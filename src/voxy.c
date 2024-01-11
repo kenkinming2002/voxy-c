@@ -1,7 +1,6 @@
 #include <voxy/world.h>
 #include <voxy/camera.h>
 #include <voxy/renderer.h>
-#include <voxy/shader.h>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -18,53 +17,55 @@
 #define MOVE_SPEED 1.0f
 #define PAN_SPEED  0.001f
 
+struct application
+{
+  GLFWwindow *window;
+  double xpos, ypos;
+
+  struct renderer renderer;
+  struct world    world;
+  struct camera   camera;
+};
+
 static void glfw_error_callback(int error, const char *description)
 {
   (void)error;
   fprintf(stderr, "ERROR: %s\n", description);
 }
 
-struct vertex
-{
-  struct vec3 position;
-  struct vec3 color;
-};
-
-int main()
+static int application_init(struct application *application)
 {
   glfwSetErrorCallback(&glfw_error_callback);
   if(!glfwInit())
   {
     fprintf(stderr, "ERROR: Failed to initialize GLFW\n");
-    return EXIT_FAILURE;
+    return -1;
   }
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-
-  GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL, NULL);
-  if(!window)
+  application->window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL, NULL);
+  if(!application->window)
   {
     fprintf(stderr, "ERROR: Failed to create window\n");
     glfwTerminate();
-    return EXIT_FAILURE;
+    return -1;
   }
 
-  glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(application->window);
   if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
     fprintf(stderr, "ERROR: Failed to load OpenGL\n");
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(application->window);
     glfwTerminate();
     return EXIT_FAILURE;
   }
 
-  struct renderer renderer;
-  struct world    world;
-  struct camera   camera;
+  glfwSetInputMode(application->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwGetCursorPos(application->window, &application->xpos, &application->ypos);
 
-  world_init(&world);
-  renderer_init(&renderer);
+  world_init(&application->world);
+  renderer_init(&application->renderer);
 
   struct chunk chunk;
 
@@ -72,73 +73,95 @@ int main()
   chunk.y = 0;
   chunk.z = 0;
   chunk_randomize(&chunk);
-  world_chunk_add(&world, chunk);
+  world_chunk_add(&application->world, chunk);
 
   chunk.x = 1;
   chunk.y = 0;
   chunk.z = 0;
   chunk_randomize(&chunk);
-  world_chunk_add(&world, chunk);
+  world_chunk_add(&application->world, chunk);
 
-  camera.transform.translation = vec3(10.0f, -10.0f, 0.0f);
-  camera.transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
-  camera.fovy   = M_PI / 2.0f;
-  camera.aspect = 1.0f;
-  camera.near   = 0.1f;
-  camera.far    = 50.0f;
+  application->camera.transform.translation = vec3(10.0f, -10.0f, 0.0f);
+  application->camera.transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
+  application->camera.fovy                  = M_PI / 2.0f;
+  application->camera.aspect                = 1.0f;
+  application->camera.near                  = 0.1f;
+  application->camera.far                   = 50.0f;
 
-  double xpos, ypos;
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwGetCursorPos(window, &xpos, &ypos);
+  return 0;
+}
 
-  while(!glfwWindowShouldClose(window))
+static void application_deinit(struct application *application)
+{
+  glfwDestroyWindow(application->window);
+  glfwTerminate();
+}
+
+static void application_get_mouse_motion(struct application *application, float *dx, float *dy)
+{
+  double new_xpos, new_ypos;
+  glfwGetCursorPos(application->window, &new_xpos, &new_ypos);
+
+  *dx = new_xpos - application->xpos;
+  *dy = new_ypos - application->ypos;
+
+  application->xpos = new_xpos;
+  application->ypos = new_ypos;
+}
+
+static void application_get_keyboard_motion(struct application *application, float *dx, float *dy, float *dz)
+{
+  *dx = 0.0f;
+  *dy = 0.0f;
+  *dz = 0.0f;
+
+  if(glfwGetKey(application->window, GLFW_KEY_D))          *dx += 1.0f;
+  if(glfwGetKey(application->window, GLFW_KEY_A))          *dx -= 1.0f;
+  if(glfwGetKey(application->window, GLFW_KEY_W))          *dy += 1.0f;
+  if(glfwGetKey(application->window, GLFW_KEY_S))          *dy -= 1.0f;
+  if(glfwGetKey(application->window, GLFW_KEY_SPACE))      *dz += 1.0f;
+  if(glfwGetKey(application->window, GLFW_KEY_LEFT_SHIFT)) *dz -= 1.0f;
+}
+
+static void application_run(struct application *application)
+{
+  while(!glfwWindowShouldClose(application->window))
   {
     int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
+    glfwGetFramebufferSize(application->window, &width, &height);
     glViewport(0, 0, width, height);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    renderer_update(&renderer, &world);
-    renderer_render(&renderer, &camera);
+    renderer_update(&application->renderer, &application->world);
+    renderer_render(&application->renderer, &application->camera);
 
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(application->window);
     glfwPollEvents();
 
-    camera.aspect = (float)width / (float)height;
+    application->camera.aspect = (float)width / (float)height;
 
-    double new_xpos, new_ypos;
-    glfwGetCursorPos(window, &new_xpos, &new_ypos);
-
-    struct vec3 rotation = vec3_zero();
-
-    rotation.yaw   = new_xpos - xpos;
-    rotation.pitch = new_ypos - ypos;
-    rotation = vec3_mul(rotation, PAN_SPEED);
-
-    camera.transform.rotation = vec3_add(camera.transform.rotation, rotation);
-
-    xpos = new_xpos;
-    ypos = new_ypos;
-
+    struct vec3 rotation    = vec3_zero();
     struct vec3 translation = vec3_zero();
 
-    if(glfwGetKey(window, GLFW_KEY_D)) translation.x += 1.0f;
-    if(glfwGetKey(window, GLFW_KEY_A)) translation.x -= 1.0f;
+    application_get_mouse_motion   (application, &rotation.yaw, &rotation.pitch);
+    application_get_keyboard_motion(application, &translation.x, &translation.y, &translation.z);
 
-    if(glfwGetKey(window, GLFW_KEY_W)) translation.y += 1.0f;
-    if(glfwGetKey(window, GLFW_KEY_S)) translation.y -= 1.0f;
-
-    if(glfwGetKey(window, GLFW_KEY_SPACE))      translation.z += 1.0f;
-    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)) translation.z -= 1.0f;
-
+    rotation = vec3_mul(rotation, PAN_SPEED);
     translation = vec3_normalize(translation);
     translation = vec3_mul(translation, MOVE_SPEED);
 
-    transform_local_translate(&camera.transform, translation);
+    transform_rotate(&application->camera.transform, rotation);
+    transform_local_translate(&application->camera.transform, translation);
   }
+}
 
-  glfwDestroyWindow(window);
-  glfwTerminate();
-  return EXIT_SUCCESS;
+int main()
+{
+  struct application application;
+  if(application_init(&application) != 0)
+    return EXIT_FAILURE;
+
+  application_run(&application);
+  application_deinit(&application);
 }

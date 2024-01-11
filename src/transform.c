@@ -96,8 +96,14 @@ struct vec3 transform_up(struct transform *transform)
   return vec3(result.x, result.y, result.z);
 }
 
+void transform_rotate(struct transform *transform, struct vec3 rotation)
+{
+  transform->rotation = vec3_add(transform->rotation, rotation);
+}
+
 void transform_local_translate(struct transform *transform, struct vec3 translation)
 {
   struct vec4 offset = mat4_vmul(mat4_rotate(transform->rotation), vec4(translation.x, translation.y, translation.z, 1.0f));
   transform->translation = vec3_add(transform->translation, vec3(offset.x, offset.y, offset.z));
 }
+

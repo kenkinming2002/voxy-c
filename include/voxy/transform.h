@@ -24,6 +24,7 @@ struct vec3 transform_right  (struct transform *transform);
 struct vec3 transform_forward(struct transform *transform);
 struct vec3 transform_up     (struct transform *transform);
 
+void transform_rotate(struct transform *transform, struct vec3 rotation);
 void transform_local_translate(struct transform *transform, struct vec3 translation);
 
 #endif // VOXY_TRANSFORM_H

@@ -20,4 +20,10 @@ struct transform
 struct mat4 transform_matrix(struct transform *transform);
 struct mat4 transform_matrix_inverse(struct transform *transform);
 
+struct vec3 transform_right  (struct transform *transform);
+struct vec3 transform_forward(struct transform *transform);
+struct vec3 transform_up     (struct transform *transform);
+
+void transform_local_translate(struct transform *transform, struct vec3 translation);
+
 #endif // TRANSFORM_H

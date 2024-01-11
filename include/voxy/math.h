@@ -1,6 +1,8 @@
 #ifndef MATH_H
 #define MATH_H
 
+#include <math.h>
+
 struct vec2
 {
   union
@@ -178,6 +180,18 @@ static inline float vec4_dot(struct vec4 lhs, struct vec4 rhs)
   return result;
 }
 
+static inline float vec2_length_squared(struct vec2 vec) { return vec2_dot(vec, vec); }
+static inline float vec3_length_squared(struct vec3 vec) { return vec3_dot(vec, vec); }
+static inline float vec4_length_squared(struct vec4 vec) { return vec4_dot(vec, vec); }
+
+static inline float vec2_length(struct vec2 vec) { return sqrtf(vec2_length_squared(vec)); }
+static inline float vec3_length(struct vec3 vec) { return sqrtf(vec3_length_squared(vec)); }
+static inline float vec4_length(struct vec4 vec) { return sqrtf(vec4_length_squared(vec)); }
+
+static inline struct vec2 vec2_normalize(struct vec2 vec) { float length = vec2_length_squared(vec); return length != 0.0f ? vec2_div(vec, length) : vec; }
+static inline struct vec3 vec3_normalize(struct vec3 vec) { float length = vec3_length_squared(vec); return length != 0.0f ? vec3_div(vec, length) : vec; }
+static inline struct vec4 vec4_normalize(struct vec4 vec) { float length = vec4_length_squared(vec); return length != 0.0f ? vec4_div(vec, length) : vec; }
+
 static inline struct vec3 vec3_cross(struct vec3 lhs, struct vec3 rhs)
 {
   return vec3(
@@ -268,6 +282,33 @@ static inline struct mat4 mat4_mul(struct mat4 lhs, struct mat4 rhs)
     for(unsigned j=0; j<4; ++j)
       for(unsigned k=0; k<4; ++k)
         result.values[i][j] += lhs.values[i][k] * rhs.values[k][j];
+  return result;
+}
+
+static inline struct vec2 mat2_vmul(struct mat2 lhs, struct vec2 rhs)
+{
+  struct vec2 result = vec2_zero();
+  for(unsigned i=0; i<2; ++i)
+    for(unsigned j=0; j<2; ++j)
+      result.values[i] += lhs.values[i][j] * rhs.values[j];
+  return result;
+}
+
+static inline struct vec3 mat3_vmul(struct mat3 lhs, struct vec3 rhs)
+{
+  struct vec3 result = vec3_zero();
+  for(unsigned i=0; i<3; ++i)
+    for(unsigned j=0; j<3; ++j)
+      result.values[i] += lhs.values[i][j] * rhs.values[j];
+  return result;
+}
+
+static inline struct vec4 mat4_vmul(struct mat4 lhs, struct vec4 rhs)
+{
+  struct vec4 result = vec4_zero();
+  for(unsigned i=0; i<4; ++i)
+    for(unsigned j=0; j<4; ++j)
+      result.values[i] += lhs.values[i][j] * rhs.values[j];
   return result;
 }
 

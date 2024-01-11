@@ -32,3 +32,4 @@ struct mat4 camera_projection_matrix(struct camera *camera)
 
   return result;
 }
+

@@ -15,6 +15,9 @@
 #define WINDOW_HEIGHT 720
 #define WINDOW_TITLE "voxy"
 
+#define MOVE_SPEED 1.0f
+#define PAN_SPEED  0.001f
+
 static void glfw_error_callback(int error, const char *description)
 {
   (void)error;
@@ -84,6 +87,10 @@ int main()
   camera.near   = 0.1f;
   camera.far    = 50.0f;
 
+  double xpos, ypos;
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwGetCursorPos(window, &xpos, &ypos);
+
   while(!glfwWindowShouldClose(window))
   {
     int width, height;
@@ -99,9 +106,36 @@ int main()
     glfwPollEvents();
 
     camera.aspect = (float)width / (float)height;
-    camera.transform.rotation.yaw   += 0.02f;
-    camera.transform.rotation.roll  += 0.02f;
-    camera.transform.rotation.pitch += 0.02f;
+
+    double new_xpos, new_ypos;
+    glfwGetCursorPos(window, &new_xpos, &new_ypos);
+
+    struct vec3 rotation = vec3_zero();
+
+    rotation.yaw   = new_xpos - xpos;
+    rotation.pitch = new_ypos - ypos;
+    rotation = vec3_mul(rotation, PAN_SPEED);
+
+    camera.transform.rotation = vec3_add(camera.transform.rotation, rotation);
+
+    xpos = new_xpos;
+    ypos = new_ypos;
+
+    struct vec3 translation = vec3_zero();
+
+    if(glfwGetKey(window, GLFW_KEY_D)) translation.x += 1.0f;
+    if(glfwGetKey(window, GLFW_KEY_A)) translation.x -= 1.0f;
+
+    if(glfwGetKey(window, GLFW_KEY_W)) translation.y += 1.0f;
+    if(glfwGetKey(window, GLFW_KEY_S)) translation.y -= 1.0f;
+
+    if(glfwGetKey(window, GLFW_KEY_SPACE))      translation.z += 1.0f;
+    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)) translation.z -= 1.0f;
+
+    translation = vec3_normalize(translation);
+    translation = vec3_mul(translation, MOVE_SPEED);
+
+    transform_local_translate(&camera.transform, translation);
   }
 
   glfwDestroyWindow(window);

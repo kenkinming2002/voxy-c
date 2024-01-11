@@ -2,6 +2,16 @@
 
 #include <math.h>
 
+struct mat4 camera_translation_matrix(struct camera *camera)
+{
+  return mat4_translate(vec3_neg(camera->transform.translation));
+}
+
+struct mat4 camera_rotation_matrix(struct camera *camera)
+{
+  return mat4_rotate(vec3_neg(camera->transform.rotation));
+}
+
 struct mat4 camera_view_matrix(struct camera *camera)
 {
   // Who need matrix inverse?

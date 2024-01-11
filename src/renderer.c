@@ -1,6 +1,7 @@
 #include <voxy/renderer.h>
 #include <voxy/math.h>
 #include <voxy/shader.h>
+#include <voxy/cube_map.h>
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -8,13 +9,95 @@
 
 int renderer_init(struct renderer *renderer)
 {
-  if((renderer->chunk_program = gl_program_load("assets/shader.vert",  "assets/shader.frag")) == 0)
-    return -1;
+  renderer->skybox_program = 0;
+  renderer->skybox_texture = 0;
+  renderer->skybox_vao     = 0;
+  renderer->skybox_vbo     = 0;
+  renderer->skybox_ibo     = 0;
 
+  renderer->chunk_program       = 0;
   renderer->chunk_meshes        = 0;
   renderer->chunk_mesh_capacity = 0;
   renderer->chunk_mesh_count    = 0;
+
+  if((renderer->skybox_program = gl_program_load("assets/skybox.vert", "assets/skybox.frag")) == 0)
+    goto error;
+
+  if((renderer->skybox_texture = gl_cube_map_load((const char *[]){"assets/skybox/right.jpg", "assets/skybox/left.jpg", "assets/skybox/top.jpg", "assets/skybox/bottom.jpg", "assets/skybox/front.jpg", "assets/skybox/back.jpg"})) == 0)
+    goto error;
+
+  struct vertex
+  {
+    struct vec3 position;
+  };
+
+  // FIXME: We do not need that much vertices since we do not have normals
+  struct vertex vertices[24] = {
+    { .position = vec3(-1.0f, -1.0f, -1.0f) },
+    { .position = vec3(-1.0f, -1.0f,  1.0f) },
+    { .position = vec3(-1.0f,  1.0f, -1.0f) },
+    { .position = vec3(-1.0f,  1.0f,  1.0f) },
+    { .position = vec3( 1.0f,  1.0f, -1.0f) },
+    { .position = vec3( 1.0f,  1.0f,  1.0f) },
+    { .position = vec3( 1.0f, -1.0f, -1.0f) },
+    { .position = vec3( 1.0f, -1.0f,  1.0f) },
+    { .position = vec3( 1.0f, -1.0f, -1.0f) },
+    { .position = vec3( 1.0f, -1.0f,  1.0f) },
+    { .position = vec3(-1.0f, -1.0f, -1.0f) },
+    { .position = vec3(-1.0f, -1.0f,  1.0f) },
+    { .position = vec3(-1.0f,  1.0f, -1.0f) },
+    { .position = vec3(-1.0f,  1.0f,  1.0f) },
+    { .position = vec3( 1.0f,  1.0f, -1.0f) },
+    { .position = vec3( 1.0f,  1.0f,  1.0f) },
+    { .position = vec3(-1.0f,  1.0f, -1.0f) },
+    { .position = vec3( 1.0f,  1.0f, -1.0f) },
+    { .position = vec3(-1.0f, -1.0f, -1.0f) },
+    { .position = vec3( 1.0f, -1.0f, -1.0f) },
+    { .position = vec3(-1.0f, -1.0f,  1.0f) },
+    { .position = vec3( 1.0f, -1.0f,  1.0f) },
+    { .position = vec3(-1.0f,  1.0f,  1.0f) },
+    { .position = vec3( 1.0f,  1.0f,  1.0f) },
+  };
+
+  uint8_t indices[36] = {
+    0,  1,  2,  2,  1,  3,
+    4,  5,  6,  6,  5,  7,
+    8,  9,  10, 10, 9,  11,
+    12, 13, 14, 14, 13, 15,
+    16, 17, 18, 18, 17, 19,
+    20, 21, 22, 22, 21, 23,
+  };
+
+  glGenVertexArrays(1, &renderer->skybox_vao);
+  glGenBuffers(1, &renderer->skybox_vbo);
+  glGenBuffers(1, &renderer->skybox_ibo);
+
+  glBindVertexArray(renderer->skybox_vao);
+
+  glBindBuffer(GL_ARRAY_BUFFER, renderer->skybox_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof vertices, vertices, GL_DYNAMIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->skybox_ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indices, indices, GL_DYNAMIC_DRAW);
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), 0);
+
+  if((renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
+    goto error;
+
   return 0;
+
+error:
+  if(renderer->skybox_program != 0) glDeleteProgram(renderer->skybox_program);
+  if(renderer->skybox_texture != 0) glDeleteTextures(1, &renderer->skybox_texture);
+  if(renderer->skybox_vao     != 0) glDeleteBuffers(1, &renderer->skybox_vao);
+  if(renderer->skybox_vbo     != 0) glDeleteBuffers(1, &renderer->skybox_vbo);
+  if(renderer->skybox_ibo     != 0) glDeleteBuffers(1, &renderer->skybox_ibo);
+
+  if(renderer->chunk_program != 0) glDeleteProgram(renderer->chunk_program);
+
+  return -1;
 }
 
 struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, struct chunk_mesh chunk_mesh)
@@ -39,12 +122,6 @@ struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int z, 
   }
   return NULL;
 }
-
-struct vertex
-{
-  struct vec3 position;
-  struct vec3 color;
-};
 
 void renderer_update(struct renderer *renderer, struct world *world)
 {
@@ -76,6 +153,12 @@ void renderer_update(struct renderer *renderer, struct world *world)
         for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
           if(chunk->tiles[z][y][x].present)
             ++tile_count;
+
+    struct vertex
+    {
+      struct vec3 position;
+      struct vec3 color;
+    };
 
     struct vertex *vertices = malloc(24 * tile_count * sizeof *vertices);
     uint16_t      *indices  = malloc(36 * tile_count * sizeof *indices);
@@ -180,16 +263,25 @@ void renderer_update(struct renderer *renderer, struct world *world)
 void renderer_render(struct renderer *renderer, struct camera *camera)
 {
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
+
+  struct mat4 RP = mat4_identity();
+  RP = mat4_mul(camera_rotation_matrix(camera),   RP);
+  RP = mat4_mul(camera_projection_matrix(camera), RP);
+
+  struct mat4 VP = mat4_identity();
+  VP = mat4_mul(camera_view_matrix(camera),       VP);
+  VP = mat4_mul(camera_projection_matrix(camera), VP);
+
+  glDepthMask(GL_FALSE);
+    glUseProgram(renderer->skybox_program);
+    glUniformMatrix4fv(glGetUniformLocation(renderer->skybox_program, "RP"), 1, GL_TRUE, (const float *)&RP);
+    glBindVertexArray(renderer->skybox_vao);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, renderer->skybox_texture);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
+  glDepthMask(GL_TRUE);
 
   glUseProgram(renderer->chunk_program);
-
-  struct mat4 MVP = mat4_identity();
-  MVP = mat4_mul(camera_view_matrix(camera),       MVP);
-  MVP = mat4_mul(camera_projection_matrix(camera), MVP);
-
-  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "MVP"), 1, GL_TRUE, (const float *)&MVP);
+  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "MVP"), 1, GL_TRUE, (const float *)&VP);
   for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
   {
     glBindVertexArray(renderer->chunk_meshes[i].vao);

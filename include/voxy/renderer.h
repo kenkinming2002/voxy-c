@@ -21,9 +21,14 @@ struct chunk_mesh
 
 struct renderer
 {
-  GLuint chunk_program;
+  GLuint skybox_program;
+  GLuint skybox_texture;
+  GLuint skybox_vao;
+  GLuint skybox_vbo;
+  GLuint skybox_ibo;
 
   // FIXME: Use a proper hash table
+  GLuint             chunk_program;
   struct chunk_mesh *chunk_meshes;
   size_t             chunk_mesh_count;
   size_t             chunk_mesh_capacity;

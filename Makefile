@@ -8,12 +8,14 @@ VOXY_LIBS   += $(shell pkg-config --libs   glfw3)
 
 VOXY_SRCS += src/camera.c
 VOXY_SRCS += src/chunk.c
+VOXY_SRCS += src/cube_map.c
 VOXY_SRCS += src/glad.c
 VOXY_SRCS += src/renderer.c
 VOXY_SRCS += src/shader.c
 VOXY_SRCS += src/transform.c
 VOXY_SRCS += src/voxy.c
 VOXY_SRCS += src/world.c
+VOXY_SRCS += src/stb_image.c
 
 CUBE_SRCS += src/cube.c
 

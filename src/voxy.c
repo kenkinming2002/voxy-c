@@ -64,8 +64,10 @@ static int application_init(struct application *application)
   glfwSetInputMode(application->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwGetCursorPos(application->window, &application->xpos, &application->ypos);
 
+  if(renderer_init(&application->renderer) != 0)
+    return -1;
+
   world_init(&application->world);
-  renderer_init(&application->renderer);
 
   struct chunk chunk;
 

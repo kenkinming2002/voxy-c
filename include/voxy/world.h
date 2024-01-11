@@ -1,5 +1,5 @@
-#ifndef WORLD_H
-#define WORLD_H
+#ifndef VOXY_WORLD_H
+#define VOXY_WORLD_H
 
 #include <voxy/chunk.h>
 
@@ -20,4 +20,4 @@ struct chunk *world_chunk_lookup(struct world *world, int z, int y, int x);
 
 void world_update(struct world *world);
 
-#endif // WORLD_H
+#endif // VOXY_WORLD_H

@@ -1,5 +1,5 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef VOXY_RENDERER_H
+#define VOXY_RENDERER_H
 
 #include <voxy/world.h>
 #include <voxy/camera.h>
@@ -37,4 +37,4 @@ struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int z, 
 void renderer_update(struct renderer *renderer, struct world *world);
 void renderer_render(struct renderer *renderer, struct camera *camera);
 
-#endif // RENDERER_H
+#endif // VOXY_RENDERER_H

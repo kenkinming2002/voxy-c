@@ -1,5 +1,5 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#ifndef VOXY_CAMERA_H
+#define VOXY_CAMERA_H
 
 #include <voxy/transform.h>
 
@@ -16,4 +16,4 @@ struct camera
 struct mat4 camera_view_matrix(struct camera *camera);
 struct mat4 camera_projection_matrix(struct camera *camera);
 
-#endif // CAMERA_H
+#endif // VOXY_CAMERA_H

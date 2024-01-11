@@ -1,5 +1,5 @@
-#ifndef MATH_H
-#define MATH_H
+#ifndef VOXY_MATH_H
+#define VOXY_MATH_H
 
 #include <math.h>
 
@@ -312,4 +312,4 @@ static inline struct vec4 mat4_vmul(struct mat4 lhs, struct vec4 rhs)
   return result;
 }
 
-#endif // MATH_H
+#endif // VOXY_MATH_H

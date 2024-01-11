@@ -1,5 +1,5 @@
-#ifndef TILE_H
-#define TILE_H
+#ifndef VOXY_TILE_H
+#define VOXY_TILE_H
 
 #include <voxy/math.h>
 #include <stdbool.h>
@@ -10,4 +10,4 @@ struct tile
   struct vec3 color;
 };
 
-#endif // TILE_H
+#endif // VOXY_TILE_H

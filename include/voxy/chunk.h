@@ -1,5 +1,5 @@
-#ifndef CHUNK_H
-#define CHUNK_H
+#ifndef VOXY_CHUNK_H
+#define VOXY_CHUNK_H
 
 #include <voxy/tile.h>
 
@@ -18,4 +18,4 @@ struct chunk
 
 void chunk_randomize(struct chunk *chunk);
 
-#endif // CHUNK_H
+#endif // VOXY_CHUNK_H

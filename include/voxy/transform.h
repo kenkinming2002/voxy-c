@@ -1,5 +1,5 @@
-#ifndef TRANSFORM_H
-#define TRANSFORM_H
+#ifndef VOXY_TRANSFORM_H
+#define VOXY_TRANSFORM_H
 
 #include <voxy/math.h>
 
@@ -26,4 +26,4 @@ struct vec3 transform_up     (struct transform *transform);
 
 void transform_local_translate(struct transform *transform, struct vec3 translation);
 
-#endif // TRANSFORM_H
+#endif // VOXY_TRANSFORM_H

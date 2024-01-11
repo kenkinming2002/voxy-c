@@ -11,6 +11,11 @@ struct mat4 mat4_translate(struct vec3 translation)
   return mat;
 }
 
+struct mat4 mat4_translate_inverse(struct vec3 translation)
+{
+  return mat4_translate(vec3_neg(translation));
+}
+
 struct mat4 mat4_rotate_x(float angle)
 {
   struct mat4 result = mat4_identity();
@@ -50,31 +55,28 @@ struct mat4 mat4_rotate(struct vec3 rotation)
   return mat;
 }
 
+struct mat4 mat4_rotate_inverse(struct vec3 rotation)
+{
+  struct mat4 mat = mat4_identity();
+  mat = mat4_mul(mat4_rotate_z(-rotation.yaw),   mat);
+  mat = mat4_mul(mat4_rotate_x(-rotation.pitch), mat);
+  mat = mat4_mul(mat4_rotate_y(-rotation.roll),  mat);
+  return mat;
+}
+
 struct mat4 transform_matrix(struct transform *transform)
 {
   struct mat4 mat = mat4_identity();
-  struct mat4 tmp;
-
-  tmp = mat4_rotate(transform->rotation);
-  mat = mat4_mul(tmp, mat);
-
-  tmp = mat4_translate(transform->translation);
-  mat = mat4_mul(tmp, mat);
-
+  mat = mat4_mul(mat4_rotate(transform->rotation), mat);
+  mat = mat4_mul(mat4_translate(transform->translation), mat);
   return mat;
 }
 
 struct mat4 transform_matrix_inverse(struct transform *transform)
 {
   struct mat4 mat = mat4_identity();
-  struct mat4 tmp;
-
-  tmp = mat4_translate(vec3_neg(transform->translation));
-  mat = mat4_mul(tmp, mat);
-
-  tmp = mat4_rotate(vec3_neg(transform->rotation));
-  mat = mat4_mul(tmp, mat);
-
+  mat = mat4_mul(mat4_translate_inverse(transform->translation), mat);
+  mat = mat4_mul(mat4_rotate_inverse(transform->rotation), mat);
   return mat;
 }
 

@@ -4,12 +4,12 @@
 
 struct mat4 camera_translation_matrix(struct camera *camera)
 {
-  return mat4_translate(vec3_neg(camera->transform.translation));
+  return mat4_translate_inverse(camera->transform.translation);
 }
 
 struct mat4 camera_rotation_matrix(struct camera *camera)
 {
-  return mat4_rotate(vec3_neg(camera->transform.rotation));
+  return mat4_rotate_inverse(camera->transform.rotation);
 }
 
 struct mat4 camera_view_matrix(struct camera *camera)

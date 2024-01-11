@@ -180,7 +180,8 @@ void renderer_update(struct renderer *renderer, struct world *world)
 void renderer_render(struct renderer *renderer, struct camera *camera)
 {
   glEnable(GL_DEPTH_TEST);
-  glDisable(GL_CULL_FACE);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
 
   glUseProgram(renderer->chunk_program);
 

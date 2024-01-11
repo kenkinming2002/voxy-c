@@ -87,8 +87,8 @@ static int application_init(struct application *application)
   application->camera.transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
   application->camera.fovy                  = M_PI / 2.0f;
   application->camera.aspect                = 1.0f;
-  application->camera.near                  = 0.1f;
-  application->camera.far                   = 50.0f;
+  application->camera.near                  = 1.0f;
+  application->camera.far                   = 1000.0f;
 
   return 0;
 }

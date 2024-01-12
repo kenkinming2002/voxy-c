@@ -1,10 +1,41 @@
 #ifndef VOXY_WORLD_H
 #define VOXY_WORLD_H
 
-#include <voxy/chunk.h>
+#include <voxy/math.h>
 
 #include <stddef.h>
+#include <stdbool.h>
 
+#define CHUNK_WIDTH 16
+
+/********
+ * Tile *
+ ********/
+struct tile
+{
+  bool present;
+  struct vec3 color;
+};
+
+/*********
+ * Chunk *
+ *********/
+struct chunk
+{
+  int z;
+  int y;
+  int x;
+
+  struct tile tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+
+  bool remesh;
+};
+
+void chunk_randomize(struct chunk *chunk);
+
+/*********
+ * World *
+ *********/
 struct world
 {
   // FIXME: Use a proper hash table

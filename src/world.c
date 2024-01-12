@@ -24,6 +24,11 @@ void world_init(struct world *world)
   world->chunk_capacity = 0;
 }
 
+void world_deinit(struct world *world)
+{
+  free(world->chunks);
+}
+
 struct chunk *world_chunk_add(struct world *world, int z, int y, int x)
 {
   if(world->chunk_count == world->chunk_capacity)

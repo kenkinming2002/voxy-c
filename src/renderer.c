@@ -257,6 +257,10 @@ void renderer_deinit(struct renderer *renderer)
   skybox_renderer_deinit(&renderer->skybox_renderer);
   skybox_unload(&renderer->skybox);
   chunk_renderer_deinit(&renderer->chunk_renderer);
+
+  for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
+    chunk_mesh_deinit(&renderer->chunk_meshes[i]);
+  free(renderer->chunk_meshes);
 }
 
 struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int z, int y, int x)

@@ -45,6 +45,7 @@ struct world
 };
 
 void world_init(struct world *world);
+void world_deinit(struct world *world);
 
 struct chunk *world_chunk_add(struct world *world, int z, int y, int x);
 struct chunk *world_chunk_lookup(struct world *world, int z, int y, int x);

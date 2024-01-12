@@ -26,6 +26,7 @@ static int application_init(struct application *application)
 {
   bool window_initialized   = false;
   bool renderer_initialized = false;
+  bool world_initialized = false;
 
   if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT) != 0)
     goto error;
@@ -53,6 +54,9 @@ static int application_init(struct application *application)
   return 0;
 
 error:
+  if(world_initialized)
+    world_deinit(&application->world);
+
   if(renderer_initialized)
     renderer_deinit(&application->renderer);
 
@@ -64,6 +68,7 @@ error:
 
 static void application_deinit(struct application *application)
 {
+  world_deinit(&application->world);
   renderer_deinit(&application->renderer);
   window_deinit(&application->window);
 }

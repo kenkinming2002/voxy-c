@@ -128,7 +128,7 @@ void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_m
  **********/
 int skybox_load(struct skybox *skybox, const char *filepaths[6])
 {
-  if((skybox->skybox_texture = gl_cube_map_load(filepaths)) == 0)
+  if((skybox->skybox_texture = gl_cube_map_texture_load(filepaths)) == 0)
     goto error;
 
   return 0;

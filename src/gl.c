@@ -129,7 +129,7 @@ error:
   return 0;
 }
 
-GLuint gl_cube_map_load(const char *filepaths[6])
+GLuint gl_cube_map_texture_load(const char *filepaths[6])
 {
   GLuint cube_map;
   glGenTextures(1, &cube_map);

@@ -204,13 +204,13 @@ void skybox_renderer_render(struct skybox_renderer *skybox_renderer, struct came
   RP = mat4_mul(camera_rotation_matrix(camera),   RP);
   RP = mat4_mul(camera_projection_matrix(camera), RP);
 
-  glDepthMask(GL_FALSE);
+  glDepthFunc(GL_LEQUAL);
     glUseProgram(skybox_renderer->skybox_program);
     glUniformMatrix4fv(glGetUniformLocation(skybox_renderer->skybox_program, "RP"), 1, GL_TRUE, (const float *)&RP);
     glBindVertexArray(skybox_renderer->skybox_vao);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->skybox_texture);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
-  glDepthMask(GL_TRUE);
+  glDepthFunc(GL_LESS);
 }
 
 /************
@@ -310,10 +310,10 @@ void renderer_update(struct renderer *renderer, struct world *world)
 void renderer_render(struct renderer *renderer, struct camera *camera)
 {
   glEnable(GL_DEPTH_TEST);
-
-  skybox_renderer_render(&renderer->skybox_renderer, camera, &renderer->skybox);
-  chunk_renderer_begin(&renderer->chunk_renderer, camera);
-  for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
-    chunk_renderer_render(&renderer->chunk_renderer, &renderer->chunk_meshes[i]);
+    chunk_renderer_begin(&renderer->chunk_renderer, camera);
+    for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
+      chunk_renderer_render(&renderer->chunk_renderer, &renderer->chunk_meshes[i]);
+    skybox_renderer_render(&renderer->skybox_renderer, camera, &renderer->skybox);
+  glDisable(GL_DEPTH_TEST);
 }
 

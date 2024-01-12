@@ -10,5 +10,7 @@ void main()
   fTexCoords.x =  vPosition.x;
   fTexCoords.y =  vPosition.z;
   fTexCoords.z = -vPosition.y;
-  gl_Position = RP * vec4(vPosition, 1.0);
+
+  vec4 position = RP * vec4(vPosition, 1.0);
+  gl_Position = position.xyww;
 }

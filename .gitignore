@@ -1,4 +1,5 @@
 /voxy
-/cube
+/cube_gen
+/include/voxy/cube.h
 *.d
 *.o

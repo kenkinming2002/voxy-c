@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#define ARRAY_LENGTH(arr) (sizeof (arr) / sizeof (arr)[0])
+
 int renderer_init(struct renderer *renderer)
 {
   renderer->skybox_program = 0;
@@ -32,41 +34,14 @@ int renderer_init(struct renderer *renderer)
   };
 
   // FIXME: We do not need that much vertices since we do not have normals
-  struct vertex vertices[24] = {
-    { .position = vec3(-1.0f, -1.0f, -1.0f) },
-    { .position = vec3(-1.0f, -1.0f,  1.0f) },
-    { .position = vec3(-1.0f,  1.0f, -1.0f) },
-    { .position = vec3(-1.0f,  1.0f,  1.0f) },
-    { .position = vec3( 1.0f,  1.0f, -1.0f) },
-    { .position = vec3( 1.0f,  1.0f,  1.0f) },
-    { .position = vec3( 1.0f, -1.0f, -1.0f) },
-    { .position = vec3( 1.0f, -1.0f,  1.0f) },
-    { .position = vec3( 1.0f, -1.0f, -1.0f) },
-    { .position = vec3( 1.0f, -1.0f,  1.0f) },
-    { .position = vec3(-1.0f, -1.0f, -1.0f) },
-    { .position = vec3(-1.0f, -1.0f,  1.0f) },
-    { .position = vec3(-1.0f,  1.0f, -1.0f) },
-    { .position = vec3(-1.0f,  1.0f,  1.0f) },
-    { .position = vec3( 1.0f,  1.0f, -1.0f) },
-    { .position = vec3( 1.0f,  1.0f,  1.0f) },
-    { .position = vec3(-1.0f,  1.0f, -1.0f) },
-    { .position = vec3( 1.0f,  1.0f, -1.0f) },
-    { .position = vec3(-1.0f, -1.0f, -1.0f) },
-    { .position = vec3( 1.0f, -1.0f, -1.0f) },
-    { .position = vec3(-1.0f, -1.0f,  1.0f) },
-    { .position = vec3( 1.0f, -1.0f,  1.0f) },
-    { .position = vec3(-1.0f,  1.0f,  1.0f) },
-    { .position = vec3( 1.0f,  1.0f,  1.0f) },
-  };
+  struct vertex vertices[ARRAY_LENGTH(CUBE_POSITIONS)];
+  uint8_t       indices [ARRAY_LENGTH(CUBE_INDICES)];
 
-  uint8_t indices[36] = {
-    0,  1,  2,  2,  1,  3,
-    4,  5,  6,  6,  5,  7,
-    8,  9,  10, 10, 9,  11,
-    12, 13, 14, 14, 13, 15,
-    16, 17, 18, 18, 17, 19,
-    20, 21, 22, 22, 21, 23,
-  };
+  for(unsigned i=0; i<ARRAY_LENGTH(CUBE_POSITIONS); ++i)
+    vertices[i].position = vec3_sub(vec3_mul(CUBE_POSITIONS[i], 2.0f), vec3(1.0f, 1.0f, 1.0f));
+
+  for(unsigned i=0; i<ARRAY_LENGTH(CUBE_INDICES); ++i)
+    indices[i] = CUBE_INDICES[i];
 
   glGenVertexArrays(1, &renderer->skybox_vao);
   glGenBuffers(1, &renderer->skybox_vbo);
@@ -160,8 +135,8 @@ void renderer_update(struct renderer *renderer, struct world *world)
       struct vec3 color;
     };
 
-    struct vertex *vertices = malloc(24 * tile_count * sizeof *vertices);
-    uint16_t      *indices  = malloc(36 * tile_count * sizeof *indices);
+    struct vertex *vertices = malloc(tile_count * ARRAY_LENGTH(CUBE_POSITIONS) * sizeof *vertices);
+    uint16_t      *indices  = malloc(tile_count * ARRAY_LENGTH(CUBE_INDICES)   * sizeof *indices);
 
     unsigned i = 0;
     for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
@@ -174,67 +149,14 @@ void renderer_update(struct renderer *renderer, struct world *world)
             anchor = vec3_mul(anchor, 16.0f);
             anchor = vec3_add(anchor, vec3(x, y, z));
 
-            vertices[24 * i + 0 ] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 0.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 1 ] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 0.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 2 ] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 1.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 3 ] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 1.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 4 ] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 1.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 5 ] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 1.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 6 ] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 0.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 7 ] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 0.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 8 ] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 0.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 9 ] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 0.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 10] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 0.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 11] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 0.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 12] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 1.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 13] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 1.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 14] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 1.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 15] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 1.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 16] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 1.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 17] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 1.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 18] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 0.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 19] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 0.0f, 0.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 20] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 0.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 21] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 0.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 22] = (struct vertex) { .position = vec3_add(anchor, vec3(0.0f, 1.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
-            vertices[24 * i + 23] = (struct vertex) { .position = vec3_add(anchor, vec3(1.0f, 1.0f, 1.0f)), .color = chunk->tiles[z][y][x].color, };
+            for(unsigned j=0; j<ARRAY_LENGTH(CUBE_POSITIONS); ++j)
+            {
+              vertices[i * ARRAY_LENGTH(CUBE_POSITIONS) + j].position = vec3_add(anchor, CUBE_POSITIONS[j]);
+              vertices[i * ARRAY_LENGTH(CUBE_POSITIONS) + j].color    = chunk->tiles[z][y][x].color;
+            }
 
-            indices[36 * i + 0]  = 24 * i + 0 ;
-            indices[36 * i + 1]  = 24 * i + 1 ;
-            indices[36 * i + 2]  = 24 * i + 2 ;
-            indices[36 * i + 3]  = 24 * i + 2 ;
-            indices[36 * i + 4]  = 24 * i + 1 ;
-            indices[36 * i + 5]  = 24 * i + 3 ;
-            indices[36 * i + 6]  = 24 * i + 4 ;
-            indices[36 * i + 7]  = 24 * i + 5 ;
-            indices[36 * i + 8]  = 24 * i + 6 ;
-            indices[36 * i + 9]  = 24 * i + 6 ;
-            indices[36 * i + 10] = 24 * i + 5 ;
-            indices[36 * i + 11] = 24 * i + 7 ;
-            indices[36 * i + 12] = 24 * i + 8 ;
-            indices[36 * i + 13] = 24 * i + 9 ;
-            indices[36 * i + 14] = 24 * i + 10;
-            indices[36 * i + 15] = 24 * i + 10;
-            indices[36 * i + 16] = 24 * i + 9 ;
-            indices[36 * i + 17] = 24 * i + 11;
-            indices[36 * i + 18] = 24 * i + 12;
-            indices[36 * i + 19] = 24 * i + 13;
-            indices[36 * i + 20] = 24 * i + 14;
-            indices[36 * i + 21] = 24 * i + 14;
-            indices[36 * i + 22] = 24 * i + 13;
-            indices[36 * i + 23] = 24 * i + 15;
-            indices[36 * i + 24] = 24 * i + 16;
-            indices[36 * i + 25] = 24 * i + 17;
-            indices[36 * i + 26] = 24 * i + 18;
-            indices[36 * i + 27] = 24 * i + 18;
-            indices[36 * i + 28] = 24 * i + 17;
-            indices[36 * i + 29] = 24 * i + 19;
-            indices[36 * i + 30] = 24 * i + 20;
-            indices[36 * i + 31] = 24 * i + 21;
-            indices[36 * i + 32] = 24 * i + 22;
-            indices[36 * i + 33] = 24 * i + 22;
-            indices[36 * i + 34] = 24 * i + 21;
-            indices[36 * i + 35] = 24 * i + 23;
+            for(unsigned j=0; j<ARRAY_LENGTH(CUBE_INDICES); ++j)
+              indices[i * ARRAY_LENGTH(CUBE_INDICES) + j] = i * ARRAY_LENGTH(CUBE_POSITIONS) + CUBE_INDICES[j];
 
             ++i;
           }
@@ -242,10 +164,10 @@ void renderer_update(struct renderer *renderer, struct world *world)
     glBindVertexArray(chunk_mesh->vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, chunk_mesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, 24 * tile_count * sizeof *vertices, vertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, tile_count * ARRAY_LENGTH(CUBE_POSITIONS) * sizeof *vertices, vertices, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh->ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36  * tile_count * sizeof *indices, indices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, tile_count * ARRAY_LENGTH(CUBE_INDICES) * sizeof *indices, indices, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -253,7 +175,7 @@ void renderer_update(struct renderer *renderer, struct world *world)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, position));
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, color));
 
-    chunk_mesh->count = tile_count * 36;
+    chunk_mesh->count = tile_count * ARRAY_LENGTH(CUBE_INDICES);
 
     free(vertices);
     free(indices);

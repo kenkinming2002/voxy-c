@@ -36,22 +36,13 @@ static int application_init(struct application *application)
   renderer_initialized = true;
 
   world_init(&application->world);
-  {
-    struct chunk chunk;
-    chunk.x = 0;
-    chunk.y = 0;
-    chunk.z = 0;
-    chunk_randomize(&chunk);
-    world_chunk_add(&application->world, chunk);
-  }
-  {
-    struct chunk chunk;
-    chunk.x = 1;
-    chunk.y = 0;
-    chunk.z = 0;
-    chunk_randomize(&chunk);
-    world_chunk_add(&application->world, chunk);
-  }
+
+  struct chunk *chunk;
+
+  chunk = world_chunk_add(&application->world, 0, 0, 0); chunk_randomize(chunk);
+  chunk = world_chunk_add(&application->world, 0, 0, 1); chunk_randomize(chunk);
+  chunk = world_chunk_add(&application->world, 0, 1, 0); chunk_randomize(chunk);
+  chunk = world_chunk_add(&application->world, 0, 1, 1); chunk_randomize(chunk);
 
   application->camera.transform.translation = vec3(10.0f, -10.0f, 0.0f);
   application->camera.transform.rotation    = vec3(0.0f, 0.0f, 0.0f);

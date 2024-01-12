@@ -9,15 +9,18 @@ void world_init(struct world *world)
   world->chunk_capacity = 0;
 }
 
-struct chunk *world_chunk_add(struct world *world, struct chunk chunk)
+struct chunk *world_chunk_add(struct world *world, int z, int y, int x)
 {
   if(world->chunk_count == world->chunk_capacity)
   {
     world->chunk_capacity = world->chunk_count != 0 ? world->chunk_count * 2 : 1;
     world->chunks         = realloc(world->chunks, world->chunk_capacity * sizeof world->chunks[0]);
   }
-  world->chunks[world->chunk_count++] = chunk;
-  return &world->chunks[world->chunk_count-1];
+  struct chunk *chunk = &world->chunks[world->chunk_count++];
+  chunk->z = z;
+  chunk->y = y;
+  chunk->x = x;
+  return chunk;
 }
 
 struct chunk *world_chunk_lookup(struct world *world, int z, int y, int x)

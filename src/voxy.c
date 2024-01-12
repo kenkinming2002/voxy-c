@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 720
@@ -36,16 +37,18 @@ static int application_init(struct application *application)
     goto error;
   renderer_initialized = true;
 
+  seed_t seed = time(NULL);
+
   world_init(&application->world);
+  for(int z=0; z<4; ++z)
+    for(int y=-3; y<=3; ++y)
+      for(int x=-3; x<=3; ++x)
+      {
+        struct chunk *chunk = world_chunk_add(&application->world, z, y, x);
+        chunk_init(chunk, seed);
+      }
 
-  struct chunk *chunk;
-
-  chunk = world_chunk_add(&application->world, 0, 0, 0); chunk_randomize(chunk);
-  chunk = world_chunk_add(&application->world, 0, 0, 1); chunk_randomize(chunk);
-  chunk = world_chunk_add(&application->world, 0, 1, 0); chunk_randomize(chunk);
-  chunk = world_chunk_add(&application->world, 0, 1, 1); chunk_randomize(chunk);
-
-  application->camera.transform.translation = vec3(10.0f, -10.0f, 0.0f);
+  application->camera.transform.translation = vec3(10.0f, -10.0f, 40.0f);
   application->camera.transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
   application->camera.fovy                  = M_PI / 2.0f;
   application->camera.aspect                = 1.0f;

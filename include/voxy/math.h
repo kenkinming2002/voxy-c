@@ -188,9 +188,9 @@ static inline float vec2_length(struct vec2 vec) { return sqrtf(vec2_length_squa
 static inline float vec3_length(struct vec3 vec) { return sqrtf(vec3_length_squared(vec)); }
 static inline float vec4_length(struct vec4 vec) { return sqrtf(vec4_length_squared(vec)); }
 
-static inline struct vec2 vec2_normalize(struct vec2 vec) { float length = vec2_length_squared(vec); return length != 0.0f ? vec2_div(vec, length) : vec; }
-static inline struct vec3 vec3_normalize(struct vec3 vec) { float length = vec3_length_squared(vec); return length != 0.0f ? vec3_div(vec, length) : vec; }
-static inline struct vec4 vec4_normalize(struct vec4 vec) { float length = vec4_length_squared(vec); return length != 0.0f ? vec4_div(vec, length) : vec; }
+static inline struct vec2 vec2_normalize(struct vec2 vec) { float length = vec2_length(vec); return length != 0.0f ? vec2_div(vec, length) : vec; }
+static inline struct vec3 vec3_normalize(struct vec3 vec) { float length = vec3_length(vec); return length != 0.0f ? vec3_div(vec, length) : vec; }
+static inline struct vec4 vec4_normalize(struct vec4 vec) { float length = vec4_length(vec); return length != 0.0f ? vec4_div(vec, length) : vec; }
 
 static inline struct vec3 vec3_cross(struct vec3 lhs, struct vec3 rhs)
 {

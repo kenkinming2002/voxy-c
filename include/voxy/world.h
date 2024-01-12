@@ -2,6 +2,7 @@
 #define VOXY_WORLD_H
 
 #include <voxy/math.h>
+#include <voxy/noise.h>
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -31,6 +32,7 @@ struct chunk
   bool remesh;
 };
 
+void chunk_init(struct chunk *chunk, seed_t seed);
 void chunk_randomize(struct chunk *chunk);
 
 /*********

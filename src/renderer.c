@@ -42,7 +42,7 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk)
   };
 
   struct vertex *vertices = malloc(tile_count * ARRAY_LENGTH(CUBE_POSITIONS) * sizeof *vertices);
-  uint16_t      *indices  = malloc(tile_count * ARRAY_LENGTH(CUBE_INDICES)   * sizeof *indices);
+  uint32_t      *indices  = malloc(tile_count * ARRAY_LENGTH(CUBE_INDICES)   * sizeof *indices);
 
   unsigned i = 0;
   for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
@@ -52,7 +52,7 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk)
         {
           struct vec3 anchor = vec3_zero();
           anchor = vec3_add(anchor, vec3(chunk->x, chunk->y, chunk->z));
-          anchor = vec3_mul(anchor, 16.0f);
+          anchor = vec3_mul(anchor, CHUNK_WIDTH);
           anchor = vec3_add(anchor, vec3(x, y, z));
 
           for(unsigned j=0; j<ARRAY_LENGTH(CUBE_POSITIONS); ++j)
@@ -120,7 +120,7 @@ void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_m
 {
   (void)chunk_renderer;
   glBindVertexArray(chunk_mesh->vao);
-  glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_SHORT, 0);
+  glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);
 }
 
 /**********

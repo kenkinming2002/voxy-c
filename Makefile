@@ -7,8 +7,10 @@ VOXY_CFLAGS += $(shell pkg-config --cflags glfw3)
 VOXY_LIBS   += $(shell pkg-config --libs   glfw3)
 
 VOXY_SRCS += src/camera.c
-VOXY_SRCS += src/glad.c
 VOXY_SRCS += src/gl.c
+VOXY_SRCS += src/glad.c
+VOXY_SRCS += src/noise.c
+VOXY_SRCS += src/random.c
 VOXY_SRCS += src/renderer.c
 VOXY_SRCS += src/stb_image.c
 VOXY_SRCS += src/transform.c

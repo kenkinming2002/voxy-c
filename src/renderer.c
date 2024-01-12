@@ -203,7 +203,7 @@ void renderer_render(struct renderer *renderer, struct camera *camera)
   glDepthMask(GL_TRUE);
 
   glUseProgram(renderer->chunk_program);
-  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "MVP"), 1, GL_TRUE, (const float *)&VP);
+  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
   for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
   {
     glBindVertexArray(renderer->chunk_meshes[i].vao);

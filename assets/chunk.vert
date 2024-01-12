@@ -4,11 +4,11 @@ layout(location = 1) in vec3 vColor;
 
 out vec4 fColor;
 
-uniform mat4 MVP;
+uniform mat4 VP;
 
 void main()
 {
-  gl_Position = MVP * vec4(vPosition, 1.0);
+  gl_Position = VP * vec4(vPosition, 1.0);
   fColor      = vec4(vColor, 1.0);
 }
 

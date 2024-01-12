@@ -297,6 +297,7 @@ void renderer_update(struct renderer *renderer, struct world *world)
     struct chunk *chunk = &world->chunks[i];
     if(!chunk->remesh)
       continue;
+    chunk->remesh = false;
 
     struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->z, chunk->y, chunk->x);
     if(!chunk_mesh)

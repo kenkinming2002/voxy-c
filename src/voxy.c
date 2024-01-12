@@ -41,8 +41,8 @@ static int application_init(struct application *application)
 
   world_init(&application->world);
   for(int z=0; z<4; ++z)
-    for(int y=-3; y<=3; ++y)
-      for(int x=-3; x<=3; ++x)
+    for(int y=-9; y<=9; ++y)
+      for(int x=-9; x<=9; ++x)
       {
         struct chunk *chunk = world_chunk_add(&application->world, z, y, x);
         chunk_init(chunk, seed);

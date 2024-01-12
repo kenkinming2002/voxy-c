@@ -15,6 +15,7 @@ VOXY_SRCS += src/shader.c
 VOXY_SRCS += src/stb_image.c
 VOXY_SRCS += src/transform.c
 VOXY_SRCS += src/voxy.c
+VOXY_SRCS += src/window.c
 VOXY_SRCS += src/world.c
 
 CUBE_GEN_SRCS += src/cube_gen.c

@@ -1,7 +1,6 @@
 #include <voxy/renderer.h>
 #include <voxy/math.h>
-#include <voxy/shader.h>
-#include <voxy/cube_map.h>
+#include <voxy/gl.h>
 
 #include <stdint.h>
 #include <stdlib.h>

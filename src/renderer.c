@@ -118,8 +118,8 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
 
       vertex.position = vec3_add(vertex.position, vec3(0.5f, 0.5f, 0.5f));
       vertex.position = vec3_add(vertex.position, vec3_mul_s(normal, 0.5f));
-      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis1, multipliers[i][0]));
-      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis2, multipliers[i][1]));
+      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis2, multipliers[i][0]));
+      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis1, multipliers[i][1]));
 
       vertex.color = chunk_adjacency->chunk->tiles[z][y][x].color;
     }
@@ -305,9 +305,13 @@ void renderer_update(struct renderer *renderer, struct world *world)
 void renderer_render(struct renderer *renderer, struct camera *camera)
 {
   glEnable(GL_DEPTH_TEST);
-    chunk_renderer_begin(&renderer->chunk_renderer, camera);
-    for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
-      chunk_renderer_render(&renderer->chunk_renderer, &renderer->chunk_meshes[i]);
+  glEnable(GL_CULL_FACE);
+
+  chunk_renderer_begin(&renderer->chunk_renderer, camera);
+  for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
+    chunk_renderer_render(&renderer->chunk_renderer, &renderer->chunk_meshes[i]);
+
+  glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);
 }
 

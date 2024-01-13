@@ -7,6 +7,34 @@
 #include <glad/glad.h>
 #include <stddef.h>
 
+/**********************
+ * Chunk Mesh Builder *
+ **********************/
+struct chunk_mesh_vertex
+{
+  struct vec3 position;
+  struct vec3 color;
+};
+
+struct chunk_mesh_builder
+{
+  struct chunk_mesh_vertex *vertices;
+  size_t                    vertex_count;
+  size_t                    vertex_capacity;
+
+  uint32_t *indices;
+  size_t    index_count;
+  size_t    index_capacity;
+};
+
+void chunk_mesh_builder_init(struct chunk_mesh_builder *builder);
+void chunk_mesh_builder_deinit(struct chunk_mesh_builder *builder);
+
+void chunk_mesh_builder_reset(struct chunk_mesh_builder *builder);
+void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *builder, struct chunk_mesh_vertex vertex);
+void chunk_mesh_builder_push_index(struct chunk_mesh_builder *builder, uint32_t index);
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk *chunk, int z, int y, int x, int dz, int dy, int dx);
+
 /***************
  * Chunk Mesh *
  **************/
@@ -24,7 +52,8 @@ struct chunk_mesh
 
 int chunk_mesh_init(struct chunk_mesh *chunk_mesh);
 void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh);
-void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk);
+
+void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk *chunk);
 
 /******************
  * Chunk Renderer *

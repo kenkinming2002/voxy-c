@@ -1,13 +1,113 @@
 #include <voxy/renderer.h>
 #include <voxy/math.h>
-#include <voxy/cube.h>
 #include <voxy/gl.h>
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <limits.h>
 
 #define ARRAY_LENGTH(arr) (sizeof (arr) / sizeof (arr)[0])
+
+/**********************
+ * Chunk Mesh Builder *
+ **********************/
+void chunk_mesh_builder_init(struct chunk_mesh_builder *chunk_mesh_builder)
+{
+  chunk_mesh_builder->vertices        = NULL;
+  chunk_mesh_builder->vertex_count    = 0;
+  chunk_mesh_builder->vertex_capacity = 0;
+
+  chunk_mesh_builder->indices        = NULL;
+  chunk_mesh_builder->index_count    = 0;
+  chunk_mesh_builder->index_capacity = 0;
+}
+
+void chunk_mesh_builder_deinit(struct chunk_mesh_builder *chunk_mesh_builder)
+{
+  free(chunk_mesh_builder->vertices);
+  free(chunk_mesh_builder->indices);
+}
+
+void chunk_mesh_builder_reset(struct chunk_mesh_builder *chunk_mesh_builder)
+{
+  chunk_mesh_builder->vertex_count = 0;
+  chunk_mesh_builder->index_count  = 0;
+}
+
+void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_mesh_vertex vertex)
+{
+  if(chunk_mesh_builder->vertex_capacity == chunk_mesh_builder->vertex_count)
+  {
+    chunk_mesh_builder->vertex_capacity = chunk_mesh_builder->vertex_capacity != 0 ? chunk_mesh_builder->vertex_capacity * 2 : 1;
+    chunk_mesh_builder->vertices        = realloc(chunk_mesh_builder->vertices, chunk_mesh_builder->vertex_capacity * sizeof *chunk_mesh_builder->vertices);
+  }
+  chunk_mesh_builder->vertices[chunk_mesh_builder->vertex_count++] = vertex;
+}
+
+void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder, uint32_t index)
+{
+  if(chunk_mesh_builder->index_capacity == chunk_mesh_builder->index_count)
+  {
+    chunk_mesh_builder->index_capacity = chunk_mesh_builder->index_capacity != 0 ? chunk_mesh_builder->index_capacity * 2 : 1;
+    chunk_mesh_builder->indices        = realloc(chunk_mesh_builder->indices, chunk_mesh_builder->index_capacity * sizeof *chunk_mesh_builder->indices);
+  }
+  chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = index;
+}
+
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk *chunk, int z, int y, int x, int dz, int dy, int dx)
+{
+  int nz = z + dz;
+  int ny = y + dy;
+  int nx = x + dx;
+  if(nz >= 0 && nz < CHUNK_WIDTH)
+    if(ny >= 0 && ny < CHUNK_WIDTH)
+      if(nx >= 0 && nx < CHUNK_WIDTH)
+        if(chunk->tiles[nz][ny][nx].present)
+          return; // Occlusion
+
+  // Fancy way to compute vertex positions without just dumping a big table here
+  // Pray that the compiler will just inline everything (With -ffast-math probably)
+
+  struct vec3 normal = vec3(dx, dy, dz);
+  struct vec3 axis1  = vec3_dot(normal, vec3(0.0f, 0.0f, 1.0f)) == 0.0f ? vec3(0.0f, 0.0f, 1.0f) : vec3(1.0f, 0.0f, 0.0f);
+  struct vec3 axis2  = vec3_cross(normal, axis1);
+
+  const float multipliers[4][2] = {
+    {-0.5f, -0.5f},
+    {-0.5f,  0.5f},
+    { 0.5f, -0.5f},
+    { 0.5f,  0.5f},
+  };
+
+  for(unsigned i=0; i<4; ++i)
+  {
+    struct chunk_mesh_vertex vertex;
+    {
+      vertex.position = vec3_zero();
+
+      vertex.position = vec3_add  (vertex.position, vec3(chunk->x, chunk->y, chunk->z));
+      vertex.position = vec3_mul_s(vertex.position, CHUNK_WIDTH);
+      vertex.position = vec3_add  (vertex.position, vec3(x, y, z));
+
+      vertex.position = vec3_add(vertex.position, vec3(0.5f, 0.5f, 0.5f));
+      vertex.position = vec3_add(vertex.position, vec3_mul_s(normal, 0.5f));
+      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis1, multipliers[i][0]));
+      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis2, multipliers[i][1]));
+
+      vertex.color = chunk->tiles[z][y][x].color;
+    }
+    chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertex);
+  }
+
+  chunk_mesh_builder_push_index(chunk_mesh_builder, chunk_mesh_builder->vertex_count + 0);
+  chunk_mesh_builder_push_index(chunk_mesh_builder, chunk_mesh_builder->vertex_count + 1);
+  chunk_mesh_builder_push_index(chunk_mesh_builder, chunk_mesh_builder->vertex_count + 2);
+  chunk_mesh_builder_push_index(chunk_mesh_builder, chunk_mesh_builder->vertex_count + 2);
+  chunk_mesh_builder_push_index(chunk_mesh_builder, chunk_mesh_builder->vertex_count + 1);
+  chunk_mesh_builder_push_index(chunk_mesh_builder, chunk_mesh_builder->vertex_count + 3);
+}
+
 
 /***************
  * Chunk Mesh *
@@ -27,70 +127,37 @@ void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh)
   glDeleteBuffers(1, &chunk_mesh->ibo);
 }
 
-void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk)
+void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk *chunk)
 {
-  unsigned tile_count = 0;
-  for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
-    for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-      for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-        if(chunk->tiles[z][y][x].present)
-          ++tile_count;
-
-  struct vertex
-  {
-    struct vec3 position;
-    struct vec3 color;
-  };
-
-  struct vertex *vertices = malloc(tile_count * 24 * sizeof *vertices);
-  uint32_t      *indices  = malloc(tile_count * 36   * sizeof *indices);
-
-  unsigned i = 0;
-  for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
-    for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-      for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+  chunk_mesh_builder_reset(chunk_mesh_builder);
+  for(int z = 0; z<CHUNK_WIDTH; ++z)
+    for(int y = 0; y<CHUNK_WIDTH; ++y)
+      for(int x = 0; x<CHUNK_WIDTH; ++x)
         if(chunk->tiles[z][y][x].present)
         {
-          struct vec3 center = vec3_zero();
-          center = vec3_add(center, vec3(chunk->x, chunk->y, chunk->z));
-          center = vec3_mul_s(center, CHUNK_WIDTH);
-          center = vec3_add(center, vec3(x, y, z));
-
-          struct vec3 cube_positions[24];
-          struct vec3 cube_normals[24];
-          uint32_t    cube_indices[36];
-          cube_emit(center, 24 * i, cube_positions, cube_normals, cube_indices);
-
-          for(unsigned j=0; j<24; ++j)
-          {
-            vertices[24 * i + j].position = cube_positions[j];
-            vertices[24 * i + j].color    = chunk->tiles[z][y][x].color;
-          }
-
-          for(unsigned j=0; j<36; ++j)
-            indices[36 * i + j] = cube_indices[j];
-
-          ++i;
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk, z, y, x, -1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk, z, y, x,  1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk, z, y, x,  0, -1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk, z, y, x,  0,  1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk, z, y, x,  0,  0, -1);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk, z, y, x,  0,  0,  1);
         }
 
   glBindVertexArray(chunk_mesh->vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, chunk_mesh->vbo);
-  glBufferData(GL_ARRAY_BUFFER, tile_count * 24 * sizeof *vertices, vertices, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, chunk_mesh_builder->vertex_count * sizeof *chunk_mesh_builder->vertices, chunk_mesh_builder->vertices, GL_DYNAMIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh->ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, tile_count * 36 * sizeof *indices, indices, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh_builder->index_count * sizeof *chunk_mesh_builder->indices, chunk_mesh_builder->indices, GL_DYNAMIC_DRAW);
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, position));
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, color));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, position));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, color));
 
-  chunk_mesh->count = tile_count * 36;
-
-  free(vertices);
-  free(indices);
+  chunk_mesh->count = chunk_mesh_builder->index_count;
 }
 
 /******************
@@ -125,6 +192,7 @@ void chunk_renderer_begin(struct chunk_renderer *chunk_renderer, struct camera *
 void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_mesh *chunk_mesh)
 {
   (void)chunk_renderer;
+
   glBindVertexArray(chunk_mesh->vao);
   glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);
 }
@@ -188,19 +256,22 @@ struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int z, 
 
 void renderer_update(struct renderer *renderer, struct world *world)
 {
+  struct chunk_mesh_builder chunk_mesh_builder;
+  chunk_mesh_builder_init(&chunk_mesh_builder);
   for(size_t i=0; i<world->chunk_count; ++i)
   {
     struct chunk *chunk = &world->chunks[i];
-    if(!chunk->remesh)
-      continue;
-    chunk->remesh = false;
+    if(chunk->remesh)
+    {
+      struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->z, chunk->y, chunk->x);
+      if(!chunk_mesh)
+        chunk_mesh = renderer_chunk_mesh_add(renderer, chunk->z, chunk->y, chunk->x);
 
-    struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->z, chunk->y, chunk->x);
-    if(!chunk_mesh)
-      chunk_mesh = renderer_chunk_mesh_add(renderer, chunk->z, chunk->y, chunk->x);
-
-    chunk_mesh_update(chunk_mesh, chunk);
+      chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, chunk);
+      chunk->remesh = false;
+    }
   }
+  chunk_mesh_builder_deinit(&chunk_mesh_builder);
 }
 
 void renderer_render(struct renderer *renderer, struct camera *camera)

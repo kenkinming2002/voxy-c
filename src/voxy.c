@@ -84,9 +84,9 @@ static void application_update(struct application *application)
   window_get_mouse_motion(&application->window, &rotation.yaw, &rotation.pitch);
   window_get_keyboard_motion(&application->window, &translation.x, &translation.y, &translation.z);
 
-  rotation    = vec3_mul(rotation, PAN_SPEED);
+  rotation    = vec3_mul_s(rotation, PAN_SPEED);
   translation = vec3_normalize(translation);
-  translation = vec3_mul(translation, MOVE_SPEED);
+  translation = vec3_mul_s(translation, MOVE_SPEED);
 
   transform_rotate(&application->camera.transform, rotation);
   transform_local_translate(&application->camera.transform, translation);

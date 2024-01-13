@@ -1,5 +1,6 @@
 #include <voxy/renderer.h>
 #include <voxy/math.h>
+#include <voxy/cube.h>
 #include <voxy/gl.h>
 
 #include <stdint.h>
@@ -41,8 +42,8 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk)
     struct vec3 color;
   };
 
-  struct vertex *vertices = malloc(tile_count * ARRAY_LENGTH(CUBE_POSITIONS) * sizeof *vertices);
-  uint32_t      *indices  = malloc(tile_count * ARRAY_LENGTH(CUBE_INDICES)   * sizeof *indices);
+  struct vertex *vertices = malloc(tile_count * 24 * sizeof *vertices);
+  uint32_t      *indices  = malloc(tile_count * 36   * sizeof *indices);
 
   unsigned i = 0;
   for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
@@ -50,19 +51,24 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk)
       for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
         if(chunk->tiles[z][y][x].present)
         {
-          struct vec3 anchor = vec3_zero();
-          anchor = vec3_add(anchor, vec3(chunk->x, chunk->y, chunk->z));
-          anchor = vec3_mul(anchor, CHUNK_WIDTH);
-          anchor = vec3_add(anchor, vec3(x, y, z));
+          struct vec3 center = vec3_zero();
+          center = vec3_add(center, vec3(chunk->x, chunk->y, chunk->z));
+          center = vec3_mul_s(center, CHUNK_WIDTH);
+          center = vec3_add(center, vec3(x, y, z));
 
-          for(unsigned j=0; j<ARRAY_LENGTH(CUBE_POSITIONS); ++j)
+          struct vec3 cube_positions[24];
+          struct vec3 cube_normals[24];
+          uint32_t    cube_indices[36];
+          cube_emit(center, 24 * i, cube_positions, cube_normals, cube_indices);
+
+          for(unsigned j=0; j<24; ++j)
           {
-            vertices[i * ARRAY_LENGTH(CUBE_POSITIONS) + j].position = vec3_add(anchor, CUBE_POSITIONS[j]);
-            vertices[i * ARRAY_LENGTH(CUBE_POSITIONS) + j].color    = chunk->tiles[z][y][x].color;
+            vertices[24 * i + j].position = cube_positions[j];
+            vertices[24 * i + j].color    = chunk->tiles[z][y][x].color;
           }
 
-          for(unsigned j=0; j<ARRAY_LENGTH(CUBE_INDICES); ++j)
-            indices[i * ARRAY_LENGTH(CUBE_INDICES) + j] = i * ARRAY_LENGTH(CUBE_POSITIONS) + CUBE_INDICES[j];
+          for(unsigned j=0; j<36; ++j)
+            indices[36 * i + j] = cube_indices[j];
 
           ++i;
         }
@@ -70,10 +76,10 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk)
   glBindVertexArray(chunk_mesh->vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, chunk_mesh->vbo);
-  glBufferData(GL_ARRAY_BUFFER, tile_count * ARRAY_LENGTH(CUBE_POSITIONS) * sizeof *vertices, vertices, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, tile_count * 24 * sizeof *vertices, vertices, GL_DYNAMIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh->ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, tile_count * ARRAY_LENGTH(CUBE_INDICES) * sizeof *indices, indices, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, tile_count * 36 * sizeof *indices, indices, GL_DYNAMIC_DRAW);
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
@@ -81,7 +87,7 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk *chunk)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, position));
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, color));
 
-  chunk_mesh->count = tile_count * ARRAY_LENGTH(CUBE_INDICES);
+  chunk_mesh->count = tile_count * 36;
 
   free(vertices);
   free(indices);
@@ -156,14 +162,16 @@ int skybox_renderer_init(struct skybox_renderer *skybox_renderer)
     goto error;
 
   // FIXME: We do not need that much vertices since we do not have normals
-  struct vec3 positions[ARRAY_LENGTH(CUBE_POSITIONS)];
-  uint8_t     indices  [ARRAY_LENGTH(CUBE_INDICES)];
+  static struct vec3 positions[24];
+  static uint8_t     indices  [36];
 
-  for(unsigned i=0; i<ARRAY_LENGTH(CUBE_POSITIONS); ++i)
-    positions[i] = vec3_sub(vec3_mul(CUBE_POSITIONS[i], 2.0f), vec3(1.0f, 1.0f, 1.0f));
+  static struct vec3 cube_positions[24];
+  static struct vec3 cube_normals  [24];
+  static uint32_t    cube_indices  [36];
+  cube_emit(vec3_zero(), 0, cube_positions, cube_normals, cube_indices);
 
-  for(unsigned i=0; i<ARRAY_LENGTH(CUBE_INDICES); ++i)
-    indices[i] = CUBE_INDICES[i];
+  for(unsigned i=0; i<24; ++i) positions[i] = vec3_mul_s(cube_positions[i], 2.0f);
+  for(unsigned i=0; i<36; ++i) indices[i] = cube_indices[i];
 
   glGenVertexArrays(1, &skybox_renderer->skybox_vao);
   glGenBuffers(1, &skybox_renderer->skybox_vbo);

@@ -8,9 +8,9 @@
 static float get_height(seed_t seed, int y, int x)
 {
   float value = 0.0f;
-  value += perlin2(seed, vec2_div(vec2(x, y), 15.0f)) * 30.0f + 30.0f;
-  value += perlin2(seed, vec2_div(vec2(x, y), 7.0f))  * 15.0f + 10.0f;
-  value += perlin2(seed, vec2_div(vec2(x, y), 3.0f))  * 3.0f  + 3.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 15.0f)) * 30.0f + 30.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 7.0f))  * 15.0f + 10.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 3.0f))  * 3.0f  + 3.0f;
   return value;
 }
 

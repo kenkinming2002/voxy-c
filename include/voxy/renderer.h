@@ -3,7 +3,6 @@
 
 #include <voxy/world.h>
 #include <voxy/camera.h>
-#include <voxy/cube.h>
 
 #include <glad/glad.h>
 #include <stddef.h>

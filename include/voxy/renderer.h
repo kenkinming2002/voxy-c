@@ -40,41 +40,11 @@ void chunk_renderer_deinit(struct chunk_renderer *chunk_renderer);
 void chunk_renderer_begin(struct chunk_renderer *chunk_renderer, struct camera *camera);
 void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_mesh *chunk_mesh);
 
-/**********
- * Skybox *
- **********/
-struct skybox
-{
-  GLuint skybox_texture;
-};
-
-int skybox_load(struct skybox *skybox, const char *filepaths[6]);
-void skybox_unload(struct skybox *skybox);
-
-/*******************
- * Skybox Renderer *
- *******************/
-struct skybox_renderer
-{
-  GLuint skybox_program;
-  GLuint skybox_vao;
-  GLuint skybox_vbo;
-  GLuint skybox_ibo;
-};
-
-int skybox_renderer_init(struct skybox_renderer *skybox_renderer);
-void skybox_renderer_deinit(struct skybox_renderer *skybox_renderer);
-
-void skybox_renderer_render(struct skybox_renderer *skybox_renderer, struct camera *camera, struct skybox *skybox);
-
-/*******************
- * Skybox Renderer *
- *******************/
+/************
+ * Renderer *
+ ************/
 struct renderer
 {
-  struct skybox_renderer skybox_renderer;
-  struct skybox          skybox;
-
   struct chunk_renderer  chunk_renderer;
   struct chunk_mesh     *chunk_meshes;
   size_t                 chunk_mesh_count;

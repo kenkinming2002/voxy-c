@@ -129,115 +129,12 @@ void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_m
   glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);
 }
 
-/**********
- * Skybox *
- **********/
-int skybox_load(struct skybox *skybox, const char *filepaths[6])
-{
-  if((skybox->skybox_texture = gl_cube_map_texture_load(filepaths)) == 0)
-    goto error;
-
-  return 0;
-
-error:
-  return -1;
-}
-
-void skybox_unload(struct skybox *skybox)
-{
-  glDeleteTextures(1, &skybox->skybox_texture);
-}
-
-/*******************
- * Skybox Renderer *
- *******************/
-int skybox_renderer_init(struct skybox_renderer *skybox_renderer)
-{
-  skybox_renderer->skybox_program = 0;
-  skybox_renderer->skybox_vao     = 0;
-  skybox_renderer->skybox_vbo     = 0;
-  skybox_renderer->skybox_ibo     = 0;
-
-  if((skybox_renderer->skybox_program = gl_program_load("assets/skybox.vert", "assets/skybox.frag")) == 0)
-    goto error;
-
-  // FIXME: We do not need that much vertices since we do not have normals
-  static struct vec3 positions[24];
-  static uint8_t     indices  [36];
-
-  static struct vec3 cube_positions[24];
-  static struct vec3 cube_normals  [24];
-  static uint32_t    cube_indices  [36];
-  cube_emit(vec3_zero(), 0, cube_positions, cube_normals, cube_indices);
-
-  for(unsigned i=0; i<24; ++i) positions[i] = vec3_mul_s(cube_positions[i], 2.0f);
-  for(unsigned i=0; i<36; ++i) indices[i] = cube_indices[i];
-
-  glGenVertexArrays(1, &skybox_renderer->skybox_vao);
-  glGenBuffers(1, &skybox_renderer->skybox_vbo);
-  glGenBuffers(1, &skybox_renderer->skybox_ibo);
-
-  glBindVertexArray(skybox_renderer->skybox_vao);
-
-  glBindBuffer(GL_ARRAY_BUFFER, skybox_renderer->skybox_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof positions, positions, GL_DYNAMIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skybox_renderer->skybox_ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indices, indices, GL_DYNAMIC_DRAW);
-
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vec3), 0);
-
-  return 0;
-
-error:
-  if(skybox_renderer->skybox_program != 0) glDeleteProgram(skybox_renderer->skybox_program);
-  if(skybox_renderer->skybox_vao     != 0) glDeleteBuffers(1, &skybox_renderer->skybox_vao);
-  if(skybox_renderer->skybox_vbo     != 0) glDeleteBuffers(1, &skybox_renderer->skybox_vbo);
-  if(skybox_renderer->skybox_ibo     != 0) glDeleteBuffers(1, &skybox_renderer->skybox_ibo);
-  return -1;
-}
-
-void skybox_renderer_deinit(struct skybox_renderer *skybox_renderer)
-{
-  glDeleteProgram(skybox_renderer->skybox_program);
-  glDeleteBuffers(1, &skybox_renderer->skybox_vao);
-  glDeleteBuffers(1, &skybox_renderer->skybox_vbo);
-  glDeleteBuffers(1, &skybox_renderer->skybox_ibo);
-}
-
-void skybox_renderer_render(struct skybox_renderer *skybox_renderer, struct camera *camera, struct skybox *skybox)
-{
-  struct mat4 RP = mat4_identity();
-  RP = mat4_mul(camera_rotation_matrix(camera),   RP);
-  RP = mat4_mul(camera_projection_matrix(camera), RP);
-
-  glDepthFunc(GL_LEQUAL);
-    glUseProgram(skybox_renderer->skybox_program);
-    glUniformMatrix4fv(glGetUniformLocation(skybox_renderer->skybox_program, "RP"), 1, GL_TRUE, (const float *)&RP);
-    glBindVertexArray(skybox_renderer->skybox_vao);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->skybox_texture);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, 0);
-  glDepthFunc(GL_LESS);
-}
-
 /************
  * Renderer *
  ************/
 int renderer_init(struct renderer *renderer)
 {
-  bool skybox_renderer_initialized = false;
-  bool skybox_loaded               = false;
   bool chunk_renderer_initialized  = false;
-
-  if(skybox_renderer_init(&renderer->skybox_renderer) != 0)
-    goto error;
-  skybox_renderer_initialized = true;
-
-  if(skybox_load(&renderer->skybox, (const char *[]){"assets/skybox/right.jpg", "assets/skybox/left.jpg", "assets/skybox/top.jpg", "assets/skybox/bottom.jpg", "assets/skybox/front.jpg", "assets/skybox/back.jpg"}) != 0)
-    goto error;
-  skybox_loaded = true;
-
   if(chunk_renderer_init(&renderer->chunk_renderer) != 0)
     goto error;
   chunk_renderer_initialized = true;
@@ -248,12 +145,6 @@ int renderer_init(struct renderer *renderer)
   return 0;
 
 error:
-  if(skybox_renderer_initialized)
-    skybox_renderer_deinit(&renderer->skybox_renderer);
-
-  if(skybox_loaded)
-    skybox_unload(&renderer->skybox);
-
   if(chunk_renderer_initialized)
     chunk_renderer_deinit(&renderer->chunk_renderer);
 
@@ -262,10 +153,7 @@ error:
 
 void renderer_deinit(struct renderer *renderer)
 {
-  skybox_renderer_deinit(&renderer->skybox_renderer);
-  skybox_unload(&renderer->skybox);
   chunk_renderer_deinit(&renderer->chunk_renderer);
-
   for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
     chunk_mesh_deinit(&renderer->chunk_meshes[i]);
   free(renderer->chunk_meshes);
@@ -321,7 +209,6 @@ void renderer_render(struct renderer *renderer, struct camera *camera)
     chunk_renderer_begin(&renderer->chunk_renderer, camera);
     for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
       chunk_renderer_render(&renderer->chunk_renderer, &renderer->chunk_meshes[i]);
-    skybox_renderer_render(&renderer->skybox_renderer, camera, &renderer->skybox);
   glDisable(GL_DEPTH_TEST);
 }
 

@@ -7,6 +7,26 @@
 #include <glad/glad.h>
 #include <stddef.h>
 
+/*******************
+ * Chunk Adjacency *
+ *******************/
+struct chunk_adjacency
+{
+  struct chunk *chunk;
+
+  struct chunk *bottom;
+  struct chunk *top;
+
+  struct chunk *back;
+  struct chunk *front;
+
+  struct chunk *left;
+  struct chunk *right;
+};
+
+void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk);
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int z, int y, int x);
+
 /**********************
  * Chunk Mesh Builder *
  **********************/
@@ -33,7 +53,7 @@ void chunk_mesh_builder_deinit(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_reset(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *builder, struct chunk_mesh_vertex vertex);
 void chunk_mesh_builder_push_index(struct chunk_mesh_builder *builder, uint32_t index);
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk *chunk, int z, int y, int x, int dz, int dy, int dx);
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int z, int y, int x, int dz, int dy, int dx);
 
 /***************
  * Chunk Mesh *
@@ -53,7 +73,7 @@ struct chunk_mesh
 int chunk_mesh_init(struct chunk_mesh *chunk_mesh);
 void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh);
 
-void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk *chunk);
+void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency);
 
 /******************
  * Chunk Renderer *

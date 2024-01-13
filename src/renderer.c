@@ -89,7 +89,7 @@ void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder
 void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int z, int y, int x, int dz, int dy, int dx)
 {
   struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, z+dz, y+dy, x+dx);
-  if(ntile && ntile->present)
+  if(ntile && ntile->id != TILE_ID_EMPTY)
     return; // Occlusion
 
   // Fancy way to compute vertex positions without just dumping a big table here
@@ -121,7 +121,33 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
       vertex.position = vec3_add(vertex.position, vec3_mul_s(axis2, multipliers[i][0]));
       vertex.position = vec3_add(vertex.position, vec3_mul_s(axis1, multipliers[i][1]));
 
-      vertex.color = chunk_adjacency->chunk->tiles[z][y][x].color;
+      switch(i)
+      {
+      case 0: vertex.texture_coords = vec2(0.0f, 0.0f); break;
+      case 1: vertex.texture_coords = vec2(0.0f, 1.0f); break;
+      case 2: vertex.texture_coords = vec2(1.0f, 0.0f); break;
+      case 3: vertex.texture_coords = vec2(1.0f, 1.0f); break;
+      }
+
+      // FIXME: Unhardcode them
+      switch(chunk_adjacency->chunk->tiles[z][y][x].id)
+      {
+      case TILE_ID_GRASS:
+        switch(dz)
+        {
+        case -1: vertex.texture_index = 0; break;
+        case  0: vertex.texture_index = 1; break;
+        case  1: vertex.texture_index = 2; break;
+        default:
+          assert(0 && "Unreachable");
+        }
+        break;
+      case TILE_ID_STONE:
+        vertex.texture_index = 3;
+        break;
+      default:
+        assert(0 && "Unreachable");
+      }
     }
     chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertex);
   }
@@ -159,7 +185,7 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
-        if(chunk_adjacency->chunk->tiles[z][y][x].present)
+        if(chunk_adjacency->chunk->tiles[z][y][x].id != TILE_ID_EMPTY)
         {
           chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x, -1,  0,  0);
           chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x,  1,  0,  0);
@@ -179,9 +205,11 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, position));
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, color));
+  glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, position));
+  glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_coords));
+  glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_index));
 
   chunk_mesh->count = chunk_mesh_builder->index_count;
 }
@@ -191,18 +219,37 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
  ******************/
 int chunk_renderer_init(struct chunk_renderer *chunk_renderer)
 {
+  chunk_renderer->chunk_program       = 0;
+  chunk_renderer->block_texture_array = 0;
+
   if((chunk_renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
+    goto error;
+
+  const char *filepaths[] = {
+    "assets/grass_bottom.png",
+    "assets/grass_side.png",
+    "assets/grass_top.png",
+    "assets/stone.png",
+  };
+  if((chunk_renderer->block_texture_array = gl_array_texture_load(sizeof filepaths / sizeof filepaths[0], filepaths)) == 0)
     goto error;
 
   return 0;
 
 error:
+  if(chunk_renderer->chunk_program)
+    glDeleteProgram(chunk_renderer->chunk_program);
+
+  if(chunk_renderer->block_texture_array)
+    glDeleteTextures(1, &chunk_renderer->block_texture_array);
+
   return -1;
 }
 
 void chunk_renderer_deinit(struct chunk_renderer *chunk_renderer)
 {
   glDeleteProgram(chunk_renderer->chunk_program);
+  glDeleteTextures(1, &chunk_renderer->block_texture_array);
 }
 
 void chunk_renderer_begin(struct chunk_renderer *chunk_renderer, struct camera *camera)
@@ -220,6 +267,7 @@ void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_m
   (void)chunk_renderer;
 
   glBindVertexArray(chunk_mesh->vao);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, chunk_renderer->block_texture_array);
   glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);
 }
 

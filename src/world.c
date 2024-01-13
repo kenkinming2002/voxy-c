@@ -34,29 +34,11 @@ void chunk_init(struct chunk *chunk, seed_t seed)
       {
         int real_z = chunk->z * CHUNK_WIDTH + (int)z;
         if(real_z <= heights[y][x])
-        {
-          chunk->tiles[z][y][x].present = true;
-          chunk->tiles[z][y][x].color.r = (float)rand() / (float)RAND_MAX;
-          chunk->tiles[z][y][x].color.g = (float)rand() / (float)RAND_MAX;
-          chunk->tiles[z][y][x].color.b = (float)rand() / (float)RAND_MAX;
-        }
+          chunk->tiles[z][y][x].id = TILE_ID_STONE;
+        else if(real_z <= heights[y][x] + 1.0f)
+          chunk->tiles[z][y][x].id = TILE_ID_GRASS;
         else
-          chunk->tiles[z][y][x].present = false;
-      }
-
-  chunk->remesh = true;
-}
-
-void chunk_randomize(struct chunk *chunk)
-{
-  for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
-    for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-      for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-      {
-        chunk->tiles[z][y][x].present = rand() % 2 == 0;
-        chunk->tiles[z][y][x].color.r = (float)rand() / (float)RAND_MAX;
-        chunk->tiles[z][y][x].color.g = (float)rand() / (float)RAND_MAX;
-        chunk->tiles[z][y][x].color.b = (float)rand() / (float)RAND_MAX;
+          chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
       }
 
   chunk->remesh = true;

@@ -1,7 +1,10 @@
 #include <voxy/gl.h>
 
 #include <stb_image.h>
+
+#include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 static char *read_file(const char *filepath)
 {
@@ -158,3 +161,51 @@ GLuint gl_cube_map_texture_load(const char *filepaths[6])
   return cube_map;
 }
 
+GLuint gl_array_texture_load(size_t count, const char *filepaths[count])
+{
+  stbi_set_flip_vertically_on_load(1);
+
+  size_t width, height;
+  unsigned char *texels = NULL;
+  for(size_t i=0; i<count; ++i)
+  {
+    int x, y, n;
+    unsigned char *data = stbi_load(filepaths[i], &x, &y, &n, 3);
+    if(!data)
+    {
+      fprintf(stderr, "ERROR: Failed to load image for array texture from %s: %s\n", filepaths[i], stbi_failure_reason());
+      free(texels);
+      return 0;
+    }
+
+    if(!texels)
+    {
+      width  = x;
+      height = y;
+      texels = malloc(count * width * height * 3);
+    }
+    else if((size_t)x != width || (size_t)y != height)
+    {
+      fprintf(stderr, "ERROR: Array texture must be comprised of images of same dimension: Expected %zux%zu: Got %dx%d from %s\n", width, height, x, y, filepaths[i]);
+      stbi_image_free(data);
+      free(texels);
+      return 0;
+    }
+
+    memcpy(&texels[i * width * height * 3], data, width * height * 3);
+    stbi_image_free(data);
+  }
+
+  GLuint cube_map;
+  {
+    glGenTextures(1, &cube_map);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, cube_map);
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, width, height, count, 0, GL_RGB, GL_UNSIGNED_BYTE, texels);
+  }
+  return cube_map;
+}

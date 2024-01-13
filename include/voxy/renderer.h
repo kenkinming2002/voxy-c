@@ -33,7 +33,8 @@ struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency
 struct chunk_mesh_vertex
 {
   struct vec3 position;
-  struct vec3 color;
+  struct vec2 texture_coords;
+  uint32_t    texture_index;
 };
 
 struct chunk_mesh_builder
@@ -81,6 +82,7 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
 struct chunk_renderer
 {
   GLuint chunk_program;
+  GLuint block_texture_array;
 };
 
 int chunk_renderer_init(struct chunk_renderer *chunk_renderer);

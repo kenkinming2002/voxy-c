@@ -9,13 +9,16 @@
 
 #define CHUNK_WIDTH 16
 
+#define TILE_ID_EMPTY 0
+#define TILE_ID_GRASS 1
+#define TILE_ID_STONE 2
+
 /********
  * Tile *
  ********/
 struct tile
 {
-  bool present;
-  struct vec3 color;
+  uint8_t id;
 };
 
 /*********
@@ -33,7 +36,6 @@ struct chunk
 };
 
 void chunk_init(struct chunk *chunk, seed_t seed);
-void chunk_randomize(struct chunk *chunk);
 
 /*********
  * World *

@@ -19,14 +19,21 @@ void chunk_init(struct chunk *chunk, seed_t seed)
   if(chunk->z < 0)
     return; // Fast-path
 
+  float heights[CHUNK_WIDTH][CHUNK_WIDTH];
+  for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
+    for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+    {
+      int real_y = chunk->y * CHUNK_WIDTH + (int)y;
+      int real_x = chunk->x * CHUNK_WIDTH + (int)x;
+      heights[y][x] = get_height(seed, real_y, real_x);
+    }
+
   for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
     for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
       for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
       {
         int real_z = chunk->z * CHUNK_WIDTH + (int)z;
-        int real_y = chunk->y * CHUNK_WIDTH + (int)y;
-        int real_x = chunk->x * CHUNK_WIDTH + (int)x;
-        if(real_z <= get_height(seed, real_y, real_x))
+        if(real_z <= heights[y][x])
         {
           chunk->tiles[z][y][x].present = true;
           chunk->tiles[z][y][x].color.r = (float)rand() / (float)RAND_MAX;

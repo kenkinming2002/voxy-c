@@ -104,61 +104,61 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
   // Pray that the compiler will just inline everything (With -ffast-math probably)
 
   struct vec3 normal = vec3(dx, dy, dz);
-  struct vec3 axis1  = vec3_dot(normal, vec3(0.0f, 0.0f, 1.0f)) == 0.0f ? vec3(0.0f, 0.0f, 1.0f) : vec3(1.0f, 0.0f, 0.0f);
-  struct vec3 axis2  = vec3_cross(normal, axis1);
+  struct vec3 axis2  = vec3_dot(normal, vec3(0.0f, 0.0f, 1.0f)) == 0.0f ? vec3(0.0f, 0.0f, 1.0f) : vec3(1.0f, 0.0f, 0.0f);
+  struct vec3 axis1  = vec3_cross(normal, axis2);
 
-  const float multipliers[4][2] = {
-    {-0.5f, -0.5f},
-    {-0.5f,  0.5f},
-    { 0.5f, -0.5f},
-    { 0.5f,  0.5f},
-  };
+  struct chunk_mesh_vertex vertices[4];
 
-  for(unsigned i=0; i<4; ++i)
+  // 1: Position
+  struct vec3 center = vec3_zero();;
+  center = vec3_add  (center, vec3(chunk_adjacency->chunk->x, chunk_adjacency->chunk->y, chunk_adjacency->chunk->z));
+  center = vec3_mul_s(center, CHUNK_WIDTH);
+  center = vec3_add  (center, vec3(x, y, z));
+  center = vec3_add  (center, vec3(0.5f, 0.5f, 0.5f));
+  center = vec3_add  (center, vec3_mul_s(normal, 0.5f));
+
+  vertices[0].position = vec3_add(center, vec3_add(vec3_mul_s(axis1, -0.5f), vec3_mul_s(axis2, -0.5f)));
+  vertices[1].position = vec3_add(center, vec3_add(vec3_mul_s(axis1, -0.5f), vec3_mul_s(axis2,  0.5f)));
+  vertices[2].position = vec3_add(center, vec3_add(vec3_mul_s(axis1,  0.5f), vec3_mul_s(axis2, -0.5f)));
+  vertices[3].position = vec3_add(center, vec3_add(vec3_mul_s(axis1,  0.5f), vec3_mul_s(axis2,  0.5f)));
+
+  // 2: Texture Coords
+  vertices[0].texture_coords = vec2(0.0f, 0.0f);
+  vertices[1].texture_coords = vec2(0.0f, 1.0f);
+  vertices[2].texture_coords = vec2(1.0f, 0.0f);
+  vertices[3].texture_coords = vec2(1.0f, 1.0f);
+
+  // 3: Texture Index
+  uint32_t texture_index;
+  switch(chunk_adjacency->chunk->tiles[z][y][x].id)
   {
-    struct chunk_mesh_vertex vertex;
+  case TILE_ID_GRASS:
+    switch(dz)
     {
-      vertex.position = vec3_zero();
-
-      vertex.position = vec3_add  (vertex.position, vec3(chunk_adjacency->chunk->x, chunk_adjacency->chunk->y, chunk_adjacency->chunk->z));
-      vertex.position = vec3_mul_s(vertex.position, CHUNK_WIDTH);
-      vertex.position = vec3_add  (vertex.position, vec3(x, y, z));
-
-      vertex.position = vec3_add(vertex.position, vec3(0.5f, 0.5f, 0.5f));
-      vertex.position = vec3_add(vertex.position, vec3_mul_s(normal, 0.5f));
-      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis2, multipliers[i][0]));
-      vertex.position = vec3_add(vertex.position, vec3_mul_s(axis1, multipliers[i][1]));
-
-      switch(i)
-      {
-      case 0: vertex.texture_coords = vec2(0.0f, 0.0f); break;
-      case 1: vertex.texture_coords = vec2(0.0f, 1.0f); break;
-      case 2: vertex.texture_coords = vec2(1.0f, 0.0f); break;
-      case 3: vertex.texture_coords = vec2(1.0f, 1.0f); break;
-      }
-
-      // FIXME: Unhardcode them
-      switch(chunk_adjacency->chunk->tiles[z][y][x].id)
-      {
-      case TILE_ID_GRASS:
-        switch(dz)
-        {
-        case -1: vertex.texture_index = 0; break;
-        case  0: vertex.texture_index = 1; break;
-        case  1: vertex.texture_index = 2; break;
-        default:
-          assert(0 && "Unreachable");
-        }
-        break;
-      case TILE_ID_STONE:
-        vertex.texture_index = 3;
-        break;
-      default:
-        assert(0 && "Unreachable");
-      }
+    case -1: texture_index = 0; break;
+    case  0: texture_index = 1; break;
+    case  1: texture_index = 2; break;
+    default:
+      assert(0 && "Unreachable");
     }
-    chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertex);
+    break;
+  case TILE_ID_STONE:
+    texture_index = 3;
+    break;
+  default:
+    assert(0 && "Unreachable");
   }
+
+  vertices[0].texture_index = texture_index;
+  vertices[1].texture_index = texture_index;
+  vertices[2].texture_index = texture_index;
+  vertices[3].texture_index = texture_index;
+
+  // 4: Push
+  chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertices[0]);
+  chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertices[1]);
+  chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertices[2]);
+  chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertices[3]);
 }
 
 

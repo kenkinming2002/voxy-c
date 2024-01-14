@@ -1,3 +1,4 @@
-/voxy
+/voxy/voxy
+/resource_pack/resource_pack.so
 *.d
 *.o

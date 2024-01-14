@@ -1,6 +1,6 @@
-#include <voxy/gl.h>
+#include "gl.h"
 
-#include <stb_image.h>
+#include "stb_image.h"
 
 #include <assert.h>
 #include <errno.h>

@@ -1,11 +1,30 @@
 #ifndef VOXY_RENDERER_H
 #define VOXY_RENDERER_H
 
-#include <voxy/world.h>
-#include <voxy/camera.h>
+#include <voxy/resource_pack.h>
 
-#include <glad/glad.h>
+#include "camera.h"
+#include "glad/glad.h"
+#include "world.h"
+
 #include <stddef.h>
+
+/*****************
+ * Resource Pack *
+ *****************/
+struct resource_pack
+{
+  void *handle;
+
+  const struct block_info         *block_infos;
+  const struct block_texture_info *block_texture_infos;
+
+  size_t block_info_count;
+  size_t block_texture_info_count;
+};
+
+int resource_pack_load(struct resource_pack *resource_pack, const char *filepath);
+void resource_pack_unload(struct resource_pack *resource_pack);
 
 /*******************
  * Chunk Adjacency *
@@ -54,7 +73,7 @@ void chunk_mesh_builder_deinit(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_reset(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *builder, struct chunk_mesh_vertex vertex);
 void chunk_mesh_builder_push_index(struct chunk_mesh_builder *builder, uint32_t index);
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz);
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz);
 
 /***************
  * Chunk Mesh *
@@ -74,15 +93,17 @@ struct chunk_mesh
 
 void chunk_mesh_init(struct chunk_mesh *chunk_mesh);
 void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh);
-void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency);
+void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency);
 
 /************
  * Renderer *
  ************/
 struct renderer
 {
-  GLuint             chunk_program;
-  GLuint             chunk_block_texture_array;
+  struct resource_pack resource_pack;
+
+  GLuint chunk_program;
+  GLuint chunk_block_texture_array;
 
   struct chunk_mesh **chunk_meshes;
   size_t              chunk_mesh_capacity;

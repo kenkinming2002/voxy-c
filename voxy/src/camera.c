@@ -1,4 +1,4 @@
-#include <voxy/camera.h>
+#include "camera.h"
 
 #include <math.h>
 

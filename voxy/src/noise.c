@@ -1,4 +1,4 @@
-#include <voxy/noise.h>
+#include "noise.h"
 
 #include <math.h>
 

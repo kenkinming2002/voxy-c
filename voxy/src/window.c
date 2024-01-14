@@ -1,4 +1,4 @@
-#include <voxy/window.h>
+#include "window.h"
 
 #include <stdio.h>
 #include <stdbool.h>

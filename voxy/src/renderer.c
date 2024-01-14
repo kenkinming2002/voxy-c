@@ -1,12 +1,70 @@
-#include <voxy/renderer.h>
-#include <voxy/math.h>
-#include <voxy/gl.h>
+#include "renderer.h"
+
+#include "lin.h"
+#include "gl.h"
 
 #include <assert.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <errno.h>
 #include <limits.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <dlfcn.h>
+
+/*****************
+ * Resource Pack *
+ *****************/
+int resource_pack_load(struct resource_pack *resource_pack, const char *filepath)
+{
+  size_t *value;
+
+  if(!(resource_pack->handle = dlopen(filepath, RTLD_LAZY)))
+  {
+    fprintf(stderr, "ERROR: Failed to load resource pack from %s: %s\n", filepath, strerror(errno));
+    goto error;
+  }
+
+  if(!(resource_pack->block_infos = dlsym(resource_pack->handle, "block_infos")))
+  {
+    fprintf(stderr, "ERROR: Missing symbol block_infos from resource pack %s\n", filepath);
+    goto error;
+  }
+
+  if(!(resource_pack->block_texture_infos = dlsym(resource_pack->handle, "block_texture_infos")))
+  {
+    fprintf(stderr, "ERROR: Missing symbol block_texture_infos from resource pack %s\n", filepath);
+    goto error;
+  }
+
+  if(!(value = dlsym(resource_pack->handle, "block_info_count")))
+  {
+    fprintf(stderr, "ERROR: Missing symbol block_info_count from resource pack %s\n", filepath);
+    goto error;
+  }
+  resource_pack->block_info_count = *value;
+
+  if(!(value = dlsym(resource_pack->handle, "block_texture_info_count")))
+  {
+    fprintf(stderr, "ERROR: Missing symbol block_texture_info_count from resource pack %s\n", filepath);
+    goto error;
+  }
+  resource_pack->block_texture_info_count = *value;
+
+  return 0;
+
+error:
+  if(resource_pack->handle)
+    dlclose(resource_pack->handle);
+
+  return -1;
+}
+
+void resource_pack_unload(struct resource_pack *resource_pack)
+{
+  dlclose(resource_pack->handle);
+}
 
 /*******************
  * Chunk Adjacency *
@@ -87,7 +145,7 @@ void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder
   chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = index;
 }
 
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz)
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz)
 {
   struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, x+dx, y+dy, z+dz);
   if(ntile && ntile->id != TILE_ID_EMPTY)
@@ -130,24 +188,15 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
 
   // 3: Texture Index
   uint32_t texture_index;
-  switch(chunk_adjacency->chunk->tiles[z][y][x].id)
-  {
-  case TILE_ID_GRASS:
-    switch(dz)
-    {
-    case -1: texture_index = 0; break;
-    case  0: texture_index = 1; break;
-    case  1: texture_index = 2; break;
-    default:
-      assert(0 && "Unreachable");
-    }
-    break;
-  case TILE_ID_STONE:
-    texture_index = 3;
-    break;
-  default:
-    assert(0 && "Unreachable");
-  }
+
+  if(dx == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_left;
+  if(dx ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_right;
+
+  if(dy == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_back;
+  if(dy ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_front;
+
+  if(dz == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_bottom;
+  if(dz ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_top;
 
   vertices[0].texture_index = texture_index;
   vertices[1].texture_index = texture_index;
@@ -179,7 +228,7 @@ void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh)
   glDeleteBuffers(1, &chunk_mesh->ibo);
 }
 
-void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency)
+void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency)
 {
   chunk_mesh_builder_reset(chunk_mesh_builder);
   for(int z = 0; z<CHUNK_WIDTH; ++z)
@@ -187,12 +236,12 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
       for(int x = 0; x<CHUNK_WIDTH; ++x)
         if(chunk_adjacency->chunk->tiles[z][y][x].id != TILE_ID_EMPTY)
         {
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z, -1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0, -1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0,  1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0,  0, -1);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0,  0,  1);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z, -1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0, -1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0,  1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0,  0, -1);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0,  0,  1);
         }
 
   glBindVertexArray(chunk_mesh->vao);
@@ -219,14 +268,8 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
  ************/
 int renderer_init(struct renderer *renderer)
 {
-  const char *CHUNK_VERTEX_SHADER_FILEPATH = "assets/chunk.vert";
-  const char *CHUNK_FRAGMENT_SHADER_FILEPATH = "assets/chunk.frag";
-  const char *CHUNK_BLOCK_TEXTURE_FILEPATHS[] = {
-    "assets/grass_bottom.png",
-    "assets/grass_side.png",
-    "assets/grass_top.png",
-    "assets/stone.png",
-  };
+  if(resource_pack_load(&renderer->resource_pack, "resource_pack/resource_pack.so") != 0)
+    return -1;
 
   renderer->chunk_program             = 0;
   renderer->chunk_block_texture_array = 0;
@@ -234,13 +277,22 @@ int renderer_init(struct renderer *renderer)
   renderer->chunk_mesh_capacity       = 0;
   renderer->chunk_mesh_load           = 0;
 
-  if((renderer->chunk_program = gl_program_load(CHUNK_VERTEX_SHADER_FILEPATH, CHUNK_FRAGMENT_SHADER_FILEPATH)) == 0)
+  if((renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
   {
     fprintf(stderr, "ERROR: Failed to load chunk shader\n");
     goto error;
   }
 
-  if((renderer->chunk_block_texture_array = gl_array_texture_load(sizeof CHUNK_BLOCK_TEXTURE_FILEPATHS / sizeof CHUNK_BLOCK_TEXTURE_FILEPATHS[0], CHUNK_BLOCK_TEXTURE_FILEPATHS)) == 0)
+  size_t       filepath_count = renderer->resource_pack.block_texture_info_count;
+  const char **filepaths      = malloc(filepath_count * sizeof *filepaths);
+
+  for(size_t i=0; i<filepath_count; ++i)
+    filepaths[i] = renderer->resource_pack.block_texture_infos[i].filepath;
+  renderer->chunk_block_texture_array = gl_array_texture_load(filepath_count, filepaths);
+
+  free(filepaths);
+
+  if(renderer->chunk_block_texture_array == 0)
   {
     fprintf(stderr, "ERROR: Failed to load block textures\n");
     goto error;
@@ -249,8 +301,13 @@ int renderer_init(struct renderer *renderer)
   return 0;
 
 error:
-  if(renderer->chunk_program != 0)             glDeleteProgram(renderer->chunk_program);
-  if(renderer->chunk_block_texture_array != 0) glDeleteTextures(1, &renderer->chunk_block_texture_array);
+  if(renderer->chunk_program != 0)
+    glDeleteProgram(renderer->chunk_program);
+
+  if(renderer->chunk_block_texture_array != 0)
+    glDeleteTextures(1, &renderer->chunk_block_texture_array);
+
+  resource_pack_unload(&renderer->resource_pack);
   return -1;
 }
 
@@ -368,7 +425,7 @@ void renderer_update(struct renderer *renderer, struct world *world)
     struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup_or_add(renderer, chunk->x, chunk->y, chunk->z);
     struct chunk_adjacency chunk_adjacency;
     chunk_adjacency_init(&chunk_adjacency, world, chunk);
-    chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &chunk_adjacency);
+    chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &renderer->resource_pack, &chunk_adjacency);
   }
   chunk_mesh_builder_deinit(&chunk_mesh_builder);
 }

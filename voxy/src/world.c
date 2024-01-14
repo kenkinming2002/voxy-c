@@ -1,9 +1,9 @@
-#include <voxy/world.h>
+#include "world.h"
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
 #include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void world_deinit(struct world *world)
 {

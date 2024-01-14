@@ -7,7 +7,7 @@
     APIs: gl=4.6
     Profile: core
     Extensions:
-        
+
     Loader: True
     Local files: False
     Omit khrplatform: False
@@ -19,10 +19,11 @@
         https://glad.dav1d.de/#profile=core&language=c&specification=gl&loader=on&api=gl%3D4.6
 */
 
+#include "glad/glad.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <glad/glad.h>
 
 static void* get_proc(const char *namez);
 

@@ -1,7 +1,7 @@
-#include <voxy/window.h>
-#include <voxy/world.h>
-#include <voxy/camera.h>
-#include <voxy/renderer.h>
+#include "window.h"
+#include "world.h"
+#include "camera.h"
+#include "renderer.h"
 
 #include <stdio.h>
 #include <stdlib.h>

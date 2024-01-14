@@ -1,17 +1,17 @@
 #ifndef VOXY_WORLD_H
 #define VOXY_WORLD_H
 
-#include <voxy/math.h>
-#include <voxy/noise.h>
+#include "math.h"
+#include "noise.h"
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define CHUNK_WIDTH 16
 
-#define TILE_ID_EMPTY 0
-#define TILE_ID_GRASS 1
-#define TILE_ID_STONE 2
+#define TILE_ID_GRASS 0
+#define TILE_ID_STONE 1
+#define TILE_ID_EMPTY 2
 
 /********
  * Tile *

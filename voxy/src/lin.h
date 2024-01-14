@@ -1,5 +1,5 @@
-#ifndef VOXY_MATH_H
-#define VOXY_MATH_H
+#ifndef VOXY_LIN_H
+#define VOXY_LIN_H
 
 #include <math.h>
 
@@ -217,4 +217,4 @@ MAT_DEFINE_OPS(4)
 #undef MAT_DEFINE_OP_MUL_V
 #undef MAT_DEFINE_OPS
 
-#endif // VOXY_MATH_H
+#endif // VOXY_LIN_H

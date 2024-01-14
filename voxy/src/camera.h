@@ -1,7 +1,7 @@
 #ifndef VOXY_CAMERA_H
 #define VOXY_CAMERA_H
 
-#include <voxy/transform.h>
+#include "transform.h"
 
 struct camera
 {

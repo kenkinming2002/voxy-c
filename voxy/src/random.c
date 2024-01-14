@@ -1,4 +1,4 @@
-#include <voxy/random.h>
+#include "random.h"
 
 #define MULTIPLIER1 131421833123
 #define CONSTANT1   1312379

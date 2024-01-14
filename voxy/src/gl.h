@@ -1,7 +1,8 @@
 #ifndef VOXY_GL_H
 #define VOXY_GL_H
 
-#include <glad/glad.h>
+#include "glad/glad.h"
+
 #include <stddef.h>
 
 GLuint gl_shader_load(GLenum target, const char *filepath);

@@ -1,7 +1,7 @@
 #ifndef VOXY_TRANSFORM_H
 #define VOXY_TRANSFORM_H
 
-#include <voxy/math.h>
+#include "lin.h"
 
 struct mat4 mat4_translate(struct vec3 translation);
 struct mat4 mat4_translate_inverse(struct vec3 translation);

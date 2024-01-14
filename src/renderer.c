@@ -273,28 +273,6 @@ static inline size_t hash(int x, int y, int z)
   return x * 23 + y * 31 + z * 47;
 }
 
-struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z)
-{
-  if(renderer->chunk_mesh_capacity == 0)
-    renderer_chunk_mesh_rehash(renderer, 32);
-  else if(renderer->chunk_mesh_load * 4 >= renderer->chunk_mesh_capacity * 3)
-    renderer_chunk_mesh_rehash(renderer, renderer->chunk_mesh_capacity * 2);
-
-  struct chunk_mesh *chunk_mesh = malloc(sizeof *chunk_mesh);
-  chunk_mesh->x = x;
-  chunk_mesh->y = y;
-  chunk_mesh->z = z;
-  chunk_mesh_init(chunk_mesh);
-
-  chunk_mesh->hash = hash(x, y, z);
-  chunk_mesh->next = renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity];
-
-  renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity] = chunk_mesh;
-  renderer->chunk_mesh_load += 1;
-
-  return chunk_mesh;
-}
-
 void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity)
 {
   struct chunk_mesh *orphans = NULL;
@@ -329,6 +307,28 @@ void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity)
   }
 }
 
+struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z)
+{
+  if(renderer->chunk_mesh_capacity == 0)
+    renderer_chunk_mesh_rehash(renderer, 32);
+  else if(renderer->chunk_mesh_load * 4 >= renderer->chunk_mesh_capacity * 3)
+    renderer_chunk_mesh_rehash(renderer, renderer->chunk_mesh_capacity * 2);
+
+  struct chunk_mesh *chunk_mesh = malloc(sizeof *chunk_mesh);
+  chunk_mesh->x = x;
+  chunk_mesh->y = y;
+  chunk_mesh->z = z;
+  chunk_mesh_init(chunk_mesh);
+
+  chunk_mesh->hash = hash(x, y, z);
+  chunk_mesh->next = renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity];
+
+  renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity] = chunk_mesh;
+  renderer->chunk_mesh_load += 1;
+
+  return chunk_mesh;
+}
+
 struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z)
 {
   if(renderer->chunk_mesh_capacity == 0)
@@ -341,6 +341,15 @@ struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, 
   return NULL;
 }
 
+struct chunk_mesh *renderer_chunk_mesh_lookup_or_add(struct renderer *renderer, int x, int y, int z)
+{
+  struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, x, y, z);
+  if(chunk_mesh)
+    return chunk_mesh;
+  else
+    return renderer_chunk_mesh_add(renderer, x, y, z);
+}
+
 void renderer_update(struct renderer *renderer, struct world *world)
 {
   struct chunk_mesh_builder chunk_mesh_builder;
@@ -349,10 +358,7 @@ void renderer_update(struct renderer *renderer, struct world *world)
     for(struct chunk *chunk = world->chunks[i]; chunk; chunk = chunk->next)
       if(chunk->remesh)
       {
-        struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->x, chunk->y, chunk->z);
-        if(!chunk_mesh)
-          chunk_mesh = renderer_chunk_mesh_add(renderer, chunk->x, chunk->y, chunk->z);
-
+        struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup_or_add(renderer, chunk->x, chunk->y, chunk->z);
         struct chunk_adjacency chunk_adjacency;
         chunk_adjacency_init(&chunk_adjacency, world, chunk);
         chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &chunk_adjacency);

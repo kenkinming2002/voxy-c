@@ -76,30 +76,16 @@ void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh);
 
 void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency);
 
-/******************
- * Chunk Renderer *
- ******************/
-struct chunk_renderer
-{
-  GLuint chunk_program;
-  GLuint block_texture_array;
-};
-
-int chunk_renderer_init(struct chunk_renderer *chunk_renderer);
-void chunk_renderer_deinit(struct chunk_renderer *chunk_renderer);
-
-void chunk_renderer_begin(struct chunk_renderer *chunk_renderer, struct camera *camera);
-void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_mesh *chunk_mesh);
-
 /************
  * Renderer *
  ************/
 struct renderer
 {
-  struct chunk_renderer  chunk_renderer;
-  struct chunk_mesh     *chunk_meshes;
-  size_t                 chunk_mesh_count;
-  size_t                 chunk_mesh_capacity;
+  GLuint             chunk_program;
+  GLuint             chunk_block_texture_array;
+  struct chunk_mesh *chunk_meshes;
+  size_t             chunk_mesh_count;
+  size_t             chunk_mesh_capacity;
 };
 
 int renderer_init(struct renderer *renderer);

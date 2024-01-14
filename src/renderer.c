@@ -214,88 +214,44 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
   chunk_mesh->count = chunk_mesh_builder->index_count;
 }
 
-/******************
- * Chunk Renderer *
- ******************/
-int chunk_renderer_init(struct chunk_renderer *chunk_renderer)
-{
-  chunk_renderer->chunk_program       = 0;
-  chunk_renderer->block_texture_array = 0;
-
-  if((chunk_renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
-    goto error;
-
-  const char *filepaths[] = {
-    "assets/grass_bottom.png",
-    "assets/grass_side.png",
-    "assets/grass_top.png",
-    "assets/stone.png",
-  };
-  if((chunk_renderer->block_texture_array = gl_array_texture_load(sizeof filepaths / sizeof filepaths[0], filepaths)) == 0)
-    goto error;
-
-  return 0;
-
-error:
-  if(chunk_renderer->chunk_program)
-    glDeleteProgram(chunk_renderer->chunk_program);
-
-  if(chunk_renderer->block_texture_array)
-    glDeleteTextures(1, &chunk_renderer->block_texture_array);
-
-  return -1;
-}
-
-void chunk_renderer_deinit(struct chunk_renderer *chunk_renderer)
-{
-  glDeleteProgram(chunk_renderer->chunk_program);
-  glDeleteTextures(1, &chunk_renderer->block_texture_array);
-}
-
-void chunk_renderer_begin(struct chunk_renderer *chunk_renderer, struct camera *camera)
-{
-  struct mat4 VP = mat4_identity();
-  VP = mat4_mul(camera_view_matrix(camera),       VP);
-  VP = mat4_mul(camera_projection_matrix(camera), VP);
-
-  glUseProgram(chunk_renderer->chunk_program);
-  glUniformMatrix4fv(glGetUniformLocation(chunk_renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
-}
-
-void chunk_renderer_render(struct chunk_renderer *chunk_renderer, struct chunk_mesh *chunk_mesh)
-{
-  (void)chunk_renderer;
-
-  glBindVertexArray(chunk_mesh->vao);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, chunk_renderer->block_texture_array);
-  glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);
-}
-
 /************
  * Renderer *
  ************/
 int renderer_init(struct renderer *renderer)
 {
-  bool chunk_renderer_initialized  = false;
-  if(chunk_renderer_init(&renderer->chunk_renderer) != 0)
-    goto error;
-  chunk_renderer_initialized = true;
+  const char *CHUNK_VERTEX_SHADER_FILEPATH = "assets/chunk.vert";
+  const char *CHUNK_FRAGMENT_SHADER_FILEPATH = "assets/chunk.frag";
+  const char *CHUNK_BLOCK_TEXTURE_FILEPATHS[] = {
+    "assets/grass_bottom.png",
+    "assets/grass_side.png",
+    "assets/grass_top.png",
+    "assets/stone.png",
+  };
 
-  renderer->chunk_meshes        = NULL;
-  renderer->chunk_mesh_capacity = 0;
-  renderer->chunk_mesh_count    = 0;
+  renderer->chunk_program             = 0;
+  renderer->chunk_block_texture_array = 0;
+  renderer->chunk_meshes              = NULL;
+  renderer->chunk_mesh_count          = 0;
+  renderer->chunk_mesh_capacity       = 0;
+
+  if((renderer->chunk_program = gl_program_load(CHUNK_VERTEX_SHADER_FILEPATH, CHUNK_FRAGMENT_SHADER_FILEPATH)) == 0)
+    goto error;
+
+  if((renderer->chunk_block_texture_array = gl_array_texture_load(sizeof CHUNK_BLOCK_TEXTURE_FILEPATHS / sizeof CHUNK_BLOCK_TEXTURE_FILEPATHS[0], CHUNK_BLOCK_TEXTURE_FILEPATHS)) == 0)
+    goto error;
+
   return 0;
 
 error:
-  if(chunk_renderer_initialized)
-    chunk_renderer_deinit(&renderer->chunk_renderer);
-
+  if(renderer->chunk_program != 0)             glDeleteProgram(renderer->chunk_program);
+  if(renderer->chunk_block_texture_array != 0) glDeleteTextures(1, &renderer->chunk_block_texture_array);
   return -1;
 }
 
 void renderer_deinit(struct renderer *renderer)
 {
-  chunk_renderer_deinit(&renderer->chunk_renderer);
+  glDeleteProgram(renderer->chunk_program);
+  glDeleteTextures(1, &renderer->chunk_block_texture_array);
   for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
     chunk_mesh_deinit(&renderer->chunk_meshes[i]);
   free(renderer->chunk_meshes);
@@ -352,12 +308,21 @@ void renderer_update(struct renderer *renderer, struct world *world)
 
 void renderer_render(struct renderer *renderer, struct camera *camera)
 {
+  struct mat4 VP = mat4_identity();
+  VP = mat4_mul(camera_view_matrix(camera),       VP);
+  VP = mat4_mul(camera_projection_matrix(camera), VP);
+
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  chunk_renderer_begin(&renderer->chunk_renderer, camera);
+  glUseProgram(renderer->chunk_program);
+  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, renderer->chunk_block_texture_array);
   for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
-    chunk_renderer_render(&renderer->chunk_renderer, &renderer->chunk_meshes[i]);
+  {
+    glBindVertexArray(renderer->chunk_meshes[i].vao);
+    glDrawElements(GL_TRIANGLES, renderer->chunk_meshes[i].count, GL_UNSIGNED_INT, 0);
+  }
 
   glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);

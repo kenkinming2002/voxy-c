@@ -25,7 +25,7 @@ struct chunk_adjacency
 };
 
 void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk);
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int z, int y, int x);
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z);
 
 /**********************
  * Chunk Mesh Builder *
@@ -54,7 +54,7 @@ void chunk_mesh_builder_deinit(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_reset(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *builder, struct chunk_mesh_vertex vertex);
 void chunk_mesh_builder_push_index(struct chunk_mesh_builder *builder, uint32_t index);
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int z, int y, int x, int dz, int dy, int dx);
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz);
 
 /***************
  * Chunk Mesh *
@@ -91,8 +91,8 @@ struct renderer
 int renderer_init(struct renderer *renderer);
 void renderer_deinit(struct renderer *renderer);
 
-struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int z, int y, int x);
-struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int z, int y, int x);
+struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z);
+struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z);
 
 void renderer_update(struct renderer *renderer, struct world *world);
 void renderer_render(struct renderer *renderer, struct camera *camera);

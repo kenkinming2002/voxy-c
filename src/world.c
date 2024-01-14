@@ -56,7 +56,7 @@ void world_deinit(struct world *world)
   free(world->chunks);
 }
 
-struct chunk *world_chunk_add(struct world *world, int z, int y, int x)
+struct chunk *world_chunk_add(struct world *world, int x, int y, int z)
 {
   if(world->chunk_count == world->chunk_capacity)
   {
@@ -64,19 +64,19 @@ struct chunk *world_chunk_add(struct world *world, int z, int y, int x)
     world->chunks         = realloc(world->chunks, world->chunk_capacity * sizeof world->chunks[0]);
   }
   struct chunk *chunk = &world->chunks[world->chunk_count++];
-  chunk->z = z;
-  chunk->y = y;
   chunk->x = x;
+  chunk->y = y;
+  chunk->z = z;
   return chunk;
 }
 
-struct chunk *world_chunk_lookup(struct world *world, int z, int y, int x)
+struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z)
 {
   for(size_t i=0; i<world->chunk_count; ++i)
   {
-    if(world->chunks[i].z != z) continue;
-    if(world->chunks[i].y != y) continue;
     if(world->chunks[i].x != x) continue;
+    if(world->chunks[i].y != y) continue;
+    if(world->chunks[i].z != z) continue;
     return &world->chunks[i];
   }
   return NULL;

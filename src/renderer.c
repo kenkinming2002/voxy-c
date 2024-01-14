@@ -13,15 +13,15 @@
 void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk)
 {
   chunk_adjacency->chunk = chunk;
-  chunk_adjacency->bottom = world_chunk_lookup(world, chunk->z-1, chunk->y, chunk->x);
-  chunk_adjacency->top    = world_chunk_lookup(world, chunk->z+1, chunk->y, chunk->x);
-  chunk_adjacency->back   = world_chunk_lookup(world, chunk->z, chunk->y-1, chunk->x);
-  chunk_adjacency->front  = world_chunk_lookup(world, chunk->z, chunk->y+1, chunk->x);
-  chunk_adjacency->left   = world_chunk_lookup(world, chunk->z, chunk->y, chunk->x-1);
-  chunk_adjacency->right  = world_chunk_lookup(world, chunk->z, chunk->y, chunk->x+1);
+  chunk_adjacency->left   = world_chunk_lookup(world, chunk->x-1, chunk->y, chunk->z);
+  chunk_adjacency->right  = world_chunk_lookup(world, chunk->x+1, chunk->y, chunk->z);
+  chunk_adjacency->back   = world_chunk_lookup(world, chunk->x, chunk->y-1, chunk->z);
+  chunk_adjacency->front  = world_chunk_lookup(world, chunk->x, chunk->y+1, chunk->z);
+  chunk_adjacency->bottom = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z-1);
+  chunk_adjacency->top    = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z+1);
 }
 
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int z, int y, int x)
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z)
 {
   if(z >= 0 && z < CHUNK_WIDTH)
     if(y >= 0 && y < CHUNK_WIDTH)
@@ -86,9 +86,9 @@ void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder
   chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = index;
 }
 
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int z, int y, int x, int dz, int dy, int dx)
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz)
 {
-  struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, z+dz, y+dy, x+dx);
+  struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, x+dx, y+dy, z+dz);
   if(ntile && ntile->id != TILE_ID_EMPTY)
     return; // Occlusion
 
@@ -187,12 +187,12 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
       for(int x = 0; x<CHUNK_WIDTH; ++x)
         if(chunk_adjacency->chunk->tiles[z][y][x].id != TILE_ID_EMPTY)
         {
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x, -1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x,  1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x,  0, -1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x,  0,  1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x,  0,  0, -1);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, z, y, x,  0,  0,  1);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z, -1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0, -1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0,  1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0,  0, -1);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, chunk_adjacency, x, y, z,  0,  0,  1);
         }
 
   glBindVertexArray(chunk_mesh->vao);
@@ -257,7 +257,7 @@ void renderer_deinit(struct renderer *renderer)
   free(renderer->chunk_meshes);
 }
 
-struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int z, int y, int x)
+struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z)
 {
   if(renderer->chunk_mesh_count == renderer->chunk_mesh_capacity)
   {
@@ -265,20 +265,20 @@ struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int z, int
     renderer->chunk_meshes        = realloc(renderer->chunk_meshes, renderer->chunk_mesh_capacity * sizeof renderer->chunk_meshes[0]);
   }
   struct chunk_mesh *chunk_mesh = &renderer->chunk_meshes[renderer->chunk_mesh_count++];
-  chunk_mesh->z = z;
-  chunk_mesh->y = y;
   chunk_mesh->x = x;
+  chunk_mesh->y = y;
+  chunk_mesh->z = z;
   chunk_mesh_init(chunk_mesh);
   return chunk_mesh;
 }
 
-struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int z, int y, int x)
+struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z)
 {
   for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
   {
-    if(renderer->chunk_meshes[i].z != z) continue;
-    if(renderer->chunk_meshes[i].y != y) continue;
     if(renderer->chunk_meshes[i].x != x) continue;
+    if(renderer->chunk_meshes[i].y != y) continue;
+    if(renderer->chunk_meshes[i].z != z) continue;
     return &renderer->chunk_meshes[i];
   }
   return NULL;
@@ -293,9 +293,9 @@ void renderer_update(struct renderer *renderer, struct world *world)
     struct chunk *chunk = &world->chunks[i];
     if(chunk->remesh)
     {
-      struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->z, chunk->y, chunk->x);
+      struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->x, chunk->y, chunk->z);
       if(!chunk_mesh)
-        chunk_mesh = renderer_chunk_mesh_add(renderer, chunk->z, chunk->y, chunk->x);
+        chunk_mesh = renderer_chunk_mesh_add(renderer, chunk->x, chunk->y, chunk->z);
 
       struct chunk_adjacency chunk_adjacency;
       chunk_adjacency_init(&chunk_adjacency, world, chunk);

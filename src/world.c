@@ -5,52 +5,6 @@
 #include <assert.h>
 #include <float.h>
 
-static float get_height(seed_t seed, int y, int x)
-{
-  float value = 0.0f;
-  value += perlin2(seed, vec2_div_s(vec2(x, y), 15.0f)) * 30.0f + 30.0f;
-  value += perlin2(seed, vec2_div_s(vec2(x, y), 7.0f))  * 15.0f + 10.0f;
-  value += perlin2(seed, vec2_div_s(vec2(x, y), 3.0f))  * 3.0f  + 3.0f;
-  return value;
-}
-
-void chunk_init(struct chunk *chunk, seed_t seed)
-{
-  if(chunk->z < 0)
-    return; // Fast-path
-
-  float heights[CHUNK_WIDTH][CHUNK_WIDTH];
-  for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-    for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-    {
-      int real_y = chunk->y * CHUNK_WIDTH + (int)y;
-      int real_x = chunk->x * CHUNK_WIDTH + (int)x;
-      heights[y][x] = get_height(seed, real_y, real_x);
-    }
-
-  for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
-    for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-      for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-      {
-        int real_z = chunk->z * CHUNK_WIDTH + (int)z;
-        if(real_z <= heights[y][x])
-          chunk->tiles[z][y][x].id = TILE_ID_STONE;
-        else if(real_z <= heights[y][x] + 1.0f)
-          chunk->tiles[z][y][x].id = TILE_ID_GRASS;
-        else
-          chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
-      }
-
-  chunk->remesh = true;
-}
-
-void world_init(struct world *world)
-{
-  world->chunks         = NULL;
-  world->chunk_capacity = 0;
-  world->chunk_load     = 0;
-}
-
 void world_deinit(struct world *world)
 {
   for(size_t i=0; i<world->chunk_capacity; ++i)
@@ -136,3 +90,52 @@ struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z)
   return NULL;
 }
 
+void world_init(struct world *world, seed_t seed)
+{
+  world->seed              = seed;
+  world->chunks            = NULL;
+  world->chunk_capacity    = 0;
+  world->chunk_load        = 0;
+  world->chunk_remesh_list = NULL;
+}
+
+static float get_height(seed_t seed, int y, int x)
+{
+  float value = 0.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 15.0f)) * 30.0f + 30.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 7.0f))  * 15.0f + 10.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 3.0f))  * 3.0f  + 3.0f;
+  return value;
+}
+
+void world_chunk_generate(struct world *world, int x, int y, int z)
+{
+  struct chunk *chunk = world_chunk_add(world, x, y, z);
+  if(chunk->z < 0)
+    return; // Fast-path
+
+  float heights[CHUNK_WIDTH][CHUNK_WIDTH];
+  for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
+    for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+    {
+      int real_y = chunk->y * CHUNK_WIDTH + (int)y;
+      int real_x = chunk->x * CHUNK_WIDTH + (int)x;
+      heights[y][x] = get_height(world->seed, real_y, real_x);
+    }
+
+  for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
+    for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
+      for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+      {
+        int real_z = chunk->z * CHUNK_WIDTH + (int)z;
+        if(real_z <= heights[y][x])
+          chunk->tiles[z][y][x].id = TILE_ID_STONE;
+        else if(real_z <= heights[y][x] + 1.0f)
+          chunk->tiles[z][y][x].id = TILE_ID_GRASS;
+        else
+          chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+      }
+
+  chunk->remesh_next = world->chunk_remesh_list;
+  world->chunk_remesh_list = chunk;
+}

@@ -354,16 +354,16 @@ void renderer_update(struct renderer *renderer, struct world *world)
 {
   struct chunk_mesh_builder chunk_mesh_builder;
   chunk_mesh_builder_init(&chunk_mesh_builder);
-  for(size_t i=0; i<world->chunk_capacity; ++i)
-    for(struct chunk *chunk = world->chunks[i]; chunk; chunk = chunk->next)
-      if(chunk->remesh)
-      {
-        struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup_or_add(renderer, chunk->x, chunk->y, chunk->z);
-        struct chunk_adjacency chunk_adjacency;
-        chunk_adjacency_init(&chunk_adjacency, world, chunk);
-        chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &chunk_adjacency);
-        chunk->remesh = false;
-      }
+  while(world->chunk_remesh_list)
+  {
+    struct chunk *chunk = world->chunk_remesh_list;
+    world->chunk_remesh_list = world->chunk_remesh_list->remesh_next;
+
+    struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup_or_add(renderer, chunk->x, chunk->y, chunk->z);
+    struct chunk_adjacency chunk_adjacency;
+    chunk_adjacency_init(&chunk_adjacency, world, chunk);
+    chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &chunk_adjacency);
+  }
   chunk_mesh_builder_deinit(&chunk_mesh_builder);
 }
 

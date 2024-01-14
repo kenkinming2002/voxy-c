@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <limits.h>
 
 /*******************
@@ -164,12 +165,11 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
 /***************
  * Chunk Mesh *
  **************/
-int chunk_mesh_init(struct chunk_mesh *chunk_mesh)
+void chunk_mesh_init(struct chunk_mesh *chunk_mesh)
 {
   glGenVertexArrays(1, &chunk_mesh->vao);
   glGenBuffers(1, &chunk_mesh->vbo);
   glGenBuffers(1, &chunk_mesh->ibo);
-  return 0;
 }
 
 void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh)
@@ -235,10 +235,16 @@ int renderer_init(struct renderer *renderer)
   renderer->chunk_mesh_load           = 0;
 
   if((renderer->chunk_program = gl_program_load(CHUNK_VERTEX_SHADER_FILEPATH, CHUNK_FRAGMENT_SHADER_FILEPATH)) == 0)
+  {
+    fprintf(stderr, "ERROR: Failed to load chunk shader\n");
     goto error;
+  }
 
   if((renderer->chunk_block_texture_array = gl_array_texture_load(sizeof CHUNK_BLOCK_TEXTURE_FILEPATHS / sizeof CHUNK_BLOCK_TEXTURE_FILEPATHS[0], CHUNK_BLOCK_TEXTURE_FILEPATHS)) == 0)
+  {
+    fprintf(stderr, "ERROR: Failed to load block textures\n");
     goto error;
+  }
 
   return 0;
 

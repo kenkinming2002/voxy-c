@@ -72,7 +72,7 @@ struct chunk_mesh
   GLsizei count;
 };
 
-int chunk_mesh_init(struct chunk_mesh *chunk_mesh);
+void chunk_mesh_init(struct chunk_mesh *chunk_mesh);
 void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh);
 void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency);
 

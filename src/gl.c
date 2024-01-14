@@ -3,6 +3,7 @@
 #include <stb_image.h>
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -12,7 +13,10 @@ static char *read_file(const char *filepath)
   char *buffer = NULL;
 
   if(!(file = fopen(filepath, "r")))
+  {
+    fprintf(stderr, "ERROR: Failed to open file %s: %s\n", filepath, strerror(errno));
     goto error;
+  }
 
   long begin = ftell(file); fseek(file, 0, SEEK_END);
   long end   = ftell(file); fseek(file, 0, SEEK_SET);
@@ -20,7 +24,10 @@ static char *read_file(const char *filepath)
 
   buffer = malloc(size+1);
   if(fread(buffer, size, 1, file) != 1)
+  {
+    fprintf(stderr, "ERROR: Failed to read from file %s\n", filepath);
     goto error;
+  }
   buffer[size] = '\0';
 
   fclose(file);
@@ -34,13 +41,10 @@ error:
 
 GLuint gl_shader_load(GLenum target, const char *filepath)
 {
-  GLuint  shader        = 0;
-  char   *shader_source = NULL;
+  GLuint shader = glCreateShader(target);
 
-  if((shader = glCreateShader(target)) == 0)
-    goto error;
-
-  if(!(shader_source = read_file(filepath)))
+  char *shader_source = read_file(filepath);
+  if(!shader_source)
     goto error;
 
   glShaderSource(shader, 1, (const char *const *)&shader_source, NULL);
@@ -57,8 +61,7 @@ GLuint gl_shader_load(GLenum target, const char *filepath)
     info_log = malloc(info_log_length);
     glGetShaderInfoLog(shader, info_log_length, NULL, info_log);
 
-    fprintf(stderr, "ERROR: Failed to compile OpenGL shader: %s\n", info_log);
-
+    fprintf(stderr, "ERROR: Failed to compile shader: %s\n", info_log);
     free(info_log);
     goto error;
   }
@@ -67,18 +70,16 @@ GLuint gl_shader_load(GLenum target, const char *filepath)
   return shader;
 
 error:
-  if(shader) glDeleteShader(shader);
-  if(shader_source) free(shader_source);
+  glDeleteShader(shader);
+  if(shader_source)
+    free(shader_source);
+
   return 0;
 }
 
 GLuint gl_program_link(GLuint vertex_shader, GLuint fragment_shader)
 {
-  GLuint program = 0;
-
-  if((program = glCreateProgram()) == 0)
-    goto error;
-
+  GLuint program = glCreateProgram();
   glAttachShader(program, vertex_shader);
   glAttachShader(program, fragment_shader);
   glLinkProgram(program);
@@ -94,8 +95,7 @@ GLuint gl_program_link(GLuint vertex_shader, GLuint fragment_shader)
     info_log = malloc(info_log_length);
     glGetProgramInfoLog(program, info_log_length, NULL, info_log);
 
-    fprintf(stderr, "ERROR: Failed to link OpenGL program: %s\n", info_log);
-
+    fprintf(stderr, "ERROR: Failed to link program: %s\n", info_log);
     free(info_log);
     goto error;
   }
@@ -103,7 +103,7 @@ GLuint gl_program_link(GLuint vertex_shader, GLuint fragment_shader)
   return program;
 
 error:
-  if(program) glDeleteProgram(program);
+  glDeleteProgram(program);
   return 0;
 }
 

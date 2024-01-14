@@ -188,15 +188,14 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
 
   // 3: Texture Index
   uint32_t texture_index;
-
-  if(dx == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_left;
-  if(dx ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_right;
-
-  if(dy == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_back;
-  if(dy ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_front;
-
-  if(dz == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_bottom;
-  if(dz ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_top;
+  if     (dx == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_left;
+  else if(dx ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_right;
+  else if(dy == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_back;
+  else if(dy ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_front;
+  else if(dz == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_bottom;
+  else if(dz ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_top;
+  else
+    assert(0 && "Unreachable");
 
   vertices[0].texture_index = texture_index;
   vertices[1].texture_index = texture_index;

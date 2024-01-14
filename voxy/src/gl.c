@@ -136,7 +136,7 @@ GLuint gl_array_texture_load(size_t count, const char *filepaths[count])
 {
   stbi_set_flip_vertically_on_load(1);
 
-  size_t width, height;
+  size_t width = 0, height = 0;
   unsigned char *texels = NULL;
   for(size_t i=0; i<count; ++i)
   {

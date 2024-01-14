@@ -231,8 +231,8 @@ int renderer_init(struct renderer *renderer)
   renderer->chunk_program             = 0;
   renderer->chunk_block_texture_array = 0;
   renderer->chunk_meshes              = NULL;
-  renderer->chunk_mesh_count          = 0;
   renderer->chunk_mesh_capacity       = 0;
+  renderer->chunk_mesh_load           = 0;
 
   if((renderer->chunk_program = gl_program_load(CHUNK_VERTEX_SHADER_FILEPATH, CHUNK_FRAGMENT_SHADER_FILEPATH)) == 0)
     goto error;
@@ -252,35 +252,92 @@ void renderer_deinit(struct renderer *renderer)
 {
   glDeleteProgram(renderer->chunk_program);
   glDeleteTextures(1, &renderer->chunk_block_texture_array);
-  for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
-    chunk_mesh_deinit(&renderer->chunk_meshes[i]);
+
+  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+  {
+    struct chunk_mesh *chunk_mesh = renderer->chunk_meshes[i];
+    while(chunk_mesh)
+    {
+      struct chunk_mesh *tmp = chunk_mesh;
+      chunk_mesh = chunk_mesh->next;
+      chunk_mesh_deinit(tmp);
+      free(tmp);
+    }
+  }
   free(renderer->chunk_meshes);
+}
+
+static inline size_t hash(int x, int y, int z)
+{
+  // I honestly do not know what I am doing here
+  return x * 23 + y * 31 + z * 47;
 }
 
 struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z)
 {
-  if(renderer->chunk_mesh_count == renderer->chunk_mesh_capacity)
-  {
-    renderer->chunk_mesh_capacity = renderer->chunk_mesh_count != 0 ? renderer->chunk_mesh_count * 2 : 1;
-    renderer->chunk_meshes        = realloc(renderer->chunk_meshes, renderer->chunk_mesh_capacity * sizeof renderer->chunk_meshes[0]);
-  }
-  struct chunk_mesh *chunk_mesh = &renderer->chunk_meshes[renderer->chunk_mesh_count++];
+  if(renderer->chunk_mesh_capacity == 0)
+    renderer_chunk_mesh_rehash(renderer, 32);
+  else if(renderer->chunk_mesh_load * 4 >= renderer->chunk_mesh_capacity * 3)
+    renderer_chunk_mesh_rehash(renderer, renderer->chunk_mesh_capacity * 2);
+
+  struct chunk_mesh *chunk_mesh = malloc(sizeof *chunk_mesh);
   chunk_mesh->x = x;
   chunk_mesh->y = y;
   chunk_mesh->z = z;
   chunk_mesh_init(chunk_mesh);
+
+  chunk_mesh->hash = hash(x, y, z);
+  chunk_mesh->next = renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity];
+
+  renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity] = chunk_mesh;
+  renderer->chunk_mesh_load += 1;
+
   return chunk_mesh;
+}
+
+void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity)
+{
+  struct chunk_mesh *orphans = NULL;
+  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+  {
+    struct chunk_mesh **head = &renderer->chunk_meshes[i];
+    while(*head)
+      if((*head)->hash % new_capacity != i)
+      {
+        struct chunk_mesh *orphan = *head;
+        *head = (*head)->next;
+
+        orphan->next = orphans;
+        orphans      = orphan;
+      }
+      else
+        head = &(*head)->next;
+  }
+
+  renderer->chunk_meshes = realloc(renderer->chunk_meshes, new_capacity * sizeof *renderer->chunk_meshes);
+  for(size_t i=renderer->chunk_mesh_capacity; i<new_capacity; ++i)
+    renderer->chunk_meshes[i] = NULL;
+  renderer->chunk_mesh_capacity = new_capacity;
+
+  while(orphans)
+  {
+    struct chunk_mesh *orphan = orphans;
+    orphans = orphans->next;
+
+    orphan->next = renderer->chunk_meshes[orphan->hash % renderer->chunk_mesh_capacity];
+    renderer->chunk_meshes[orphan->hash % renderer->chunk_mesh_capacity] = orphan;
+  }
 }
 
 struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z)
 {
-  for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
-  {
-    if(renderer->chunk_meshes[i].x != x) continue;
-    if(renderer->chunk_meshes[i].y != y) continue;
-    if(renderer->chunk_meshes[i].z != z) continue;
-    return &renderer->chunk_meshes[i];
-  }
+  if(renderer->chunk_mesh_capacity == 0)
+    return NULL;
+
+  size_t h = hash(x, y, z);
+  for(struct chunk_mesh *chunk_mesh = renderer->chunk_meshes[h % renderer->chunk_mesh_capacity]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+    if(chunk_mesh->hash == h && chunk_mesh->x == x && chunk_mesh->y == y && chunk_mesh->z == z)
+      return chunk_mesh;
   return NULL;
 }
 
@@ -288,21 +345,19 @@ void renderer_update(struct renderer *renderer, struct world *world)
 {
   struct chunk_mesh_builder chunk_mesh_builder;
   chunk_mesh_builder_init(&chunk_mesh_builder);
-  for(size_t i=0; i<world->chunk_count; ++i)
-  {
-    struct chunk *chunk = &world->chunks[i];
-    if(chunk->remesh)
-    {
-      struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->x, chunk->y, chunk->z);
-      if(!chunk_mesh)
-        chunk_mesh = renderer_chunk_mesh_add(renderer, chunk->x, chunk->y, chunk->z);
+  for(size_t i=0; i<world->chunk_capacity; ++i)
+    for(struct chunk *chunk = world->chunks[i]; chunk; chunk = chunk->next)
+      if(chunk->remesh)
+      {
+        struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, chunk->x, chunk->y, chunk->z);
+        if(!chunk_mesh)
+          chunk_mesh = renderer_chunk_mesh_add(renderer, chunk->x, chunk->y, chunk->z);
 
-      struct chunk_adjacency chunk_adjacency;
-      chunk_adjacency_init(&chunk_adjacency, world, chunk);
-      chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &chunk_adjacency);
-      chunk->remesh = false;
-    }
-  }
+        struct chunk_adjacency chunk_adjacency;
+        chunk_adjacency_init(&chunk_adjacency, world, chunk);
+        chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &chunk_adjacency);
+        chunk->remesh = false;
+      }
   chunk_mesh_builder_deinit(&chunk_mesh_builder);
 }
 
@@ -318,11 +373,13 @@ void renderer_render(struct renderer *renderer, struct camera *camera)
   glUseProgram(renderer->chunk_program);
   glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
   glBindTexture(GL_TEXTURE_CUBE_MAP, renderer->chunk_block_texture_array);
-  for(size_t i=0; i<renderer->chunk_mesh_count; ++i)
-  {
-    glBindVertexArray(renderer->chunk_meshes[i].vao);
-    glDrawElements(GL_TRIANGLES, renderer->chunk_meshes[i].count, GL_UNSIGNED_INT, 0);
-  }
+
+  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+    for(struct chunk_mesh *chunk_mesh = renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+    {
+      glBindVertexArray(chunk_mesh->vao);
+      glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);
+    }
 
   glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);

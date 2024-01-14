@@ -61,9 +61,10 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
  **************/
 struct chunk_mesh
 {
-  int z;
-  int y;
-  int x;
+  struct chunk_mesh *next;
+  size_t             hash;
+
+  int x, y, z;
 
   GLuint vao;
   GLuint vbo;
@@ -73,7 +74,6 @@ struct chunk_mesh
 
 int chunk_mesh_init(struct chunk_mesh *chunk_mesh);
 void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh);
-
 void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_adjacency *chunk_adjacency);
 
 /************
@@ -83,14 +83,16 @@ struct renderer
 {
   GLuint             chunk_program;
   GLuint             chunk_block_texture_array;
-  struct chunk_mesh *chunk_meshes;
-  size_t             chunk_mesh_count;
-  size_t             chunk_mesh_capacity;
+
+  struct chunk_mesh **chunk_meshes;
+  size_t              chunk_mesh_capacity;
+  size_t              chunk_mesh_load;
 };
 
 int renderer_init(struct renderer *renderer);
 void renderer_deinit(struct renderer *renderer);
 
+void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity);
 struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z);
 struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z);
 

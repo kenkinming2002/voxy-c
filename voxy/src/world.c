@@ -143,11 +143,14 @@ float world_get_height(struct world *world, int x, int y)
 {
   float value = 0.0f;
 
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 200.0f)) * 140.0f + 140.0f;
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 100.0f)) * 70.0f  + 70.0f;
+  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 1600.0f)) * 512.0f + 512.0f;
+  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 800.0f))  * 256.0f + 256.0f;
 
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 20.0f))  * 10.0f + 10.0f;
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 5.0f))   * 5.0f  + 3.0f;
+  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 400.0f)) * 140.0f + 140.0f;
+  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 200.0f)) * 70.0f  + 70.0f;
+
+  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 10.0f))  * 8.0f + 8.0f;
+  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 5.0f))   * 3.0f + 3.0f;
 
   return value;
 }

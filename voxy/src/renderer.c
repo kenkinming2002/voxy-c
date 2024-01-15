@@ -380,7 +380,7 @@ void renderer_update(struct renderer *renderer, struct world *world)
 }
 
 #define RENDERER_LOAD_DISTANCE   8
-#define RENDERER_UNLOAD_DISTANCE 16
+#define RENDERER_UNLOAD_DISTANCE 32
 
 void renderer_update_load(struct renderer *renderer, struct world *world)
 {

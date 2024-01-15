@@ -113,15 +113,6 @@ void world_init(struct world *world, seed_t seed)
   world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
 }
 
-static float get_height(seed_t seed, int y, int x)
-{
-  float value = 0.0f;
-  value += perlin2(seed, vec2_div_s(vec2(x, y), 15.0f)) * 30.0f + 30.0f;
-  value += perlin2(seed, vec2_div_s(vec2(x, y), 7.0f))  * 15.0f + 10.0f;
-  value += perlin2(seed, vec2_div_s(vec2(x, y), 3.0f))  * 3.0f  + 3.0f;
-  return value;
-}
-
 void world_update(struct world *world, struct window *window)
 {
   world_update_player_control(world, window);
@@ -157,6 +148,19 @@ void world_update_chunk_generate(struct world *world)
       for(int dx = -4; dx<=4; ++dx)
         if(!world_chunk_lookup(world, x+dx, y+dy, z+dz))
           world_chunk_generate(world, x+dx, y+dy, z+dz);
+}
+
+static float get_height(seed_t seed, int y, int x)
+{
+  float value = 0.0f;
+
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 200.0f)) * 140.0f + 140.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 100.0f)) * 70.0f  + 70.0f;
+
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 20.0f))  * 10.0f + 10.0f;
+  value += perlin2(seed, vec2_div_s(vec2(x, y), 5.0f))   * 5.0f  + 3.0f;
+
+  return value;
 }
 
 void world_chunk_generate(struct world *world, int x, int y, int z)

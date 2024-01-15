@@ -37,11 +37,6 @@ static int application_init(struct application *application)
   renderer_initialized = true;
 
   world_init(&application->world, time(NULL));
-  for(int z=0; z<4; ++z)
-    for(int y=-9; y<=9; ++y)
-      for(int x=-9; x<=9; ++x)
-        world_chunk_generate(&application->world, x, y, z);
-
   return 0;
 
 error:

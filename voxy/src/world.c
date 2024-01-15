@@ -112,11 +112,17 @@ static float get_height(seed_t seed, int y, int x)
   return value;
 }
 
-#define MOVE_SPEED 1.0f
-#define PAN_SPEED  0.001f
-
 void world_update(struct world *world, struct window *window)
 {
+  world_update_player_control(world, window);
+  world_update_chunk_generate(world);
+}
+
+void world_update_player_control(struct world *world, struct window *window)
+{
+  static const float MOVE_SPEED = 1.0f;
+  static const float PAN_SPEED  = 0.001f;
+
   struct vec3 rotation = vec3_zero();
   struct vec3 translation = vec3_zero();
 
@@ -129,6 +135,18 @@ void world_update(struct world *world, struct window *window)
 
   transform_rotate(&world->player_transform, rotation);
   transform_local_translate(&world->player_transform, translation);
+}
+
+void world_update_chunk_generate(struct world *world)
+{
+  int x = floorf(world->player_transform.translation.x / CHUNK_WIDTH);
+  int y = floorf(world->player_transform.translation.y / CHUNK_WIDTH);
+  int z = floorf(world->player_transform.translation.z / CHUNK_WIDTH);
+  for(int dz = -4; dz<=4; ++dz)
+    for(int dy = -4; dy<=4; ++dy)
+      for(int dx = -4; dx<=4; ++dx)
+        if(!world_chunk_lookup(world, x+dx, y+dy, z+dz))
+          world_chunk_generate(world, x+dx, y+dy, z+dz);
 }
 
 void world_chunk_generate(struct world *world, int x, int y, int z)

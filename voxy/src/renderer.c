@@ -465,11 +465,15 @@ void renderer_render(struct renderer *renderer, struct camera *camera)
   VP = mat4_mul(camera_view_matrix(camera),       VP);
   VP = mat4_mul(camera_projection_matrix(camera), VP);
 
+  struct mat4 V = mat4_identity();
+  V = mat4_mul(camera_view_matrix(camera), V);
+
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
   glUseProgram(renderer->chunk_program);
   glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
+  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_CUBE_MAP, renderer->chunk_block_texture_array);
 
   for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)

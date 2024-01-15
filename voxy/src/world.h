@@ -60,10 +60,6 @@ struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z);
 
 void world_update(struct world *world, struct window *window);
 void world_update_player_control(struct world *world, struct window *window);
-void world_update_chunk_generate(struct world *world);
-
-float world_get_height(struct world *world, int x, int y);
-void world_chunk_generate(struct world *world, int x, int y, int z);
 
 /*******************
  * Chunk Adjacency *

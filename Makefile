@@ -12,6 +12,7 @@ VOXY_SRCS += voxy/src/transform.c
 VOXY_SRCS += voxy/src/voxy.c
 VOXY_SRCS += voxy/src/window.c
 VOXY_SRCS += voxy/src/world.c
+VOXY_SRCS += voxy/src/world_generator.c
 
 RESOURCE_PACK_SRCS += resource_pack/src/resource_pack.c
 

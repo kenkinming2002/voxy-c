@@ -7,12 +7,11 @@
 
 void world_init(struct world *world, seed_t seed)
 {
-  world->seed              = seed;
+  world->seed = seed;
 
-  world->chunks            = NULL;
-  world->chunk_capacity    = 0;
-  world->chunk_load        = 0;
-  world->chunk_remesh_list = NULL;
+  world->chunks         = NULL;
+  world->chunk_capacity = 0;
+  world->chunk_load     = 0;
 
   world->player_transform.translation = vec3(0.0f, 0.0f, world_get_height(world, 0, 0) + 2.0f);
   world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
@@ -103,16 +102,6 @@ struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z)
   return NULL;
 }
 
-void world_chunk_remesh_insert(struct world *world, struct chunk *chunk)
-{
-  if(chunk->remesh)
-    return;
-
-  chunk->remesh            = true;
-  chunk->remesh_next       = world->chunk_remesh_list;
-  world->chunk_remesh_list = chunk;
-}
-
 void world_update(struct world *world, struct window *window)
 {
   world_update_player_control(world, window);
@@ -166,8 +155,7 @@ float world_get_height(struct world *world, int x, int y)
 void world_chunk_generate(struct world *world, int x, int y, int z)
 {
   struct chunk *chunk = world_chunk_add(world, x, y, z);
-  chunk->remesh      = false;
-  chunk->remesh_next = NULL;
+  chunk->mesh_dirty = false;
 
   if(chunk->z < 0)
   {
@@ -203,13 +191,13 @@ void world_chunk_generate(struct world *world, int x, int y, int z)
 
   struct chunk_adjacency chunk_adjacency;
   chunk_adjacency_init(&chunk_adjacency, world, chunk);
-  if(chunk_adjacency.chunk)  world_chunk_remesh_insert(world, chunk_adjacency.chunk);
-  if(chunk_adjacency.bottom) world_chunk_remesh_insert(world, chunk_adjacency.bottom);
-  if(chunk_adjacency.top)    world_chunk_remesh_insert(world, chunk_adjacency.top);
-  if(chunk_adjacency.back)   world_chunk_remesh_insert(world, chunk_adjacency.back);
-  if(chunk_adjacency.front)  world_chunk_remesh_insert(world, chunk_adjacency.front);
-  if(chunk_adjacency.left)   world_chunk_remesh_insert(world, chunk_adjacency.left);
-  if(chunk_adjacency.right)  world_chunk_remesh_insert(world, chunk_adjacency.right);
+  if(chunk_adjacency.chunk)  chunk_adjacency.chunk ->mesh_dirty = true;
+  if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
+  if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
+  if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
+  if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
+  if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
+  if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
 }
 
 /*******************

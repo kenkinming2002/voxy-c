@@ -96,9 +96,13 @@ void renderer_deinit(struct renderer *renderer);
 void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity);
 struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z);
 struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z);
-struct chunk_mesh *renderer_chunk_mesh_lookup_or_add(struct renderer *renderer, int x, int y, int z);
 
 void renderer_update(struct renderer *renderer, struct world *world);
+
+void renderer_update_load(struct renderer *renderer, struct world *world);
+void renderer_update_unload(struct renderer *renderer, struct world *world);
+void renderer_update_reload(struct renderer *renderer, struct world *world);
+
 void renderer_render(struct renderer *renderer, struct camera *camera);
 
 #endif // VOXY_RENDERER_H

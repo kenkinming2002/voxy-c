@@ -196,6 +196,8 @@ void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh)
 
 void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency)
 {
+  chunk_adjacency->chunk->mesh_dirty = false;
+
   chunk_mesh_builder_reset(chunk_mesh_builder);
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
@@ -370,30 +372,90 @@ struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, 
   return NULL;
 }
 
-struct chunk_mesh *renderer_chunk_mesh_lookup_or_add(struct renderer *renderer, int x, int y, int z)
+void renderer_update(struct renderer *renderer, struct world *world)
 {
-  struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup(renderer, x, y, z);
-  if(chunk_mesh)
-    return chunk_mesh;
-  else
-    return renderer_chunk_mesh_add(renderer, x, y, z);
+  renderer_update_unload(renderer, world);
+  renderer_update_load(renderer, world);
+  renderer_update_reload(renderer, world);
 }
 
-void renderer_update(struct renderer *renderer, struct world *world)
+#define RENDERER_LOAD_DISTANCE   8
+#define RENDERER_UNLOAD_DISTANCE 16
+
+void renderer_update_load(struct renderer *renderer, struct world *world)
 {
   struct chunk_mesh_builder chunk_mesh_builder;
   chunk_mesh_builder_init(&chunk_mesh_builder);
-  while(world->chunk_remesh_list)
-  {
-    struct chunk *chunk = world->chunk_remesh_list;
-    world->chunk_remesh_list = world->chunk_remesh_list->remesh_next;
-    chunk->remesh = false;
 
-    struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup_or_add(renderer, chunk->x, chunk->y, chunk->z);
-    struct chunk_adjacency chunk_adjacency;
-    chunk_adjacency_init(&chunk_adjacency, world, chunk);
-    chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &renderer->resource_pack, &chunk_adjacency);
+  struct chunk           *chunk;
+  struct chunk_mesh      *chunk_mesh;
+  struct chunk_adjacency  chunk_adjacency;
+
+  int x = floorf(world->player_transform.translation.x / CHUNK_WIDTH);
+  int y = floorf(world->player_transform.translation.y / CHUNK_WIDTH);
+  int z = floorf(world->player_transform.translation.z / CHUNK_WIDTH);
+  for(int dz = -RENDERER_LOAD_DISTANCE; dz<=RENDERER_LOAD_DISTANCE; ++dz)
+    for(int dy = -RENDERER_LOAD_DISTANCE; dy<=RENDERER_LOAD_DISTANCE; ++dy)
+      for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
+      {
+        if(!(chunk = world_chunk_lookup(world, x+dx, y+dy, z+dz)))
+          continue;
+
+        if((chunk_mesh = renderer_chunk_mesh_lookup(renderer, x+dx, y+dy, z+dz)))
+          continue;
+
+        chunk_mesh = renderer_chunk_mesh_add(renderer, x+dx, y+dy, z+dz);
+        chunk_adjacency_init(&chunk_adjacency, world, chunk);
+        chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &renderer->resource_pack, &chunk_adjacency);
+      }
+
+  chunk_mesh_builder_deinit(&chunk_mesh_builder);
+}
+
+void renderer_update_unload(struct renderer *renderer, struct world *world)
+{
+  int x = floorf(world->player_transform.translation.x / CHUNK_WIDTH);
+  int y = floorf(world->player_transform.translation.y / CHUNK_WIDTH);
+  int z = floorf(world->player_transform.translation.z / CHUNK_WIDTH);
+  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+  {
+    struct chunk_mesh **it = &renderer->chunk_meshes[i];
+    while(*it)
+      if((*it)->x < x - RENDERER_UNLOAD_DISTANCE || (*it)->x > x + RENDERER_UNLOAD_DISTANCE ||
+         (*it)->y < y - RENDERER_UNLOAD_DISTANCE || (*it)->y > y + RENDERER_UNLOAD_DISTANCE ||
+         (*it)->z < z - RENDERER_UNLOAD_DISTANCE || (*it)->z > z + RENDERER_UNLOAD_DISTANCE)
+      {
+        struct chunk_mesh *chunk_mesh = *it;
+        *it = (*it)->next;
+
+        chunk_mesh_deinit(chunk_mesh);
+        free(chunk_mesh);
+      }
+      else
+        it = &(*it)->next;
   }
+}
+
+void renderer_update_reload(struct renderer *renderer, struct world *world)
+{
+  struct chunk_mesh_builder chunk_mesh_builder;
+  chunk_mesh_builder_init(&chunk_mesh_builder);
+
+  struct chunk           *chunk;
+  struct chunk_mesh      *chunk_mesh;
+  struct chunk_adjacency  chunk_adjacency;
+
+  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+    for(chunk_mesh = renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+    {
+      chunk = world_chunk_lookup(world, chunk_mesh->x, chunk_mesh->y, chunk_mesh->z);
+      if(!chunk || !chunk->mesh_dirty)
+        continue;
+
+      chunk_adjacency_init(&chunk_adjacency, world, chunk);
+      chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &renderer->resource_pack, &chunk_adjacency);
+    }
+
   chunk_mesh_builder_deinit(&chunk_mesh_builder);
 }
 

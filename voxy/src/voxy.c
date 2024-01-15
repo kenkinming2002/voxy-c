@@ -20,7 +20,6 @@ struct application
   struct window   window;
   struct renderer renderer;
   struct world    world;
-  struct camera   camera;
 };
 
 static int application_init(struct application *application)
@@ -43,12 +42,6 @@ static int application_init(struct application *application)
       for(int x=-9; x<=9; ++x)
         world_chunk_generate(&application->world, x, y, z);
 
-  application->camera.transform.translation = vec3(10.0f, -10.0f, 40.0f);
-  application->camera.transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
-  application->camera.fovy                  = M_PI / 2.0f;
-  application->camera.aspect                = 1.0f;
-  application->camera.near                  = 1.0f;
-  application->camera.far                   = 1000.0f;
   return 0;
 
 error:
@@ -73,18 +66,7 @@ static void application_deinit(struct application *application)
 
 static void application_update(struct application *application)
 {
-  struct vec3 rotation = vec3_zero();
-  struct vec3 translation = vec3_zero();
-
-  window_get_mouse_motion(&application->window, &rotation.yaw, &rotation.pitch);
-  window_get_keyboard_motion(&application->window, &translation.x, &translation.y, &translation.z);
-
-  rotation    = vec3_mul_s(rotation, PAN_SPEED);
-  translation = vec3_normalize(translation);
-  translation = vec3_mul_s(translation, MOVE_SPEED);
-
-  transform_rotate(&application->camera.transform, rotation);
-  transform_local_translate(&application->camera.transform, translation);
+  world_update(&application->world, &application->window);
 }
 
 static void application_render(struct application *application)
@@ -96,10 +78,14 @@ static void application_render(struct application *application)
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  application->camera.aspect = (float)width / (float)height;
-
   renderer_update(&application->renderer, &application->world);
-  renderer_render(&application->renderer, &application->camera);
+  renderer_render(&application->renderer, &(struct camera) {
+    .transform = application->world.player_transform,
+    .fovy      = M_PI / 2.0f,
+    .near      = 1.0f,
+    .far       = 1000.0f,
+    .aspect    = (float)width / (float)height,
+  });
 
   window_swap_buffers(&application->window);
 }

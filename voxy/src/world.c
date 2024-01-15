@@ -93,10 +93,14 @@ struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z)
 void world_init(struct world *world, seed_t seed)
 {
   world->seed              = seed;
+
   world->chunks            = NULL;
   world->chunk_capacity    = 0;
   world->chunk_load        = 0;
   world->chunk_remesh_list = NULL;
+
+  world->player_transform.translation = vec3(10.0f, -10.0f, 40.0f);
+  world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
 }
 
 static float get_height(seed_t seed, int y, int x)
@@ -106,6 +110,25 @@ static float get_height(seed_t seed, int y, int x)
   value += perlin2(seed, vec2_div_s(vec2(x, y), 7.0f))  * 15.0f + 10.0f;
   value += perlin2(seed, vec2_div_s(vec2(x, y), 3.0f))  * 3.0f  + 3.0f;
   return value;
+}
+
+#define MOVE_SPEED 1.0f
+#define PAN_SPEED  0.001f
+
+void world_update(struct world *world, struct window *window)
+{
+  struct vec3 rotation = vec3_zero();
+  struct vec3 translation = vec3_zero();
+
+  window_get_mouse_motion(window, &rotation.yaw, &rotation.pitch);
+  window_get_keyboard_motion(window, &translation.x, &translation.y, &translation.z);
+
+  rotation    = vec3_mul_s(rotation, PAN_SPEED);
+  translation = vec3_normalize(translation);
+  translation = vec3_mul_s(translation, MOVE_SPEED);
+
+  transform_rotate(&world->player_transform, rotation);
+  transform_local_translate(&world->player_transform, translation);
 }
 
 void world_chunk_generate(struct world *world, int x, int y, int z)

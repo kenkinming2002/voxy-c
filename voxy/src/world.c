@@ -13,7 +13,7 @@ void world_init(struct world *world, seed_t seed)
   world->chunk_capacity = 0;
   world->chunk_load     = 0;
 
-  world->player_transform.translation = vec3(0.0f, 0.0f, world_get_height(world, 0, 0) + 2.0f);
+  world->player_transform.translation = vec3(0.5f, 0.5f, world_get_height(world, 0, 0) + 2.0f);
   world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
 }
 

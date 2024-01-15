@@ -14,7 +14,7 @@ void world_init(struct world *world, seed_t seed)
   world->chunk_load        = 0;
   world->chunk_remesh_list = NULL;
 
-  world->player_transform.translation = vec3(10.0f, -10.0f, 40.0f);
+  world->player_transform.translation = vec3(0.0f, 0.0f, world_get_height(world, 0, 0) + 2.0f);
   world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
 }
 

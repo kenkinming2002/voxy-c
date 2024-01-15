@@ -132,9 +132,9 @@ void world_update_chunk_generate(struct world *world)
   int x = floorf(world->player_transform.translation.x / CHUNK_WIDTH);
   int y = floorf(world->player_transform.translation.y / CHUNK_WIDTH);
   int z = floorf(world->player_transform.translation.z / CHUNK_WIDTH);
-  for(int dz = -4; dz<=4; ++dz)
-    for(int dy = -4; dy<=4; ++dy)
-      for(int dx = -4; dx<=4; ++dx)
+  for(int dz = -8; dz<=8; ++dz)
+    for(int dy = -8; dy<=8; ++dy)
+      for(int dx = -8; dx<=8; ++dx)
         if(!world_chunk_lookup(world, x+dx, y+dy, z+dz))
           world_chunk_generate(world, x+dx, y+dy, z+dz);
 }
@@ -143,14 +143,23 @@ float world_get_height(struct world *world, int x, int y)
 {
   float value = 0.0f;
 
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 1600.0f)) * 512.0f + 512.0f;
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 800.0f))  * 256.0f + 256.0f;
+  seed_t seed = world->seed;
 
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 400.0f)) * 140.0f + 140.0f;
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 200.0f)) * 70.0f  + 70.0f;
+  // Truly Massive Mountains
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 8000.0f)) * 2048.0f + 2048.0f;
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 4000.0f)) * 1024.0f + 1024.0f;
 
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 10.0f))  * 8.0f + 8.0f;
-  value += perlin2(world->seed, vec2_div_s(vec2(x, y), 5.0f))   * 3.0f + 3.0f;
+  // Mountains
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 1600.0f)) * 512.0f + 512.0f;
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 800.0f))  * 256.0f + 256.0f;
+
+  // Hills
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 400.0f)) * 256.0f + 256.0f;
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 200.0f)) * 128.0f + 128.0f;
+
+  // Small hills
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 10.0f)) * 5.0f + 5.0f;
+  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 5.0f))  * 2.0f + 2.0f;
 
   return value;
 }

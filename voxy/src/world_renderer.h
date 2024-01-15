@@ -1,5 +1,5 @@
-#ifndef VOXY_RENDERER_H
-#define VOXY_RENDERER_H
+#ifndef VOXY_WORLD_RENDERER_H
+#define VOXY_WORLD_RENDERER_H
 
 #include <voxy/resource_pack.h>
 
@@ -78,7 +78,7 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
 /************
  * Renderer *
  ************/
-struct renderer
+struct world_renderer
 {
   struct resource_pack resource_pack;
 
@@ -90,19 +90,19 @@ struct renderer
   size_t              chunk_mesh_load;
 };
 
-int renderer_init(struct renderer *renderer);
-void renderer_deinit(struct renderer *renderer);
+int world_renderer_init(struct world_renderer *world_renderer);
+void world_renderer_deinit(struct world_renderer *world_renderer);
 
-void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity);
-struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z);
-struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z);
+void world_renderer_chunk_mesh_rehash(struct world_renderer *world_renderer, size_t new_capacity);
+struct chunk_mesh *world_renderer_chunk_mesh_add(struct world_renderer *world_renderer, int x, int y, int z);
+struct chunk_mesh *world_renderer_chunk_mesh_lookup(struct world_renderer *world_renderer, int x, int y, int z);
 
-void renderer_update(struct renderer *renderer, struct world *world);
+void world_renderer_update(struct world_renderer *world_renderer, struct world *world);
 
-void renderer_update_load(struct renderer *renderer, struct world *world);
-void renderer_update_unload(struct renderer *renderer, struct world *world);
-void renderer_update_reload(struct renderer *renderer, struct world *world);
+void world_renderer_update_load(struct world_renderer *world_renderer, struct world *world);
+void world_renderer_update_unload(struct world_renderer *world_renderer, struct world *world);
+void world_renderer_update_reload(struct world_renderer *world_renderer, struct world *world);
 
-void renderer_render(struct renderer *renderer, struct camera *camera);
+void world_renderer_render(struct world_renderer *world_renderer, struct camera *camera);
 
-#endif // VOXY_RENDERER_H
+#endif // VOXY_WORLD_RENDERER_H

@@ -6,13 +6,13 @@ VOXY_SRCS += voxy/src/gl.c
 VOXY_SRCS += voxy/src/glad.c
 VOXY_SRCS += voxy/src/noise.c
 VOXY_SRCS += voxy/src/random.c
-VOXY_SRCS += voxy/src/renderer.c
 VOXY_SRCS += voxy/src/stb_image.c
 VOXY_SRCS += voxy/src/transform.c
 VOXY_SRCS += voxy/src/voxy.c
 VOXY_SRCS += voxy/src/window.c
 VOXY_SRCS += voxy/src/world.c
 VOXY_SRCS += voxy/src/world_generator.c
+VOXY_SRCS += voxy/src/world_renderer.c
 
 RESOURCE_PACK_SRCS += resource_pack/src/resource_pack.c
 

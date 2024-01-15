@@ -1,4 +1,4 @@
-#include "renderer.h"
+#include "world_renderer.h"
 
 #include "lin.h"
 #include "gl.h"
@@ -234,33 +234,33 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
 /************
  * Renderer *
  ************/
-int renderer_init(struct renderer *renderer)
+int world_renderer_init(struct world_renderer *world_renderer)
 {
-  if(resource_pack_load(&renderer->resource_pack, "resource_pack/resource_pack.so") != 0)
+  if(resource_pack_load(&world_renderer->resource_pack, "resource_pack/resource_pack.so") != 0)
     return -1;
 
-  renderer->chunk_program             = 0;
-  renderer->chunk_block_texture_array = 0;
-  renderer->chunk_meshes              = NULL;
-  renderer->chunk_mesh_capacity       = 0;
-  renderer->chunk_mesh_load           = 0;
+  world_renderer->chunk_program             = 0;
+  world_renderer->chunk_block_texture_array = 0;
+  world_renderer->chunk_meshes              = NULL;
+  world_renderer->chunk_mesh_capacity       = 0;
+  world_renderer->chunk_mesh_load           = 0;
 
-  if((renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
+  if((world_renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
   {
     fprintf(stderr, "ERROR: Failed to load chunk shader\n");
     goto error;
   }
 
-  size_t       filepath_count = renderer->resource_pack.block_texture_info_count;
+  size_t       filepath_count = world_renderer->resource_pack.block_texture_info_count;
   const char **filepaths      = malloc(filepath_count * sizeof *filepaths);
 
   for(size_t i=0; i<filepath_count; ++i)
-    filepaths[i] = renderer->resource_pack.block_texture_infos[i].filepath;
-  renderer->chunk_block_texture_array = gl_array_texture_load(filepath_count, filepaths);
+    filepaths[i] = world_renderer->resource_pack.block_texture_infos[i].filepath;
+  world_renderer->chunk_block_texture_array = gl_array_texture_load(filepath_count, filepaths);
 
   free(filepaths);
 
-  if(renderer->chunk_block_texture_array == 0)
+  if(world_renderer->chunk_block_texture_array == 0)
   {
     fprintf(stderr, "ERROR: Failed to load block textures\n");
     goto error;
@@ -269,24 +269,24 @@ int renderer_init(struct renderer *renderer)
   return 0;
 
 error:
-  if(renderer->chunk_program != 0)
-    glDeleteProgram(renderer->chunk_program);
+  if(world_renderer->chunk_program != 0)
+    glDeleteProgram(world_renderer->chunk_program);
 
-  if(renderer->chunk_block_texture_array != 0)
-    glDeleteTextures(1, &renderer->chunk_block_texture_array);
+  if(world_renderer->chunk_block_texture_array != 0)
+    glDeleteTextures(1, &world_renderer->chunk_block_texture_array);
 
-  resource_pack_unload(&renderer->resource_pack);
+  resource_pack_unload(&world_renderer->resource_pack);
   return -1;
 }
 
-void renderer_deinit(struct renderer *renderer)
+void world_renderer_deinit(struct world_renderer *world_renderer)
 {
-  glDeleteProgram(renderer->chunk_program);
-  glDeleteTextures(1, &renderer->chunk_block_texture_array);
+  glDeleteProgram(world_renderer->chunk_program);
+  glDeleteTextures(1, &world_renderer->chunk_block_texture_array);
 
-  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
   {
-    struct chunk_mesh *chunk_mesh = renderer->chunk_meshes[i];
+    struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes[i];
     while(chunk_mesh)
     {
       struct chunk_mesh *tmp = chunk_mesh;
@@ -295,7 +295,7 @@ void renderer_deinit(struct renderer *renderer)
       free(tmp);
     }
   }
-  free(renderer->chunk_meshes);
+  free(world_renderer->chunk_meshes);
 }
 
 static inline size_t hash(int x, int y, int z)
@@ -304,12 +304,12 @@ static inline size_t hash(int x, int y, int z)
   return x * 23 + y * 31 + z * 47;
 }
 
-void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity)
+void world_renderer_chunk_mesh_rehash(struct world_renderer *world_renderer, size_t new_capacity)
 {
   struct chunk_mesh *orphans = NULL;
-  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
   {
-    struct chunk_mesh **head = &renderer->chunk_meshes[i];
+    struct chunk_mesh **head = &world_renderer->chunk_meshes[i];
     while(*head)
       if((*head)->hash % new_capacity != i)
       {
@@ -323,27 +323,27 @@ void renderer_chunk_mesh_rehash(struct renderer *renderer, size_t new_capacity)
         head = &(*head)->next;
   }
 
-  renderer->chunk_meshes = realloc(renderer->chunk_meshes, new_capacity * sizeof *renderer->chunk_meshes);
-  for(size_t i=renderer->chunk_mesh_capacity; i<new_capacity; ++i)
-    renderer->chunk_meshes[i] = NULL;
-  renderer->chunk_mesh_capacity = new_capacity;
+  world_renderer->chunk_meshes = realloc(world_renderer->chunk_meshes, new_capacity * sizeof *world_renderer->chunk_meshes);
+  for(size_t i=world_renderer->chunk_mesh_capacity; i<new_capacity; ++i)
+    world_renderer->chunk_meshes[i] = NULL;
+  world_renderer->chunk_mesh_capacity = new_capacity;
 
   while(orphans)
   {
     struct chunk_mesh *orphan = orphans;
     orphans = orphans->next;
 
-    orphan->next = renderer->chunk_meshes[orphan->hash % renderer->chunk_mesh_capacity];
-    renderer->chunk_meshes[orphan->hash % renderer->chunk_mesh_capacity] = orphan;
+    orphan->next = world_renderer->chunk_meshes[orphan->hash % world_renderer->chunk_mesh_capacity];
+    world_renderer->chunk_meshes[orphan->hash % world_renderer->chunk_mesh_capacity] = orphan;
   }
 }
 
-struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int y, int z)
+struct chunk_mesh *world_renderer_chunk_mesh_add(struct world_renderer *world_renderer, int x, int y, int z)
 {
-  if(renderer->chunk_mesh_capacity == 0)
-    renderer_chunk_mesh_rehash(renderer, 32);
-  else if(renderer->chunk_mesh_load * 4 >= renderer->chunk_mesh_capacity * 3)
-    renderer_chunk_mesh_rehash(renderer, renderer->chunk_mesh_capacity * 2);
+  if(world_renderer->chunk_mesh_capacity == 0)
+    world_renderer_chunk_mesh_rehash(world_renderer, 32);
+  else if(world_renderer->chunk_mesh_load * 4 >= world_renderer->chunk_mesh_capacity * 3)
+    world_renderer_chunk_mesh_rehash(world_renderer, world_renderer->chunk_mesh_capacity * 2);
 
   struct chunk_mesh *chunk_mesh = malloc(sizeof *chunk_mesh);
   chunk_mesh->x = x;
@@ -352,37 +352,37 @@ struct chunk_mesh *renderer_chunk_mesh_add(struct renderer *renderer, int x, int
   chunk_mesh_init(chunk_mesh);
 
   chunk_mesh->hash = hash(x, y, z);
-  chunk_mesh->next = renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity];
+  chunk_mesh->next = world_renderer->chunk_meshes[chunk_mesh->hash % world_renderer->chunk_mesh_capacity];
 
-  renderer->chunk_meshes[chunk_mesh->hash % renderer->chunk_mesh_capacity] = chunk_mesh;
-  renderer->chunk_mesh_load += 1;
+  world_renderer->chunk_meshes[chunk_mesh->hash % world_renderer->chunk_mesh_capacity] = chunk_mesh;
+  world_renderer->chunk_mesh_load += 1;
 
   return chunk_mesh;
 }
 
-struct chunk_mesh *renderer_chunk_mesh_lookup(struct renderer *renderer, int x, int y, int z)
+struct chunk_mesh *world_renderer_chunk_mesh_lookup(struct world_renderer *world_renderer, int x, int y, int z)
 {
-  if(renderer->chunk_mesh_capacity == 0)
+  if(world_renderer->chunk_mesh_capacity == 0)
     return NULL;
 
   size_t h = hash(x, y, z);
-  for(struct chunk_mesh *chunk_mesh = renderer->chunk_meshes[h % renderer->chunk_mesh_capacity]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+  for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes[h % world_renderer->chunk_mesh_capacity]; chunk_mesh; chunk_mesh = chunk_mesh->next)
     if(chunk_mesh->hash == h && chunk_mesh->x == x && chunk_mesh->y == y && chunk_mesh->z == z)
       return chunk_mesh;
   return NULL;
 }
 
-void renderer_update(struct renderer *renderer, struct world *world)
+void world_renderer_update(struct world_renderer *world_renderer, struct world *world)
 {
-  renderer_update_unload(renderer, world);
-  renderer_update_load(renderer, world);
-  renderer_update_reload(renderer, world);
+  world_renderer_update_unload(world_renderer, world);
+  world_renderer_update_load(world_renderer, world);
+  world_renderer_update_reload(world_renderer, world);
 }
 
 #define RENDERER_LOAD_DISTANCE   16
 #define RENDERER_UNLOAD_DISTANCE 64
 
-void renderer_update_load(struct renderer *renderer, struct world *world)
+void world_renderer_update_load(struct world_renderer *world_renderer, struct world *world)
 {
   struct chunk_mesh_builder chunk_mesh_builder;
   chunk_mesh_builder_init(&chunk_mesh_builder);
@@ -401,25 +401,25 @@ void renderer_update_load(struct renderer *renderer, struct world *world)
         if(!(chunk = world_chunk_lookup(world, x+dx, y+dy, z+dz)))
           continue;
 
-        if((chunk_mesh = renderer_chunk_mesh_lookup(renderer, x+dx, y+dy, z+dz)))
+        if((chunk_mesh = world_renderer_chunk_mesh_lookup(world_renderer, x+dx, y+dy, z+dz)))
           continue;
 
-        chunk_mesh = renderer_chunk_mesh_add(renderer, x+dx, y+dy, z+dz);
+        chunk_mesh = world_renderer_chunk_mesh_add(world_renderer, x+dx, y+dy, z+dz);
         chunk_adjacency_init(&chunk_adjacency, world, chunk);
-        chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &renderer->resource_pack, &chunk_adjacency);
+        chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &world_renderer->resource_pack, &chunk_adjacency);
       }
 
   chunk_mesh_builder_deinit(&chunk_mesh_builder);
 }
 
-void renderer_update_unload(struct renderer *renderer, struct world *world)
+void world_renderer_update_unload(struct world_renderer *world_renderer, struct world *world)
 {
   int x = floorf(world->player_transform.translation.x / CHUNK_WIDTH);
   int y = floorf(world->player_transform.translation.y / CHUNK_WIDTH);
   int z = floorf(world->player_transform.translation.z / CHUNK_WIDTH);
-  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
+  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
   {
-    struct chunk_mesh **it = &renderer->chunk_meshes[i];
+    struct chunk_mesh **it = &world_renderer->chunk_meshes[i];
     while(*it)
       if((*it)->x < x - RENDERER_UNLOAD_DISTANCE || (*it)->x > x + RENDERER_UNLOAD_DISTANCE ||
          (*it)->y < y - RENDERER_UNLOAD_DISTANCE || (*it)->y > y + RENDERER_UNLOAD_DISTANCE ||
@@ -436,7 +436,7 @@ void renderer_update_unload(struct renderer *renderer, struct world *world)
   }
 }
 
-void renderer_update_reload(struct renderer *renderer, struct world *world)
+void world_renderer_update_reload(struct world_renderer *world_renderer, struct world *world)
 {
   struct chunk_mesh_builder chunk_mesh_builder;
   chunk_mesh_builder_init(&chunk_mesh_builder);
@@ -445,21 +445,21 @@ void renderer_update_reload(struct renderer *renderer, struct world *world)
   struct chunk_mesh      *chunk_mesh;
   struct chunk_adjacency  chunk_adjacency;
 
-  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
-    for(chunk_mesh = renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
+    for(chunk_mesh = world_renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
     {
       chunk = world_chunk_lookup(world, chunk_mesh->x, chunk_mesh->y, chunk_mesh->z);
       if(!chunk || !chunk->mesh_dirty)
         continue;
 
       chunk_adjacency_init(&chunk_adjacency, world, chunk);
-      chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &renderer->resource_pack, &chunk_adjacency);
+      chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &world_renderer->resource_pack, &chunk_adjacency);
     }
 
   chunk_mesh_builder_deinit(&chunk_mesh_builder);
 }
 
-void renderer_render(struct renderer *renderer, struct camera *camera)
+void world_renderer_render(struct world_renderer *world_renderer, struct camera *camera)
 {
   struct mat4 VP = mat4_identity();
   VP = mat4_mul(camera_view_matrix(camera),       VP);
@@ -471,13 +471,13 @@ void renderer_render(struct renderer *renderer, struct camera *camera)
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  glUseProgram(renderer->chunk_program);
-  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
-  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "V"),  1, GL_TRUE, (const float *)&V);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, renderer->chunk_block_texture_array);
+  glUseProgram(world_renderer->chunk_program);
+  glUniformMatrix4fv(glGetUniformLocation(world_renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
+  glUniformMatrix4fv(glGetUniformLocation(world_renderer->chunk_program, "V"),  1, GL_TRUE, (const float *)&V);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, world_renderer->chunk_block_texture_array);
 
-  for(size_t i=0; i<renderer->chunk_mesh_capacity; ++i)
-    for(struct chunk_mesh *chunk_mesh = renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
+    for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
     {
       glBindVertexArray(chunk_mesh->vao);
       glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);

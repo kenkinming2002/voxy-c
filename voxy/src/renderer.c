@@ -66,39 +66,6 @@ void resource_pack_unload(struct resource_pack *resource_pack)
   dlclose(resource_pack->handle);
 }
 
-/*******************
- * Chunk Adjacency *
- *******************/
-void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk)
-{
-  chunk_adjacency->chunk = chunk;
-  chunk_adjacency->left   = world_chunk_lookup(world, chunk->x-1, chunk->y, chunk->z);
-  chunk_adjacency->right  = world_chunk_lookup(world, chunk->x+1, chunk->y, chunk->z);
-  chunk_adjacency->back   = world_chunk_lookup(world, chunk->x, chunk->y-1, chunk->z);
-  chunk_adjacency->front  = world_chunk_lookup(world, chunk->x, chunk->y+1, chunk->z);
-  chunk_adjacency->bottom = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z-1);
-  chunk_adjacency->top    = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z+1);
-}
-
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z)
-{
-  if(z >= 0 && z < CHUNK_WIDTH)
-    if(y >= 0 && y < CHUNK_WIDTH)
-      if(x >= 0 && x < CHUNK_WIDTH)
-        return &chunk_adjacency->chunk->tiles[z][y][x];
-
-  if(z == -1)          return chunk_adjacency->bottom ? &chunk_adjacency->bottom->tiles[CHUNK_WIDTH-1][y][x] : NULL;
-  if(z == CHUNK_WIDTH) return chunk_adjacency->top    ? &chunk_adjacency->top   ->tiles[0]            [y][x] : NULL;
-
-  if(y == -1)          return chunk_adjacency->back  ? &chunk_adjacency->back ->tiles[z][CHUNK_WIDTH-1][x] : NULL;
-  if(y == CHUNK_WIDTH) return chunk_adjacency->front ? &chunk_adjacency->front->tiles[z][0]            [x] : NULL;
-
-  if(x == -1)          return chunk_adjacency->left  ? &chunk_adjacency->left ->tiles[z][y][CHUNK_WIDTH-1] : NULL;
-  if(x == CHUNK_WIDTH) return chunk_adjacency->right ? &chunk_adjacency->right->tiles[z][y][0]             : NULL;
-
-  assert(0 && "Unreachable");
-}
-
 /**********************
  * Chunk Mesh Builder *
  **********************/
@@ -420,6 +387,7 @@ void renderer_update(struct renderer *renderer, struct world *world)
   {
     struct chunk *chunk = world->chunk_remesh_list;
     world->chunk_remesh_list = world->chunk_remesh_list->remesh_next;
+    chunk->remesh = false;
 
     struct chunk_mesh *chunk_mesh = renderer_chunk_mesh_lookup_or_add(renderer, chunk->x, chunk->y, chunk->z);
     struct chunk_adjacency chunk_adjacency;

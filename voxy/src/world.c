@@ -90,6 +90,16 @@ struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z)
   return NULL;
 }
 
+void world_chunk_remesh_insert(struct world *world, struct chunk *chunk)
+{
+  if(chunk->remesh)
+    return;
+
+  chunk->remesh            = true;
+  chunk->remesh_next       = world->chunk_remesh_list;
+  world->chunk_remesh_list = chunk;
+}
+
 void world_init(struct world *world, seed_t seed)
 {
   world->seed              = seed;
@@ -152,8 +162,18 @@ void world_update_chunk_generate(struct world *world)
 void world_chunk_generate(struct world *world, int x, int y, int z)
 {
   struct chunk *chunk = world_chunk_add(world, x, y, z);
+  chunk->remesh      = false;
+  chunk->remesh_next = NULL;
+
   if(chunk->z < 0)
-    return; // Fast-path
+  {
+    for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
+      for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
+        for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+          chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+
+    return; // Fast-path!?
+  }
 
   float heights[CHUNK_WIDTH][CHUNK_WIDTH];
   for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
@@ -177,6 +197,47 @@ void world_chunk_generate(struct world *world, int x, int y, int z)
           chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
       }
 
-  chunk->remesh_next = world->chunk_remesh_list;
-  world->chunk_remesh_list = chunk;
+  struct chunk_adjacency chunk_adjacency;
+  chunk_adjacency_init(&chunk_adjacency, world, chunk);
+  if(chunk_adjacency.chunk)  world_chunk_remesh_insert(world, chunk_adjacency.chunk);
+  if(chunk_adjacency.bottom) world_chunk_remesh_insert(world, chunk_adjacency.bottom);
+  if(chunk_adjacency.top)    world_chunk_remesh_insert(world, chunk_adjacency.top);
+  if(chunk_adjacency.back)   world_chunk_remesh_insert(world, chunk_adjacency.back);
+  if(chunk_adjacency.front)  world_chunk_remesh_insert(world, chunk_adjacency.front);
+  if(chunk_adjacency.left)   world_chunk_remesh_insert(world, chunk_adjacency.left);
+  if(chunk_adjacency.right)  world_chunk_remesh_insert(world, chunk_adjacency.right);
 }
+
+/*******************
+ * Chunk Adjacency *
+ *******************/
+void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk)
+{
+  chunk_adjacency->chunk = chunk;
+  chunk_adjacency->left   = world_chunk_lookup(world, chunk->x-1, chunk->y, chunk->z);
+  chunk_adjacency->right  = world_chunk_lookup(world, chunk->x+1, chunk->y, chunk->z);
+  chunk_adjacency->back   = world_chunk_lookup(world, chunk->x, chunk->y-1, chunk->z);
+  chunk_adjacency->front  = world_chunk_lookup(world, chunk->x, chunk->y+1, chunk->z);
+  chunk_adjacency->bottom = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z-1);
+  chunk_adjacency->top    = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z+1);
+}
+
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z)
+{
+  if(z >= 0 && z < CHUNK_WIDTH)
+    if(y >= 0 && y < CHUNK_WIDTH)
+      if(x >= 0 && x < CHUNK_WIDTH)
+        return &chunk_adjacency->chunk->tiles[z][y][x];
+
+  if(z == -1)          return chunk_adjacency->bottom ? &chunk_adjacency->bottom->tiles[CHUNK_WIDTH-1][y][x] : NULL;
+  if(z == CHUNK_WIDTH) return chunk_adjacency->top    ? &chunk_adjacency->top   ->tiles[0]            [y][x] : NULL;
+
+  if(y == -1)          return chunk_adjacency->back  ? &chunk_adjacency->back ->tiles[z][CHUNK_WIDTH-1][x] : NULL;
+  if(y == CHUNK_WIDTH) return chunk_adjacency->front ? &chunk_adjacency->front->tiles[z][0]            [x] : NULL;
+
+  if(x == -1)          return chunk_adjacency->left  ? &chunk_adjacency->left ->tiles[z][y][CHUNK_WIDTH-1] : NULL;
+  if(x == CHUNK_WIDTH) return chunk_adjacency->right ? &chunk_adjacency->right->tiles[z][y][0]             : NULL;
+
+  assert(0 && "Unreachable");
+}
+

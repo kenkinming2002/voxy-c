@@ -31,6 +31,7 @@ struct chunk
   struct chunk *next;
   size_t        hash;
 
+  bool          remesh;
   struct chunk *remesh_next;
 
   int x, y, z;
@@ -60,11 +61,32 @@ void world_chunk_rehash(struct world *world, size_t new_capacity);
 struct chunk *world_chunk_add(struct world *world, int x, int y, int z);
 struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z);
 
+void world_chunk_remesh_insert(struct world *world, struct chunk *chunk);
+
 void world_update(struct world *world, struct window *window);
 void world_update_player_control(struct world *world, struct window *window);
 void world_update_chunk_generate(struct world *world);
 
 void world_chunk_generate(struct world *world, int x, int y, int z);
 
+/*******************
+ * Chunk Adjacency *
+ *******************/
+struct chunk_adjacency
+{
+  struct chunk *chunk;
+
+  struct chunk *bottom;
+  struct chunk *top;
+
+  struct chunk *back;
+  struct chunk *front;
+
+  struct chunk *left;
+  struct chunk *right;
+};
+
+void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk);
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z);
 
 #endif // VOXY_WORLD_H

@@ -26,26 +26,6 @@ struct resource_pack
 int resource_pack_load(struct resource_pack *resource_pack, const char *filepath);
 void resource_pack_unload(struct resource_pack *resource_pack);
 
-/*******************
- * Chunk Adjacency *
- *******************/
-struct chunk_adjacency
-{
-  struct chunk *chunk;
-
-  struct chunk *bottom;
-  struct chunk *top;
-
-  struct chunk *back;
-  struct chunk *front;
-
-  struct chunk *left;
-  struct chunk *right;
-};
-
-void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk);
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z);
-
 /**********************
  * Chunk Mesh Builder *
  **********************/

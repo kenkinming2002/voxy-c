@@ -2,6 +2,22 @@
 
 #include <math.h>
 
+float random2(seed_t seed, struct vec2 position)
+{
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  return (float)seed_next(&seed) / (float)SEED_MAX;
+}
+
+float random3(seed_t seed, struct vec3 position)
+{
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  seed_combine(&seed, &position.z, sizeof position.z);
+  return (float)seed_next(&seed) / (float)SEED_MAX;
+}
+
+
 static struct vec2 gradient2(seed_t seed, int ix, int iy)
 {
   seed_combine(&seed, &ix, sizeof ix);
@@ -87,9 +103,9 @@ float perlin3(seed_t seed, struct vec3 position)
   int y0 = floorf(position.y), y1 = y0 + 1;
   int z0 = floorf(position.z), z1 = z0 + 1;
 
-  float tx0 = position.x - x0;
-  float ty0 = position.y - y0;
-  float tz0 = position.z - z0;
+  float tx = position.x - x0;
+  float ty = position.y - y0;
+  float tz = position.z - z0;
 
   return
     interpolate(
@@ -97,28 +113,28 @@ float perlin3(seed_t seed, struct vec3 position)
         interpolate(
           value3(seed, position, x0, y0, z0),
           value3(seed, position, x1, y0, z0),
-          tx0
+          tx
         ),
         interpolate(
           value3(seed, position, x0, y1, z0),
           value3(seed, position, x1, y1, z0),
-          tx0
+          tx
         ),
-        ty0
+        ty
       ),
       interpolate(
         interpolate(
           value3(seed, position, x0, y0, z1),
           value3(seed, position, x1, y0, z1),
-          tx0
+          tx
         ),
         interpolate(
           value3(seed, position, x0, y1, z1),
           value3(seed, position, x1, y1, z1),
-          tx0
+          tx
         ),
-        ty0
+        ty
       ),
-      tz0
+      tz
     );
 }

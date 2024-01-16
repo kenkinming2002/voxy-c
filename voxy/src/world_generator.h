@@ -3,9 +3,10 @@
 
 #include "world.h"
 
-#define CAVE_WORM_RATIO 1e-5
+#define CAVE_WORM_RATIO 1e-3
 
-#define CAVE_WORM_NODE_COUNT  20
+#define CAVE_WORM_TRIAL 10
+#define CAVE_WORM_NODE_COUNT  30
 #define CAVE_WORM_NODE_RADIUS 5.0f
 #define CAVE_WORM_STEP 5.0f
 

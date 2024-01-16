@@ -79,6 +79,6 @@ struct chunk_adjacency
 };
 
 void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk);
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z);
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int cx, int cy, int cz);
 
 #endif // VOXY_WORLD_H

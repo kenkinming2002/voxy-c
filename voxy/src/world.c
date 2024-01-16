@@ -140,21 +140,21 @@ void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world 
   chunk_adjacency->top    = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z+1);
 }
 
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int x, int y, int z)
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int cx, int cy, int cz)
 {
-  if(z >= 0 && z < CHUNK_WIDTH)
-    if(y >= 0 && y < CHUNK_WIDTH)
-      if(x >= 0 && x < CHUNK_WIDTH)
-        return &chunk_adjacency->chunk->tiles[z][y][x];
+  if(cz >= 0 && cz < CHUNK_WIDTH)
+    if(cy >= 0 && cy < CHUNK_WIDTH)
+      if(cx >= 0 && cx < CHUNK_WIDTH)
+        return &chunk_adjacency->chunk->tiles[cz][cy][cx];
 
-  if(z == -1)          return chunk_adjacency->bottom ? &chunk_adjacency->bottom->tiles[CHUNK_WIDTH-1][y][x] : NULL;
-  if(z == CHUNK_WIDTH) return chunk_adjacency->top    ? &chunk_adjacency->top   ->tiles[0]            [y][x] : NULL;
+  if(cz == -1)          return chunk_adjacency->bottom ? &chunk_adjacency->bottom->tiles[CHUNK_WIDTH-1][cy][cx] : NULL;
+  if(cz == CHUNK_WIDTH) return chunk_adjacency->top    ? &chunk_adjacency->top   ->tiles[0]            [cy][cx] : NULL;
 
-  if(y == -1)          return chunk_adjacency->back  ? &chunk_adjacency->back ->tiles[z][CHUNK_WIDTH-1][x] : NULL;
-  if(y == CHUNK_WIDTH) return chunk_adjacency->front ? &chunk_adjacency->front->tiles[z][0]            [x] : NULL;
+  if(cy == -1)          return chunk_adjacency->back  ? &chunk_adjacency->back ->tiles[cz][CHUNK_WIDTH-1][cx] : NULL;
+  if(cy == CHUNK_WIDTH) return chunk_adjacency->front ? &chunk_adjacency->front->tiles[cz][0]            [cx] : NULL;
 
-  if(x == -1)          return chunk_adjacency->left  ? &chunk_adjacency->left ->tiles[z][y][CHUNK_WIDTH-1] : NULL;
-  if(x == CHUNK_WIDTH) return chunk_adjacency->right ? &chunk_adjacency->right->tiles[z][y][0]             : NULL;
+  if(cx == -1)          return chunk_adjacency->left  ? &chunk_adjacency->left ->tiles[cz][cy][CHUNK_WIDTH-1] : NULL;
+  if(cx == CHUNK_WIDTH) return chunk_adjacency->right ? &chunk_adjacency->right->tiles[cz][cy][0]             : NULL;
 
   assert(0 && "Unreachable");
 }

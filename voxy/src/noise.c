@@ -2,14 +2,14 @@
 
 #include <math.h>
 
-float random2(seed_t seed, struct vec2 position)
+float noise_random2(seed_t seed, struct vec2 position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
   return (float)seed_next(&seed) / (float)SEED_MAX;
 }
 
-float random3(seed_t seed, struct vec3 position)
+float noise_random3(seed_t seed, struct vec3 position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
@@ -73,7 +73,7 @@ static float interpolate(float a, float b, float t)
   return a + (b - a) * t;
 }
 
-float perlin2(seed_t seed, struct vec2 position)
+float noise_perlin2(seed_t seed, struct vec2 position)
 {
   int x0 = floorf(position.x), x1 = x0 + 1;
   int y0 = floorf(position.y), y1 = y0 + 1;
@@ -97,7 +97,7 @@ float perlin2(seed_t seed, struct vec2 position)
     );
 }
 
-float perlin3(seed_t seed, struct vec3 position)
+float noise_perlin3(seed_t seed, struct vec3 position)
 {
   int x0 = floorf(position.x), x1 = x0 + 1;
   int y0 = floorf(position.y), y1 = y0 + 1;

@@ -4,10 +4,10 @@
 #include "lin.h"
 #include "random.h"
 
-float random2(seed_t seed, struct vec2 position);
-float random3(seed_t seed, struct vec3 position);
+float noise_random2(seed_t seed, struct vec2 position);
+float noise_random3(seed_t seed, struct vec3 position);
 
-float perlin2(seed_t seed, struct vec2 position);
-float perlin3(seed_t seed, struct vec3 position);
+float noise_perlin2(seed_t seed, struct vec2 position);
+float noise_perlin3(seed_t seed, struct vec3 position);
 
 #endif // VOXY_NOISE_H

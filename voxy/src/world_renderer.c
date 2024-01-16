@@ -112,9 +112,9 @@ void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder
   chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = index;
 }
 
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz)
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int cx, int cy, int cz, int dcx, int dcy, int dcz)
 {
-  struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, x+dx, y+dy, z+dz);
+  struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, cx+dcx, cy+dcy, cz+dcz);
   if(ntile && ntile->id != TILE_ID_EMPTY)
     return; // Occlusion
 
@@ -128,7 +128,7 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
   // Fancy way to compute vertex positions without just dumping a big table here
   // Pray that the compiler will just inline everything (With -ffast-math probably)
 
-  struct vec3 normal = vec3(dx, dy, dz);
+  struct vec3 normal = vec3(dcx, dcy, dcz);
   struct vec3 axis2  = vec3_dot(normal, vec3(0.0f, 0.0f, 1.0f)) == 0.0f ? vec3(0.0f, 0.0f, 1.0f) : vec3(1.0f, 0.0f, 0.0f);
   struct vec3 axis1  = vec3_cross(normal, axis2);
 
@@ -138,7 +138,7 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
   struct vec3 center = vec3_zero();;
   center = vec3_add  (center, vec3(chunk_adjacency->chunk->x, chunk_adjacency->chunk->y, chunk_adjacency->chunk->z));
   center = vec3_mul_s(center, CHUNK_WIDTH);
-  center = vec3_add  (center, vec3(x, y, z));
+  center = vec3_add  (center, vec3(cx, cy, cz));
   center = vec3_add  (center, vec3(0.5f, 0.5f, 0.5f));
   center = vec3_add  (center, vec3_mul_s(normal, 0.5f));
 
@@ -155,12 +155,12 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
 
   // 3: Texture Index
   uint32_t texture_index;
-  if     (dx == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_left;
-  else if(dx ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_right;
-  else if(dy == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_back;
-  else if(dy ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_front;
-  else if(dz == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_bottom;
-  else if(dz ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[z][y][x].id].texture_top;
+  if     (dcx == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_left;
+  else if(dcx ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_right;
+  else if(dcy == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_back;
+  else if(dcy ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_front;
+  else if(dcz == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_bottom;
+  else if(dcz ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_top;
   else
     assert(0 && "Unreachable");
 
@@ -199,17 +199,17 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
   chunk_adjacency->chunk->mesh_dirty = false;
 
   chunk_mesh_builder_reset(chunk_mesh_builder);
-  for(int z = 0; z<CHUNK_WIDTH; ++z)
-    for(int y = 0; y<CHUNK_WIDTH; ++y)
-      for(int x = 0; x<CHUNK_WIDTH; ++x)
-        if(chunk_adjacency->chunk->tiles[z][y][x].id != TILE_ID_EMPTY)
+  for(int cz = 0; cz<CHUNK_WIDTH; ++cz)
+    for(int cy = 0; cy<CHUNK_WIDTH; ++cy)
+      for(int cx = 0; cx<CHUNK_WIDTH; ++cx)
+        if(chunk_adjacency->chunk->tiles[cz][cy][cx].id != TILE_ID_EMPTY)
         {
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z, -1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0, -1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0,  1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0,  0, -1);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, x, y, z,  0,  0,  1);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz, -1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  1,  0,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0, -1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0,  1,  0);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0,  0, -1);
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0,  0,  1);
         }
 
   glBindVertexArray(chunk_mesh->vao);

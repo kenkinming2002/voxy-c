@@ -53,7 +53,7 @@ void chunk_mesh_builder_deinit(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_reset(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *builder, struct chunk_mesh_vertex vertex);
 void chunk_mesh_builder_push_index(struct chunk_mesh_builder *builder, uint32_t index);
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int x, int y, int z, int dx, int dy, int dz);
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int cx, int cy, int cz, int dcx, int dcy, int dcz);
 
 /***************
  * Chunk Mesh *

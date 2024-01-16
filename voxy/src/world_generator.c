@@ -133,20 +133,20 @@ static float get_height(seed_t seed, int x, int y)
   struct vec2 position = vec2(x, y);
 
   // Truly Massive Mountains
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 8000.0f)) * 2048.0f + 2048.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 4000.0f)) * 1024.0f + 1024.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 8000.0f)) * 2048.0f + 2048.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 4000.0f)) * 1024.0f + 1024.0f;
 
   // Mountains
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 1600.0f)) * 512.0f + 512.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 800.0f))  * 256.0f + 256.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 1600.0f)) * 512.0f + 512.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 800.0f))  * 256.0f + 256.0f;
 
   // Hills
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 400.0f)) * 256.0f + 256.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 200.0f)) * 128.0f + 128.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 400.0f)) * 256.0f + 256.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 200.0f)) * 128.0f + 128.0f;
 
   // Small hills
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 10.0f)) * 5.0f + 5.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 5.0f))  * 2.0f + 2.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 10.0f)) * 5.0f + 5.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 5.0f))  * 2.0f + 2.0f;
 
   return value;
 }
@@ -258,7 +258,7 @@ struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_
         int real_x = chunk_info->x * CHUNK_WIDTH + x;
         int real_y = chunk_info->y * CHUNK_WIDTH + y;
         int real_z = chunk_info->z * CHUNK_WIDTH + z;
-        if(random3(seed_gen, vec3(real_x, real_y, real_z)) < CAVE_WORM_RATIO)
+        if(noise_random3(seed_gen, vec3(real_x, real_y, real_z)) < CAVE_WORM_RATIO)
         {
           if(worm_capacity == worm_count)
           {
@@ -270,9 +270,9 @@ struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_
           worm->nodes[0] = vec3(real_x, real_y, real_z);
           for(size_t i=1; i<CAVE_WORM_NODE_COUNT; ++i)
           {
-            struct vec3 offset = vec3(perlin3(seed_x, vec3_div_s(worm->nodes[i-1], 15.0f)),
-                                      perlin3(seed_y, vec3_div_s(worm->nodes[i-1], 15.0f)),
-                                      perlin3(seed_z, vec3_div_s(worm->nodes[i-1], 15.0f)));
+            struct vec3 offset = vec3(noise_perlin3(seed_x, vec3_div_s(worm->nodes[i-1], 15.0f)),
+                                      noise_perlin3(seed_y, vec3_div_s(worm->nodes[i-1], 15.0f)),
+                                      noise_perlin3(seed_z, vec3_div_s(worm->nodes[i-1], 15.0f)));
 
             offset = vec3_normalize(offset);
             offset = vec3_mul_s(offset, CAVE_WORM_STEP);
@@ -315,27 +315,27 @@ void world_generator_update_at(struct world_generator *world_generator, struct w
 
   if(chunk->z < 0)
   {
-    for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
-      for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-        for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-          chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+    for(unsigned cz = 0; cz<CHUNK_WIDTH; ++cz)
+      for(unsigned cy = 0; cy<CHUNK_WIDTH; ++cy)
+        for(unsigned cx = 0; cx<CHUNK_WIDTH; ++cx)
+          chunk->tiles[cz][cy][cx].id = TILE_ID_EMPTY;
 
     return; // Fast-path!?
   }
 
   // 1: Terrain Generation
   struct section_info *section_info = world_generator_section_info_get(world_generator, world, x, y);
-  for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
-    for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-      for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+  for(int cz = 0; cz<CHUNK_WIDTH; ++cz)
+    for(int cy = 0; cy<CHUNK_WIDTH; ++cy)
+      for(int cx = 0; cx<CHUNK_WIDTH; ++cx)
       {
-        int real_z = chunk->z * CHUNK_WIDTH + (int)z;
-        if(real_z <= section_info->heights[y][x])
-          chunk->tiles[z][y][x].id = TILE_ID_STONE;
-        else if(real_z <= section_info->heights[y][x] + 1.0f)
-          chunk->tiles[z][y][x].id = TILE_ID_GRASS;
+        int real_z = chunk->z * CHUNK_WIDTH + (int)cz;
+        if(real_z <= section_info->heights[cy][cx])
+          chunk->tiles[cz][cy][cx].id = TILE_ID_STONE;
+        else if(real_z <= section_info->heights[cy][cx] + 1.0f)
+          chunk->tiles[cz][cy][cx].id = TILE_ID_GRASS;
         else
-          chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+          chunk->tiles[cz][cy][cx].id = TILE_ID_EMPTY;
       }
 
   // 2: Cave generation

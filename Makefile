@@ -31,10 +31,10 @@ resource_pack/resource_pack.so: LDFLAGS += -shared
 all: voxy/voxy resource_pack/resource_pack.so
 
 voxy/voxy: $(VOXY_SRCS:.c=.o)
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(LIBS) $(VOXY_SRCS:.c=.o)
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS)
 
 resource_pack/resource_pack.so: $(RESOURCE_PACK_SRCS:.c=.o)
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(LIBS) $(RESOURCE_PACK_SRCS:.c=.o)
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(RESOURCE_PACK_SRCS:.c=.o) $(LIBS)
 
 clean:
 	- rm -f voxy/voxy

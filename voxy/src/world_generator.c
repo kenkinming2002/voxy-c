@@ -233,6 +233,21 @@ struct chunk_info *world_generator_chunk_info_lookup(struct world_generator *wor
   return NULL;
 }
 
+struct vec3 get_cave_direction(seed_t seed_x, seed_t seed_y, seed_t seed_z, struct vec3 position)
+{
+  struct vec3 direction = vec3_zero();
+
+  direction.x += noise_perlin3(seed_x, vec3_div_s(position, 50.0f));
+  direction.y += noise_perlin3(seed_y, vec3_div_s(position, 50.0f));
+  direction.z += noise_perlin3(seed_z, vec3_div_s(position, 50.0f));
+
+  direction.x += noise_perlin3(seed_x, vec3_div_s(position, 25.0f)) * 0.5f;
+  direction.y += noise_perlin3(seed_y, vec3_div_s(position, 25.0f)) * 0.5f;
+  direction.z += noise_perlin3(seed_z, vec3_div_s(position, 25.0f)) * 0.5f;
+
+  return vec3_normalize(direction);
+}
+
 struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_generator, struct world *world, int x, int y, int z)
 {
   struct chunk_info *chunk_info;
@@ -270,14 +285,8 @@ struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_
           worm->nodes[0] = vec3(real_x, real_y, real_z);
           for(size_t i=1; i<CAVE_WORM_NODE_COUNT; ++i)
           {
-            struct vec3 offset = vec3(noise_perlin3(seed_x, vec3_div_s(worm->nodes[i-1], 15.0f)),
-                                      noise_perlin3(seed_y, vec3_div_s(worm->nodes[i-1], 15.0f)),
-                                      noise_perlin3(seed_z, vec3_div_s(worm->nodes[i-1], 15.0f)));
-
-            offset = vec3_normalize(offset);
-            offset = vec3_mul_s(offset, CAVE_WORM_STEP);
-
-            worm->nodes[i] = vec3_add(worms->nodes[i-1], offset);
+            struct vec3 direction = get_cave_direction(seed_x, seed_y, seed_z, worm->nodes[i-1]);
+            worm->nodes[i] = vec3_add(worms->nodes[i-1], vec3_mul_s(direction, CAVE_WORM_STEP));
           }
         }
       }

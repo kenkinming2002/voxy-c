@@ -79,29 +79,38 @@ void world_generator_generate_chunk(struct world_generator *world_generator, str
   if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
 }
 
+static void vec2_rotate(struct vec2 *vec, float degree)
+{
+  float new_x = vec->x * +cosf(degree) + vec->y * +sinf(degree);
+  float new_y = vec->x * -sinf(degree) + vec->y * +cosf(degree);
+  vec->x = new_x;
+  vec->y = new_y;
+}
+
 float world_generator_get_height(struct world_generator *world_generator, struct world *world, int x, int y)
 {
   (void)world_generator;
 
   float value = 0.0f;
 
-  seed_t seed = world->seed;
+  seed_t      seed     = world->seed;
+  struct vec2 position = vec2(x, y);
 
   // Truly Massive Mountains
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 8000.0f)) * 2048.0f + 2048.0f;
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 4000.0f)) * 1024.0f + 1024.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 8000.0f)) * 2048.0f + 2048.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 4000.0f)) * 1024.0f + 1024.0f;
 
   // Mountains
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 1600.0f)) * 512.0f + 512.0f;
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 800.0f))  * 256.0f + 256.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 1600.0f)) * 512.0f + 512.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 800.0f))  * 256.0f + 256.0f;
 
   // Hills
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 400.0f)) * 256.0f + 256.0f;
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 200.0f)) * 128.0f + 128.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 400.0f)) * 256.0f + 256.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 200.0f)) * 128.0f + 128.0f;
 
   // Small hills
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 10.0f)) * 5.0f + 5.0f;
-  seed_next(&seed); value += perlin2(seed, vec2_div_s(vec2(x, y), 5.0f))  * 2.0f + 2.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 10.0f)) * 5.0f + 5.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 5.0f))  * 2.0f + 2.0f;
 
   return value;
 }

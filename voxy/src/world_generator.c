@@ -257,11 +257,7 @@ struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_
   chunk_info = world_generator_chunk_info_insert(world_generator, x, y, z);
 
   seed_t seed = world->seed;
-
   seed_t seed_gen = seed_next(&seed); // Determine whether to generate a worm
-  seed_t seed_x   = seed_next(&seed); // Determine x direction for worm movement
-  seed_t seed_y   = seed_next(&seed); // Determine y direction for worm movement
-  seed_t seed_z   = seed_next(&seed); // Determine z direction for worm movement
 
   struct worm *worms         = NULL;
   size_t       worm_count    = 0;
@@ -275,19 +271,24 @@ struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_
         int real_z = chunk_info->z * CHUNK_WIDTH + z;
         if(noise_random3(seed_gen, vec3(real_x, real_y, real_z)) < CAVE_WORM_RATIO)
         {
+          seed_t seed_x = seed_next(&seed); // Determine x direction for worm movement
+          seed_t seed_y = seed_next(&seed); // Determine y direction for worm movement
+          seed_t seed_z = seed_next(&seed); // Determine z direction for worm movement
+
+          struct worm worm;
+          worm.nodes[0] = vec3(real_x, real_y, real_z);
+          for(size_t i=1; i<CAVE_WORM_NODE_COUNT; ++i)
+          {
+            struct vec3 direction = get_cave_direction(seed_x, seed_y, seed_z, worm.nodes[i-1]);
+            worm.nodes[i] = vec3_add(worm.nodes[i-1], vec3_mul_s(direction, CAVE_WORM_STEP));
+          }
+
           if(worm_capacity == worm_count)
           {
             worm_capacity = worm_capacity != 0 ? worm_capacity * 2 : 1;
             worms         = realloc(worms, worm_capacity * sizeof *worms);
           }
-
-          struct worm *worm = &worms[worm_count++];
-          worm->nodes[0] = vec3(real_x, real_y, real_z);
-          for(size_t i=1; i<CAVE_WORM_NODE_COUNT; ++i)
-          {
-            struct vec3 direction = get_cave_direction(seed_x, seed_y, seed_z, worm->nodes[i-1]);
-            worm->nodes[i] = vec3_add(worms->nodes[i-1], vec3_mul_s(direction, CAVE_WORM_STEP));
-          }
+          worms[worm_count++] = worm;
         }
       }
 

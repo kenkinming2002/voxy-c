@@ -1,14 +1,118 @@
 #include "world_generator.h"
 
+#include <stdlib.h>
+
 void world_generator_init(struct world_generator *world_generator)
 {
   world_generator->player_spawned = false;
+
+  world_generator->section_infos         = NULL;
+  world_generator->section_info_capacity = 0;
+  world_generator->section_info_load     = 0;
 }
 
 void world_generator_deinit(struct world_generator *world_generator)
 {
-  (void)world_generator;
+  for(size_t i=0; i<world_generator->section_info_capacity; ++i)
+  {
+    struct section_info *section_info = world_generator->section_infos[i];
+    while(section_info)
+    {
+      struct section_info *tmp = section_info;
+      section_info = section_info->next;
+      free(tmp);
+    }
+  }
+  free(world_generator->section_infos);
 }
+
+static inline size_t hash(int x, int y)
+{
+  // I honestly do not know what I am doing here
+  return x * 23 + y * 31;
+}
+
+void world_generator_section_info_rehash(struct world_generator *world_generator, size_t new_capacity)
+{
+  struct section_info *orphans = NULL;
+  for(size_t i=0; i<world_generator->section_info_capacity; ++i)
+  {
+    struct section_info **head = &world_generator->section_infos[i];
+    while(*head)
+      if((*head)->hash % new_capacity != i)
+      {
+        struct section_info *orphan = *head;
+        *head = (*head)->next;
+
+        orphan->next = orphans;
+        orphans      = orphan;
+      }
+      else
+        head = &(*head)->next;
+  }
+
+  world_generator->section_infos = realloc(world_generator->section_infos, new_capacity * sizeof *world_generator->section_infos);
+  for(size_t i=world_generator->section_info_capacity; i<new_capacity; ++i)
+    world_generator->section_infos[i] = NULL;
+  world_generator->section_info_capacity = new_capacity;
+
+  while(orphans)
+  {
+    struct section_info *orphan = orphans;
+    orphans = orphans->next;
+
+    orphan->next = world_generator->section_infos[orphan->hash % world_generator->section_info_capacity];
+    world_generator->section_infos[orphan->hash % world_generator->section_info_capacity] = orphan;
+  }
+}
+
+struct section_info *world_generator_section_info_add(struct world_generator *world_generator, int x, int y)
+{
+  if(world_generator->section_info_capacity == 0)
+    world_generator_section_info_rehash(world_generator, 32);
+  else if(world_generator->section_info_load * 4 >= world_generator->section_info_capacity * 3)
+    world_generator_section_info_rehash(world_generator, world_generator->section_info_capacity * 2);
+
+  struct section_info *section_info = malloc(sizeof *section_info);
+  section_info->x = x;
+  section_info->y = y;
+  section_info->hash = hash(x, y);
+  section_info->next = world_generator->section_infos[section_info->hash % world_generator->section_info_capacity];
+  world_generator->section_infos[section_info->hash % world_generator->section_info_capacity] = section_info;
+  world_generator->section_info_load += 1;
+  return section_info;
+}
+
+struct section_info *world_generator_section_info_lookup(struct world_generator *world_generator, int x, int y)
+{
+  if(world_generator->section_info_capacity == 0)
+    return NULL;
+
+  size_t h = hash(x, y);
+  for(struct section_info *section_info = world_generator->section_infos[h % world_generator->section_info_capacity]; section_info; section_info = section_info->next)
+    if(section_info->hash == h && section_info->x == x && section_info->y == y)
+      return section_info;
+  return NULL;
+}
+
+struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, int x, int y)
+{
+  struct section_info *section_info;
+  if((section_info = world_generator_section_info_lookup(world_generator, x, y)))
+    return section_info;
+
+  section_info = world_generator_section_info_add(world_generator, x, y);
+  for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
+    for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+    {
+      int real_x = section_info->x * CHUNK_WIDTH + (int)x;
+      int real_y = section_info->y * CHUNK_WIDTH + (int)y;
+      section_info->heights[y][x] = world_generator_get_height(world_generator, world, real_x, real_y);
+    }
+
+  return section_info;
+}
+
 
 void world_generator_update(struct world_generator *world_generator, struct world *world)
 {
@@ -46,23 +150,15 @@ void world_generator_generate_chunk(struct world_generator *world_generator, str
     return; // Fast-path!?
   }
 
-  float heights[CHUNK_WIDTH][CHUNK_WIDTH];
-  for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-    for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-    {
-      int real_x = chunk->x * CHUNK_WIDTH + (int)x;
-      int real_y = chunk->y * CHUNK_WIDTH + (int)y;
-      heights[y][x] = world_generator_get_height(world_generator, world, real_x, real_y);
-    }
-
+  struct section_info *section_info = world_generator_section_info_get(world_generator, world, x, y);
   for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
     for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
       for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
       {
         int real_z = chunk->z * CHUNK_WIDTH + (int)z;
-        if(real_z <= heights[y][x])
+        if(real_z <= section_info->heights[y][x])
           chunk->tiles[z][y][x].id = TILE_ID_STONE;
-        else if(real_z <= heights[y][x] + 1.0f)
+        else if(real_z <= section_info->heights[y][x] + 1.0f)
           chunk->tiles[z][y][x].id = TILE_ID_GRASS;
         else
           chunk->tiles[z][y][x].id = TILE_ID_EMPTY;

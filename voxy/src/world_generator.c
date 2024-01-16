@@ -10,6 +10,10 @@ void world_generator_init(struct world_generator *world_generator)
   world_generator->section_infos         = NULL;
   world_generator->section_info_capacity = 0;
   world_generator->section_info_load     = 0;
+
+  world_generator->chunk_infos         = NULL;
+  world_generator->chunk_info_capacity = 0;
+  world_generator->chunk_info_load     = 0;
 }
 
 void world_generator_deinit(struct world_generator *world_generator)

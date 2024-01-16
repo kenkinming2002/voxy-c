@@ -44,10 +44,11 @@ static int application_init(struct application *application)
 
 static void application_deinit(struct application *application)
 {
-  window_deinit(&application->window);
   world_deinit(&application->world);
   world_generator_deinit(&application->world_generator);
   world_renderer_deinit(&application->world_renderer);
+
+  window_deinit(&application->window);
 }
 
 static void application_update(struct application *application)

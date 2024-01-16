@@ -30,7 +30,6 @@ struct section_info *world_generator_section_info_lookup(struct world_generator 
 struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, int x, int y);
 
 void world_generator_update(struct world_generator *world_generator, struct world *world);
-void world_generator_generate_chunk(struct world_generator *world_generator, struct world *world, int x, int y, int z);
-float world_generator_get_height(struct world_generator *world_generator, struct world *world, int x, int y);
+void world_generator_update_at(struct world_generator *world_generator, struct world *world, int x, int y, int z);
 
 #endif // VOXY_WORLD_GENERATOR_H

@@ -95,6 +95,39 @@ struct section_info *world_generator_section_info_lookup(struct world_generator 
   return NULL;
 }
 
+static void vec2_rotate(struct vec2 *vec, float degree)
+{
+  float new_x = vec->x * +cosf(degree) + vec->y * +sinf(degree);
+  float new_y = vec->x * -sinf(degree) + vec->y * +cosf(degree);
+  vec->x = new_x;
+  vec->y = new_y;
+}
+
+static float get_height(seed_t seed, int x, int y)
+{
+  float value = 0.0f;
+
+  struct vec2 position = vec2(x, y);
+
+  // Truly Massive Mountains
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 8000.0f)) * 2048.0f + 2048.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 4000.0f)) * 1024.0f + 1024.0f;
+
+  // Mountains
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 1600.0f)) * 512.0f + 512.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 800.0f))  * 256.0f + 256.0f;
+
+  // Hills
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 400.0f)) * 256.0f + 256.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 200.0f)) * 128.0f + 128.0f;
+
+  // Small hills
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 10.0f)) * 5.0f + 5.0f;
+  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 5.0f))  * 2.0f + 2.0f;
+
+  return value;
+}
+
 struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, int x, int y)
 {
   struct section_info *section_info;
@@ -107,19 +140,18 @@ struct section_info *world_generator_section_info_get(struct world_generator *wo
     {
       int real_x = section_info->x * CHUNK_WIDTH + (int)x;
       int real_y = section_info->y * CHUNK_WIDTH + (int)y;
-      section_info->heights[y][x] = world_generator_get_height(world_generator, world, real_x, real_y);
+      section_info->heights[y][x] = get_height(world->seed, real_x, real_y);
     }
 
   return section_info;
 }
-
 
 void world_generator_update(struct world_generator *world_generator, struct world *world)
 {
   if(!world_generator->player_spawned)
   {
     world_generator->player_spawned     = true;
-    world->player_transform.translation = vec3(0.5f, 0.5f, world_generator_get_height(world_generator, world, 0, 0) + 2.0f);
+    world->player_transform.translation = vec3(0.5f, 0.5f, get_height(world->seed, 0, 0) + 2.0f);
     world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
   }
 
@@ -130,10 +162,10 @@ void world_generator_update(struct world_generator *world_generator, struct worl
     for(int dy = -8; dy<=8; ++dy)
       for(int dx = -8; dx<=8; ++dx)
         if(!world_chunk_lookup(world, x+dx, y+dy, z+dz))
-          world_generator_generate_chunk(world_generator, world, x+dx, y+dy, z+dz);
+          world_generator_update_at(world_generator, world, x+dx, y+dy, z+dz);
 }
 
-void world_generator_generate_chunk(struct world_generator *world_generator, struct world *world, int x, int y, int z)
+void world_generator_update_at(struct world_generator *world_generator, struct world *world, int x, int y, int z)
 {
   (void)world_generator;
 
@@ -175,38 +207,3 @@ void world_generator_generate_chunk(struct world_generator *world_generator, str
   if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
 }
 
-static void vec2_rotate(struct vec2 *vec, float degree)
-{
-  float new_x = vec->x * +cosf(degree) + vec->y * +sinf(degree);
-  float new_y = vec->x * -sinf(degree) + vec->y * +cosf(degree);
-  vec->x = new_x;
-  vec->y = new_y;
-}
-
-float world_generator_get_height(struct world_generator *world_generator, struct world *world, int x, int y)
-{
-  (void)world_generator;
-
-  float value = 0.0f;
-
-  seed_t      seed     = world->seed;
-  struct vec2 position = vec2(x, y);
-
-  // Truly Massive Mountains
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 8000.0f)) * 2048.0f + 2048.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 4000.0f)) * 1024.0f + 1024.0f;
-
-  // Mountains
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 1600.0f)) * 512.0f + 512.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 800.0f))  * 256.0f + 256.0f;
-
-  // Hills
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 400.0f)) * 256.0f + 256.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 200.0f)) * 128.0f + 128.0f;
-
-  // Small hills
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 10.0f)) * 5.0f + 5.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += perlin2(seed, vec2_div_s(position, 5.0f))  * 2.0f + 2.0f;
-
-  return value;
-}

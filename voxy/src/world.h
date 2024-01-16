@@ -55,7 +55,7 @@ void world_init(struct world *world, seed_t seed);
 void world_deinit(struct world *world);
 
 void world_chunk_rehash(struct world *world, size_t new_capacity);
-struct chunk *world_chunk_add(struct world *world, int x, int y, int z);
+struct chunk *world_chunk_insert(struct world *world, int x, int y, int z);
 struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z);
 
 void world_update(struct world *world, struct window *window);

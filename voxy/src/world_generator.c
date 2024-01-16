@@ -66,7 +66,7 @@ void world_generator_section_info_rehash(struct world_generator *world_generator
   }
 }
 
-struct section_info *world_generator_section_info_add(struct world_generator *world_generator, int x, int y)
+struct section_info *world_generator_section_info_insert(struct world_generator *world_generator, int x, int y)
 {
   if(world_generator->section_info_capacity == 0)
     world_generator_section_info_rehash(world_generator, 32);
@@ -101,7 +101,7 @@ struct section_info *world_generator_section_info_get(struct world_generator *wo
   if((section_info = world_generator_section_info_lookup(world_generator, x, y)))
     return section_info;
 
-  section_info = world_generator_section_info_add(world_generator, x, y);
+  section_info = world_generator_section_info_insert(world_generator, x, y);
   for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
     for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
     {
@@ -137,7 +137,7 @@ void world_generator_generate_chunk(struct world_generator *world_generator, str
 {
   (void)world_generator;
 
-  struct chunk *chunk = world_chunk_add(world, x, y, z);
+  struct chunk *chunk = world_chunk_insert(world, x, y, z);
   chunk->mesh_dirty = false;
 
   if(chunk->z < 0)

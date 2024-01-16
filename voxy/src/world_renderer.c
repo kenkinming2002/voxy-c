@@ -338,7 +338,7 @@ void world_renderer_chunk_mesh_rehash(struct world_renderer *world_renderer, siz
   }
 }
 
-struct chunk_mesh *world_renderer_chunk_mesh_add(struct world_renderer *world_renderer, int x, int y, int z)
+struct chunk_mesh *world_renderer_chunk_mesh_insert(struct world_renderer *world_renderer, int x, int y, int z)
 {
   if(world_renderer->chunk_mesh_capacity == 0)
     world_renderer_chunk_mesh_rehash(world_renderer, 32);
@@ -404,7 +404,7 @@ void world_renderer_update_load(struct world_renderer *world_renderer, struct wo
         if((chunk_mesh = world_renderer_chunk_mesh_lookup(world_renderer, x+dx, y+dy, z+dz)))
           continue;
 
-        chunk_mesh = world_renderer_chunk_mesh_add(world_renderer, x+dx, y+dy, z+dz);
+        chunk_mesh = world_renderer_chunk_mesh_insert(world_renderer, x+dx, y+dy, z+dz);
         chunk_adjacency_init(&chunk_adjacency, world, chunk);
         chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &world_renderer->resource_pack, &chunk_adjacency);
       }

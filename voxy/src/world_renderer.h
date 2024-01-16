@@ -94,7 +94,7 @@ int world_renderer_init(struct world_renderer *world_renderer);
 void world_renderer_deinit(struct world_renderer *world_renderer);
 
 void world_renderer_chunk_mesh_rehash(struct world_renderer *world_renderer, size_t new_capacity);
-struct chunk_mesh *world_renderer_chunk_mesh_add(struct world_renderer *world_renderer, int x, int y, int z);
+struct chunk_mesh *world_renderer_chunk_mesh_insert(struct world_renderer *world_renderer, int x, int y, int z);
 struct chunk_mesh *world_renderer_chunk_mesh_lookup(struct world_renderer *world_renderer, int x, int y, int z);
 
 void world_renderer_update(struct world_renderer *world_renderer, struct world *world);

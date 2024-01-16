@@ -72,7 +72,7 @@ void world_chunk_rehash(struct world *world, size_t new_capacity)
   }
 }
 
-struct chunk *world_chunk_add(struct world *world, int x, int y, int z)
+struct chunk *world_chunk_insert(struct world *world, int x, int y, int z)
 {
   if(world->chunk_capacity == 0)
     world_chunk_rehash(world, 32);

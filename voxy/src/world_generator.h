@@ -25,7 +25,7 @@ void world_generator_init(struct world_generator *world_generator);
 void world_generator_deinit(struct world_generator *world_generator);
 
 void world_generator_section_info_rehash(struct world_generator *world_generator, size_t new_capacity);
-struct section_info *world_generator_section_info_add(struct world_generator *world_generator, int x, int y);
+struct section_info *world_generator_section_info_insert(struct world_generator *world_generator, int x, int y);
 struct section_info *world_generator_section_info_lookup(struct world_generator *world_generator, int x, int y);
 struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, int x, int y);
 

@@ -283,8 +283,7 @@ void world_generator_generate_cave(struct world_generator *world_generator, stru
 
         struct ivec3 local_position  = seed_rand_ivec3(&seed, ivec3_zero(), ivec3(CHUNK_WIDTH-1, CHUNK_WIDTH-1, CHUNK_WIDTH-1));
         struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk_position, CHUNK_WIDTH), local_position);
-
-        struct vec3 node_position = ivec3_as_vec3(global_position);
+        struct vec3  node_position   = ivec3_as_vec3(global_position);
         world_generator_add_node(world_generator, node_position);
         for(size_t i=1; i<CAVE_WORM_NODE_COUNT; ++i)
         {

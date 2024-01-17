@@ -2,6 +2,7 @@
 
 #include "lin.h"
 #include "gl.h"
+#include "hash.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -297,12 +298,6 @@ void world_renderer_deinit(struct world_renderer *world_renderer)
   free(world_renderer->chunk_meshes);
 }
 
-static inline size_t hash(int x, int y, int z)
-{
-  // I honestly do not know what I am doing here
-  return x * 23 + y * 31 + z * 47;
-}
-
 void world_renderer_chunk_mesh_rehash(struct world_renderer *world_renderer, size_t new_capacity)
 {
   struct chunk_mesh *orphans = NULL;
@@ -350,7 +345,7 @@ struct chunk_mesh *world_renderer_chunk_mesh_insert(struct world_renderer *world
   chunk_mesh->z = z;
   chunk_mesh_init(chunk_mesh);
 
-  chunk_mesh->hash = hash(x, y, z);
+  chunk_mesh->hash = hash3(x, y, z);
   chunk_mesh->next = world_renderer->chunk_meshes[chunk_mesh->hash % world_renderer->chunk_mesh_capacity];
 
   world_renderer->chunk_meshes[chunk_mesh->hash % world_renderer->chunk_mesh_capacity] = chunk_mesh;
@@ -364,7 +359,7 @@ struct chunk_mesh *world_renderer_chunk_mesh_lookup(struct world_renderer *world
   if(world_renderer->chunk_mesh_capacity == 0)
     return NULL;
 
-  size_t h = hash(x, y, z);
+  size_t h = hash3(x, y, z);
   for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes[h % world_renderer->chunk_mesh_capacity]; chunk_mesh; chunk_mesh = chunk_mesh->next)
     if(chunk_mesh->hash == h && chunk_mesh->x == x && chunk_mesh->y == y && chunk_mesh->z == z)
       return chunk_mesh;

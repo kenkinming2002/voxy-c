@@ -1,4 +1,5 @@
 #include "world_generator.h"
+#include "hash.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,16 +44,6 @@ void world_generator_deinit(struct world_generator *world_generator)
     }
   }
   free(world_generator->chunk_infos);
-}
-
-static inline size_t hash2(int x, int y)
-{
-  return x * 23 + y * 31;
-}
-
-static inline size_t hash3(int x, int y, int z)
-{
-  return x * 23 + y * 31 + z * 41;
 }
 
 void world_generator_section_info_rehash(struct world_generator *world_generator, size_t new_capacity)

@@ -1,4 +1,5 @@
 #include "world.h"
+#include "hash.h"
 
 #include <assert.h>
 #include <float.h>
@@ -30,12 +31,6 @@ void world_deinit(struct world *world)
     }
   }
   free(world->chunks);
-}
-
-static inline size_t hash(int x, int y, int z)
-{
-  // I honestly do not know what I am doing here
-  return x * 23 + y * 31 + z * 47;
 }
 
 void world_chunk_rehash(struct world *world, size_t new_capacity)
@@ -83,7 +78,7 @@ struct chunk *world_chunk_insert(struct world *world, int x, int y, int z)
   chunk->x = x;
   chunk->y = y;
   chunk->z = z;
-  chunk->hash = hash(x, y, z);
+  chunk->hash = hash3(x, y, z);
   chunk->next = world->chunks[chunk->hash % world->chunk_capacity];
   world->chunks[chunk->hash % world->chunk_capacity] = chunk;
   world->chunk_load += 1;
@@ -95,7 +90,7 @@ struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z)
   if(world->chunk_capacity == 0)
     return NULL;
 
-  size_t h = hash(x, y, z);
+  size_t h = hash3(x, y, z);
   for(struct chunk *chunk = world->chunks[h % world->chunk_capacity]; chunk; chunk = chunk->next)
     if(chunk->hash == h && chunk->x == x && chunk->y == y && chunk->z == z)
       return chunk;

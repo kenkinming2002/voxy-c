@@ -5,7 +5,6 @@
 
 #define CAVE_WORM_TRIAL 10
 #define CAVE_WORM_NODE_COUNT 100
-#define CAVE_WORM_NODE_RADIUS 3.0f
 #define CAVE_WORM_STEP 1.0f
 
 #define CHUNK_WIDTH 16

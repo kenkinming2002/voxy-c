@@ -37,6 +37,7 @@ struct section_info
 struct node
 {
   struct vec3 position;
+  float       radius;
 };
 
 struct chunk_info
@@ -73,6 +74,6 @@ struct section_info *world_generator_section_info_get(struct world_generator *wo
 struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position);
 
 void world_generator_generate_cave(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position);
-void world_generator_add_node(struct world_generator *world_generator, struct vec3 position);
+void world_generator_add_node(struct world_generator *world_generator, struct vec3 position, float radius);
 
 #endif // VOXY_WORLD_GENERATOR_H

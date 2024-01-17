@@ -93,6 +93,14 @@ static struct vec3 get_cave_direction(seed_t seed_x, seed_t seed_y, seed_t seed_
   return vec3_normalize(direction);
 }
 
+static float get_cave_radius(seed_t seed_r, struct vec3 position)
+{
+  float value = 0.0f;
+  value += noise_perlin3(seed_r, vec3_div_s(position, 25.0f))  * 2.5f + 2.5f;
+  value += noise_perlin3(seed_r, vec3_div_s(position, 10.0f))  * 1.0f + 1.0f;
+  return value;
+}
+
 static float get_height(seed_t seed, struct ivec2 position)
 {
   float value = 0.0f;
@@ -194,10 +202,10 @@ void world_generator_update_generate_chunk(struct world_generator *world_generat
       // 2: Cave generation
       struct chunk_info *chunk_info = world_generator_chunk_info_get(world_generator, world, chunk_position);
       for(size_t i=0; i<chunk_info->node_count; ++i)
-        for(int z = floorf(chunk_info->nodes[i].position.z - CAVE_WORM_NODE_RADIUS); z <= ceilf(chunk_info->nodes[i].position.z + CAVE_WORM_NODE_RADIUS); ++z)
-          for(int y = floorf(chunk_info->nodes[i].position.y - CAVE_WORM_NODE_RADIUS); y <= ceilf(chunk_info->nodes[i].position.y + CAVE_WORM_NODE_RADIUS); ++y)
-            for(int x = floorf(chunk_info->nodes[i].position.x - CAVE_WORM_NODE_RADIUS); x <= ceilf(chunk_info->nodes[i].position.x + CAVE_WORM_NODE_RADIUS); ++x)
-              if(vec3_length(vec3_sub(vec3(x, y, z), chunk_info->nodes[i].position)) <= CAVE_WORM_NODE_RADIUS)
+        for(int z = floorf(chunk_info->nodes[i].position.z - chunk_info->nodes[i].radius); z <= ceilf(chunk_info->nodes[i].position.z + chunk_info->nodes[i].radius); ++z)
+          for(int y = floorf(chunk_info->nodes[i].position.y - chunk_info->nodes[i].radius); y <= ceilf(chunk_info->nodes[i].position.y + chunk_info->nodes[i].radius); ++y)
+            for(int x = floorf(chunk_info->nodes[i].position.x - chunk_info->nodes[i].radius); x <= ceilf(chunk_info->nodes[i].position.x + chunk_info->nodes[i].radius); ++x)
+              if(vec3_length(vec3_sub(vec3(x, y, z), chunk_info->nodes[i].position)) <= chunk_info->nodes[i].radius)
                 if(z >= 0 && z <= CHUNK_WIDTH - 1)
                   if(y >= 0 && y <= CHUNK_WIDTH - 1)
                     if(x >= 0 && x <= CHUNK_WIDTH - 1)
@@ -239,7 +247,7 @@ struct section_info *world_generator_section_info_get(struct world_generator *wo
 
 struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position)
 {
-  int count = ceilf((CAVE_WORM_STEP * CAVE_WORM_NODE_COUNT + 2 * CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH);
+  int count = ceilf(CAVE_WORM_STEP * CAVE_WORM_NODE_COUNT / CHUNK_WIDTH);
   for(int dz = -count; dz<=count; ++dz)
     for(int dy = -count; dy<=count; ++dy)
       for(int dx = -count; dx<=count; ++dx)
@@ -281,15 +289,17 @@ void world_generator_generate_cave(struct world_generator *world_generator, stru
         seed_t seed_x = seed_next(&seed);
         seed_t seed_y = seed_next(&seed);
         seed_t seed_z = seed_next(&seed);
+        seed_t seed_r = seed_next(&seed);
 
         struct ivec3 local_position  = seed_rand_ivec3(&seed, ivec3_zero(), ivec3(CHUNK_WIDTH-1, CHUNK_WIDTH-1, CHUNK_WIDTH-1));
         struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk_position, CHUNK_WIDTH), local_position);
-        struct vec3  node_position   = ivec3_as_vec3(global_position);
-        world_generator_add_node(world_generator, node_position);
+
+        struct vec3 node_position = ivec3_as_vec3(global_position);
+        world_generator_add_node(world_generator, node_position, get_cave_radius(seed_r, node_position));
         for(size_t i=1; i<CAVE_WORM_NODE_COUNT; ++i)
         {
           node_position = vec3_add(node_position, vec3_mul_s(get_cave_direction(seed_x, seed_y, seed_z, node_position), CAVE_WORM_STEP));
-          world_generator_add_node(world_generator, node_position);
+          world_generator_add_node(world_generator, node_position, get_cave_radius(seed_r, node_position));
         }
       }
     }
@@ -297,11 +307,11 @@ void world_generator_generate_cave(struct world_generator *world_generator, stru
   }
 }
 
-void world_generator_add_node(struct world_generator *world_generator, struct vec3 position)
+void world_generator_add_node(struct world_generator *world_generator, struct vec3 position, float radius)
 {
-  for(int z = floorf((position.z - CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); z<=ceilf((position.z + CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); ++z)
-    for(int y = floorf((position.y - CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); y<=ceilf((position.y + CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); ++y)
-      for(int x = floorf((position.x - CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); x<=ceilf((position.x + CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); ++x)
+  for(int z = floorf((position.z - radius) / CHUNK_WIDTH); z<=ceilf((position.z + radius) / CHUNK_WIDTH); ++z)
+    for(int y = floorf((position.y - radius) / CHUNK_WIDTH); y<=ceilf((position.y + radius) / CHUNK_WIDTH); ++y)
+      for(int x = floorf((position.x - radius) / CHUNK_WIDTH); x<=ceilf((position.x + radius) / CHUNK_WIDTH); ++x)
       {
         struct ivec3 chunk_position = ivec3(x, y, z);
         struct chunk_info *chunk_info = chunk_info_hash_table_lookup(&world_generator->chunk_infos, chunk_position);
@@ -324,7 +334,7 @@ void world_generator_add_node(struct world_generator *world_generator, struct ve
 
         struct vec3 global_position = position;
         struct vec3 local_position  = vec3_sub(global_position, ivec3_as_vec3(ivec3_mul_s(chunk_position, CHUNK_WIDTH)));
-        chunk_info->nodes[chunk_info->node_count++] = (struct node) { .position = local_position };
+        chunk_info->nodes[chunk_info->node_count++] = (struct node) { .position = local_position, .radius = radius, };
       }
 }
 

@@ -285,7 +285,7 @@ void world_generator_generate_cave(struct world_generator *world_generator, stru
     for(unsigned trial=0; trial<CAVE_WORM_TRIAL; ++trial)
     {
       float value = (float)seed_next(&seed) / (float)SEED_MAX;
-      if(value < CAVE_WORM_RATIO)
+      if(value < CAVE_WORM_RATIO * expf(-chunk_position.z / 128.0f))
       {
         seed_t seed_x = seed_next(&seed);
         seed_t seed_y = seed_next(&seed);

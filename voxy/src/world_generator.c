@@ -68,6 +68,39 @@ static float get_height(seed_t seed, struct ivec2 position)
   return value;
 }
 
+static bool get_cave(seed_t seed, struct ivec3 position)
+{
+  float threshold = (1.0f - expf(-position.z / 3000.0f)) * 0.94f;
+
+  bool cave = false;
+  for(unsigned i=0; i<2; ++i)
+  {
+    bool inner_cave = true;
+    for(unsigned j=0; j<5; ++j)
+    {
+      seed_next(&seed);
+
+      float value = 0.0f;
+      value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 50.0f)) * 2.0f + 2.0f;
+      value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 40.0f)) * 1.0f + 1.0f;
+      value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 30.0f)) * 0.5f + 0.5f;
+      value /= 5.215f;
+      if(value < threshold)
+      {
+        inner_cave = false;
+        break;
+      }
+    }
+
+    if(inner_cave)
+    {
+      cave = true;
+      break;
+    }
+  }
+  return cave;
+}
+
 void world_generator_init(struct world_generator *world_generator)
 {
   world_generator->player_spawned = false;
@@ -112,68 +145,36 @@ void world_generator_update_generate_chunk(struct world_generator *world_generat
     chunk->position = chunk_position;
     chunk->mesh_dirty = false;
 
-    if(chunk->position.z < 0)
-    {
-      for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
-        for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-          for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-            chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
-    }
-    else
-    {
-      // 1: Terrain Generation
-      struct section_info *section_info = world_generator_section_info_get(world_generator, world, ivec2(chunk_position.x, chunk_position.y));
+    // 1: Terrain Generation
+    struct section_info *section_info = world_generator_section_info_get(world_generator, world, ivec2(chunk_position.x, chunk_position.y));
 #pragma omp parallel for collapse(3)
-      for(int z = 0; z<CHUNK_WIDTH; ++z)
-        for(int y = 0; y<CHUNK_WIDTH; ++y)
-          for(int x = 0; x<CHUNK_WIDTH; ++x)
+    for(int z = 0; z<CHUNK_WIDTH; ++z)
+      for(int y = 0; y<CHUNK_WIDTH; ++y)
+        for(int x = 0; x<CHUNK_WIDTH; ++x)
+        {
+          struct ivec3 local_position  = ivec3(x, y, z);
+          struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk->position, CHUNK_WIDTH), local_position);
+          if(get_cave(world->seed ^ 0xdeadbeefdeadbeef, global_position))
           {
-            struct ivec3 local_position  = ivec3(x, y, z);
-            struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk->position, CHUNK_WIDTH), local_position);
-
-            float threshold = (1.0f - expf(-chunk_position.z / 180.0f)) * 0.95f;
-            seed_t seed = world->seed ^ 0xdeadbeefdeadbeef;
-
-            bool cave = false;
-            for(unsigned i=0; i<5; ++i)
-            {
-              bool inner_cave = true;
-              for(unsigned j=0; j<3; ++j)
-              {
-                seed_next(&seed);
-
-                float value = 0.0f;
-                value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(global_position), 30.0f)) * 2.0f + 2.0f;
-                value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(global_position), 20.0f)) * 1.0f + 1.0f;
-                value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(global_position), 10.0f)) * 0.5f + 0.5f;
-                value /= 5.215f;
-                if(value < threshold)
-                {
-                  inner_cave = false;
-                  break;
-                }
-              }
-
-              if(inner_cave)
-              {
-                cave = true;
-                break;
-              }
-            }
-
-            if(!cave)
-            {
-              if(global_position.z <= section_info->heights[y][x])
-                chunk->tiles[z][y][x].id = TILE_ID_STONE;
-              else if(global_position.z <= section_info->heights[y][x] + 1.0f)
-                chunk->tiles[z][y][x].id = TILE_ID_GRASS;
-              else
-                chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
-            }
-            else
-              chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+            chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+            continue;
           }
-    }
+
+          if(global_position.z <= section_info->heights[y][x])
+          {
+            chunk->tiles[z][y][x].id = TILE_ID_STONE;
+            continue;
+          }
+
+          if(global_position.z <= section_info->heights[y][x] + 1.0f)
+          {
+            chunk->tiles[z][y][x].id = TILE_ID_GRASS;
+            continue;
+          }
+
+          chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+        }
+
     chunk_hash_table_insert_unchecked(&world->chunks, chunk);
 
     struct chunk_adjacency chunk_adjacency;

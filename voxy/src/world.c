@@ -1,18 +1,49 @@
 #include "world.h"
 #include "hash.h"
 
+#define SC_HASH_TABLE_IMPLEMENTATION
+#define SC_HASH_TABLE_PREFIX chunk
+#define SC_HASH_TABLE_NODE_TYPE struct chunk
+#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#include "hash_table.h"
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_IMPLEMENTATION
+
 #include <assert.h>
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+struct ivec3 chunk_key(struct chunk *chunk)
+{
+  return chunk->position;
+}
+
+size_t chunk_hash(struct ivec3 position)
+{
+  return hash3(position.x, position.y, position.z);
+}
+
+int chunk_compare(struct ivec3 position1, struct ivec3 position2)
+{
+  if(position1.x != position2.x) return position1.x - position2.x;
+  if(position1.y != position2.y) return position1.y - position2.y;
+  if(position1.z != position2.z) return position1.z - position2.z;
+  return 0;
+}
+
+void chunk_dispose(struct chunk *chunk)
+{
+  free(chunk);
+}
+
 void world_init(struct world *world, seed_t seed)
 {
   world->seed = seed;
 
-  world->chunks         = NULL;
-  world->chunk_capacity = 0;
-  world->chunk_load     = 0;
+  chunk_hash_table_init(&world->chunks);
 
   world->player_transform.translation = vec3_zero();
   world->player_transform.rotation    = vec3_zero();
@@ -20,81 +51,7 @@ void world_init(struct world *world, seed_t seed)
 
 void world_deinit(struct world *world)
 {
-  for(size_t i=0; i<world->chunk_capacity; ++i)
-  {
-    struct chunk *chunk = world->chunks[i];
-    while(chunk)
-    {
-      struct chunk *tmp = chunk;
-      chunk = chunk->next;
-      free(tmp);
-    }
-  }
-  free(world->chunks);
-}
-
-void world_chunk_rehash(struct world *world, size_t new_capacity)
-{
-  struct chunk *orphans = NULL;
-  for(size_t i=0; i<world->chunk_capacity; ++i)
-  {
-    struct chunk **head = &world->chunks[i];
-    while(*head)
-      if((*head)->hash % new_capacity != i)
-      {
-        struct chunk *orphan = *head;
-        *head = (*head)->next;
-
-        orphan->next = orphans;
-        orphans      = orphan;
-      }
-      else
-        head = &(*head)->next;
-  }
-
-  world->chunks = realloc(world->chunks, new_capacity * sizeof *world->chunks);
-  for(size_t i=world->chunk_capacity; i<new_capacity; ++i)
-    world->chunks[i] = NULL;
-  world->chunk_capacity = new_capacity;
-
-  while(orphans)
-  {
-    struct chunk *orphan = orphans;
-    orphans = orphans->next;
-
-    orphan->next = world->chunks[orphan->hash % world->chunk_capacity];
-    world->chunks[orphan->hash % world->chunk_capacity] = orphan;
-  }
-}
-
-struct chunk *world_chunk_insert(struct world *world, int x, int y, int z)
-{
-  if(world->chunk_capacity == 0)
-    world_chunk_rehash(world, 32);
-  else if(world->chunk_load * 4 >= world->chunk_capacity * 3)
-    world_chunk_rehash(world, world->chunk_capacity * 2);
-
-  struct chunk *chunk = malloc(sizeof *chunk);
-  chunk->x = x;
-  chunk->y = y;
-  chunk->z = z;
-  chunk->hash = hash3(x, y, z);
-  chunk->next = world->chunks[chunk->hash % world->chunk_capacity];
-  world->chunks[chunk->hash % world->chunk_capacity] = chunk;
-  world->chunk_load += 1;
-  return chunk;
-}
-
-struct chunk *world_chunk_lookup(struct world *world, int x, int y, int z)
-{
-  if(world->chunk_capacity == 0)
-    return NULL;
-
-  size_t h = hash3(x, y, z);
-  for(struct chunk *chunk = world->chunks[h % world->chunk_capacity]; chunk; chunk = chunk->next)
-    if(chunk->hash == h && chunk->x == x && chunk->y == y && chunk->z == z)
-      return chunk;
-  return NULL;
+  chunk_hash_table_dispose(&world->chunks);
 }
 
 void world_update(struct world *world, struct window *window)
@@ -127,29 +84,29 @@ void world_update_player_control(struct world *world, struct window *window)
 void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk)
 {
   chunk_adjacency->chunk = chunk;
-  chunk_adjacency->left   = world_chunk_lookup(world, chunk->x-1, chunk->y, chunk->z);
-  chunk_adjacency->right  = world_chunk_lookup(world, chunk->x+1, chunk->y, chunk->z);
-  chunk_adjacency->back   = world_chunk_lookup(world, chunk->x, chunk->y-1, chunk->z);
-  chunk_adjacency->front  = world_chunk_lookup(world, chunk->x, chunk->y+1, chunk->z);
-  chunk_adjacency->bottom = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z-1);
-  chunk_adjacency->top    = world_chunk_lookup(world, chunk->x, chunk->y, chunk->z+1);
+  chunk_adjacency->left   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
+  chunk_adjacency->right  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0)));
+  chunk_adjacency->back   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0)));
+  chunk_adjacency->front  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0)));
+  chunk_adjacency->bottom = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1)));
+  chunk_adjacency->top    = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1)));
 }
 
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, int cx, int cy, int cz)
+struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, struct ivec3 cposition)
 {
-  if(cz >= 0 && cz < CHUNK_WIDTH)
-    if(cy >= 0 && cy < CHUNK_WIDTH)
-      if(cx >= 0 && cx < CHUNK_WIDTH)
-        return &chunk_adjacency->chunk->tiles[cz][cy][cx];
+  if(cposition.z >= 0 && cposition.z < CHUNK_WIDTH)
+    if(cposition.y >= 0 && cposition.y < CHUNK_WIDTH)
+      if(cposition.x >= 0 && cposition.x < CHUNK_WIDTH)
+        return &chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x];
 
-  if(cz == -1)          return chunk_adjacency->bottom ? &chunk_adjacency->bottom->tiles[CHUNK_WIDTH-1][cy][cx] : NULL;
-  if(cz == CHUNK_WIDTH) return chunk_adjacency->top    ? &chunk_adjacency->top   ->tiles[0]            [cy][cx] : NULL;
+  if(cposition.z == -1)          return chunk_adjacency->bottom ? &chunk_adjacency->bottom->tiles[CHUNK_WIDTH-1][cposition.y][cposition.x] : NULL;
+  if(cposition.z == CHUNK_WIDTH) return chunk_adjacency->top    ? &chunk_adjacency->top   ->tiles[0]            [cposition.y][cposition.x] : NULL;
 
-  if(cy == -1)          return chunk_adjacency->back  ? &chunk_adjacency->back ->tiles[cz][CHUNK_WIDTH-1][cx] : NULL;
-  if(cy == CHUNK_WIDTH) return chunk_adjacency->front ? &chunk_adjacency->front->tiles[cz][0]            [cx] : NULL;
+  if(cposition.y == -1)          return chunk_adjacency->back  ? &chunk_adjacency->back ->tiles[cposition.z][CHUNK_WIDTH-1][cposition.x] : NULL;
+  if(cposition.y == CHUNK_WIDTH) return chunk_adjacency->front ? &chunk_adjacency->front->tiles[cposition.z][0]            [cposition.x] : NULL;
 
-  if(cx == -1)          return chunk_adjacency->left  ? &chunk_adjacency->left ->tiles[cz][cy][CHUNK_WIDTH-1] : NULL;
-  if(cx == CHUNK_WIDTH) return chunk_adjacency->right ? &chunk_adjacency->right->tiles[cz][cy][0]             : NULL;
+  if(cposition.x == -1)          return chunk_adjacency->left  ? &chunk_adjacency->left ->tiles[cposition.z][cposition.y][CHUNK_WIDTH-1] : NULL;
+  if(cposition.x == CHUNK_WIDTH) return chunk_adjacency->right ? &chunk_adjacency->right->tiles[cposition.z][cposition.y][0]             : NULL;
 
   assert(0 && "Unreachable");
 }

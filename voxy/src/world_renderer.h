@@ -7,6 +7,16 @@
 #include "glad/glad.h"
 #include "world.h"
 
+#define SC_HASH_TABLE_INTERFACE
+#define SC_HASH_TABLE_PREFIX chunk_mesh
+#define SC_HASH_TABLE_NODE_TYPE struct chunk_mesh
+#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#include "hash_table.h"
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_INTERFACE
+
 #include <stddef.h>
 
 /*****************
@@ -53,7 +63,7 @@ void chunk_mesh_builder_deinit(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_reset(struct chunk_mesh_builder *builder);
 void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *builder, struct chunk_mesh_vertex vertex);
 void chunk_mesh_builder_push_index(struct chunk_mesh_builder *builder, uint32_t index);
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int cx, int cy, int cz, int dcx, int dcy, int dcz);
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, struct ivec3 cposition, struct ivec3 dcposition);
 
 /***************
  * Chunk Mesh *
@@ -63,7 +73,7 @@ struct chunk_mesh
   struct chunk_mesh *next;
   size_t             hash;
 
-  int x, y, z;
+  struct ivec3 position;
 
   GLuint vao;
   GLuint vbo;
@@ -71,8 +81,6 @@ struct chunk_mesh
   GLsizei count;
 };
 
-void chunk_mesh_init(struct chunk_mesh *chunk_mesh);
-void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh);
 void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency);
 
 /************
@@ -85,20 +93,13 @@ struct world_renderer
   GLuint chunk_program;
   GLuint chunk_block_texture_array;
 
-  struct chunk_mesh **chunk_meshes;
-  size_t              chunk_mesh_capacity;
-  size_t              chunk_mesh_load;
+  struct chunk_mesh_hash_table chunk_meshes;
 };
 
 int world_renderer_init(struct world_renderer *world_renderer);
 void world_renderer_deinit(struct world_renderer *world_renderer);
 
-void world_renderer_chunk_mesh_rehash(struct world_renderer *world_renderer, size_t new_capacity);
-struct chunk_mesh *world_renderer_chunk_mesh_insert(struct world_renderer *world_renderer, int x, int y, int z);
-struct chunk_mesh *world_renderer_chunk_mesh_lookup(struct world_renderer *world_renderer, int x, int y, int z);
-
 void world_renderer_update(struct world_renderer *world_renderer, struct world *world);
-
 void world_renderer_update_load(struct world_renderer *world_renderer, struct world *world);
 void world_renderer_update_unload(struct world_renderer *world_renderer, struct world *world);
 void world_renderer_update_reload(struct world_renderer *world_renderer, struct world *world);

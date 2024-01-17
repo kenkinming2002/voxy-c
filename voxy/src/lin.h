@@ -6,6 +6,32 @@
 /*********
  * Types *
  *********/
+struct ivec2
+{
+  union
+  {
+    int values[2];
+    struct { int x, y; };
+  };
+};
+
+struct ivec3
+{
+  union
+  {
+    int values[3];
+    struct { int x, y, z; };
+  };
+};
+
+struct ivec4
+{
+  union
+  {
+    int values[4];
+    struct { int x, y, z, w; };
+  };
+};
 
 struct vec2
 {
@@ -53,6 +79,22 @@ static inline struct vec2 vec2_zero() { return vec2(0.0f, 0.0f);             }
 static inline struct vec3 vec3_zero() { return vec3(0.0f, 0.0f, 0.0f);       }
 static inline struct vec4 vec4_zero() { return vec4(0.0f, 0.0f, 0.0f, 0.0f); }
 
+static inline struct ivec2 ivec2(int a, int b)               { return (struct ivec2){ .values = {a, b}       }; }
+static inline struct ivec3 ivec3(int a, int b, int c)        { return (struct ivec3){ .values = {a, b, c}    }; }
+static inline struct ivec4 ivec4(int a, int b, int c, int d) { return (struct ivec4){ .values = {a, b, c, d} }; }
+
+static inline struct ivec2 ivec2_zero() { return ivec2(0, 0);       }
+static inline struct ivec3 ivec3_zero() { return ivec3(0, 0, 0);    }
+static inline struct ivec4 ivec4_zero() { return ivec4(0, 0, 0, 0); }
+
+static inline struct vec2 ivec2_as_vec2(struct ivec2 vec) { return vec2(vec.values[0], vec.values[1]);                               }
+static inline struct vec3 ivec3_as_vec3(struct ivec3 vec) { return vec3(vec.values[0], vec.values[1], vec.values[2]);                }
+static inline struct vec4 ivec4_as_vec4(struct ivec4 vec) { return vec4(vec.values[0], vec.values[1], vec.values[2], vec.values[3]); }
+
+static inline struct ivec2 vec2_as_ivec2_floor(struct vec2 vec) { return ivec2(floorf(vec.values[0]), floorf(vec.values[1]));                                               }
+static inline struct ivec3 vec3_as_ivec3_floor(struct vec3 vec) { return ivec3(floorf(vec.values[0]), floorf(vec.values[1]), floorf(vec.values[2]));                        }
+static inline struct ivec4 vec4_as_ivec4_floor(struct vec4 vec) { return ivec4(floorf(vec.values[0]), floorf(vec.values[1]), floorf(vec.values[2]), floorf(vec.values[3])); }
+
 /***********************
  * Matrix Initializers *
  ***********************/
@@ -73,88 +115,92 @@ static inline struct mat4 mat4_identity() { return mat4(1.0f, 0.0f, 0.0f, 0.0f, 
  * Vector Functions *
  ********************/
 
-#define VEC_DEFINE_BINARY_OP(count, name, op)                                                   \
-  static inline struct vec##count vec##count##_##name(struct vec##count a, struct vec##count b) \
+#define VEC_DEFINE_BINARY_OP(type, count, prefix, name, op)                                                   \
+  static inline struct prefix##vec##count prefix##vec##count##_##name(struct prefix##vec##count a, struct prefix##vec##count b) \
   {                                                                                             \
-    struct vec##count result;                                                                   \
+    struct prefix##vec##count result;                                                                   \
     for(unsigned i=0; i<count; ++i)                                                             \
       result.values[i] = a.values[i] op b.values[i];                                            \
     return result;                                                                              \
   }
 
-#define VEC_DEFINE_BINARY_OP_SCALAR(count, name, op)                                    \
-  static inline struct vec##count vec##count##_##name##_s(struct vec##count a, float b) \
+#define VEC_DEFINE_BINARY_OP_SCALAR(type, count, prefix, name, op)                                    \
+  static inline struct prefix##vec##count prefix##vec##count##_##name##_s(struct prefix##vec##count a, type b) \
   {                                                                                     \
-    struct vec##count result;                                                           \
+    struct prefix##vec##count result;                                                           \
     for(unsigned i=0; i<count; ++i)                                                     \
       result.values[i] = a.values[i] op b;                                              \
     return result;                                                                      \
   }
 
-#define VEC_DEFINE_OP_NEG(count)                                        \
-  static inline struct vec##count vec##count##_neg(struct vec##count a) \
+#define VEC_DEFINE_OP_NEG(type, count, prefix)                                        \
+  static inline struct prefix##vec##count prefix##vec##count##_neg(struct prefix##vec##count a) \
   {                                                                     \
-    struct vec##count result;                                           \
+    struct prefix##vec##count result;                                           \
     for(unsigned i=0; i<count; ++i)                                     \
       result.values[i] = -a.values[i];                                  \
     return result;                                                      \
   }
 
-#define VEC_DEFINE_OP_REDUCE(count)                            \
-  static inline float vec##count##_reduce(struct vec##count a) \
+#define VEC_DEFINE_OP_REDUCE(type, count, prefix)                            \
+  static inline type prefix##vec##count##_reduce(struct prefix##vec##count a) \
   {                                                            \
-    float result = 0.0f;                                       \
+    type result = 0;                                       \
     for(unsigned i=0; i<count; ++i)                            \
       result += a.values[i];                                   \
     return result;                                             \
   }
 
-#define VEC_DEFINE_OP_DOT(count)                                                 \
-  static inline float vec##count##_dot(struct vec##count a, struct vec##count b) \
+#define VEC_DEFINE_OP_DOT(type, count, prefix)                                                 \
+  static inline type prefix##vec##count##_dot(struct prefix##vec##count a, struct prefix##vec##count b) \
   {                                                                              \
-    return vec##count##_reduce(vec##count##_mul(a, b));                          \
+    return prefix##vec##count##_reduce(prefix##vec##count##_mul(a, b));                          \
   }
 
-#define VEC_DEFINE_OP_LENGTH_SQUARED(count)                            \
-  static inline float vec##count##_length_squared(struct vec##count a) \
+#define VEC_DEFINE_OP_LENGTH_SQUARED(type, count, prefix)                            \
+  static inline type prefix##vec##count##_length_squared(struct prefix##vec##count a) \
   {                                                                    \
-    return vec##count##_dot(a, a);                                     \
+    return prefix##vec##count##_dot(a, a);                                     \
   }
 
-#define VEC_DEFINE_OP_LENGTH(count)                            \
-  static inline float vec##count##_length(struct vec##count a) \
+#define VEC_DEFINE_OP_LENGTH(type, count, prefix)                            \
+  static inline type prefix##vec##count##_length(struct prefix##vec##count a) \
   {                                                            \
-    return sqrtf(vec##count##_length_squared(a));              \
+    return sqrtf(prefix##vec##count##_length_squared(a));              \
   }
 
-#define VEC_DEFINE_OP_NORMALIZE(count)                                        \
-  static inline struct vec##count vec##count##_normalize(struct vec##count a) \
+#define VEC_DEFINE_OP_NORMALIZE(type, count, prefix)                                        \
+  static inline struct prefix##vec##count prefix##vec##count##_normalize(struct prefix##vec##count a) \
   {                                                                           \
-    float length_squared = vec##count##_length_squared(a);                    \
-    if(length_squared == 0.0f)                                                \
+    type length_squared = prefix##vec##count##_length_squared(a);                    \
+    if(length_squared == 0)                                                \
       return a;                                                               \
-    return vec##count##_div_s(a, vec##count##_length(a));                     \
+    return prefix##vec##count##_div_s(a, prefix##vec##count##_length(a));                     \
   }
 
-#define VEC_DEFINE_OPS(count) \
-  VEC_DEFINE_BINARY_OP(count, add, +)        \
-  VEC_DEFINE_BINARY_OP(count, sub, -)        \
-  VEC_DEFINE_BINARY_OP(count, mul, *)        \
-  VEC_DEFINE_BINARY_OP(count, div, /)        \
-  VEC_DEFINE_BINARY_OP_SCALAR(count, add, +) \
-  VEC_DEFINE_BINARY_OP_SCALAR(count, sub, -) \
-  VEC_DEFINE_BINARY_OP_SCALAR(count, mul, *) \
-  VEC_DEFINE_BINARY_OP_SCALAR(count, div, /) \
-  VEC_DEFINE_OP_NEG(count)                   \
-  VEC_DEFINE_OP_REDUCE(count)                \
-  VEC_DEFINE_OP_DOT(count)                   \
-  VEC_DEFINE_OP_LENGTH_SQUARED(count)        \
-  VEC_DEFINE_OP_LENGTH(count)                \
-  VEC_DEFINE_OP_NORMALIZE(count)
+#define VEC_DEFINE_OPS(type, count, prefix) \
+  VEC_DEFINE_BINARY_OP(type, count, prefix, add, +)        \
+  VEC_DEFINE_BINARY_OP(type, count, prefix, sub, -)        \
+  VEC_DEFINE_BINARY_OP(type, count, prefix, mul, *)        \
+  VEC_DEFINE_BINARY_OP(type, count, prefix, div, /)        \
+  VEC_DEFINE_BINARY_OP_SCALAR(type, count, prefix, add, +) \
+  VEC_DEFINE_BINARY_OP_SCALAR(type, count, prefix, sub, -) \
+  VEC_DEFINE_BINARY_OP_SCALAR(type, count, prefix, mul, *) \
+  VEC_DEFINE_BINARY_OP_SCALAR(type, count, prefix, div, /) \
+  VEC_DEFINE_OP_NEG(type, count, prefix)                   \
+  VEC_DEFINE_OP_REDUCE(type, count, prefix)                \
+  VEC_DEFINE_OP_DOT(type, count, prefix)                   \
+  VEC_DEFINE_OP_LENGTH_SQUARED(type, count, prefix)        \
+  VEC_DEFINE_OP_LENGTH(type, count, prefix)                \
+  VEC_DEFINE_OP_NORMALIZE(type, count, prefix)
 
-VEC_DEFINE_OPS(2)
-VEC_DEFINE_OPS(3)
-VEC_DEFINE_OPS(4)
+VEC_DEFINE_OPS(float, 2,)
+VEC_DEFINE_OPS(float, 3,)
+VEC_DEFINE_OPS(float, 4,)
+
+VEC_DEFINE_OPS(int, 2, i)
+VEC_DEFINE_OPS(int, 3, i)
+VEC_DEFINE_OPS(int, 4, i)
 
 #undef VEC_DEFINE_BINARY_OP
 #undef VEC_DEFINE_BINARY_OP

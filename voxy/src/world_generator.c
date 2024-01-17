@@ -1,112 +1,72 @@
 #include "world_generator.h"
 #include "hash.h"
 
+#define SC_HASH_TABLE_IMPLEMENTATION
+#define SC_HASH_TABLE_PREFIX section_info
+#define SC_HASH_TABLE_NODE_TYPE struct section_info
+#define SC_HASH_TABLE_KEY_TYPE struct ivec2
+#include "hash_table.h"
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_IMPLEMENTATION
+
+#define SC_HASH_TABLE_IMPLEMENTATION
+#define SC_HASH_TABLE_PREFIX chunk_info
+#define SC_HASH_TABLE_NODE_TYPE struct chunk_info
+#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#include "hash_table.h"
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_IMPLEMENTATION
+
 #include <stdlib.h>
 #include <stdio.h>
 
-void world_generator_init(struct world_generator *world_generator)
+struct ivec2 section_info_key(struct section_info *section_info)
 {
-  world_generator->player_spawned = false;
-
-  world_generator->section_infos         = NULL;
-  world_generator->section_info_capacity = 0;
-  world_generator->section_info_load     = 0;
-
-  world_generator->chunk_infos         = NULL;
-  world_generator->chunk_info_capacity = 0;
-  world_generator->chunk_info_load     = 0;
+  return section_info->position;
 }
 
-void world_generator_deinit(struct world_generator *world_generator)
+size_t section_info_hash(struct ivec2 position)
 {
-  for(size_t i=0; i<world_generator->section_info_capacity; ++i)
-  {
-    struct section_info *section_info = world_generator->section_infos[i];
-    while(section_info)
-    {
-      struct section_info *tmp = section_info;
-      section_info = section_info->next;
-      free(tmp);
-    }
-  }
-  free(world_generator->section_infos);
-
-  for(size_t i=0; i<world_generator->chunk_info_capacity; ++i)
-  {
-    struct chunk_info *chunk_info = world_generator->chunk_infos[i];
-    while(chunk_info)
-    {
-      struct chunk_info *tmp = chunk_info;
-      chunk_info = chunk_info->next;
-
-      free(tmp->nodes);
-      free(tmp);
-    }
-  }
-  free(world_generator->chunk_infos);
+  return hash2(position.x, position.y);
 }
 
-void world_generator_section_info_rehash(struct world_generator *world_generator, size_t new_capacity)
+int section_info_compare(struct ivec2 position1, struct ivec2 position2)
 {
-  struct section_info *orphans = NULL;
-  for(size_t i=0; i<world_generator->section_info_capacity; ++i)
-  {
-    struct section_info **head = &world_generator->section_infos[i];
-    while(*head)
-      if((*head)->hash % new_capacity != i)
-      {
-        struct section_info *orphan = *head;
-        *head = (*head)->next;
-
-        orphan->next = orphans;
-        orphans      = orphan;
-      }
-      else
-        head = &(*head)->next;
-  }
-
-  world_generator->section_infos = realloc(world_generator->section_infos, new_capacity * sizeof *world_generator->section_infos);
-  for(size_t i=world_generator->section_info_capacity; i<new_capacity; ++i)
-    world_generator->section_infos[i] = NULL;
-  world_generator->section_info_capacity = new_capacity;
-
-  while(orphans)
-  {
-    struct section_info *orphan = orphans;
-    orphans = orphans->next;
-
-    orphan->next = world_generator->section_infos[orphan->hash % world_generator->section_info_capacity];
-    world_generator->section_infos[orphan->hash % world_generator->section_info_capacity] = orphan;
-  }
+  if(position1.x != position2.x) return position1.x - position2.x;
+  if(position1.y != position2.y) return position1.y - position2.y;
+  return 0;
 }
 
-struct section_info *world_generator_section_info_insert(struct world_generator *world_generator, int x, int y)
+void section_info_dispose(struct section_info *section_info)
 {
-  if(world_generator->section_info_capacity == 0)
-    world_generator_section_info_rehash(world_generator, 32);
-  else if(world_generator->section_info_load * 4 >= world_generator->section_info_capacity * 3)
-    world_generator_section_info_rehash(world_generator, world_generator->section_info_capacity * 2);
-
-  struct section_info *section_info = malloc(sizeof *section_info);
-  section_info->x = x;
-  section_info->y = y;
-  section_info->hash = hash2(x, y);
-  section_info->next = world_generator->section_infos[section_info->hash % world_generator->section_info_capacity];
-  world_generator->section_infos[section_info->hash % world_generator->section_info_capacity] = section_info;
-  world_generator->section_info_load += 1;
-  return section_info;
+  free(section_info);
 }
 
-struct section_info *world_generator_section_info_lookup(struct world_generator *world_generator, int x, int y)
+struct ivec3 chunk_info_key(struct chunk_info *chunk_info)
 {
-  if(world_generator->section_info_capacity == 0)
-    return NULL;
+  return chunk_info->position;
+}
 
-  size_t h = hash2(x, y);
-  for(struct section_info *section_info = world_generator->section_infos[h % world_generator->section_info_capacity]; section_info; section_info = section_info->next)
-    if(section_info->hash == h && section_info->x == x && section_info->y == y)
-      return section_info;
-  return NULL;
+size_t chunk_info_hash(struct ivec3 position)
+{
+  return hash3(position.x, position.y, position.z);
+}
+
+int chunk_info_compare(struct ivec3 position1, struct ivec3 position2)
+{
+  if(position1.x != position2.x) return position1.x - position2.x;
+  if(position1.y != position2.y) return position1.y - position2.y;
+  if(position1.z != position2.z) return position1.z - position2.z;
+  return 0;
+}
+
+void chunk_info_dispose(struct chunk_info *chunk_info)
+{
+  free(chunk_info);
 }
 
 static void vec2_rotate(struct vec2 *vec, float degree)
@@ -115,139 +75,6 @@ static void vec2_rotate(struct vec2 *vec, float degree)
   float new_y = vec->x * -sinf(degree) + vec->y * +cosf(degree);
   vec->x = new_x;
   vec->y = new_y;
-}
-
-static float get_height(seed_t seed, int x, int y)
-{
-  float value = 0.0f;
-
-  struct vec2 position = vec2(x, y);
-
-  // Truly Massive Mountains
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 8000.0f)) * 2048.0f + 2048.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 4000.0f)) * 1024.0f + 1024.0f;
-
-  // Mountains
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 1600.0f)) * 512.0f + 512.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 800.0f))  * 256.0f + 256.0f;
-
-  // Hills
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 400.0f)) * 256.0f + 256.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 200.0f)) * 128.0f + 128.0f;
-
-  // Small hills
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 10.0f)) * 5.0f + 5.0f;
-  seed_next(&seed); vec2_rotate(&position, M_PI / 4); value += noise_perlin2(seed, vec2_div_s(position, 5.0f))  * 2.0f + 2.0f;
-
-  return value;
-}
-
-struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, int x, int y)
-{
-  struct section_info *section_info;
-  if((section_info = world_generator_section_info_lookup(world_generator, x, y)))
-    return section_info;
-
-  section_info = world_generator_section_info_insert(world_generator, x, y);
-  for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
-    for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
-    {
-      int real_x = section_info->x * CHUNK_WIDTH + (int)x;
-      int real_y = section_info->y * CHUNK_WIDTH + (int)y;
-      section_info->heights[y][x] = get_height(world->seed, real_x, real_y);
-    }
-
-  return section_info;
-}
-
-void world_generator_chunk_info_rehash(struct world_generator *world_generator, size_t new_capacity)
-{
-  struct chunk_info *orphans = NULL;
-  for(size_t i=0; i<world_generator->chunk_info_capacity; ++i)
-  {
-    struct chunk_info **head = &world_generator->chunk_infos[i];
-    while(*head)
-      if((*head)->hash % new_capacity != i)
-      {
-        struct chunk_info *orphan = *head;
-        *head = (*head)->next;
-
-        orphan->next = orphans;
-        orphans      = orphan;
-      }
-      else
-        head = &(*head)->next;
-  }
-
-  world_generator->chunk_infos = realloc(world_generator->chunk_infos, new_capacity * sizeof *world_generator->chunk_infos);
-  for(size_t i=world_generator->chunk_info_capacity; i<new_capacity; ++i)
-    world_generator->chunk_infos[i] = NULL;
-  world_generator->chunk_info_capacity = new_capacity;
-
-  while(orphans)
-  {
-    struct chunk_info *orphan = orphans;
-    orphans = orphans->next;
-
-    orphan->next = world_generator->chunk_infos[orphan->hash % world_generator->chunk_info_capacity];
-    world_generator->chunk_infos[orphan->hash % world_generator->chunk_info_capacity] = orphan;
-  }
-}
-
-struct chunk_info *world_generator_chunk_info_insert(struct world_generator *world_generator, int x, int y, int z)
-{
-  if(world_generator->chunk_info_capacity == 0)
-    world_generator_chunk_info_rehash(world_generator, 32);
-  else if(world_generator->chunk_info_load * 4 >= world_generator->chunk_info_capacity * 3)
-    world_generator_chunk_info_rehash(world_generator, world_generator->chunk_info_capacity * 2);
-
-  struct chunk_info *chunk_info = malloc(sizeof *chunk_info);
-  chunk_info->x = x;
-  chunk_info->y = y;
-  chunk_info->z = z;
-  chunk_info->hash = hash3(x, y, z);
-  chunk_info->next = world_generator->chunk_infos[chunk_info->hash % world_generator->chunk_info_capacity];
-  world_generator->chunk_infos[chunk_info->hash % world_generator->chunk_info_capacity] = chunk_info;
-  world_generator->chunk_info_load += 1;
-  return chunk_info;
-}
-
-struct chunk_info *world_generator_chunk_info_lookup(struct world_generator *world_generator, int x, int y, int z)
-{
-  if(world_generator->chunk_info_capacity == 0)
-    return NULL;
-
-  size_t h = hash3(x, y, z);
-  for(struct chunk_info *chunk_info = world_generator->chunk_infos[h % world_generator->chunk_info_capacity]; chunk_info; chunk_info = chunk_info->next)
-    if(chunk_info->hash == h && chunk_info->x == x && chunk_info->y == y)
-      return chunk_info;
-  return NULL;
-}
-
-struct chunk_info *world_generator_chunk_info_lookup_or_insert(struct world_generator *world_generator, int x, int y, int z)
-{
-  struct chunk_info *chunk_info = world_generator_chunk_info_lookup(world_generator, x, y, z);
-  if(!chunk_info)
-  {
-    chunk_info = world_generator_chunk_info_insert(world_generator, x, y, z);
-    chunk_info->nodes          = NULL;
-    chunk_info->node_count     = 0;
-    chunk_info->node_capacity  = 0;
-    chunk_info->cave_generated = false;
-  }
-  return chunk_info;
-}
-
-struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_generator, struct world *world, int x, int y, int z)
-{
-  int count = ceilf((CAVE_WORM_STEP * CAVE_WORM_NODE_COUNT + 2 * CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH);
-  for(int dz = -count; dz<=count; ++dz)
-    for(int dy = -count; dy<=count; ++dy)
-      for(int dx = -count; dx<=count; ++dx)
-        if(dx * dx + dy * dy + dz * dz <= count * count)
-          world_generator_generate_cave(world_generator, world, x+dx, y+dy, z+dz);
-
-  return world_generator_chunk_info_lookup(world_generator, x, y, z);
 }
 
 static struct vec3 get_cave_direction(seed_t seed_x, seed_t seed_y, seed_t seed_z, struct vec3 position)
@@ -265,44 +92,211 @@ static struct vec3 get_cave_direction(seed_t seed_x, seed_t seed_y, seed_t seed_
   return vec3_normalize(direction);
 }
 
-void world_generator_generate_cave(struct world_generator *world_generator, struct world *world, int x, int y, int z)
+static float get_height(seed_t seed, struct ivec2 position)
 {
-  struct chunk_info *chunk_info = world_generator_chunk_info_lookup_or_insert(world_generator, x, y, z);
+  float value = 0.0f;
+
+  seed_t      current_seed     = seed;
+  struct vec2 current_position = vec2(position.x, position.y);
+
+  // Truly Massive Mountains
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 8000.0f)) * 2048.0f + 2048.0f;
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 4000.0f)) * 1024.0f + 1024.0f;
+
+  // Mountaincurrent_s
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 1600.0f)) * 512.0f + 512.0f;
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 800.0f))  * 256.0f + 256.0f;
+
+  // Hills
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 400.0f)) * 256.0f + 256.0f;
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 200.0f)) * 128.0f + 128.0f;
+
+  // Small hicurrent_lls
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 10.0f)) * 5.0f + 5.0f;
+  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 5.0f))  * 2.0f + 2.0f;
+
+  return value;
+}
+
+void world_generator_init(struct world_generator *world_generator)
+{
+  world_generator->player_spawned = false;
+
+  section_info_hash_table_init(&world_generator->section_infos);
+  chunk_info_hash_table_init(&world_generator->chunk_infos);
+
+}
+
+void world_generator_deinit(struct world_generator *world_generator)
+{
+  section_info_hash_table_dispose(&world_generator->section_infos);
+  chunk_info_hash_table_dispose(&world_generator->chunk_infos);
+}
+
+void world_generator_update(struct world_generator *world_generator, struct world *world)
+{
+  world_generator_update_spawn_player(world_generator, world);
+  world_generator_update_generate_chunks(world_generator, world);
+}
+
+void world_generator_update_spawn_player(struct world_generator *world_generator, struct world *world)
+{
+  if(!world_generator->player_spawned)
+  {
+    world_generator->player_spawned     = true;
+    world->player_transform.translation = vec3(0.0f, 0.0f, get_height(world->seed, ivec2(0, 0)) + 2.0f);
+    world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
+  }
+}
+
+void world_generator_update_generate_chunks(struct world_generator *world_generator, struct world *world)
+{
+  struct ivec3 chunk_position = vec3_as_ivec3_floor(vec3_div_s(world->player_transform.translation, CHUNK_WIDTH));
+  for(int dz = -8; dz<=8; ++dz)
+    for(int dy = -8; dy<=8; ++dy)
+      for(int dx = -8; dx<=8; ++dx)
+        world_generator_update_generate_chunk(world_generator, world, ivec3_add(chunk_position, ivec3(dx, dy, dz)));
+}
+
+void world_generator_update_generate_chunk(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position)
+{
+  if(!chunk_hash_table_lookup(&world->chunks, chunk_position))
+  {
+    struct chunk *chunk = malloc(sizeof *chunk);
+    chunk->position = chunk_position;
+    chunk->mesh_dirty = false;
+
+    if(chunk->position.z < 0)
+    {
+      for(unsigned z = 0; z<CHUNK_WIDTH; ++z)
+        for(unsigned y = 0; y<CHUNK_WIDTH; ++y)
+          for(unsigned x = 0; x<CHUNK_WIDTH; ++x)
+            chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+    }
+    else
+    {
+      // 1: Terrain Generation
+      struct section_info *section_info = world_generator_section_info_get(world_generator, world, ivec2(chunk_position.x, chunk_position.y));
+      for(int z = 0; z<CHUNK_WIDTH; ++z)
+        for(int y = 0; y<CHUNK_WIDTH; ++y)
+          for(int x = 0; x<CHUNK_WIDTH; ++x)
+          {
+            int real_z = chunk->position.z * CHUNK_WIDTH + (int)z;
+            if(real_z <= section_info->heights[y][x])
+              chunk->tiles[z][y][x].id = TILE_ID_STONE;
+            else if(real_z <= section_info->heights[y][x] + 1.0f)
+              chunk->tiles[z][y][x].id = TILE_ID_GRASS;
+            else
+              chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+          }
+
+      // 2: Cave generation
+      struct chunk_info *chunk_info = world_generator_chunk_info_get(world_generator, world, chunk_position);
+      for(size_t i=0; i<chunk_info->node_count; ++i)
+        for(int z = floorf(chunk_info->nodes[i].position.z - CAVE_WORM_NODE_RADIUS); z <= ceilf(chunk_info->nodes[i].position.z + CAVE_WORM_NODE_RADIUS); ++z)
+          for(int y = floorf(chunk_info->nodes[i].position.y - CAVE_WORM_NODE_RADIUS); y <= ceilf(chunk_info->nodes[i].position.y + CAVE_WORM_NODE_RADIUS); ++y)
+            for(int x = floorf(chunk_info->nodes[i].position.x - CAVE_WORM_NODE_RADIUS); x <= ceilf(chunk_info->nodes[i].position.x + CAVE_WORM_NODE_RADIUS); ++x)
+              if(vec3_length(vec3_sub(vec3(x, y, z), chunk_info->nodes[i].position)) <= CAVE_WORM_NODE_RADIUS)
+                if(z >= 0 && z <= CHUNK_WIDTH - 1)
+                  if(y >= 0 && y <= CHUNK_WIDTH - 1)
+                    if(x >= 0 && x <= CHUNK_WIDTH - 1)
+                      chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+    }
+    chunk_hash_table_insert_unchecked(&world->chunks, chunk);
+
+    struct chunk_adjacency chunk_adjacency;
+    chunk_adjacency_init(&chunk_adjacency, world, chunk);
+    if(chunk_adjacency.chunk)  chunk_adjacency.chunk ->mesh_dirty = true;
+    if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
+    if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
+    if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
+    if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
+    if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
+    if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
+  }
+}
+
+struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, struct ivec2 section_position)
+{
+  struct section_info *section_info = section_info_hash_table_lookup(&world_generator->section_infos, section_position);
+  if(!section_info)
+  {
+    section_info = malloc(sizeof *section_info);
+    section_info->position = section_position;
+    for(int y = 0; y<CHUNK_WIDTH; ++y)
+      for(int x = 0; x<CHUNK_WIDTH; ++x)
+      {
+        struct ivec2 local_position  = ivec2(x, y);
+        struct ivec2 global_position = ivec2_add(ivec2_mul_s(section_info->position, CHUNK_WIDTH), local_position);
+        section_info->heights[y][x] = get_height(world->seed, global_position);
+      }
+
+    section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
+  }
+  return section_info;
+}
+
+struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position)
+{
+  int count = ceilf((CAVE_WORM_STEP * CAVE_WORM_NODE_COUNT + 2 * CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH);
+  for(int dz = -count; dz<=count; ++dz)
+    for(int dy = -count; dy<=count; ++dy)
+      for(int dx = -count; dx<=count; ++dx)
+        if(dx * dx + dy * dy + dz * dz <= count * count)
+        {
+          struct ivec3 delta_chunk_position     = ivec3(dx, dy, dz);
+          struct ivec3 neighbour_chunk_position = ivec3_add(chunk_position, delta_chunk_position);
+          world_generator_generate_cave(world_generator, world, neighbour_chunk_position);
+        }
+
+  return chunk_info_hash_table_lookup(&world_generator->chunk_infos, chunk_position);
+}
+
+void world_generator_generate_cave(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position)
+{
+  struct chunk_info *chunk_info = chunk_info_hash_table_lookup(&world_generator->chunk_infos, chunk_position);
+  if(!chunk_info)
+  {
+    chunk_info = malloc(sizeof *chunk_info);
+    chunk_info->position = chunk_position;
+    chunk_info->cave_generated = false;
+    chunk_info->nodes          = NULL;
+    chunk_info->node_count     = 0;
+    chunk_info->node_capacity  = 0;
+    chunk_info_hash_table_insert_unchecked(&world_generator->chunk_infos, chunk_info);
+  }
+
   if(!chunk_info->cave_generated)
   {
     seed_t seed = world->seed;
-    seed_combine(&seed, &x, sizeof x);
-    seed_combine(&seed, &y, sizeof y);
-    seed_combine(&seed, &z, sizeof z);
-
+    seed_combine(&seed, &chunk_position.x, sizeof chunk_position.x);
+    seed_combine(&seed, &chunk_position.y, sizeof chunk_position.y);
+    seed_combine(&seed, &chunk_position.z, sizeof chunk_position.z);
     for(unsigned trial=0; trial<CAVE_WORM_TRIAL; ++trial)
     {
       float value = (float)seed_next(&seed) / (float)SEED_MAX;
       if(value < CAVE_WORM_RATIO)
       {
-        int cx = seed_next(&seed) % CHUNK_WIDTH;
-        int cy = seed_next(&seed) % CHUNK_WIDTH;
-        int cz = seed_next(&seed) % CHUNK_WIDTH;
+        size_t local_x = seed_next(&seed) % CHUNK_WIDTH;
+        size_t local_y = seed_next(&seed) % CHUNK_WIDTH;
+        size_t local_z = seed_next(&seed) % CHUNK_WIDTH;
 
-        int real_x = x * CHUNK_WIDTH + cx;
-        int real_y = y * CHUNK_WIDTH + cy;
-        int real_z = z * CHUNK_WIDTH + cz;
+        seed_t seed_x = seed_next(&seed);
+        seed_t seed_y = seed_next(&seed);
+        seed_t seed_z = seed_next(&seed);
 
-        seed_t seed_x = seed_next(&seed); // Determine x direction for worm movement
-        seed_t seed_y = seed_next(&seed); // Determine y direction for worm movement
-        seed_t seed_z = seed_next(&seed); // Determine z direction for worm movement
+        struct ivec3 local_position  = ivec3(local_x, local_y, local_z);
+        struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk_position, CHUNK_WIDTH), local_position);
 
-        struct vec3 position = vec3(real_x, real_y, real_z);
-        world_generator_add_node(world_generator, position);
+        struct vec3 node_position = ivec3_as_vec3(global_position);
+        world_generator_add_node(world_generator, node_position);
         for(size_t i=1; i<CAVE_WORM_NODE_COUNT; ++i)
         {
-          struct vec3 direction = get_cave_direction(seed_x, seed_y, seed_z, position);
-          position = vec3_add(position, vec3_mul_s(direction, CAVE_WORM_STEP));
-          world_generator_add_node(world_generator, position);
+          node_position = vec3_add(node_position, vec3_mul_s(get_cave_direction(seed_x, seed_y, seed_z, node_position), CAVE_WORM_STEP));
+          world_generator_add_node(world_generator, node_position);
         }
       }
     }
-
     chunk_info->cave_generated = true;
   }
 }
@@ -313,13 +307,17 @@ void world_generator_add_node(struct world_generator *world_generator, struct ve
     for(int y = floorf((position.y - CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); y<=ceilf((position.y + CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); ++y)
       for(int x = floorf((position.x - CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); x<=ceilf((position.x + CAVE_WORM_NODE_RADIUS) / CHUNK_WIDTH); ++x)
       {
-        struct chunk_info *chunk_info = world_generator_chunk_info_lookup(world_generator, x, y, z);
+        struct ivec3 chunk_position = ivec3(x, y, z);
+        struct chunk_info *chunk_info = chunk_info_hash_table_lookup(&world_generator->chunk_infos, chunk_position);
         if(!chunk_info)
         {
-          chunk_info = world_generator_chunk_info_insert(world_generator, x, y, z);
-          chunk_info->nodes         = NULL;
-          chunk_info->node_count    = 0;
-          chunk_info->node_capacity = 0;
+          chunk_info = malloc(sizeof *chunk_info);
+          chunk_info->position = chunk_position;
+          chunk_info->cave_generated = false;
+          chunk_info->nodes          = NULL;
+          chunk_info->node_count     = 0;
+          chunk_info->node_capacity  = 0;
+          chunk_info_hash_table_insert_unchecked(&world_generator->chunk_infos, chunk_info);
         }
 
         if(chunk_info->node_capacity == chunk_info->node_count)
@@ -328,83 +326,9 @@ void world_generator_add_node(struct world_generator *world_generator, struct ve
           chunk_info->nodes         = realloc(chunk_info->nodes, chunk_info->node_capacity * sizeof *chunk_info->nodes);
         }
 
-        chunk_info->nodes[chunk_info->node_count++] = (struct node) {
-          .position = vec3_sub(position, vec3_mul_s(vec3(x, y, z), CHUNK_WIDTH))
-        };
+        struct vec3 global_position = position;
+        struct vec3 local_position  = vec3_sub(global_position, ivec3_as_vec3(ivec3_mul_s(chunk_position, CHUNK_WIDTH)));
+        chunk_info->nodes[chunk_info->node_count++] = (struct node) { .position = local_position };
       }
-}
-
-void world_generator_update(struct world_generator *world_generator, struct world *world)
-{
-  if(!world_generator->player_spawned)
-  {
-    world_generator->player_spawned     = true;
-    world->player_transform.translation = vec3(0.0f, 0.0f, get_height(world->seed, 0, 0) + 2.0f);
-    world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
-  }
-
-  int x = floorf(world->player_transform.translation.x / CHUNK_WIDTH);
-  int y = floorf(world->player_transform.translation.y / CHUNK_WIDTH);
-  int z = floorf(world->player_transform.translation.z / CHUNK_WIDTH);
-  for(int dz = -8; dz<=8; ++dz)
-    for(int dy = -8; dy<=8; ++dy)
-      for(int dx = -8; dx<=8; ++dx)
-        if(!world_chunk_lookup(world, x+dx, y+dy, z+dz))
-          world_generator_update_at(world_generator, world, x+dx, y+dy, z+dz);
-}
-
-void world_generator_update_at(struct world_generator *world_generator, struct world *world, int x, int y, int z)
-{
-  (void)world_generator;
-
-  struct chunk *chunk = world_chunk_insert(world, x, y, z);
-  chunk->mesh_dirty = false;
-
-  if(chunk->z < 0)
-  {
-    for(unsigned cz = 0; cz<CHUNK_WIDTH; ++cz)
-      for(unsigned cy = 0; cy<CHUNK_WIDTH; ++cy)
-        for(unsigned cx = 0; cx<CHUNK_WIDTH; ++cx)
-          chunk->tiles[cz][cy][cx].id = TILE_ID_EMPTY;
-
-    return; // Fast-path!?
-  }
-
-  // 1: Terrain Generation
-  struct section_info *section_info = world_generator_section_info_get(world_generator, world, x, y);
-  for(int cz = 0; cz<CHUNK_WIDTH; ++cz)
-    for(int cy = 0; cy<CHUNK_WIDTH; ++cy)
-      for(int cx = 0; cx<CHUNK_WIDTH; ++cx)
-      {
-        int real_z = chunk->z * CHUNK_WIDTH + (int)cz;
-        if(real_z <= section_info->heights[cy][cx])
-          chunk->tiles[cz][cy][cx].id = TILE_ID_STONE;
-        else if(real_z <= section_info->heights[cy][cx] + 1.0f)
-          chunk->tiles[cz][cy][cx].id = TILE_ID_GRASS;
-        else
-          chunk->tiles[cz][cy][cx].id = TILE_ID_EMPTY;
-      }
-
-  // 2: Cave generation
-  struct chunk_info *chunk_info = world_generator_chunk_info_get(world_generator, world, x, y, z);
-  for(size_t i=0; i<chunk_info->node_count; ++i)
-    for(int cz = floorf(chunk_info->nodes[i].position.z - CAVE_WORM_NODE_RADIUS); cz <= ceilf(chunk_info->nodes[i].position.z + CAVE_WORM_NODE_RADIUS); ++cz)
-      for(int cy = floorf(chunk_info->nodes[i].position.y - CAVE_WORM_NODE_RADIUS); cy <= ceilf(chunk_info->nodes[i].position.y + CAVE_WORM_NODE_RADIUS); ++cy)
-        for(int cx = floorf(chunk_info->nodes[i].position.x - CAVE_WORM_NODE_RADIUS); cx <= ceilf(chunk_info->nodes[i].position.x + CAVE_WORM_NODE_RADIUS); ++cx)
-          if(vec3_length(vec3_sub(vec3(cx, cy, cz), chunk_info->nodes[i].position)) <= CAVE_WORM_NODE_RADIUS)
-            if(cz >= 0 && cz <= CHUNK_WIDTH - 1)
-              if(cy >= 0 && cy <= CHUNK_WIDTH - 1)
-                if(cx >= 0 && cx <= CHUNK_WIDTH - 1)
-                  chunk->tiles[cz][cy][cx].id = TILE_ID_EMPTY;
-
-  struct chunk_adjacency chunk_adjacency;
-  chunk_adjacency_init(&chunk_adjacency, world, chunk);
-  if(chunk_adjacency.chunk)  chunk_adjacency.chunk ->mesh_dirty = true;
-  if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
-  if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
-  if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
-  if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
-  if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
-  if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
 }
 

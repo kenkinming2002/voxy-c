@@ -4,6 +4,16 @@
 #include "gl.h"
 #include "hash.h"
 
+#define SC_HASH_TABLE_IMPLEMENTATION
+#define SC_HASH_TABLE_PREFIX chunk_mesh
+#define SC_HASH_TABLE_NODE_TYPE struct chunk_mesh
+#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#include "hash_table.h"
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_IMPLEMENTATION
+
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
@@ -13,6 +23,32 @@
 #include <string.h>
 
 #include <dlfcn.h>
+
+struct ivec3 chunk_mesh_key(struct chunk_mesh *chunk_mesh)
+{
+  return chunk_mesh->position;
+}
+
+size_t chunk_mesh_hash(struct ivec3 position)
+{
+  return hash3(position.x, position.y, position.z);
+}
+
+int chunk_mesh_compare(struct ivec3 position1, struct ivec3 position2)
+{
+  if(position1.x != position2.x) return position1.x - position2.x;
+  if(position1.y != position2.y) return position1.y - position2.y;
+  if(position1.z != position2.z) return position1.z - position2.z;
+  return 0;
+}
+
+void chunk_mesh_dispose(struct chunk_mesh *chunk_mesh)
+{
+  glDeleteVertexArrays(1, &chunk_mesh->vao);
+  glDeleteBuffers(1, &chunk_mesh->vbo);
+  glDeleteBuffers(1, &chunk_mesh->ibo);
+  free(chunk_mesh);
+}
 
 /*****************
  * Resource Pack *
@@ -113,9 +149,9 @@ void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder
   chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = index;
 }
 
-void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, int cx, int cy, int cz, int dcx, int dcy, int dcz)
+void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency, struct ivec3 cposition, struct ivec3 dcposition)
 {
-  struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, cx+dcx, cy+dcy, cz+dcz);
+  struct tile *ntile = chunk_adjacency_tile_lookup(chunk_adjacency, ivec3_add(cposition, dcposition));
   if(ntile && ntile->id != TILE_ID_EMPTY)
     return; // Occlusion
 
@@ -129,7 +165,7 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
   // Fancy way to compute vertex positions without just dumping a big table here
   // Pray that the compiler will just inline everything (With -ffast-math probably)
 
-  struct vec3 normal = vec3(dcx, dcy, dcz);
+  struct vec3 normal = vec3(dcposition.x, dcposition.y, dcposition.z);
   struct vec3 axis2  = vec3_dot(normal, vec3(0.0f, 0.0f, 1.0f)) == 0.0f ? vec3(0.0f, 0.0f, 1.0f) : vec3(1.0f, 0.0f, 0.0f);
   struct vec3 axis1  = vec3_cross(normal, axis2);
 
@@ -137,9 +173,9 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
 
   // 1: Position
   struct vec3 center = vec3_zero();;
-  center = vec3_add  (center, vec3(chunk_adjacency->chunk->x, chunk_adjacency->chunk->y, chunk_adjacency->chunk->z));
+  center = vec3_add  (center, vec3(chunk_adjacency->chunk->position.x, chunk_adjacency->chunk->position.y, chunk_adjacency->chunk->position.z));
   center = vec3_mul_s(center, CHUNK_WIDTH);
-  center = vec3_add  (center, vec3(cx, cy, cz));
+  center = vec3_add  (center, vec3(cposition.x, cposition.y, cposition.z));
   center = vec3_add  (center, vec3_mul_s(normal, 0.5f));
 
   vertices[0].position = vec3_add(center, vec3_add(vec3_mul_s(axis1, -0.5f), vec3_mul_s(axis2, -0.5f)));
@@ -155,12 +191,12 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
 
   // 3: Texture Index
   uint32_t texture_index;
-  if     (dcx == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_left;
-  else if(dcx ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_right;
-  else if(dcy == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_back;
-  else if(dcy ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_front;
-  else if(dcz == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_bottom;
-  else if(dcz ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cz][cy][cx].id].texture_top;
+  if     (dcposition.x == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_left;
+  else if(dcposition.x ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_right;
+  else if(dcposition.y == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_back;
+  else if(dcposition.y ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_front;
+  else if(dcposition.z == -1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_bottom;
+  else if(dcposition.z ==  1) texture_index = resource_pack->block_infos[chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_top;
   else
     assert(0 && "Unreachable");
 
@@ -176,24 +212,9 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
   chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertices[3]);
 }
 
-
 /***************
  * Chunk Mesh *
  **************/
-void chunk_mesh_init(struct chunk_mesh *chunk_mesh)
-{
-  glGenVertexArrays(1, &chunk_mesh->vao);
-  glGenBuffers(1, &chunk_mesh->vbo);
-  glGenBuffers(1, &chunk_mesh->ibo);
-}
-
-void chunk_mesh_deinit(struct chunk_mesh *chunk_mesh)
-{
-  glDeleteVertexArrays(1, &chunk_mesh->vao);
-  glDeleteBuffers(1, &chunk_mesh->vbo);
-  glDeleteBuffers(1, &chunk_mesh->ibo);
-}
-
 void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder *chunk_mesh_builder, struct resource_pack *resource_pack, struct chunk_adjacency *chunk_adjacency)
 {
   chunk_adjacency->chunk->mesh_dirty = false;
@@ -204,12 +225,13 @@ void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct chunk_mesh_builder 
       for(int cx = 0; cx<CHUNK_WIDTH; ++cx)
         if(chunk_adjacency->chunk->tiles[cz][cy][cx].id != TILE_ID_EMPTY)
         {
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz, -1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  1,  0,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0, -1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0,  1,  0);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0,  0, -1);
-          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cx, cy, cz,  0,  0,  1);
+          struct ivec3 cposition = { .x = cx, .y = cy, .z = cz };
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cposition, ivec3(-1,  0,  0));
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cposition, ivec3( 1,  0,  0));
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cposition, ivec3( 0, -1,  0));
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cposition, ivec3( 0,  1,  0));
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cposition, ivec3( 0,  0, -1));
+          chunk_mesh_builder_emit_face(chunk_mesh_builder, resource_pack, chunk_adjacency, cposition, ivec3( 0,  0,  1));
         }
 
   glBindVertexArray(chunk_mesh->vao);
@@ -241,9 +263,6 @@ int world_renderer_init(struct world_renderer *world_renderer)
 
   world_renderer->chunk_program             = 0;
   world_renderer->chunk_block_texture_array = 0;
-  world_renderer->chunk_meshes              = NULL;
-  world_renderer->chunk_mesh_capacity       = 0;
-  world_renderer->chunk_mesh_load           = 0;
 
   if((world_renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
   {
@@ -266,6 +285,7 @@ int world_renderer_init(struct world_renderer *world_renderer)
     goto error;
   }
 
+  chunk_mesh_hash_table_init(&world_renderer->chunk_meshes);
   return 0;
 
 error:
@@ -283,87 +303,7 @@ void world_renderer_deinit(struct world_renderer *world_renderer)
 {
   glDeleteProgram(world_renderer->chunk_program);
   glDeleteTextures(1, &world_renderer->chunk_block_texture_array);
-
-  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
-  {
-    struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes[i];
-    while(chunk_mesh)
-    {
-      struct chunk_mesh *tmp = chunk_mesh;
-      chunk_mesh = chunk_mesh->next;
-      chunk_mesh_deinit(tmp);
-      free(tmp);
-    }
-  }
-  free(world_renderer->chunk_meshes);
-}
-
-void world_renderer_chunk_mesh_rehash(struct world_renderer *world_renderer, size_t new_capacity)
-{
-  struct chunk_mesh *orphans = NULL;
-  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
-  {
-    struct chunk_mesh **head = &world_renderer->chunk_meshes[i];
-    while(*head)
-      if((*head)->hash % new_capacity != i)
-      {
-        struct chunk_mesh *orphan = *head;
-        *head = (*head)->next;
-
-        orphan->next = orphans;
-        orphans      = orphan;
-      }
-      else
-        head = &(*head)->next;
-  }
-
-  world_renderer->chunk_meshes = realloc(world_renderer->chunk_meshes, new_capacity * sizeof *world_renderer->chunk_meshes);
-  for(size_t i=world_renderer->chunk_mesh_capacity; i<new_capacity; ++i)
-    world_renderer->chunk_meshes[i] = NULL;
-  world_renderer->chunk_mesh_capacity = new_capacity;
-
-  while(orphans)
-  {
-    struct chunk_mesh *orphan = orphans;
-    orphans = orphans->next;
-
-    orphan->next = world_renderer->chunk_meshes[orphan->hash % world_renderer->chunk_mesh_capacity];
-    world_renderer->chunk_meshes[orphan->hash % world_renderer->chunk_mesh_capacity] = orphan;
-  }
-}
-
-struct chunk_mesh *world_renderer_chunk_mesh_insert(struct world_renderer *world_renderer, int x, int y, int z)
-{
-  if(world_renderer->chunk_mesh_capacity == 0)
-    world_renderer_chunk_mesh_rehash(world_renderer, 32);
-  else if(world_renderer->chunk_mesh_load * 4 >= world_renderer->chunk_mesh_capacity * 3)
-    world_renderer_chunk_mesh_rehash(world_renderer, world_renderer->chunk_mesh_capacity * 2);
-
-  struct chunk_mesh *chunk_mesh = malloc(sizeof *chunk_mesh);
-  chunk_mesh->x = x;
-  chunk_mesh->y = y;
-  chunk_mesh->z = z;
-  chunk_mesh_init(chunk_mesh);
-
-  chunk_mesh->hash = hash3(x, y, z);
-  chunk_mesh->next = world_renderer->chunk_meshes[chunk_mesh->hash % world_renderer->chunk_mesh_capacity];
-
-  world_renderer->chunk_meshes[chunk_mesh->hash % world_renderer->chunk_mesh_capacity] = chunk_mesh;
-  world_renderer->chunk_mesh_load += 1;
-
-  return chunk_mesh;
-}
-
-struct chunk_mesh *world_renderer_chunk_mesh_lookup(struct world_renderer *world_renderer, int x, int y, int z)
-{
-  if(world_renderer->chunk_mesh_capacity == 0)
-    return NULL;
-
-  size_t h = hash3(x, y, z);
-  for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes[h % world_renderer->chunk_mesh_capacity]; chunk_mesh; chunk_mesh = chunk_mesh->next)
-    if(chunk_mesh->hash == h && chunk_mesh->x == x && chunk_mesh->y == y && chunk_mesh->z == z)
-      return chunk_mesh;
-  return NULL;
+  chunk_mesh_hash_table_dispose(&world_renderer->chunk_meshes);
 }
 
 void world_renderer_update(struct world_renderer *world_renderer, struct world *world)
@@ -392,13 +332,22 @@ void world_renderer_update_load(struct world_renderer *world_renderer, struct wo
     for(int dy = -RENDERER_LOAD_DISTANCE; dy<=RENDERER_LOAD_DISTANCE; ++dy)
       for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
       {
-        if(!(chunk = world_chunk_lookup(world, x+dx, y+dy, z+dz)))
+        struct ivec3 chunk_position = ivec3_add(ivec3(x, y, z), ivec3(dx, dy, dz));
+        if(!(chunk = chunk_hash_table_lookup(&world->chunks, chunk_position)))
           continue;
 
-        if((chunk_mesh = world_renderer_chunk_mesh_lookup(world_renderer, x+dx, y+dy, z+dz)))
+        if(chunk_mesh_hash_table_lookup(&world_renderer->chunk_meshes, chunk_position))
           continue;
 
-        chunk_mesh = world_renderer_chunk_mesh_insert(world_renderer, x+dx, y+dy, z+dz);
+        chunk_mesh = malloc(sizeof *chunk_mesh);
+        chunk_mesh->position = chunk_position;
+
+        glGenVertexArrays(1, &chunk_mesh->vao);
+        glGenBuffers(1, &chunk_mesh->vbo);
+        glGenBuffers(1, &chunk_mesh->ibo);
+
+        chunk_mesh_hash_table_insert_unchecked(&world_renderer->chunk_meshes, chunk_mesh);
+
         chunk_adjacency_init(&chunk_adjacency, world, chunk);
         chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &world_renderer->resource_pack, &chunk_adjacency);
       }
@@ -411,43 +360,37 @@ void world_renderer_update_unload(struct world_renderer *world_renderer, struct 
   int x = floorf(world->player_transform.translation.x / CHUNK_WIDTH);
   int y = floorf(world->player_transform.translation.y / CHUNK_WIDTH);
   int z = floorf(world->player_transform.translation.z / CHUNK_WIDTH);
-  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
-  {
-    struct chunk_mesh **it = &world_renderer->chunk_meshes[i];
-    while(*it)
-      if((*it)->x < x - RENDERER_UNLOAD_DISTANCE || (*it)->x > x + RENDERER_UNLOAD_DISTANCE ||
-         (*it)->y < y - RENDERER_UNLOAD_DISTANCE || (*it)->y > y + RENDERER_UNLOAD_DISTANCE ||
-         (*it)->z < z - RENDERER_UNLOAD_DISTANCE || (*it)->z > z + RENDERER_UNLOAD_DISTANCE)
-      {
-        struct chunk_mesh *chunk_mesh = *it;
-        *it = (*it)->next;
 
-        chunk_mesh_deinit(chunk_mesh);
-        free(chunk_mesh);
+  for(size_t i=0; i<world_renderer->chunk_meshes.bucket_count; ++i)
+    for(struct chunk_mesh **chunk_mesh = &world_renderer->chunk_meshes.buckets[i].head; *chunk_mesh;)
+      if((*chunk_mesh)->position.x < x - RENDERER_UNLOAD_DISTANCE || (*chunk_mesh)->position.x > x + RENDERER_UNLOAD_DISTANCE ||
+         (*chunk_mesh)->position.y < y - RENDERER_UNLOAD_DISTANCE || (*chunk_mesh)->position.y > y + RENDERER_UNLOAD_DISTANCE ||
+         (*chunk_mesh)->position.z < z - RENDERER_UNLOAD_DISTANCE || (*chunk_mesh)->position.z > z + RENDERER_UNLOAD_DISTANCE)
+      {
+        struct chunk_mesh *tmp = *chunk_mesh;
+        *chunk_mesh = (*chunk_mesh)->next;
+        chunk_mesh_dispose(tmp);
+
+        world_renderer->chunk_meshes.load -= 1;
       }
       else
-        it = &(*it)->next;
-  }
+        chunk_mesh = &(*chunk_mesh)->next;
 }
 
 void world_renderer_update_reload(struct world_renderer *world_renderer, struct world *world)
 {
   struct chunk_mesh_builder chunk_mesh_builder;
   chunk_mesh_builder_init(&chunk_mesh_builder);
-
-  struct chunk           *chunk;
-  struct chunk_mesh      *chunk_mesh;
-  struct chunk_adjacency  chunk_adjacency;
-
-  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
-    for(chunk_mesh = world_renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+  for(size_t i=0; i<world_renderer->chunk_meshes.bucket_count; ++i)
+    for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes.buckets[i].head; chunk_mesh; chunk_mesh = chunk_mesh->next)
     {
-      chunk = world_chunk_lookup(world, chunk_mesh->x, chunk_mesh->y, chunk_mesh->z);
-      if(!chunk || !chunk->mesh_dirty)
-        continue;
-
-      chunk_adjacency_init(&chunk_adjacency, world, chunk);
-      chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &world_renderer->resource_pack, &chunk_adjacency);
+      struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_mesh->position);
+      if(chunk && chunk->mesh_dirty)
+      {
+        struct chunk_adjacency chunk_adjacency;
+        chunk_adjacency_init(&chunk_adjacency, world, chunk);
+        chunk_mesh_update(chunk_mesh, &chunk_mesh_builder, &world_renderer->resource_pack, &chunk_adjacency);
+      }
     }
 
   chunk_mesh_builder_deinit(&chunk_mesh_builder);
@@ -470,8 +413,8 @@ void world_renderer_render(struct world_renderer *world_renderer, struct camera 
   glUniformMatrix4fv(glGetUniformLocation(world_renderer->chunk_program, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_CUBE_MAP, world_renderer->chunk_block_texture_array);
 
-  for(size_t i=0; i<world_renderer->chunk_mesh_capacity; ++i)
-    for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes[i]; chunk_mesh; chunk_mesh = chunk_mesh->next)
+  for(size_t i=0; i<world_renderer->chunk_meshes.bucket_count; ++i)
+    for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes.buckets[i].head; chunk_mesh; chunk_mesh = chunk_mesh->next)
     {
       glBindVertexArray(chunk_mesh->vao);
       glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);

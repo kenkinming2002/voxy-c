@@ -138,3 +138,28 @@ float noise_perlin3(seed_t seed, struct vec3 position)
       tz
     );
 }
+
+float noise_perlin2_ex(seed_t seed, struct vec2 position, float frequency, float amplitude, float lacunarity, float persistence, size_t octaves)
+{
+  float value = 0.0f;
+  for(size_t i=0; i<octaves; ++i)
+  {
+    value += noise_perlin2(seed_next(&seed), vec2_mul_s(position, frequency)) * amplitude;
+    frequency *= lacunarity;
+    amplitude *= persistence;
+  }
+  return value;
+}
+
+float noise_perlin3_ex(seed_t seed, struct vec3 position, float frequency, float amplitude, float lacunarity, float persistence, size_t octaves)
+{
+  float value = 0.0f;
+  for(size_t i=0; i<octaves; ++i)
+  {
+    value += noise_perlin3(seed_next(&seed), vec3_mul_s(position, frequency)) * amplitude;
+    frequency *= lacunarity;
+    amplitude *= persistence;
+  }
+  return value;
+}
+

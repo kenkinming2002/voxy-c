@@ -37,54 +37,23 @@ void section_info_dispose(struct section_info *section_info)
   free(section_info);
 }
 
-static void vec2_rotate(struct vec2 *vec, float degree)
+static float lerpf(float a, float b, float t)
 {
-  float new_x = vec->x * +cosf(degree) + vec->y * +sinf(degree);
-  float new_y = vec->x * -sinf(degree) + vec->y * +cosf(degree);
-  vec->x = new_x;
-  vec->y = new_y;
+  return a + (b - a) * t;
 }
 
 static float get_height(seed_t seed, struct ivec2 position)
 {
-  float value = 0.0f;
-
-  seed_t      current_seed     = seed;
-  struct vec2 current_position = vec2(position.x, position.y);
-
-  // Truly Massive Mountains
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 8000.0f)) * 2048.0f + 2048.0f;
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 4000.0f)) * 1024.0f + 1024.0f;
-
-  // Mountaincurrent_s
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 1600.0f)) * 512.0f + 512.0f;
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 800.0f))  * 256.0f + 256.0f;
-
-  // Hills
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 400.0f)) * 256.0f + 256.0f;
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 200.0f)) * 128.0f + 128.0f;
-
-  // Small hicurrent_lls
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 10.0f)) * 5.0f + 5.0f;
-  seed_next(&current_seed); vec2_rotate(&current_position, M_PI / 4); value += noise_perlin2(current_seed, vec2_div_s(current_position, 5.0f))  * 2.0f + 2.0f;
-
-  return value;
+  return fabs(noise_perlin2_ex(seed_next(&seed), ivec2_as_vec2(position), 1/8192.0f, 4096.0f, 2.3f, 0.4f, 8));
 }
 
 static bool get_cave(seed_t seed, struct ivec3 position)
 {
   // Reference: https://blog.danol.cz/voxel-cave-generation-using-3d-perlin-noise-isosurfaces/
-  float threshold = 0.05f * exp(-position.z/5000.0f);
+  float threshold = lerpf(0.0f, 0.025f, 1.0f/(1.0f+exp(position.z/1000.0f)));
   for(unsigned i=0; i<2; ++i)
   {
-    seed_next(&seed);
-
-    float value = 0.0f;
-    value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 80.0f)) * 4.0f;
-    value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 60.0f)) * 2.0f;
-    value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 40.0f)) * 1.0f;
-    value += noise_random3(seed, ivec3_as_vec3(position)) * 0.07f;
-    value /= (4.0f + 2.0f + 1.0f) * sqrtf(3.0f/4.0f);
+    float value = noise_perlin3_ex(seed_next(&seed), ivec3_as_vec3(position), 0.013f, 1.0f, 1.5f, 0.3f, 4);
     if(fabs(value) > threshold)
       return false;
   }

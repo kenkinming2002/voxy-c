@@ -1,5 +1,6 @@
 #include "world_generator.h"
 #include "hash.h"
+#include "config.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX section_info
@@ -152,9 +153,9 @@ void world_generator_update_spawn_player(struct world_generator *world_generator
 void world_generator_update_generate_chunks(struct world_generator *world_generator, struct world *world)
 {
   struct ivec3 chunk_position = vec3_as_ivec3_floor(vec3_div_s(world->player_transform.translation, CHUNK_WIDTH));
-  for(int dz = -8; dz<=8; ++dz)
-    for(int dy = -8; dy<=8; ++dy)
-      for(int dx = -8; dx<=8; ++dx)
+  for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
+    for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
+      for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
         world_generator_update_generate_chunk(world_generator, world, ivec3_add(chunk_position, ivec3(dx, dy, dz)));
 }
 

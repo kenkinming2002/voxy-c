@@ -24,13 +24,6 @@
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_INTERFACE
 
-#define CAVE_WORM_RATIO 1e-3
-
-#define CAVE_WORM_TRIAL 10
-#define CAVE_WORM_NODE_COUNT  30
-#define CAVE_WORM_NODE_RADIUS 5.0f
-#define CAVE_WORM_STEP 5.0f
-
 struct section_info
 {
   struct section_info *next;

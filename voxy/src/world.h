@@ -5,6 +5,7 @@
 #include "noise.h"
 #include "transform.h"
 #include "window.h"
+#include "config.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX chunk
@@ -18,8 +19,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-
-#define CHUNK_WIDTH 16
 
 #define TILE_ID_GRASS 0
 #define TILE_ID_STONE 1

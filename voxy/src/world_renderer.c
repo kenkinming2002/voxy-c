@@ -3,6 +3,7 @@
 #include "lin.h"
 #include "gl.h"
 #include "hash.h"
+#include "config.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX chunk_mesh
@@ -312,9 +313,6 @@ void world_renderer_update(struct world_renderer *world_renderer, struct world *
   world_renderer_update_load(world_renderer, world);
   world_renderer_update_reload(world_renderer, world);
 }
-
-#define RENDERER_LOAD_DISTANCE   16
-#define RENDERER_UNLOAD_DISTANCE 64
 
 void world_renderer_update_load(struct world_renderer *world_renderer, struct world *world)
 {

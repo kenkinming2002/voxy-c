@@ -277,15 +277,11 @@ void world_generator_generate_cave(struct world_generator *world_generator, stru
       float value = (float)seed_next(&seed) / (float)SEED_MAX;
       if(value < CAVE_WORM_RATIO)
       {
-        size_t local_x = seed_next(&seed) % CHUNK_WIDTH;
-        size_t local_y = seed_next(&seed) % CHUNK_WIDTH;
-        size_t local_z = seed_next(&seed) % CHUNK_WIDTH;
-
         seed_t seed_x = seed_next(&seed);
         seed_t seed_y = seed_next(&seed);
         seed_t seed_z = seed_next(&seed);
 
-        struct ivec3 local_position  = ivec3(local_x, local_y, local_z);
+        struct ivec3 local_position  = seed_rand_ivec3(&seed, ivec3_zero(), ivec3(CHUNK_WIDTH-1, CHUNK_WIDTH-1, CHUNK_WIDTH-1));
         struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk_position, CHUNK_WIDTH), local_position);
 
         struct vec3 node_position = ivec3_as_vec3(global_position);

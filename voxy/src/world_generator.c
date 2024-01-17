@@ -12,6 +12,9 @@
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_IMPLEMENTATION
 
+#include <math.h>
+#include <stdio.h>
+
 struct ivec2 section_info_key(struct section_info *section_info)
 {
   return section_info->position;
@@ -70,35 +73,22 @@ static float get_height(seed_t seed, struct ivec2 position)
 
 static bool get_cave(seed_t seed, struct ivec3 position)
 {
-  float threshold = (1.0f - expf(-position.z / 3000.0f)) * 0.94f;
-
-  bool cave = false;
+  // Reference: https://blog.danol.cz/voxel-cave-generation-using-3d-perlin-noise-isosurfaces/
+  float threshold = 0.05f * exp(-position.z/5000.0f);
   for(unsigned i=0; i<2; ++i)
   {
-    bool inner_cave = true;
-    for(unsigned j=0; j<5; ++j)
-    {
-      seed_next(&seed);
+    seed_next(&seed);
 
-      float value = 0.0f;
-      value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 50.0f)) * 2.0f + 2.0f;
-      value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 40.0f)) * 1.0f + 1.0f;
-      value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 30.0f)) * 0.5f + 0.5f;
-      value /= 5.215f;
-      if(value < threshold)
-      {
-        inner_cave = false;
-        break;
-      }
-    }
-
-    if(inner_cave)
-    {
-      cave = true;
-      break;
-    }
+    float value = 0.0f;
+    value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 80.0f)) * 4.0f;
+    value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 60.0f)) * 2.0f;
+    value += noise_perlin3(seed, vec3_div_s(ivec3_as_vec3(position), 40.0f)) * 1.0f;
+    value += noise_random3(seed, ivec3_as_vec3(position)) * 0.07f;
+    value /= (4.0f + 2.0f + 1.0f) * sqrtf(3.0f/4.0f);
+    if(fabs(value) > threshold)
+      return false;
   }
-  return cave;
+  return true;
 }
 
 void world_generator_init(struct world_generator *world_generator)
@@ -125,6 +115,10 @@ void world_generator_update_spawn_player(struct world_generator *world_generator
     world_generator->player_spawned     = true;
     world->player_transform.translation = vec3(0.0f, 0.0f, get_height(world->seed, ivec2(0, 0)) + 2.0f);
     world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
+    printf("Spawning player at (%f, %f, %f)\n",
+        world->player_transform.translation.x,
+        world->player_transform.translation.y,
+        world->player_transform.translation.z);
   }
 }
 

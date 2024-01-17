@@ -3,7 +3,7 @@
 
 #define CAVE_WORM_RATIO 1e-2
 
-#define CAVE_WORM_TRIAL 10
+#define CAVE_WORM_TRIAL 20
 #define CAVE_WORM_NODE_COUNT 100
 #define CAVE_WORM_STEP 1.0f
 

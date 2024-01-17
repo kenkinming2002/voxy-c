@@ -82,13 +82,13 @@ static struct vec3 get_cave_direction(seed_t seed_x, seed_t seed_y, seed_t seed_
 {
   struct vec3 direction = vec3_zero();
 
-  direction.x += noise_perlin3(seed_x, vec3_div_s(position, 50.0f));
-  direction.y += noise_perlin3(seed_y, vec3_div_s(position, 50.0f));
-  direction.z += noise_perlin3(seed_z, vec3_div_s(position, 50.0f));
+  direction.x += noise_perlin3(seed_x, vec3_div_s(position, 30.0f));
+  direction.y += noise_perlin3(seed_y, vec3_div_s(position, 30.0f));
+  direction.z += noise_perlin3(seed_z, vec3_div_s(position, 30.0f));
 
-  direction.x += noise_perlin3(seed_x, vec3_div_s(position, 25.0f)) * 0.5f;
-  direction.y += noise_perlin3(seed_y, vec3_div_s(position, 25.0f)) * 0.5f;
-  direction.z += noise_perlin3(seed_z, vec3_div_s(position, 25.0f)) * 0.5f;
+  direction.x += noise_perlin3(seed_x, vec3_div_s(position, 15.0f)) * 0.5f;
+  direction.y += noise_perlin3(seed_y, vec3_div_s(position, 15.0f)) * 0.5f;
+  direction.z += noise_perlin3(seed_z, vec3_div_s(position, 15.0f)) * 0.5f;
 
   return vec3_normalize(direction);
 }
@@ -96,9 +96,10 @@ static struct vec3 get_cave_direction(seed_t seed_x, seed_t seed_y, seed_t seed_
 static float get_cave_radius(seed_t seed_r, struct vec3 position)
 {
   float value = 0.0f;
-  value += noise_perlin3(seed_r, vec3_div_s(position, 25.0f))  * 2.5f + 2.5f;
-  value += noise_perlin3(seed_r, vec3_div_s(position, 10.0f))  * 1.0f + 1.0f;
-  return value;
+  value += noise_perlin3(seed_r, vec3_div_s(position, 50.0f)) * 5.0f + 5.0f;
+  value += noise_perlin3(seed_r, vec3_div_s(position, 10.0f)) * 2.5f + 2.5f;
+  value += noise_perlin3(seed_r, vec3_div_s(position, 5.0f))  * 1.0f + 1.0f;
+  return sqrtf(value);
 }
 
 static float get_height(seed_t seed, struct ivec2 position)

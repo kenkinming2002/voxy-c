@@ -19,9 +19,9 @@ struct section_info
   float heights[CHUNK_WIDTH][CHUNK_WIDTH];
 };
 
-struct worm
+struct node
 {
-  struct vec3 nodes[CAVE_WORM_NODE_COUNT];
+  struct vec3 position;
 };
 
 struct chunk_info
@@ -31,8 +31,11 @@ struct chunk_info
 
   int x, y, z;
 
-  struct worm *worms;
-  size_t       worm_count;
+  bool cave_generated;
+
+  struct node *nodes;
+  size_t       node_count;
+  size_t       node_capacity;
 };
 
 struct world_generator
@@ -59,7 +62,12 @@ struct section_info *world_generator_section_info_get(struct world_generator *wo
 void world_generator_chunk_info_rehash(struct world_generator *world_generator, size_t new_capacity);
 struct chunk_info *world_generator_chunk_info_insert(struct world_generator *world_generator, int x, int y, int z);
 struct chunk_info *world_generator_chunk_info_lookup(struct world_generator *world_generator, int x, int y, int z);
+struct chunk_info *world_generator_chunk_info_lookup_or_insert(struct world_generator *world_generator, int x, int y, int z);
+
 struct chunk_info *world_generator_chunk_info_get(struct world_generator *world_generator, struct world *world, int x, int y, int z);
+
+void world_generator_generate_cave(struct world_generator *world_generator, struct world *world, int x, int y, int z);
+void world_generator_add_node(struct world_generator *world_generator, struct vec3 position);
 
 void world_generator_update(struct world_generator *world_generator, struct world *world);
 void world_generator_update_at(struct world_generator *world_generator, struct world *world, int x, int y, int z);

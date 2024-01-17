@@ -139,7 +139,6 @@ void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder,
   center = vec3_add  (center, vec3(chunk_adjacency->chunk->x, chunk_adjacency->chunk->y, chunk_adjacency->chunk->z));
   center = vec3_mul_s(center, CHUNK_WIDTH);
   center = vec3_add  (center, vec3(cx, cy, cz));
-  center = vec3_add  (center, vec3(0.5f, 0.5f, 0.5f));
   center = vec3_add  (center, vec3_mul_s(normal, 0.5f));
 
   vertices[0].position = vec3_add(center, vec3_add(vec3_mul_s(axis1, -0.5f), vec3_mul_s(axis2, -0.5f)));

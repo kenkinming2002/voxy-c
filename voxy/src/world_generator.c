@@ -309,7 +309,7 @@ void world_generator_update(struct world_generator *world_generator, struct worl
   if(!world_generator->player_spawned)
   {
     world_generator->player_spawned     = true;
-    world->player_transform.translation = vec3(0.5f, 0.5f, get_height(world->seed, 0, 0) + 2.0f);
+    world->player_transform.translation = vec3(0.0f, 0.0f, get_height(world->seed, 0, 0) + 2.0f);
     world->player_transform.rotation    = vec3(0.0f, 0.0f, 0.0f);
   }
 

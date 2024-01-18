@@ -39,6 +39,4 @@ void world_generator_update_spawn_player(struct world_generator *world_generator
 void world_generator_update_generate_chunks(struct world_generator *world_generator, struct world *world);
 void world_generator_update_generate_chunk(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position);
 
-struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, struct ivec2 section_position);
-
 #endif // VOXY_WORLD_GENERATOR_H

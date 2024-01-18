@@ -93,14 +93,44 @@ void world_generator_update_spawn_player(struct world_generator *world_generator
 
 void world_generator_update_generate_chunks(struct world_generator *world_generator, struct world *world)
 {
+  struct section_info **section_infos         = NULL;
+  size_t                section_info_count    = 0;
+  size_t                section_info_capacity = 0;
+
   struct chunk **chunks         = NULL;
   size_t         chunk_count    = 0;
   size_t         chunk_capacity = 0;
 
+  struct ivec3 player_chunk_position   = vec3_as_ivec3_floor(vec3_div_s(world->player_transform.translation, CHUNK_WIDTH));
+  struct ivec2 player_section_position = ivec2(player_chunk_position.x, player_chunk_position.y);
+
+  seed_t cave_seed = world->seed ^ 0xdeadbeefdeadbeef;
+
+  /////////////////////////////////////////////////////////////
+  // 1: Collect all section infos that need to be generated ///
+  /////////////////////////////////////////////////////////////
+  for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
+    for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
+    {
+      struct ivec2 section_position = ivec2_add(player_section_position, ivec2(dx, dy));
+      if(!section_info_hash_table_lookup(&world_generator->section_infos, section_position))
+      {
+        struct section_info *section_info = malloc(sizeof *section_info);
+        section_info->position = section_position;
+        section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
+
+        if(section_info_capacity == section_info_count)
+        {
+          section_info_capacity = section_info_capacity != 0 ? section_info_capacity * 2 : 1;
+          section_infos         = realloc(section_infos, section_info_capacity * sizeof *section_infos);
+        }
+        section_infos[section_info_count++] = section_info;
+      }
+    }
+
   //////////////////////////////////////////////////////
-  // 1: Collect all chunks that need to be generated ///
+  // 2: Collect all chunks that need to be generated ///
   //////////////////////////////////////////////////////
-  struct ivec3 player_chunk_position = vec3_as_ivec3_floor(vec3_div_s(world->player_transform.translation, CHUNK_WIDTH));
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
@@ -113,16 +143,6 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
           chunk->mesh_dirty = true;
           chunk_hash_table_insert_unchecked(&world->chunks, chunk);
 
-          struct chunk_adjacency chunk_adjacency;
-          chunk_adjacency_init(&chunk_adjacency, world, chunk);
-          if(chunk_adjacency.chunk)  chunk_adjacency.chunk ->mesh_dirty = true;
-          if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
-          if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
-          if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
-          if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
-          if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
-          if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
-
           if(chunk_capacity == chunk_count)
           {
             chunk_capacity = chunk_capacity != 0 ? chunk_capacity * 2 : 1;
@@ -132,16 +152,27 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
         }
       }
 
-  /////////////////////////////////////////
-  // 2: Generate all chunks in parallel ///
-  /////////////////////////////////////////
-  seed_t cave_seed = world->seed ^ 0xdeadbeefdeadbeef;
+  ////////////////////////////////////////////////
+  // 3: Generate all section infos in parallel ///
+  ////////////////////////////////////////////////
+  #pragma omp parallel for
+  for(size_t i=0; i<section_info_count; ++i)
+    for(int y = 0; y<CHUNK_WIDTH; ++y)
+      for(int x = 0; x<CHUNK_WIDTH; ++x)
+      {
+        struct ivec2 local_position  = ivec2(x, y);
+        struct ivec2 global_position = ivec2_add(ivec2_mul_s(section_infos[i]->position, CHUNK_WIDTH), local_position);
+        section_infos[i]->heights[y][x] = get_height(world->seed, global_position);
+      }
 
+
+  /////////////////////////////////////////
+  // 4: Generate all chunks in parallel ///
+  /////////////////////////////////////////
   #pragma omp parallel for
   for(size_t i=0; i<chunk_count; ++i)
   {
-    struct section_info *section_info;
-    section_info = world_generator_section_info_get(world_generator, world, ivec2(chunks[i]->position.x, chunks[i]->position.y));
+    struct section_info *section_info = section_info_hash_table_lookup(&world_generator->section_infos, ivec2(chunks[i]->position.x, chunks[i]->position.y));
     for(int z = 0; z<CHUNK_WIDTH; ++z)
       for(int y = 0; y<CHUNK_WIDTH; ++y)
         for(int x = 0; x<CHUNK_WIDTH; ++x)
@@ -158,33 +189,25 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
         }
   }
 
-  /////////////////
-  // 3: Cleanup ///
-  /////////////////
-  free(chunks);
-}
-
-struct section_info *world_generator_section_info_get(struct world_generator *world_generator, struct world *world, struct ivec2 section_position)
-{
-  struct section_info *section_info;
-
-  #pragma omp critical
-  section_info = section_info_hash_table_lookup(&world_generator->section_infos, section_position);
-  if(!section_info)
+  ///////////////////////////
+  // 5: Invalidate meshes ///
+  ///////////////////////////
+  for(size_t i=0; i<chunk_count; ++i)
   {
-    section_info = malloc(sizeof *section_info);
-    section_info->position = section_position;
-    for(int y = 0; y<CHUNK_WIDTH; ++y)
-      for(int x = 0; x<CHUNK_WIDTH; ++x)
-      {
-        struct ivec2 local_position  = ivec2(x, y);
-        struct ivec2 global_position = ivec2_add(ivec2_mul_s(section_info->position, CHUNK_WIDTH), local_position);
-        section_info->heights[y][x] = get_height(world->seed, global_position);
-      }
-
-    #pragma omp critical
-    section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
+    struct chunk_adjacency chunk_adjacency;
+    chunk_adjacency_init(&chunk_adjacency, world, chunks[i]);
+    if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
+    if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
+    if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
+    if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
+    if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
+    if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
   }
-  return section_info;
+
+  /////////////////
+  // 5: Cleanup ///
+  /////////////////
+  free(section_infos);
+  free(chunks);
 }
 

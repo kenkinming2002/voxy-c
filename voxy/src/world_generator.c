@@ -60,10 +60,10 @@ static float get_height(seed_t seed, struct ivec2 position)
 static bool get_cave(seed_t seed, struct ivec3 position)
 {
   // Reference: https://blog.danol.cz/voxel-cave-generation-using-3d-perlin-noise-isosurfaces/
-  float threshold = lerpf(0.0f, 0.025f, 1.0f/(1.0f+expf(position.z/1000.0f)));
+  float threshold = lerpf(0.0f, 0.1f, 1.0f/(1.0f+expf(position.z/1000.0f)));
   for(unsigned i=0; i<2; ++i)
   {
-    float value = noise_perlin3_ex(seed_next(&seed), ivec3_as_vec3(position), 0.013f, 1.5f, 0.3f, 4);
+    float value = noise_perlin3_ex(seed_next(&seed), ivec3_as_vec3(position), 0.02f, 1.5f, 0.3f, 4);
     if(fabs(value) > threshold)
       return false;
   }

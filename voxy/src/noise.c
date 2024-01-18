@@ -169,3 +169,27 @@ float noise_perlin3_ex(seed_t seed, struct vec3 position, float frequency, float
   return value / max_value / (sqrtf(3.0f) / 4.0f);
 }
 
+float ease_in(float x, float factor)
+{
+  return (expf(x * factor) - 1.0f)/(expf(factor) - 1.0f);
+}
+
+float ease_out(float x, float factor)
+{
+  return logf(x * factor + 1.0f) / logf(factor + 1.0f);
+}
+
+float smooth_step(float x)
+{
+  return 3.0f * x * x
+       - 2.0f * x * x * x;
+}
+
+float smoother_step(float x)
+{
+  return 6.0f  * x * x * x * x * x
+       - 15.0f * x * x * x * x
+       + 10.0f * x * x * x;
+}
+
+

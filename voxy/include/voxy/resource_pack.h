@@ -1,5 +1,5 @@
-#ifndef VOXY_RESOURCE_PACK_H
-#define VOXY_RESOURCE_PACK_H
+#ifndef VOXY_INTERFACE_RESOURCE_PACK_H
+#define VOXY_INTERFACE_RESOURCE_PACK_H
 
 #include <stddef.h>
 
@@ -26,4 +26,4 @@ extern const struct block_texture_info block_texture_infos[];
 extern const size_t block_info_count;
 extern const size_t block_texture_info_count;
 
-#endif // VOXY_RESOURCE_PACK_H
+#endif // VOXY_INTERFACE_RESOURCE_PACK_H

@@ -1,10 +1,9 @@
 #ifndef VOXY_WORLD_RENDERER_H
 #define VOXY_WORLD_RENDERER_H
 
-#include <voxy/resource_pack.h>
-
 #include "camera.h"
 #include "glad/glad.h"
+#include "resource_pack.h"
 #include "world.h"
 
 #define SC_HASH_TABLE_INTERFACE
@@ -19,26 +18,6 @@
 
 #include <stddef.h>
 
-/*****************
- * Resource Pack *
- *****************/
-struct resource_pack
-{
-  void *handle;
-
-  const struct block_info         *block_infos;
-  const struct block_texture_info *block_texture_infos;
-
-  size_t block_info_count;
-  size_t block_texture_info_count;
-};
-
-int resource_pack_load(struct resource_pack *resource_pack, const char *filepath);
-void resource_pack_unload(struct resource_pack *resource_pack);
-
-/***************
- * Chunk Mesh *
- **************/
 struct chunk_mesh
 {
   struct chunk_mesh *next;
@@ -52,9 +31,6 @@ struct chunk_mesh
   GLsizei count;
 };
 
-/************
- * Renderer *
- ************/
 struct world_renderer
 {
   struct resource_pack resource_pack;

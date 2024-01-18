@@ -190,6 +190,8 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
           struct ivec3 local_position  = ivec3(x, y, z);
           struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunks[i]->position, CHUNK_WIDTH), local_position);
 
+          if(global_position.z > section_info->heights[y][x] && global_position.z <= 3.0f) { chunks[i]->tiles[z][y][x].id = TILE_ID_WATER; continue; }
+
           if(get_cave(cave_seed, global_position)) { chunks[i]->tiles[z][y][x].id = TILE_ID_EMPTY; continue; }
 
           if(global_position.z <= section_info->heights[y][x])        { chunks[i]->tiles[z][y][x].id = TILE_ID_STONE; continue; }

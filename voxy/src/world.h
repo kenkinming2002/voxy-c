@@ -22,7 +22,8 @@
 
 #define TILE_ID_GRASS 0
 #define TILE_ID_STONE 1
-#define TILE_ID_EMPTY 2
+#define TILE_ID_WATER 2
+#define TILE_ID_EMPTY 3
 
 struct tile
 {

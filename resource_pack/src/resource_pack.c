@@ -6,11 +6,13 @@ enum texture
   TEXTURE_GRASS_TOP,
   TEXTURE_GRASS_SIDE,
   TEXTURE_STONE,
+  TEXTURE_WATER,
 };
 
 const struct block_info block_infos[] = {
   { .name = "grass", .texture_left = TEXTURE_GRASS_SIDE, .texture_right = TEXTURE_GRASS_SIDE, .texture_back = TEXTURE_GRASS_SIDE, .texture_front = TEXTURE_GRASS_SIDE, .texture_bottom = TEXTURE_GRASS_BOTTOM, .texture_top = TEXTURE_GRASS_TOP },
   { .name = "stone", .texture_left = TEXTURE_STONE,      .texture_right = TEXTURE_STONE,      .texture_back = TEXTURE_STONE,      .texture_front = TEXTURE_STONE,      .texture_bottom = TEXTURE_STONE,        .texture_top = TEXTURE_STONE     },
+  { .name = "water", .texture_left = TEXTURE_WATER,      .texture_right = TEXTURE_WATER,      .texture_back = TEXTURE_WATER,      .texture_front = TEXTURE_WATER,      .texture_bottom = TEXTURE_WATER,        .texture_top = TEXTURE_WATER     },
 };
 
 const struct block_texture_info block_texture_infos[] = {
@@ -18,6 +20,7 @@ const struct block_texture_info block_texture_infos[] = {
   [TEXTURE_GRASS_TOP]    = { .filepath = "assets/grass_top.png"    },
   [TEXTURE_GRASS_SIDE]   = { .filepath = "assets/grass_side.png"   },
   [TEXTURE_STONE]        = { .filepath = "assets/stone.png"        },
+  [TEXTURE_WATER]        = { .filepath = "assets/water.png"        },
 };
 
 const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];

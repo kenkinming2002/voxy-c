@@ -46,7 +46,7 @@ static float get_height(seed_t seed, struct ivec2 position)
 {
   float value1 = noise_perlin2_ex(seed_next(&seed), ivec2_as_vec2(position), 1/200.0f, 2.3f, 0.4f, 8);
   value1 = fabs(value1);
-  value1 = powf(value1, 1.5f);
+  value1 = powf(value1, 2.0f);
   value1 = ease_out(value1, 3.0f);
   value1 = value1 * 100.0f;
 

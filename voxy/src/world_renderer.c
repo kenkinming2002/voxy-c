@@ -125,7 +125,8 @@ struct chunk_mesh_info
   size_t    index_capacity;
 };
 
-struct tile *chunk_mesh_info_tile_lookup(struct chunk_mesh_info *chunk_mesh_info, struct ivec3 cposition)
+__attribute__((always_inline))
+static inline struct tile *chunk_mesh_info_tile_lookup(struct chunk_mesh_info *chunk_mesh_info, struct ivec3 cposition)
 {
   if(cposition.z >= 0 && cposition.z < CHUNK_WIDTH)
     if(cposition.y >= 0 && cposition.y < CHUNK_WIDTH)
@@ -144,7 +145,8 @@ struct tile *chunk_mesh_info_tile_lookup(struct chunk_mesh_info *chunk_mesh_info
   assert(0 && "Unreachable");
 }
 
-static void chunk_mesh_info_push_vertex(struct chunk_mesh_info *chunk_mesh_info, struct chunk_mesh_vertex vertex)
+__attribute__((always_inline))
+static inline void chunk_mesh_info_push_vertex(struct chunk_mesh_info *chunk_mesh_info, struct chunk_mesh_vertex vertex)
 {
   if(chunk_mesh_info->vertex_capacity == chunk_mesh_info->vertex_count)
   {
@@ -154,7 +156,8 @@ static void chunk_mesh_info_push_vertex(struct chunk_mesh_info *chunk_mesh_info,
   chunk_mesh_info->vertices[chunk_mesh_info->vertex_count++] = vertex;
 }
 
-static void chunk_mesh_info_push_index(struct chunk_mesh_info *chunk_mesh_info, uint32_t index)
+__attribute__((always_inline))
+static inline void chunk_mesh_info_push_index(struct chunk_mesh_info *chunk_mesh_info, uint32_t index)
 {
   if(chunk_mesh_info->index_capacity == chunk_mesh_info->index_count)
   {
@@ -164,7 +167,8 @@ static void chunk_mesh_info_push_index(struct chunk_mesh_info *chunk_mesh_info, 
   chunk_mesh_info->indices[chunk_mesh_info->index_count++] = index;
 }
 
-static void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_info, struct resource_pack *resource_pack, struct ivec3 cposition, struct ivec3 dcposition)
+__attribute__((always_inline))
+static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_info, struct resource_pack *resource_pack, struct ivec3 cposition, struct ivec3 dcposition)
 {
   struct tile *ntile = chunk_mesh_info_tile_lookup(chunk_mesh_info, ivec3_add(cposition, dcposition));
   if(!ntile || ntile->id == TILE_ID_EMPTY)

@@ -139,27 +139,33 @@ float noise_perlin3(seed_t seed, struct vec3 position)
     );
 }
 
-float noise_perlin2_ex(seed_t seed, struct vec2 position, float frequency, float amplitude, float lacunarity, float persistence, size_t octaves)
+float noise_perlin2_ex(seed_t seed, struct vec2 position, float frequency, float lacunarity, float persistence, size_t octaves)
 {
-  float value = 0.0f;
+  float amplitude = 1.0f;
+  float max_value = 0.0f;
+  float value     = 0.0f;
   for(size_t i=0; i<octaves; ++i)
   {
+    max_value += amplitude;
     value += noise_perlin2(seed_next(&seed), vec2_mul_s(position, frequency)) * amplitude;
     frequency *= lacunarity;
     amplitude *= persistence;
   }
-  return value;
+  return value / max_value / (sqrtf(2.0f) / 4.0f);
 }
 
-float noise_perlin3_ex(seed_t seed, struct vec3 position, float frequency, float amplitude, float lacunarity, float persistence, size_t octaves)
+float noise_perlin3_ex(seed_t seed, struct vec3 position, float frequency, float lacunarity, float persistence, size_t octaves)
 {
-  float value = 0.0f;
+  float amplitude = 1.0f;
+  float max_value = 0.0f;
+  float value     = 0.0f;
   for(size_t i=0; i<octaves; ++i)
   {
+    max_value += amplitude;
     value += noise_perlin3(seed_next(&seed), vec3_mul_s(position, frequency)) * amplitude;
     frequency *= lacunarity;
     amplitude *= persistence;
   }
-  return value;
+  return value / max_value / (sqrtf(3.0f) / 4.0f);
 }
 

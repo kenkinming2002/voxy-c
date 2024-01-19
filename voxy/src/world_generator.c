@@ -284,10 +284,9 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
         if(chunk)
           continue;
 
-        ///////////////////////////
-        /// 2: Get Section Info ///
-        ///////////////////////////
-        pthread_mutex_lock(&world_generator->section_infos_mutex);
+        /////////////////////////////////
+        /// 2: Get Section/Chunk Info ///
+        /////////////////////////////////
         section_info = section_info_hash_table_lookup(&world_generator->section_infos, section_position);
         if(!section_info)
         {
@@ -296,24 +295,13 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
           section_info->done     = false;
           section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
 
+          pthread_mutex_lock(&world_generator->section_infos_mutex);
           section_info->next_list                = world_generator->section_infos_pending;
           world_generator->section_infos_pending = section_info;
-        }
-        pthread_mutex_unlock(&world_generator->section_infos_mutex);
-
-        if(!section_info)
-        {
+          pthread_mutex_unlock(&world_generator->section_infos_mutex);
           pthread_cond_signal(&world_generator->section_infos_cond);
-          continue;
         }
 
-        if(!atomic_load_explicit(&section_info->done, memory_order_acquire))
-          continue;
-
-        /////////////////////////
-        /// 3: Get Chunk Info ///
-        /////////////////////////
-        pthread_mutex_lock(&world_generator->chunk_infos_mutex);
         chunk_info = chunk_info_hash_table_lookup(&world_generator->chunk_infos, chunk_position);
         if(!chunk_info)
         {
@@ -322,19 +310,15 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
           chunk_info->done     = false;
           chunk_info_hash_table_insert_unchecked(&world_generator->chunk_infos, chunk_info);
 
+          pthread_mutex_lock(&world_generator->chunk_infos_mutex);
           chunk_info->next_list                = world_generator->chunk_infos_pending;
           world_generator->chunk_infos_pending = chunk_info;
-        }
-        pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
-
-        if(!chunk_info)
-        {
+          pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
           pthread_cond_signal(&world_generator->chunk_infos_cond);
-          continue;
         }
 
-        if(!atomic_load_explicit(&chunk_info->done, memory_order_acquire))
-          continue;
+        if(!section_info || !atomic_load_explicit(&section_info->done, memory_order_acquire)) continue;
+        if(!chunk_info   || !atomic_load_explicit(&chunk_info->done,   memory_order_acquire)) continue;
 
         //////////////////////////
         /// 3: Build the chunk ///

@@ -29,8 +29,10 @@ static int application_init(struct application *application)
   if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT) != 0)
     return -1;
 
-  world_init(&application->world, time(NULL));
-  world_generator_init(&application->world_generator);
+  seed_t seed = time(NULL);
+
+  world_init(&application->world, seed);
+  world_generator_init(&application->world_generator, seed);
   if(world_renderer_init(&application->world_renderer) != 0)
   {
     window_deinit(&application->window);

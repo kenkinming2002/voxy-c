@@ -12,9 +12,23 @@
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_IMPLEMENTATION
 
+#define SC_HASH_TABLE_IMPLEMENTATION
+#define SC_HASH_TABLE_PREFIX chunk_info
+#define SC_HASH_TABLE_NODE_TYPE struct chunk_info
+#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#include "hash_table.h"
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_IMPLEMENTATION
+
+#include <sys/sysinfo.h>
 #include <math.h>
 #include <stdio.h>
 
+////////////////////
+/// Section Info ///
+////////////////////
 struct ivec2 section_info_key(struct section_info *section_info)
 {
   return section_info->position;
@@ -37,6 +51,35 @@ void section_info_dispose(struct section_info *section_info)
   free(section_info);
 }
 
+//////////////////
+/// Chunk Info ///
+//////////////////
+struct ivec3 chunk_info_key(struct chunk_info *chunk_info)
+{
+  return chunk_info->position;
+}
+
+size_t chunk_info_hash(struct ivec3 position)
+{
+  return hash2(position.x, position.y);
+}
+
+int chunk_info_compare(struct ivec3 position1, struct ivec3 position2)
+{
+  if(position1.x != position2.x) return position1.x - position2.x;
+  if(position1.y != position2.y) return position1.y - position2.y;
+  if(position1.z != position2.z) return position1.z - position2.z;
+  return 0;
+}
+
+void chunk_info_dispose(struct chunk_info *chunk_info)
+{
+  free(chunk_info);
+}
+
+/////////////////
+/// Functions ///
+/////////////////
 static float lerpf(float a, float b, float t)
 {
   return a + (b - a) * t;
@@ -70,15 +113,133 @@ static bool get_cave(seed_t seed, struct ivec3 position)
   return true;
 }
 
-void world_generator_init(struct world_generator *world_generator)
+////////////////////////
+/// Thread Functions ///
+////////////////////////
+void *world_generator_create_section_infos(void *arg)
 {
-  world_generator->player_spawned = false;
+  struct world_generator *world_generator = arg;
+  struct section_info    *section_info;
+  bool                    shutdown;
+  for(;;)
+  {
+    pthread_mutex_lock(&world_generator->section_infos_mutex);
+    while(!(shutdown = atomic_load_explicit(&world_generator->thread_shutdown, memory_order_acquire)) && !world_generator->section_infos_pending)
+      pthread_cond_wait(&world_generator->section_infos_cond, &world_generator->section_infos_mutex);
+
+    if(shutdown)
+      break;
+
+    section_info                           = world_generator->section_infos_pending;
+    world_generator->section_infos_pending = world_generator->section_infos_pending->next_list;
+    pthread_mutex_unlock(&world_generator->section_infos_mutex);
+
+    for(int y = 0; y<CHUNK_WIDTH; ++y)
+      for(int x = 0; x<CHUNK_WIDTH; ++x)
+      {
+        struct ivec2 local_position  = ivec2(x, y);
+        struct ivec2 global_position = ivec2_add(ivec2_mul_s(section_info->position, CHUNK_WIDTH), local_position);
+        section_info->heights[y][x] = get_height(world_generator->seed, global_position);
+      }
+
+    atomic_store_explicit(&section_info->done, true, memory_order_release);
+  }
+
+  pthread_mutex_unlock(&world_generator->section_infos_mutex);
+  return NULL;
+}
+
+void *world_generator_create_chunk_infos(void *arg)
+{
+  struct world_generator *world_generator = arg;
+  struct chunk_info      *chunk_info;
+  bool                    shutdown;
+  for(;;)
+  {
+    pthread_mutex_lock(&world_generator->chunk_infos_mutex);
+    while(!(shutdown = atomic_load_explicit(&world_generator->thread_shutdown, memory_order_acquire)) && !world_generator->chunk_infos_pending)
+      pthread_cond_wait(&world_generator->chunk_infos_cond, &world_generator->chunk_infos_mutex);
+
+    if(shutdown)
+      break;
+
+    chunk_info                           = world_generator->chunk_infos_pending;
+    world_generator->chunk_infos_pending = world_generator->chunk_infos_pending->next_list;
+    pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
+
+    for(int z = 0; z<CHUNK_WIDTH; ++z)
+      for(int y = 0; y<CHUNK_WIDTH; ++y)
+        for(int x = 0; x<CHUNK_WIDTH; ++x)
+        {
+          struct ivec3 local_position  = ivec3(x, y, z);
+          struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk_info->position, CHUNK_WIDTH), local_position);
+          chunk_info->caves[z][y][x] = get_cave(world_generator->seed, global_position);
+        }
+
+    atomic_store_explicit(&chunk_info->done, true, memory_order_release);
+  }
+
+  pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
+  return NULL;
+}
+
+////////////
+/// Init ///
+////////////
+void world_generator_init(struct world_generator *world_generator, seed_t seed)
+{
+  world_generator->seed            = seed;
+  world_generator->player_spawned  = false;
+
+  world_generator->thread_shutdown = false;
+  world_generator->thread_count    = get_nprocs();
+
   section_info_hash_table_init(&world_generator->section_infos);
+  chunk_info_hash_table_init(&world_generator->chunk_infos);
+
+  world_generator->section_infos_pending = NULL;
+  world_generator->chunk_infos_pending   = NULL;
+
+  pthread_mutex_init(&world_generator->section_infos_mutex, NULL);
+  pthread_mutex_init(&world_generator->chunk_infos_mutex,   NULL);
+
+  pthread_cond_init(&world_generator->section_infos_cond, NULL);
+  pthread_cond_init(&world_generator->chunk_infos_cond,   NULL);
+
+  world_generator->section_infos_threads = malloc(world_generator->thread_count * sizeof *world_generator->section_infos_threads);
+  world_generator->chunk_infos_threads   = malloc(world_generator->thread_count * sizeof *world_generator->chunk_infos_threads);
+
+  for(int i=0; i<world_generator->thread_count; ++i)
+  {
+    pthread_create(&world_generator->section_infos_threads[i], NULL, &world_generator_create_section_infos, world_generator);
+    pthread_create(&world_generator->chunk_infos_threads[i],   NULL, &world_generator_create_chunk_infos,   world_generator);
+  }
 }
 
 void world_generator_deinit(struct world_generator *world_generator)
 {
+  atomic_store_explicit(&world_generator->thread_shutdown, true, memory_order_release);
+
+  pthread_cond_broadcast(&world_generator->section_infos_cond);
+  pthread_cond_broadcast(&world_generator->chunk_infos_cond);
+
+  for(int i=0; i<world_generator->thread_count; ++i)
+  {
+    pthread_join(world_generator->section_infos_threads[i], NULL);
+    pthread_join(world_generator->chunk_infos_threads[i],   NULL);
+  }
+
+  free(world_generator->section_infos_threads);
+  free(world_generator->chunk_infos_threads);
+
   section_info_hash_table_dispose(&world_generator->section_infos);
+  chunk_info_hash_table_dispose(&world_generator->chunk_infos);
+
+  pthread_mutex_destroy(&world_generator->section_infos_mutex);
+  pthread_mutex_destroy(&world_generator->chunk_infos_mutex);
+
+  pthread_cond_destroy(&world_generator->section_infos_cond);
+  pthread_cond_destroy(&world_generator->chunk_infos_cond);
 }
 
 void world_generator_update(struct world_generator *world_generator, struct world *world)
@@ -103,123 +264,128 @@ void world_generator_update_spawn_player(struct world_generator *world_generator
 
 void world_generator_update_generate_chunks(struct world_generator *world_generator, struct world *world)
 {
-  struct section_info **section_infos         = NULL;
-  size_t                section_info_count    = 0;
-  size_t                section_info_capacity = 0;
-
-  struct chunk **chunks         = NULL;
-  size_t         chunk_count    = 0;
-  size_t         chunk_capacity = 0;
+  struct section_info *section_info;
+  struct chunk_info   *chunk_info;
+  struct chunk        *chunk;
 
   struct ivec3 player_chunk_position   = vec3_as_ivec3_floor(vec3_div_s(world->player_transform.translation, CHUNK_WIDTH));
   struct ivec2 player_section_position = ivec2(player_chunk_position.x, player_chunk_position.y);
-
-  seed_t cave_seed = world->seed ^ 0xdeadbeefdeadbeef;
-
-  /////////////////////////////////////////////////////////////
-  // 1: Collect all section infos that need to be generated ///
-  /////////////////////////////////////////////////////////////
-  for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
-    for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
-    {
-      struct ivec2 section_position = ivec2_add(player_section_position, ivec2(dx, dy));
-      if(!section_info_hash_table_lookup(&world_generator->section_infos, section_position))
-      {
-        struct section_info *section_info = malloc(sizeof *section_info);
-        section_info->position = section_position;
-        section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
-
-        if(section_info_capacity == section_info_count)
-        {
-          section_info_capacity = section_info_capacity != 0 ? section_info_capacity * 2 : 1;
-          section_infos         = realloc(section_infos, section_info_capacity * sizeof *section_infos);
-        }
-        section_infos[section_info_count++] = section_info;
-      }
-    }
-
-  //////////////////////////////////////////////////////
-  // 2: Collect all chunks that need to be generated ///
-  //////////////////////////////////////////////////////
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
       {
-        struct ivec3 chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
-        if(!chunk_hash_table_lookup(&world->chunks, chunk_position))
+        struct ivec2 section_position = ivec2_add(player_section_position, ivec2(dx, dy));
+        struct ivec3 chunk_position   = ivec3_add(player_chunk_position,   ivec3(dx, dy, dz));
+
+        ///////////////////////////////
+        /// 1: Check if chunk exist ///
+        ///////////////////////////////
+        chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
+        if(chunk)
+          continue;
+
+        ///////////////////////////
+        /// 2: Get Section Info ///
+        ///////////////////////////
+        pthread_mutex_lock(&world_generator->section_infos_mutex);
+        section_info = section_info_hash_table_lookup(&world_generator->section_infos, section_position);
+        if(!section_info)
         {
-          struct chunk *chunk = malloc(sizeof *chunk);
-          chunk->position   = chunk_position;
-          chunk->mesh_dirty = true;
-          chunk_hash_table_insert_unchecked(&world->chunks, chunk);
+          struct section_info *section_info = malloc(sizeof *section_info);
+          section_info->position = section_position;
+          section_info->done     = false;
+          section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
 
-          if(chunk_capacity == chunk_count)
-          {
-            chunk_capacity = chunk_capacity != 0 ? chunk_capacity * 2 : 1;
-            chunks         = realloc(chunks, chunk_capacity * sizeof *chunks);
-          }
-          chunks[chunk_count++] = chunk;
+          section_info->next_list                = world_generator->section_infos_pending;
+          world_generator->section_infos_pending = section_info;
         }
-      }
+        pthread_mutex_unlock(&world_generator->section_infos_mutex);
 
-  ////////////////////////////////////////////////
-  // 3: Generate all section infos in parallel ///
-  ////////////////////////////////////////////////
-  #pragma omp parallel for
-  for(size_t i=0; i<section_info_count; ++i)
-    for(int y = 0; y<CHUNK_WIDTH; ++y)
-      for(int x = 0; x<CHUNK_WIDTH; ++x)
-      {
-        struct ivec2 local_position  = ivec2(x, y);
-        struct ivec2 global_position = ivec2_add(ivec2_mul_s(section_infos[i]->position, CHUNK_WIDTH), local_position);
-        section_infos[i]->heights[y][x] = get_height(world->seed, global_position);
-      }
-
-
-  /////////////////////////////////////////
-  // 4: Generate all chunks in parallel ///
-  /////////////////////////////////////////
-  #pragma omp parallel for
-  for(size_t i=0; i<chunk_count; ++i)
-  {
-    struct section_info *section_info = section_info_hash_table_lookup(&world_generator->section_infos, ivec2(chunks[i]->position.x, chunks[i]->position.y));
-    for(int z = 0; z<CHUNK_WIDTH; ++z)
-      for(int y = 0; y<CHUNK_WIDTH; ++y)
-        for(int x = 0; x<CHUNK_WIDTH; ++x)
+        if(!section_info)
         {
-          struct ivec3 local_position  = ivec3(x, y, z);
-          struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunks[i]->position, CHUNK_WIDTH), local_position);
-
-          if(global_position.z > section_info->heights[y][x] && global_position.z <= 3.0f) { chunks[i]->tiles[z][y][x].id = TILE_ID_WATER; continue; }
-
-          if(get_cave(cave_seed, global_position)) { chunks[i]->tiles[z][y][x].id = TILE_ID_EMPTY; continue; }
-
-          if(global_position.z <= section_info->heights[y][x])        { chunks[i]->tiles[z][y][x].id = TILE_ID_STONE; continue; }
-          if(global_position.z <= section_info->heights[y][x] + 1.0f) { chunks[i]->tiles[z][y][x].id = TILE_ID_GRASS; continue; }
-
-          chunks[i]->tiles[z][y][x].id = TILE_ID_EMPTY;
+          pthread_cond_signal(&world_generator->section_infos_cond);
+          continue;
         }
-  }
 
-  ///////////////////////////
-  // 5: Invalidate meshes ///
-  ///////////////////////////
-  for(size_t i=0; i<chunk_count; ++i)
-  {
-    struct chunk_adjacency chunk_adjacency;
-    chunk_adjacency_init(&chunk_adjacency, world, chunks[i]);
-    if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
-    if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
-    if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
-    if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
-    if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
-    if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
-  }
+        if(!atomic_load_explicit(&section_info->done, memory_order_acquire))
+          continue;
 
-  /////////////////
-  // 5: Cleanup ///
-  /////////////////
-  free(section_infos);
-  free(chunks);
+        /////////////////////////
+        /// 3: Get Chunk Info ///
+        /////////////////////////
+        pthread_mutex_lock(&world_generator->chunk_infos_mutex);
+        chunk_info = chunk_info_hash_table_lookup(&world_generator->chunk_infos, chunk_position);
+        if(!chunk_info)
+        {
+          struct chunk_info *chunk_info = malloc(sizeof *chunk_info);
+          chunk_info->position = chunk_position;
+          chunk_info->done     = false;
+          chunk_info_hash_table_insert_unchecked(&world_generator->chunk_infos, chunk_info);
+
+          chunk_info->next_list                = world_generator->chunk_infos_pending;
+          world_generator->chunk_infos_pending = chunk_info;
+        }
+        pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
+
+        if(!chunk_info)
+        {
+          pthread_cond_signal(&world_generator->chunk_infos_cond);
+          continue;
+        }
+
+        if(!atomic_load_explicit(&chunk_info->done, memory_order_acquire))
+          continue;
+
+        //////////////////////////
+        /// 3: Build the chunk ///
+        //////////////////////////
+        chunk = malloc(sizeof *chunk);
+        chunk->position = chunk_position;
+        chunk->mesh_dirty = true;
+        for(int z = 0; z<CHUNK_WIDTH; ++z)
+          for(int y = 0; y<CHUNK_WIDTH; ++y)
+            for(int x = 0; x<CHUNK_WIDTH; ++x)
+            {
+              struct ivec3 local_position  = ivec3(x, y, z);
+              struct ivec3 global_position = ivec3_add(ivec3_mul_s(chunk->position, CHUNK_WIDTH), local_position);
+
+              if(global_position.z > section_info->heights[y][x] && global_position.z <= 3.0f)
+              {
+                chunk->tiles[z][y][x].id = TILE_ID_WATER;
+                continue;
+              }
+
+              if(chunk_info->caves[z][y][x])
+              {
+                chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+                continue;
+              }
+
+              if(global_position.z <= section_info->heights[y][x])
+              {
+                chunk->tiles[z][y][x].id = TILE_ID_STONE;
+                continue;
+              }
+
+              if(global_position.z <= section_info->heights[y][x] + 1.0f)
+              {
+                chunk->tiles[z][y][x].id = TILE_ID_GRASS;
+                continue;
+              }
+
+              chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+            }
+
+        chunk_hash_table_insert_unchecked(&world->chunks, chunk);
+
+        struct chunk_adjacency chunk_adjacency;
+        chunk_adjacency_init(&chunk_adjacency, world, chunk);
+        if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
+        if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
+        if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
+        if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
+        if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
+        if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
+      }
 }
 

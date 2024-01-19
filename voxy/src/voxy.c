@@ -13,9 +13,6 @@
 #define WINDOW_HEIGHT 720
 #define WINDOW_TITLE "voxy"
 
-#define MOVE_SPEED 1.0f
-#define PAN_SPEED  0.001f
-
 struct application
 {
   struct window          window;
@@ -53,9 +50,9 @@ static void application_deinit(struct application *application)
   window_deinit(&application->window);
 }
 
-static void application_update(struct application *application)
+static void application_update(struct application *application, float dt)
 {
-  world_update(&application->world, &application->window);
+  world_update(&application->world, &application->window, dt);
   world_generator_update(&application->world_generator, &application->world);
   world_renderer_update(&application->world_renderer, &application->world);
 }
@@ -82,11 +79,20 @@ static void application_render(struct application *application)
 
 static void application_run(struct application *application)
 {
+  double prev_time;
+  double next_time;
+  double dt;
+
+  prev_time = glfwGetTime();
   while(!window_should_close(&application->window))
   {
     window_handle_events(&application->window);
 
-    application_update(application);
+    next_time = glfwGetTime();
+    dt        = next_time - prev_time;
+    prev_time = next_time;
+
+    application_update(application, dt);
     application_render(application);
   }
 }

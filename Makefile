@@ -10,6 +10,7 @@ VOXY_SRCS += voxy/src/random.c
 VOXY_SRCS += voxy/src/resource_pack.c
 VOXY_SRCS += voxy/src/stb_image.c
 VOXY_SRCS += voxy/src/transform.c
+VOXY_SRCS += voxy/src/ui.c
 VOXY_SRCS += voxy/src/voxy.c
 VOXY_SRCS += voxy/src/window.c
 VOXY_SRCS += voxy/src/world.c

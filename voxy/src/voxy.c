@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "font.h"
+#include "ui.h"
 #include "window.h"
 #include "world.h"
 #include "world_generator.h"
@@ -20,7 +21,9 @@ struct application
   struct world           world;
   struct world_renderer  world_renderer;
   struct world_generator world_generator;
-  struct font            font;
+
+  struct ui   ui;
+  struct font font;
 };
 
 static int application_init(struct application *application)
@@ -35,25 +38,30 @@ static int application_init(struct application *application)
   if(world_renderer_init(&application->world_renderer) != 0)
     goto error2;
 
-  if(font_load(&application->font, "assets/arial.ttf") != 0)
+  if(ui_init(&application->ui) != 0)
     goto error3;
+
+  if(font_load(&application->font, "assets/arial.ttf") != 0)
+    goto error4;
 
   return 0;
 
+error4:
+  ui_deinit(&application->ui);
 error3:
-    font_unload(&application->font);
+  world_renderer_deinit(&application->world_renderer);
 error2:
-    world_renderer_deinit(&application->world_renderer);
-    world_generator_deinit(&application->world_generator);
-    world_deinit(&application->world);
-    window_deinit(&application->window);
+  world_generator_deinit(&application->world_generator);
+  world_deinit(&application->world);
+  window_deinit(&application->window);
 error1:
-    return -1;
+  return -1;
 }
 
 static void application_deinit(struct application *application)
 {
   font_unload(&application->font);
+  ui_deinit(&application->ui);
   world_renderer_deinit(&application->world_renderer);
   world_generator_deinit(&application->world_generator);
   world_deinit(&application->world);
@@ -84,7 +92,13 @@ static void application_render(struct application *application)
     .aspect    = (float)width / (float)height,
   });
 
-  font_get_glyph(&application->font, 'a');
+  struct glyph *glyph = font_get_glyph(&application->font, 'a');
+
+  ui_draw(&application->ui,
+      vec2(width, height),
+      vec2(width * 0.25f, height * 0.25f),
+      vec2(width * 0.5f, height * 0.5f),
+      glyph->texture);
 
   window_swap_buffers(&application->window);
 }

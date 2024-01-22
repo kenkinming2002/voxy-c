@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "font.h"
 #include "window.h"
 #include "world.h"
 #include "world_generator.h"
@@ -19,34 +20,43 @@ struct application
   struct world           world;
   struct world_renderer  world_renderer;
   struct world_generator world_generator;
+  struct font            font;
 };
 
 static int application_init(struct application *application)
 {
   if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT) != 0)
-    return -1;
+    goto error1;
 
   seed_t seed = time(NULL);
 
   world_init(&application->world, seed);
   world_generator_init(&application->world_generator, seed);
   if(world_renderer_init(&application->world_renderer) != 0)
-  {
-    window_deinit(&application->window);
-    world_deinit(&application->world);
-    world_generator_deinit(&application->world_generator);
-    return -1;
-  }
+    goto error2;
+
+  if(font_load(&application->font, "assets/arial.ttf") != 0)
+    goto error3;
 
   return 0;
+
+error3:
+    font_unload(&application->font);
+error2:
+    world_renderer_deinit(&application->world_renderer);
+    world_generator_deinit(&application->world_generator);
+    world_deinit(&application->world);
+    window_deinit(&application->window);
+error1:
+    return -1;
 }
 
 static void application_deinit(struct application *application)
 {
-  world_deinit(&application->world);
-  world_generator_deinit(&application->world_generator);
+  font_unload(&application->font);
   world_renderer_deinit(&application->world_renderer);
-
+  world_generator_deinit(&application->world_generator);
+  world_deinit(&application->world);
   window_deinit(&application->window);
 }
 
@@ -73,6 +83,8 @@ static void application_render(struct application *application)
     .far       = 1000.0f,
     .aspect    = (float)width / (float)height,
   });
+
+  font_get_glyph(&application->font, 'a');
 
   window_swap_buffers(&application->window);
 }

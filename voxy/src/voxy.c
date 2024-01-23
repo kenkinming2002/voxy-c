@@ -76,6 +76,11 @@ static void application_update(struct application *application, float dt)
   world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
 }
 
+static inline float minf(float a, float b)
+{
+  return a < b ? a : b;
+}
+
 static void application_render(struct application *application)
 {
   int width, height;
@@ -94,10 +99,20 @@ static void application_render(struct application *application)
   });
 
   ui_begin(&application->ui, vec2(width, height));
-  ui_draw_quad(&application->ui, vec2(0.0f, 0.0f), vec2(width / 2.0f, height / 2.0f), vec4(1.0f, 1.0f, 0.0f, 0.5f));
-  ui_draw_quad_rounded(&application->ui, vec2(width / 2.0f, 0.0f), vec2(width / 2.0f, height / 2.0f), 50.0f, vec4(1.0f, 1.0f, 0.0f, 0.5f));
-  ui_render_text(&application->ui, &application->font, vec2(0.0f, 0.0f),  "hello world");
-  ui_render_text(&application->ui, &application->font, vec2(0.0f, 48.0f), "goodbye world");
+
+  const size_t count = 15;
+
+  const float sep               = minf(width, height) * 0.006f;
+  const float inner_width       = minf(width, height) * 0.05f;
+  const float outer_width       = inner_width + 2.0f * sep;
+  const float total_width       = count * inner_width + (count + 1) * sep;
+  const float total_height      = outer_width;
+  const float margin_horizontal = (width - total_width) * 0.5f;
+  const float margin_vertical   = height * 0.03f;
+
+  ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal, margin_vertical), vec2(total_width, total_height), sep, vec4(0.9f, 0.9f, 0.9f, 0.3f));
+  for(size_t i=0; i<count; ++i)
+    ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), vec2(inner_width, inner_width), sep, vec4(0.95f, 0.95f, 0.95f, 0.7f));
 
   window_swap_buffers(&application->window);
 }

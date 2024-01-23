@@ -13,34 +13,58 @@ struct ui_vertex
 
 int ui_init(struct ui *ui)
 {
-  if((ui->program = gl_program_load("assets/ui.vert", "assets/ui.frag")) == 0)
-    goto error1;
+  ui->program_quad         = 0;
+  ui->program_texture_mono = 0;
+  ui->vao                  = 0;
+
+  if((ui->program_quad         = gl_program_load("assets/ui_quad.vert",         "assets/ui_quad.frag"))         == 0) goto error;
+  if((ui->program_texture_mono = gl_program_load("assets/ui_texture_mono.vert", "assets/ui_texture_mono.frag")) == 0) goto error;
 
   glGenVertexArrays(1, &ui->vao);
   glBindVertexArray(ui->vao);
   return 0;
 
-error1:
+error:
+  ui_deinit(ui);
   return -1;
 }
 
 void ui_deinit(struct ui *ui)
 {
-  glDeleteVertexArrays(1, &ui->vao);
+  if(ui->vao)                  glDeleteVertexArrays(1, &ui->vao);
+  if(ui->program_texture_mono) glDeleteProgram(ui->program_texture_mono);
+  if(ui->program_quad)         glDeleteProgram(ui->program_quad);
 }
 
-void ui_draw(struct ui *ui, struct vec2 window_size, struct vec2 position, struct vec2 dimension, GLuint texture)
+void ui_draw_quad(struct ui *ui, struct vec2 window_size, struct vec2 position, struct vec2 dimension, struct vec4 color)
 {
   glDisable(GL_CULL_FACE);
-  glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glUseProgram(ui->program);
+  glUseProgram(ui->program_quad);
 
-  glUniform2f(glGetUniformLocation(ui->program, "window_size"), window_size.x, window_size.y);
-  glUniform2f(glGetUniformLocation(ui->program, "position"   ), position   .x, position   .y);
-  glUniform2f(glGetUniformLocation(ui->program, "dimension"  ), dimension  .x, dimension  .y);
+  glUniform2f(glGetUniformLocation(ui->program_quad, "window_size"), window_size.x, window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_quad, "position"   ), position   .x, position   .y);
+  glUniform2f(glGetUniformLocation(ui->program_quad, "dimension"  ), dimension  .x, dimension  .y);
+
+  glUniform4f(glGetUniformLocation(ui->program_quad, "color"), color.r, color.g, color.b, color.a);
+
+  glBindVertexArray(ui->vao);
+  glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void ui_draw_texture_mono(struct ui *ui, struct vec2 window_size, struct vec2 position, struct vec2 dimension, GLuint texture)
+{
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glUseProgram(ui->program_texture_mono);
+
+  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "window_size"), window_size.x, window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "position"   ), position   .x, position   .y);
+  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "dimension"  ), dimension  .x, dimension  .y);
 
   glBindTexture(GL_TEXTURE_2D, texture);
   glBindVertexArray(ui->vao);
@@ -97,7 +121,7 @@ void ui_render_text(struct ui *ui, struct font *font, struct vec2 window_size, s
     struct glyph *glyph = font_get_glyph(font, c);
     struct vec2 current_position  = vec2_add(position, glyph->bearing);
     struct vec2 current_dimension = vec2_mul(glyph->dimension, vec2(1.0f, -1.0f));
-    ui_draw(ui, window_size, current_position, current_dimension, glyph->texture);
+    ui_draw_texture_mono(ui, window_size, current_position, current_dimension, glyph->texture);
     position.x += glyph->advance;
   }
 }

@@ -14,10 +14,12 @@ struct ui_vertex
 int ui_init(struct ui *ui)
 {
   ui->program_quad         = 0;
+  ui->program_quad_rounded = 0;
   ui->program_texture_mono = 0;
   ui->vao                  = 0;
 
   if((ui->program_quad         = gl_program_load("assets/ui_quad.vert",         "assets/ui_quad.frag"))         == 0) goto error;
+  if((ui->program_quad_rounded = gl_program_load("assets/ui_quad_rounded.vert", "assets/ui_quad_rounded.frag")) == 0) goto error;
   if((ui->program_texture_mono = gl_program_load("assets/ui_texture_mono.vert", "assets/ui_texture_mono.frag")) == 0) goto error;
 
   glGenVertexArrays(1, &ui->vao);
@@ -33,6 +35,7 @@ void ui_deinit(struct ui *ui)
 {
   if(ui->vao)                  glDeleteVertexArrays(1, &ui->vao);
   if(ui->program_texture_mono) glDeleteProgram(ui->program_texture_mono);
+  if(ui->program_quad_rounded) glDeleteProgram(ui->program_quad_rounded);
   if(ui->program_quad)         glDeleteProgram(ui->program_quad);
 }
 
@@ -49,6 +52,25 @@ void ui_draw_quad(struct ui *ui, struct vec2 window_size, struct vec2 position, 
   glUniform2f(glGetUniformLocation(ui->program_quad, "dimension"  ), dimension  .x, dimension  .y);
 
   glUniform4f(glGetUniformLocation(ui->program_quad, "color"), color.r, color.g, color.b, color.a);
+
+  glBindVertexArray(ui->vao);
+  glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void ui_draw_quad_rounded(struct ui *ui, struct vec2 window_size, struct vec2 position, struct vec2 dimension, float radius, struct vec4 color)
+{
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glUseProgram(ui->program_quad_rounded);
+
+  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "window_size"), window_size.x, window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "position"   ), position   .x, position   .y);
+  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "dimension"  ), dimension  .x, dimension  .y);
+
+  glUniform4f(glGetUniformLocation(ui->program_quad_rounded, "color"), color.r, color.g, color.b, color.a);
+  glUniform1f(glGetUniformLocation(ui->program_quad_rounded, "radius"), radius);
 
   glBindVertexArray(ui->vao);
   glDrawArrays(GL_TRIANGLES, 0, 6);

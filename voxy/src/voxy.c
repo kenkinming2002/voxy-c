@@ -93,6 +93,7 @@ static void application_render(struct application *application)
   });
 
   ui_draw_quad(&application->ui, vec2(width, height), vec2(0.0f, 0.0f), vec2(width / 2.0f, height / 2.0f), vec4(1.0f, 1.0f, 0.0f, 0.5f));
+  ui_draw_quad_rounded(&application->ui, vec2(width, height), vec2(width / 2.0f, 0.0f), vec2(width / 2.0f, height / 2.0f), 50.0f, vec4(1.0f, 1.0f, 0.0f, 0.5f));
   ui_render_text(&application->ui, &application->font, vec2(width, height), vec2(0.0f, 0.0f),  "hello world");
   ui_render_text(&application->ui, &application->font, vec2(width, height), vec2(0.0f, 48.0f), "goodbye world");
   window_swap_buffers(&application->window);

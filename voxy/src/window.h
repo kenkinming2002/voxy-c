@@ -23,4 +23,6 @@ void window_get_framebuffer_size(struct window *window, int *width, int *height)
 void window_get_mouse_motion(struct window *window, float *dx, float *dy);
 void window_get_keyboard_motion(struct window *window, float *dx, float *dy, float *dz);
 
+int window_get_key(struct window *window, int key);
+
 #endif // VOXY_WINDOW_H

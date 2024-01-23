@@ -107,3 +107,8 @@ void window_get_keyboard_motion(struct window *window, float *dx, float *dy, flo
   if(glfwGetKey(window->window, GLFW_KEY_SPACE))      *dz += 1.0f;
   if(glfwGetKey(window->window, GLFW_KEY_LEFT_SHIFT)) *dz -= 1.0f;
 }
+
+int window_get_key(struct window *window, int key)
+{
+  return glfwGetKey(window->window, key);
+}

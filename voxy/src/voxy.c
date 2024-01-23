@@ -27,7 +27,11 @@ struct application
 
   struct ui   ui;
   struct font font;
+
+  int selection;
 };
+
+static void application_on_scroll(GLFWwindow *window, double xoffset, double offset);
 
 static int application_init(struct application *application)
 {
@@ -42,6 +46,11 @@ static int application_init(struct application *application)
   if(world_renderer_init(&application->world_renderer, &application->resource_pack) != 0) goto error; else world_renderer_initialized = true;
   if(ui_init(&application->ui)                                                      != 0) goto error; else ui_initialized             = true;
   if(font_load(&application->font, "assets/arial.ttf")                              != 0) goto error; else font_loaded                = true;
+
+  glfwSetWindowUserPointer(application->window.window, application);
+  glfwSetScrollCallback(application->window.window, &application_on_scroll);
+
+  application->selection = 0;
 
   seed_t seed = time(NULL);
   world_init(&application->world, seed);
@@ -69,11 +78,34 @@ static void application_deinit(struct application *application)
   window_deinit(&application->window);
 }
 
+static void application_on_scroll(GLFWwindow *window, double xoffset, double yoffset)
+{
+  (void)xoffset;
+
+  struct application *application = glfwGetWindowUserPointer(window);
+  if(yoffset > 0.0f) ++application->selection;
+  if(yoffset < 0.0f) --application->selection;
+  application->selection -= 1;
+  application->selection += 9;
+  application->selection %= 9;
+  application->selection += 1;
+}
+
 static void application_update(struct application *application, float dt)
 {
   world_update(&application->world, &application->window, dt);
   world_generator_update(&application->world_generator, &application->world);
   world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
+
+  if(window_get_key(&application->window, GLFW_KEY_1) || window_get_key(&application->window, GLFW_KEY_KP_1)) application->selection = 1;
+  if(window_get_key(&application->window, GLFW_KEY_2) || window_get_key(&application->window, GLFW_KEY_KP_2)) application->selection = 2;
+  if(window_get_key(&application->window, GLFW_KEY_3) || window_get_key(&application->window, GLFW_KEY_KP_3)) application->selection = 3;
+  if(window_get_key(&application->window, GLFW_KEY_4) || window_get_key(&application->window, GLFW_KEY_KP_4)) application->selection = 4;
+  if(window_get_key(&application->window, GLFW_KEY_5) || window_get_key(&application->window, GLFW_KEY_KP_5)) application->selection = 5;
+  if(window_get_key(&application->window, GLFW_KEY_6) || window_get_key(&application->window, GLFW_KEY_KP_6)) application->selection = 6;
+  if(window_get_key(&application->window, GLFW_KEY_7) || window_get_key(&application->window, GLFW_KEY_KP_7)) application->selection = 7;
+  if(window_get_key(&application->window, GLFW_KEY_8) || window_get_key(&application->window, GLFW_KEY_KP_8)) application->selection = 8;
+  if(window_get_key(&application->window, GLFW_KEY_9) || window_get_key(&application->window, GLFW_KEY_KP_9)) application->selection = 9;
 }
 
 static inline float minf(float a, float b)
@@ -100,7 +132,7 @@ static void application_render(struct application *application)
 
   ui_begin(&application->ui, vec2(width, height));
 
-  const size_t count = 15;
+  const int count = 9;
 
   const float sep               = minf(width, height) * 0.006f;
   const float inner_width       = minf(width, height) * 0.05f;
@@ -110,10 +142,16 @@ static void application_render(struct application *application)
   const float margin_horizontal = (width - total_width) * 0.5f;
   const float margin_vertical   = height * 0.03f;
 
-  ui_draw_text_centered(&application->ui, &application->font, vec2(width * 0.5f, margin_vertical + outer_width + sep), "Hello World");
+  char buffer[32];
+
+  snprintf(buffer, sizeof buffer, "Selected %d", application->selection);
+  ui_draw_text_centered(&application->ui, &application->font, vec2(width * 0.5f, margin_vertical + outer_width + sep), buffer);
   ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal, margin_vertical), vec2(total_width, total_height), sep, vec4(0.9f, 0.9f, 0.9f, 0.3f));
-  for(size_t i=0; i<count; ++i)
-    ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), vec2(inner_width, inner_width), sep, vec4(0.95f, 0.95f, 0.95f, 0.7f));
+  for(int i=0; i<count; ++i)
+  {
+    struct vec4 color = i + 1 == application->selection ? vec4(0.95f, 0.75f, 0.75f, 0.8f) : vec4(0.95f, 0.95f, 0.95f, 0.7f);
+    ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), vec2(inner_width, inner_width), sep, color);
+  }
 
   window_swap_buffers(&application->window);
 }

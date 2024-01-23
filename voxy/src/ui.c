@@ -39,7 +39,12 @@ void ui_deinit(struct ui *ui)
   if(ui->program_quad)         glDeleteProgram(ui->program_quad);
 }
 
-void ui_draw_quad(struct ui *ui, struct vec2 window_size, struct vec2 position, struct vec2 dimension, struct vec4 color)
+void ui_begin(struct ui *ui, struct vec2 window_size)
+{
+  ui->window_size = window_size;
+}
+
+void ui_draw_quad(struct ui *ui, struct vec2 position, struct vec2 dimension, struct vec4 color)
 {
   glDisable(GL_CULL_FACE);
   glEnable(GL_BLEND);
@@ -47,7 +52,7 @@ void ui_draw_quad(struct ui *ui, struct vec2 window_size, struct vec2 position, 
 
   glUseProgram(ui->program_quad);
 
-  glUniform2f(glGetUniformLocation(ui->program_quad, "window_size"), window_size.x, window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_quad, "window_size"), ui->window_size.x, ui->window_size.y);
   glUniform2f(glGetUniformLocation(ui->program_quad, "position"   ), position   .x, position   .y);
   glUniform2f(glGetUniformLocation(ui->program_quad, "dimension"  ), dimension  .x, dimension  .y);
 
@@ -57,7 +62,7 @@ void ui_draw_quad(struct ui *ui, struct vec2 window_size, struct vec2 position, 
   glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void ui_draw_quad_rounded(struct ui *ui, struct vec2 window_size, struct vec2 position, struct vec2 dimension, float radius, struct vec4 color)
+void ui_draw_quad_rounded(struct ui *ui, struct vec2 position, struct vec2 dimension, float radius, struct vec4 color)
 {
   glDisable(GL_CULL_FACE);
   glEnable(GL_BLEND);
@@ -65,7 +70,7 @@ void ui_draw_quad_rounded(struct ui *ui, struct vec2 window_size, struct vec2 po
 
   glUseProgram(ui->program_quad_rounded);
 
-  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "window_size"), window_size.x, window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "window_size"), ui->window_size.x, ui->window_size.y);
   glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "position"   ), position   .x, position   .y);
   glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "dimension"  ), dimension  .x, dimension  .y);
 
@@ -76,7 +81,7 @@ void ui_draw_quad_rounded(struct ui *ui, struct vec2 window_size, struct vec2 po
   glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void ui_draw_texture_mono(struct ui *ui, struct vec2 window_size, struct vec2 position, struct vec2 dimension, GLuint texture)
+void ui_draw_texture_mono(struct ui *ui, struct vec2 position, struct vec2 dimension, GLuint texture)
 {
   glDisable(GL_CULL_FACE);
   glEnable(GL_BLEND);
@@ -84,7 +89,7 @@ void ui_draw_texture_mono(struct ui *ui, struct vec2 window_size, struct vec2 po
 
   glUseProgram(ui->program_texture_mono);
 
-  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "window_size"), window_size.x, window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "window_size"), ui->window_size.x, ui->window_size.y);
   glUniform2f(glGetUniformLocation(ui->program_texture_mono, "position"   ), position   .x, position   .y);
   glUniform2f(glGetUniformLocation(ui->program_texture_mono, "dimension"  ), dimension  .x, dimension  .y);
 
@@ -135,7 +140,7 @@ static int utf8_next(const unsigned char **str)
   assert(0 && "Invalid UTF-8 String");
 }
 
-void ui_render_text(struct ui *ui, struct font *font, struct vec2 window_size, struct vec2 position, const char *str)
+void ui_render_text(struct ui *ui, struct font *font, struct vec2 position, const char *str)
 {
   int c;
   while((c = utf8_next((const unsigned char **)&str)))
@@ -143,7 +148,7 @@ void ui_render_text(struct ui *ui, struct font *font, struct vec2 window_size, s
     struct glyph *glyph = font_get_glyph(font, c);
     struct vec2 current_position  = vec2_add(position, glyph->bearing);
     struct vec2 current_dimension = vec2_mul(glyph->dimension, vec2(1.0f, -1.0f));
-    ui_draw_texture_mono(ui, window_size, current_position, current_dimension, glyph->texture);
+    ui_draw_texture_mono(ui, current_position, current_dimension, glyph->texture);
     position.x += glyph->advance;
   }
 }

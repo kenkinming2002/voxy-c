@@ -76,7 +76,7 @@ int font_load(struct font *font, const char *filepath)
   }
 
   // TODO: Use FT_Set_Char_Size and handle DPI scaling
-  if((error = FT_Set_Pixel_Sizes(font->face, 0, 48)) != 0)
+  if((error = FT_Set_Pixel_Sizes(font->face, 0, 24)) != 0)
   {
     fprintf(stderr, "ERROR: Failed to set pixel size for font %s: %s\n", filepath, ft_strerror(error));
     FT_Done_Face(font->face);

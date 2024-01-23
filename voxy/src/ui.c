@@ -140,7 +140,7 @@ static int utf8_next(const unsigned char **str)
   assert(0 && "Invalid UTF-8 String");
 }
 
-void ui_render_text(struct ui *ui, struct font *font, struct vec2 position, const char *str)
+void ui_draw_text(struct ui *ui, struct font *font, struct vec2 position, const char *str)
 {
   int c;
   while((c = utf8_next((const unsigned char **)&str)))
@@ -151,4 +151,22 @@ void ui_render_text(struct ui *ui, struct font *font, struct vec2 position, cons
     ui_draw_texture_mono(ui, current_position, current_dimension, glyph->texture);
     position.x += glyph->advance;
   }
+}
+
+static float font_compute_text_width(struct font *font, const char *str)
+{
+  float width = 0.0f;
+  int c;
+  while((c = utf8_next((const unsigned char **)&str)))
+  {
+    struct glyph *glyph = font_get_glyph(font, c);
+    width += glyph->advance;
+  }
+  return width;
+}
+
+void ui_draw_text_centered(struct ui *ui, struct font *font, struct vec2 position, const char *str)
+{
+  position.x -= font_compute_text_width(font, str) * 0.5f;
+  ui_draw_text(ui, font, position, str);
 }

@@ -110,6 +110,7 @@ static void application_render(struct application *application)
   const float margin_horizontal = (width - total_width) * 0.5f;
   const float margin_vertical   = height * 0.03f;
 
+  ui_draw_text_centered(&application->ui, &application->font, vec2(width * 0.5f, margin_vertical + outer_width + sep), "Hello World");
   ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal, margin_vertical), vec2(total_width, total_height), sep, vec4(0.9f, 0.9f, 0.9f, 0.3f));
   for(size_t i=0; i<count; ++i)
     ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), vec2(inner_width, inner_width), sep, vec4(0.95f, 0.95f, 0.95f, 0.7f));

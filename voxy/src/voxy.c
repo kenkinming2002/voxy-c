@@ -92,14 +92,8 @@ static void application_render(struct application *application)
     .aspect    = (float)width / (float)height,
   });
 
-  struct glyph *glyph = font_get_glyph(&application->font, 'a');
-
-  ui_draw(&application->ui,
-      vec2(width, height),
-      vec2(width * 0.25f, height * 0.25f),
-      vec2(width * 0.5f, height * 0.5f),
-      glyph->texture);
-
+  ui_render_text(&application->ui, &application->font, vec2(width, height), vec2(0.0f, 0.0f),  "hello world");
+  ui_render_text(&application->ui, &application->font, vec2(width, height), vec2(0.0f, 48.0f), "goodbye world");
   window_swap_buffers(&application->window);
 }
 

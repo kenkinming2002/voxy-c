@@ -10,6 +10,8 @@
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_IMPLEMENTATION
 
+#include FT_BITMAP_H
+
 #include <stdio.h>
 
 ////////////////////////
@@ -73,9 +75,11 @@ int font_load(struct font *font, const char *filepath)
     return -1;
   }
 
+  // TODO: Use FT_Set_Char_Size and handle DPI scaling
   if((error = FT_Set_Pixel_Sizes(font->face, 0, 48)) != 0)
   {
-    fprintf(stderr, "ERROR: Failed to load font from %s: %s\n", filepath, ft_strerror(error));
+    fprintf(stderr, "ERROR: Failed to set pixel size for font %s: %s\n", filepath, ft_strerror(error));
+    FT_Done_Face(font->face);
     return -1;
   }
 
@@ -111,13 +115,9 @@ struct glyph *font_get_glyph(struct font *font, int c)
     glyph = malloc(sizeof *glyph);
     glyph->c = c;
 
-    glyph->dimension_x = font->face->glyph->metrics.width;
-    glyph->dimension_y = font->face->glyph->metrics.height;
-
-    glyph->bearing_x = font->face->glyph->metrics.horiBearingX;
-    glyph->bearing_y = font->face->glyph->metrics.horiBearingY;
-
-    glyph->advance = font->face->glyph->metrics.horiAdvance;
+    glyph->dimension = vec2(font->face->glyph->bitmap.width, font->face->glyph->bitmap.rows);
+    glyph->bearing   = vec2(font->face->glyph->bitmap_left, font->face->glyph->bitmap_top);
+    glyph->advance   = font->face->glyph->advance.x / 64.0f;
 
     glGenTextures(1, &glyph->texture);
     glBindTexture(GL_TEXTURE_2D, glyph->texture);

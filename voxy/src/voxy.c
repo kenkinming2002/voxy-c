@@ -14,13 +14,14 @@
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 720
 #define WINDOW_TITLE "voxy"
+#define RESOURCE_PACK_FILEPATH "resource_pack/resource_pack.so"
 
 struct application
 {
-  struct window          window;
   struct world           world;
   struct world_generator world_generator;
 
+  struct window          window;
   struct resource_pack   resource_pack;
   struct world_renderer  world_renderer;
 
@@ -30,22 +31,21 @@ struct application
 
 static int application_init(struct application *application)
 {
-  if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT) != 0)
-    return -1;
-
-  seed_t seed = time(NULL);
-  world_init(&application->world, seed);
-  world_generator_init(&application->world_generator, seed);
-
+  bool window_initialized         = false;
   bool resource_pack_loaded       = false;
   bool world_renderer_initialized = false;
   bool ui_initialized             = false;
   bool font_loaded                = false;
 
-  if(resource_pack_load(&application->resource_pack, "resource_pack/resource_pack.so") != 0) goto error; resource_pack_loaded       = true;
-  if(world_renderer_init(&application->world_renderer, &application->resource_pack)    != 0) goto error; world_renderer_initialized = true;
-  if(ui_init(&application->ui)                                                         != 0) goto error; ui_initialized             = true;
-  if(font_load(&application->font, "assets/arial.ttf")                                 != 0) goto error; font_loaded                = true;
+  if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT)   != 0) goto error; else window_initialized         = true;
+  if(resource_pack_load(&application->resource_pack, RESOURCE_PACK_FILEPATH)        != 0) goto error; else resource_pack_loaded       = true;
+  if(world_renderer_init(&application->world_renderer, &application->resource_pack) != 0) goto error; else world_renderer_initialized = true;
+  if(ui_init(&application->ui)                                                      != 0) goto error; else ui_initialized             = true;
+  if(font_load(&application->font, "assets/arial.ttf")                              != 0) goto error; else font_loaded                = true;
+
+  seed_t seed = time(NULL);
+  world_init(&application->world, seed);
+  world_generator_init(&application->world_generator, seed);
   return 0;
 
 error:
@@ -53,21 +53,19 @@ error:
   if(ui_initialized)             ui_deinit(&application->ui);
   if(world_renderer_initialized) world_renderer_deinit(&application->world_renderer);
   if(resource_pack_loaded)       resource_pack_unload(&application->resource_pack);
-
-  world_generator_deinit(&application->world_generator);
-  world_deinit(&application->world);
-  window_deinit(&application->window);
+  if(window_initialized)         window_deinit(&application->window);
   return -1;
 }
 
 static void application_deinit(struct application *application)
 {
+  world_generator_deinit(&application->world_generator);
+  world_deinit(&application->world);
+
   font_unload(&application->font);
   ui_deinit(&application->ui);
   world_renderer_deinit(&application->world_renderer);
   resource_pack_unload(&application->resource_pack);
-  world_generator_deinit(&application->world_generator);
-  world_deinit(&application->world);
   window_deinit(&application->window);
 }
 

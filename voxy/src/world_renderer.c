@@ -46,11 +46,8 @@ void chunk_mesh_dispose(struct chunk_mesh *chunk_mesh)
   free(chunk_mesh);
 }
 
-int world_renderer_init(struct world_renderer *world_renderer)
+int world_renderer_init(struct world_renderer *world_renderer, struct resource_pack *resource_pack)
 {
-  if(resource_pack_load(&world_renderer->resource_pack, "resource_pack/resource_pack.so") != 0)
-    return -1;
-
   world_renderer->chunk_program             = 0;
   world_renderer->chunk_block_texture_array = 0;
 
@@ -60,11 +57,11 @@ int world_renderer_init(struct world_renderer *world_renderer)
     goto error;
   }
 
-  size_t       filepath_count = world_renderer->resource_pack.block_texture_info_count;
+  size_t       filepath_count = resource_pack->block_texture_info_count;
   const char **filepaths      = malloc(filepath_count * sizeof *filepaths);
 
   for(size_t i=0; i<filepath_count; ++i)
-    filepaths[i] = world_renderer->resource_pack.block_texture_infos[i].filepath;
+    filepaths[i] = resource_pack->block_texture_infos[i].filepath;
   world_renderer->chunk_block_texture_array = gl_array_texture_load(filepath_count, filepaths);
 
   free(filepaths);
@@ -85,7 +82,6 @@ error:
   if(world_renderer->chunk_block_texture_array != 0)
     glDeleteTextures(1, &world_renderer->chunk_block_texture_array);
 
-  resource_pack_unload(&world_renderer->resource_pack);
   return -1;
 }
 
@@ -230,7 +226,7 @@ static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_
   }
 }
 
-void world_renderer_update(struct world_renderer *world_renderer, struct world *world)
+void world_renderer_update(struct world_renderer *world_renderer, struct resource_pack *resource_pack, struct world *world)
 {
   struct chunk_mesh_info *chunk_mesh_infos         = NULL;
   size_t                  chunk_mesh_info_count    = 0;
@@ -289,12 +285,12 @@ void world_renderer_update(struct world_renderer *world_renderer, struct world *
           if(chunk_mesh_infos[i].chunk->tiles[z][y][x].id != TILE_ID_EMPTY)
           {
             struct ivec3 position = ivec3(x, y, z);
-            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], &world_renderer->resource_pack, position, ivec3(-1,  0,  0));
-            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], &world_renderer->resource_pack, position, ivec3( 1,  0,  0));
-            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], &world_renderer->resource_pack, position, ivec3( 0, -1,  0));
-            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], &world_renderer->resource_pack, position, ivec3( 0,  1,  0));
-            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], &world_renderer->resource_pack, position, ivec3( 0,  0, -1));
-            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], &world_renderer->resource_pack, position, ivec3( 0,  0,  1));
+            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3(-1,  0,  0));
+            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3( 1,  0,  0));
+            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3( 0, -1,  0));
+            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3( 0,  1,  0));
+            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3( 0,  0, -1));
+            chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3( 0,  0,  1));
           }
   }
 

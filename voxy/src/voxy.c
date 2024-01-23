@@ -19,8 +19,10 @@ struct application
 {
   struct window          window;
   struct world           world;
-  struct world_renderer  world_renderer;
   struct world_generator world_generator;
+
+  struct resource_pack   resource_pack;
+  struct world_renderer  world_renderer;
 
   struct ui   ui;
   struct font font;
@@ -29,32 +31,32 @@ struct application
 static int application_init(struct application *application)
 {
   if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT) != 0)
-    goto error1;
+    return -1;
 
   seed_t seed = time(NULL);
-
   world_init(&application->world, seed);
   world_generator_init(&application->world_generator, seed);
-  if(world_renderer_init(&application->world_renderer) != 0)
-    goto error2;
 
-  if(ui_init(&application->ui) != 0)
-    goto error3;
+  bool resource_pack_loaded       = false;
+  bool world_renderer_initialized = false;
+  bool ui_initialized             = false;
+  bool font_loaded                = false;
 
-  if(font_load(&application->font, "assets/arial.ttf") != 0)
-    goto error4;
-
+  if(resource_pack_load(&application->resource_pack, "resource_pack/resource_pack.so") != 0) goto error; resource_pack_loaded       = true;
+  if(world_renderer_init(&application->world_renderer, &application->resource_pack)    != 0) goto error; world_renderer_initialized = true;
+  if(ui_init(&application->ui)                                                         != 0) goto error; ui_initialized             = true;
+  if(font_load(&application->font, "assets/arial.ttf")                                 != 0) goto error; font_loaded                = true;
   return 0;
 
-error4:
-  ui_deinit(&application->ui);
-error3:
-  world_renderer_deinit(&application->world_renderer);
-error2:
+error:
+  if(font_loaded)                font_unload(&application->font);
+  if(ui_initialized)             ui_deinit(&application->ui);
+  if(world_renderer_initialized) world_renderer_deinit(&application->world_renderer);
+  if(resource_pack_loaded)       resource_pack_unload(&application->resource_pack);
+
   world_generator_deinit(&application->world_generator);
   world_deinit(&application->world);
   window_deinit(&application->window);
-error1:
   return -1;
 }
 
@@ -63,6 +65,7 @@ static void application_deinit(struct application *application)
   font_unload(&application->font);
   ui_deinit(&application->ui);
   world_renderer_deinit(&application->world_renderer);
+  resource_pack_unload(&application->resource_pack);
   world_generator_deinit(&application->world_generator);
   world_deinit(&application->world);
   window_deinit(&application->window);
@@ -72,7 +75,7 @@ static void application_update(struct application *application, float dt)
 {
   world_update(&application->world, &application->window, dt);
   world_generator_update(&application->world_generator, &application->world);
-  world_renderer_update(&application->world_renderer, &application->world);
+  world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
 }
 
 static void application_render(struct application *application)

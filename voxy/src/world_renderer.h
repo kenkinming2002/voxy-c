@@ -33,17 +33,15 @@ struct chunk_mesh
 
 struct world_renderer
 {
-  struct resource_pack resource_pack;
-
   GLuint                       chunk_program;
   GLuint                       chunk_block_texture_array;
   struct chunk_mesh_hash_table chunk_meshes;
 };
 
-int world_renderer_init(struct world_renderer *world_renderer);
+int world_renderer_init(struct world_renderer *world_renderer, struct resource_pack *resource_pack);
 void world_renderer_deinit(struct world_renderer *world_renderer);
 
-void world_renderer_update(struct world_renderer *world_renderer, struct world *world);
+void world_renderer_update(struct world_renderer *world_renderer, struct resource_pack *resource_pack, struct world *world);
 void world_renderer_render(struct world_renderer *world_renderer, struct camera *camera);
 
 #endif // VOXY_WORLD_RENDERER_H

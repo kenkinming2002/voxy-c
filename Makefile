@@ -2,7 +2,7 @@ CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 
 VOXY_SRCS += voxy/src/camera.c
-VOXY_SRCS += voxy/src/font.c
+VOXY_SRCS += voxy/src/font_set.c
 VOXY_SRCS += voxy/src/gl.c
 VOXY_SRCS += voxy/src/glad.c
 VOXY_SRCS += voxy/src/noise.c
@@ -22,8 +22,8 @@ RESOURCE_PACK_SRCS += resource_pack/src/resource_pack.c
 voxy/voxy: CFLAGS += -Ivoxy/include
 voxy/voxy: LIBS   += -lm
 
-voxy/voxy: CFLAGS += $(shell pkg-config --cflags glfw3 freetype2)
-voxy/voxy: LIBS   += $(shell pkg-config --libs   glfw3 freetype2)
+voxy/voxy: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
+voxy/voxy: LIBS   += $(shell pkg-config --libs   glfw3 fontconfig freetype2)
 
 resource_pack/resource_pack.so: CFLAGS  += -Ivoxy/include
 resource_pack/resource_pack.so: CFLAGS  += -fPIC

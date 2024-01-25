@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "font.h"
+#include "font_set.h"
 #include "ui.h"
 #include "window.h"
 #include "world.h"
@@ -25,8 +25,8 @@ struct application
   struct resource_pack   resource_pack;
   struct world_renderer  world_renderer;
 
-  struct ui   ui;
-  struct font font;
+  struct ui       ui;
+  struct font_set font_set;
 
   int selection;
 };
@@ -39,13 +39,17 @@ static int application_init(struct application *application)
   bool resource_pack_loaded       = false;
   bool world_renderer_initialized = false;
   bool ui_initialized             = false;
-  bool font_loaded                = false;
+  bool font_set_loaded            = false;
 
   if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT)   != 0) goto error; else window_initialized         = true;
   if(resource_pack_load(&application->resource_pack, RESOURCE_PACK_FILEPATH)        != 0) goto error; else resource_pack_loaded       = true;
   if(world_renderer_init(&application->world_renderer, &application->resource_pack) != 0) goto error; else world_renderer_initialized = true;
   if(ui_init(&application->ui)                                                      != 0) goto error; else ui_initialized             = true;
-  if(font_load(&application->font, "assets/arial.ttf")                              != 0) goto error; else font_loaded                = true;
+
+  font_set_init(&application->font_set);
+  font_set_load(&application->font_set, "assets/arial.ttf");
+  font_set_load_system(&application->font_set);
+  font_set_loaded = true;
 
   glfwSetWindowUserPointer(application->window.window, application);
   glfwSetScrollCallback(application->window.window, &application_on_scroll);
@@ -58,7 +62,7 @@ static int application_init(struct application *application)
   return 0;
 
 error:
-  if(font_loaded)                font_unload(&application->font);
+  if(font_set_loaded)            font_set_deinit(&application->font_set);
   if(ui_initialized)             ui_deinit(&application->ui);
   if(world_renderer_initialized) world_renderer_deinit(&application->world_renderer);
   if(resource_pack_loaded)       resource_pack_unload(&application->resource_pack);
@@ -71,7 +75,7 @@ static void application_deinit(struct application *application)
   world_generator_deinit(&application->world_generator);
   world_deinit(&application->world);
 
-  font_unload(&application->font);
+  font_set_deinit(&application->font_set);
   ui_deinit(&application->ui);
   world_renderer_deinit(&application->world_renderer);
   resource_pack_unload(&application->resource_pack);
@@ -144,8 +148,8 @@ static void application_render(struct application *application)
 
   char buffer[32];
 
-  snprintf(buffer, sizeof buffer, "Selected %d", application->selection);
-  ui_draw_text_centered(&application->ui, &application->font, vec2(width * 0.5f, margin_vertical + outer_width + sep), buffer);
+  snprintf(buffer, sizeof buffer, "Selected %d 你好", application->selection);
+  ui_draw_text_centered(&application->ui, &application->font_set, vec2(width * 0.5f, margin_vertical + outer_width + sep), buffer);
   ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal, margin_vertical), vec2(total_width, total_height), sep, vec4(0.9f, 0.9f, 0.9f, 0.3f));
   for(int i=0; i<count; ++i)
   {

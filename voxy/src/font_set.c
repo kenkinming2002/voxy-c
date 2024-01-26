@@ -3,7 +3,7 @@
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX glyph
 #define SC_HASH_TABLE_NODE_TYPE struct glyph
-#define SC_HASH_TABLE_KEY_TYPE int
+#define SC_HASH_TABLE_KEY_TYPE struct glyph_key
 #include "hash_table.h"
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
@@ -17,19 +17,25 @@
 ////////////////////////
 /// Glyph Hash Table ///
 ////////////////////////
-int glyph_key(struct glyph *glyph)
+struct glyph_key glyph_key(struct glyph *glyph)
 {
-  return glyph->c;
+  return glyph->key;
 }
 
-size_t glyph_hash(int c)
+size_t glyph_hash(struct glyph_key key)
 {
-  return c;
+  return key.c * 13 + key.height * 19;
 }
 
-int glyph_compare(int c1, int c2)
+int glyph_compare(struct glyph_key key1, struct glyph_key key2)
 {
-  return c1 - c2;
+  if(key1.c < key2.c) return -1;
+  if(key1.c > key2.c) return +1;
+
+  if(key1.height < key2.height) return -1;
+  if(key1.height > key2.height) return +1;
+
+  return 0;
 }
 
 void glyph_dispose(struct glyph *glyph)
@@ -135,14 +141,6 @@ int font_set_load(struct font_set *font_set, const char *filepath)
     return -1;
   }
 
-  // TODO: Use FT_Set_Char_Size and handle DPI scaling
-  if((error = FT_Set_Pixel_Sizes(face, 0, 24)) != 0)
-  {
-    fprintf(stderr, "ERROR: Failed to set pixel size for font %s: %s\n", filepath, ft_strerror(error));
-    FT_Done_Face(face);
-    return -1;
-  }
-
   if(font_set->face_capacity == font_set->face_count)
   {
     font_set->face_capacity = font_set->face_capacity != 0 ? font_set->face_capacity * 2 : 1;
@@ -175,10 +173,10 @@ int font_set_load_system(struct font_set *font_set)
 /////////////
 /// Glyph ///
 /////////////
-struct glyph *font_set_get_glyph(struct font_set *font_set, int c)
+struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height)
 {
-
-  struct glyph *glyph = glyph_hash_table_lookup(&font_set->glyphs, c);
+  struct glyph_key glyph_key = { .c = c, .height = height};
+  struct glyph *glyph = glyph_hash_table_lookup(&font_set->glyphs, glyph_key);
   if(!glyph)
     for(size_t i=0; i<font_set->face_count; ++i)
     {
@@ -187,6 +185,14 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, int c)
         continue;
 
       FT_Error error;
+
+      // TODO: Use FT_Set_Char_Size and handle DPI scaling
+      if((error = FT_Set_Pixel_Sizes(font_set->faces[i], 0, height)) != 0)
+      {
+        fprintf(stderr, "ERROR: Failed to set pixel size for font: %s\n", ft_strerror(error));
+        continue;
+      }
+
       if((error = FT_Load_Glyph(font_set->faces[i], char_index, FT_LOAD_RENDER)) != 0)
       {
         fprintf(stderr, "WARN: Failed to load character %c from font: %s\n", c, ft_strerror(error));
@@ -200,7 +206,7 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, int c)
       }
 
       glyph = malloc(sizeof *glyph);
-      glyph->c = c;
+      glyph->key = glyph_key;
 
       glyph->dimension = vec2(font_set->faces[i]->glyph->bitmap.width, font_set->faces[i]->glyph->bitmap.rows);
       glyph->bearing   = vec2(font_set->faces[i]->glyph->bitmap_left, font_set->faces[i]->glyph->bitmap_top);

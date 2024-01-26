@@ -149,7 +149,7 @@ static void application_render(struct application *application)
   char buffer[32];
 
   snprintf(buffer, sizeof buffer, "Selected %d 你好", application->selection);
-  ui_draw_text_centered(&application->ui, &application->font_set, vec2(width * 0.5f, margin_vertical + outer_width + sep), buffer);
+  ui_draw_text_centered(&application->ui, &application->font_set, vec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
   ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal, margin_vertical), vec2(total_width, total_height), sep, vec4(0.9f, 0.9f, 0.9f, 0.3f));
   for(int i=0; i<count; ++i)
   {

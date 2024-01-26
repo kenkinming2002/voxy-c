@@ -24,7 +24,7 @@ void ui_draw_quad(struct ui *ui, struct vec2 position, struct vec2 dimension, st
 void ui_draw_quad_rounded(struct ui *ui, struct vec2 position, struct vec2 dimension, float radius, struct vec4 color);
 void ui_draw_texture_mono(struct ui *ui, struct vec2 position, struct vec2 dimension, GLuint texture);
 
-void ui_draw_text(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str);
-void ui_draw_text_centered(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str);
+void ui_draw_text(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str, unsigned height);
+void ui_draw_text_centered(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *st, unsigned heightr);
 
 #endif // VOXY_UI_H

@@ -140,12 +140,12 @@ static int utf8_next(const unsigned char **str)
   assert(0 && "Invalid UTF-8 String");
 }
 
-void ui_draw_text(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str)
+void ui_draw_text(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str, unsigned height)
 {
   int c;
   while((c = utf8_next((const unsigned char **)&str)))
   {
-    struct glyph *glyph = font_set_get_glyph(font_set, c);
+    struct glyph *glyph = font_set_get_glyph(font_set, c, height);
     struct vec2 current_position  = vec2_add(position, glyph->bearing);
     struct vec2 current_dimension = vec2_mul(glyph->dimension, vec2(1.0f, -1.0f));
     ui_draw_texture_mono(ui, current_position, current_dimension, glyph->texture);
@@ -153,20 +153,20 @@ void ui_draw_text(struct ui *ui, struct font_set *font_set, struct vec2 position
   }
 }
 
-static float font_compute_text_width(struct font_set *font_set, const char *str)
+static float font_compute_text_width(struct font_set *font_set, const char *str, unsigned height)
 {
   float width = 0.0f;
   int c;
   while((c = utf8_next((const unsigned char **)&str)))
   {
-    struct glyph *glyph = font_set_get_glyph(font_set, c);
+    struct glyph *glyph = font_set_get_glyph(font_set, c, height);
     width += glyph->advance;
   }
   return width;
 }
 
-void ui_draw_text_centered(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str)
+void ui_draw_text_centered(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str, unsigned height)
 {
-  position.x -= font_compute_text_width(font_set, str) * 0.5f;
-  ui_draw_text(ui, font_set, position, str);
+  position.x -= font_compute_text_width(font_set, str, height) * 0.5f;
+  ui_draw_text(ui, font_set, position, str, height);
 }

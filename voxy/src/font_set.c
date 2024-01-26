@@ -162,7 +162,7 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       // TODO: Use FT_Set_Char_Size and handle DPI scaling
       if((error = FT_Set_Pixel_Sizes(font_set->fonts[i].face, 0, height)) != 0)
       {
-        fprintf(stderr, "ERROR: Failed to set pixel size: Font %s: %s\n", font_set->fonts[i].filepath, ft_strerror(error));
+        fprintf(stderr, "WARN: Failed to set pixel size: Font %s: %s\n", font_set->fonts[i].filepath, ft_strerror(error));
         continue;
       }
 

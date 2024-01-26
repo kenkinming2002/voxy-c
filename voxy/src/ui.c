@@ -118,7 +118,7 @@ static int utf8_next(const unsigned char **str)
     int c3 = *(*str)++;
     assert(c2 >> 6 == 0b10 && "Expected unicode continuation byte");
     assert(c3 >> 6 == 0b10 && "Expected unicode continuation byte");
-    return (c1 & 0b11111)  << 12
+    return (c1 & 0b1111)   << 12
          | (c2 & 0b111111) << 6
          | (c3 & 0b111111) << 0;
   }
@@ -131,7 +131,7 @@ static int utf8_next(const unsigned char **str)
     assert(c2 >> 6 == 0b10 && "Expected unicode continuation byte");
     assert(c3 >> 6 == 0b10 && "Expected unicode continuation byte");
     assert(c4 >> 6 == 0b10 && "Expected unicode continuation byte");
-    return (c1 & 0b11111)  << 18
+    return (c1 & 0b111)    << 18
          | (c2 & 0b111111) << 12
          | (c3 & 0b111111) << 6
          | (c4 & 0b111111) << 0;

@@ -54,41 +54,21 @@ void world_deinit(struct world *world)
   chunk_hash_table_dispose(&world->chunks);
 }
 
+void world_invalidate_chunk_mesh(struct world *world, struct chunk *chunk)
+{
+  chunk->mesh_dirty = true;
+
+  struct chunk *neighbour_chunk;
+  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0))))) neighbour_chunk->mesh_dirty = true;
+  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0))))) neighbour_chunk->mesh_dirty = true;
+  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0))))) neighbour_chunk->mesh_dirty = true;
+  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0))))) neighbour_chunk->mesh_dirty = true;
+  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1))))) neighbour_chunk->mesh_dirty = true;
+  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1))))) neighbour_chunk->mesh_dirty = true;
+}
+
 void world_update(struct world *world, struct window *window, float dt)
 {
   world_update_player_control(world, window, dt);
-}
-
-/*******************
- * Chunk Adjacency *
- *******************/
-void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk)
-{
-  chunk_adjacency->chunk = chunk;
-  chunk_adjacency->left   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
-  chunk_adjacency->right  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0)));
-  chunk_adjacency->back   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0)));
-  chunk_adjacency->front  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0)));
-  chunk_adjacency->bottom = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1)));
-  chunk_adjacency->top    = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1)));
-}
-
-struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, struct ivec3 cposition)
-{
-  if(cposition.z >= 0 && cposition.z < CHUNK_WIDTH)
-    if(cposition.y >= 0 && cposition.y < CHUNK_WIDTH)
-      if(cposition.x >= 0 && cposition.x < CHUNK_WIDTH)
-        return &chunk_adjacency->chunk->tiles[cposition.z][cposition.y][cposition.x];
-
-  if(cposition.z == -1)          return chunk_adjacency->bottom ? &chunk_adjacency->bottom->tiles[CHUNK_WIDTH-1][cposition.y][cposition.x] : NULL;
-  if(cposition.z == CHUNK_WIDTH) return chunk_adjacency->top    ? &chunk_adjacency->top   ->tiles[0]            [cposition.y][cposition.x] : NULL;
-
-  if(cposition.y == -1)          return chunk_adjacency->back  ? &chunk_adjacency->back ->tiles[cposition.z][CHUNK_WIDTH-1][cposition.x] : NULL;
-  if(cposition.y == CHUNK_WIDTH) return chunk_adjacency->front ? &chunk_adjacency->front->tiles[cposition.z][0]            [cposition.x] : NULL;
-
-  if(cposition.x == -1)          return chunk_adjacency->left  ? &chunk_adjacency->left ->tiles[cposition.z][cposition.y][CHUNK_WIDTH-1] : NULL;
-  if(cposition.x == CHUNK_WIDTH) return chunk_adjacency->right ? &chunk_adjacency->right->tiles[cposition.z][cposition.y][0]             : NULL;
-
-  assert(0 && "Unreachable");
 }
 

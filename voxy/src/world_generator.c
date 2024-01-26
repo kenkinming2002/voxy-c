@@ -325,7 +325,6 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
         //////////////////////////
         chunk = malloc(sizeof *chunk);
         chunk->position = chunk_position;
-        chunk->mesh_dirty = true;
         for(int z = 0; z<CHUNK_WIDTH; ++z)
           for(int y = 0; y<CHUNK_WIDTH; ++y)
             for(int x = 0; x<CHUNK_WIDTH; ++x)
@@ -361,15 +360,7 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
             }
 
         chunk_hash_table_insert_unchecked(&world->chunks, chunk);
-
-        struct chunk_adjacency chunk_adjacency;
-        chunk_adjacency_init(&chunk_adjacency, world, chunk);
-        if(chunk_adjacency.bottom) chunk_adjacency.bottom->mesh_dirty = true;
-        if(chunk_adjacency.top)    chunk_adjacency.top   ->mesh_dirty = true;
-        if(chunk_adjacency.back)   chunk_adjacency.back  ->mesh_dirty = true;
-        if(chunk_adjacency.front)  chunk_adjacency.front ->mesh_dirty = true;
-        if(chunk_adjacency.left)   chunk_adjacency.left  ->mesh_dirty = true;
-        if(chunk_adjacency.right)  chunk_adjacency.right ->mesh_dirty = true;
+        world_invalidate_chunk_mesh(world, chunk);
       }
 }
 

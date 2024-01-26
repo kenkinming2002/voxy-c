@@ -52,9 +52,6 @@ struct world
 void world_init(struct world *world, seed_t seed);
 void world_deinit(struct world *world);
 
-void world_update(struct world *world, struct window *window, float dt);
-void world_update_player_control(struct world *world, struct window *window, float dt);
-
 struct chunk_adjacency
 {
   struct chunk *chunk;
@@ -71,5 +68,8 @@ struct chunk_adjacency
 
 void chunk_adjacency_init(struct chunk_adjacency *chunk_adjacency, struct world *world, struct chunk *chunk);
 struct tile *chunk_adjacency_tile_lookup(struct chunk_adjacency *chunk_adjacency, struct ivec3 cposition);
+
+void world_update(struct world *world, struct window *window, float dt);
+void world_update_player_control(struct world *world, struct window *window, float dt);
 
 #endif // VOXY_WORLD_H

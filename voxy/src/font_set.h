@@ -37,15 +37,15 @@ struct glyph
 
 struct font
 {
-  FT_Face                 face;
-  struct glyph_hash_table glyphs;
+  char    *filepath;
+  FT_Face  face;
 };
 
 struct font_set
 {
-  FT_Face *faces;
-  size_t   face_count;
-  size_t   face_capacity;
+  struct font *fonts;
+  size_t       font_count;
+  size_t       font_capacity;
 
   struct glyph_hash_table glyphs;
 };

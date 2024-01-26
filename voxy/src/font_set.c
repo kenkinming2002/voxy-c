@@ -80,73 +80,46 @@ static int fc_ensure_init()
   return fc_initialized ? 0 : -1;
 }
 
-////////////
-/// Font ///
-////////////
-int font_load(struct font *font, const char *filepath)
-{
-  FT_Error error;
-
-  if((error = FT_New_Face(FT_HANDLE, filepath, 0, &font->face)) != 0)
-  {
-    fprintf(stderr, "ERROR: Failed to load font from %s: %s\n", filepath, ft_strerror(error));
-    return -1;
-  }
-
-  // TODO: Use FT_Set_Char_Size and handle DPI scaling
-  if((error = FT_Set_Pixel_Sizes(font->face, 0, 24)) != 0)
-  {
-    fprintf(stderr, "ERROR: Failed to set pixel size for font %s: %s\n", filepath, ft_strerror(error));
-    FT_Done_Face(font->face);
-    return -1;
-  }
-
-  glyph_hash_table_init(&font->glyphs);
-  return 0;
-}
-
-void font_unload(struct font *font)
-{
-  glyph_hash_table_dispose(&font->glyphs);
-  FT_Done_Face(font->face);
-}
-
 ////////////////
 /// Font Set ///
 ////////////////
 void font_set_init(struct font_set *font_set)
 {
-  font_set->faces         = NULL;
-  font_set->face_count    = 0;
-  font_set->face_capacity = 0;
+  font_set->fonts         = NULL;
+  font_set->font_count    = 0;
+  font_set->font_capacity = 0;
   glyph_hash_table_init(&font_set->glyphs);
 }
 
 void font_set_deinit(struct font_set *font_set)
 {
   glyph_hash_table_dispose(&font_set->glyphs);
-  for(size_t i=0; i<font_set->face_count; ++i)
-    FT_Done_Face(font_set->faces[i]);
-  free(font_set->faces);
+  for(size_t i=0; i<font_set->font_count; ++i)
+  {
+    free(font_set->fonts[i].filepath);
+    FT_Done_Face(font_set->fonts[i].face);
+  }
+  free(font_set->fonts);
 }
 
 int font_set_load(struct font_set *font_set, const char *filepath)
 {
   FT_Error error;
-  FT_Face  face;
 
-  if((error = FT_New_Face(FT_HANDLE, filepath, 0, &face)) != 0)
+  struct font font;
+  font.filepath = strdup(filepath); // FIXME: Non-POSIX platforms
+  if((error = FT_New_Face(FT_HANDLE, filepath, 0, &font.face)) != 0)
   {
     fprintf(stderr, "ERROR: Failed to load font from %s: %s\n", filepath, ft_strerror(error));
     return -1;
   }
 
-  if(font_set->face_capacity == font_set->face_count)
+  if(font_set->font_capacity == font_set->font_count)
   {
-    font_set->face_capacity = font_set->face_capacity != 0 ? font_set->face_capacity * 2 : 1;
-    font_set->faces         = realloc(font_set->faces, font_set->face_capacity * sizeof *font_set->faces);
+    font_set->font_capacity = font_set->font_capacity != 0 ? font_set->font_capacity * 2 : 1;
+    font_set->fonts         = realloc(font_set->fonts, font_set->font_capacity * sizeof *font_set->fonts);
   }
-  font_set->faces[font_set->face_count++] = face;
+  font_set->fonts[font_set->font_count++] = font;
   return 0;
 }
 
@@ -178,39 +151,39 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
   struct glyph_key glyph_key = { .c = c, .height = height};
   struct glyph *glyph = glyph_hash_table_lookup(&font_set->glyphs, glyph_key);
   if(!glyph)
-    for(size_t i=0; i<font_set->face_count; ++i)
+    for(size_t i=0; i<font_set->font_count; ++i)
     {
       FT_UInt char_index;
-      if((char_index = FT_Get_Char_Index(font_set->faces[i], c)) == 0)
+      if((char_index = FT_Get_Char_Index(font_set->fonts[i].face, c)) == 0)
         continue;
 
       FT_Error error;
 
       // TODO: Use FT_Set_Char_Size and handle DPI scaling
-      if((error = FT_Set_Pixel_Sizes(font_set->faces[i], 0, height)) != 0)
+      if((error = FT_Set_Pixel_Sizes(font_set->fonts[i].face, 0, height)) != 0)
       {
-        fprintf(stderr, "ERROR: Failed to set pixel size for font: %s\n", ft_strerror(error));
+        fprintf(stderr, "ERROR: Failed to set pixel size: Font %s: %s\n", font_set->fonts[i].filepath, ft_strerror(error));
         continue;
       }
 
-      if((error = FT_Load_Glyph(font_set->faces[i], char_index, FT_LOAD_RENDER)) != 0)
+      if((error = FT_Load_Glyph(font_set->fonts[i].face, char_index, FT_LOAD_RENDER)) != 0)
       {
-        fprintf(stderr, "WARN: Failed to load character %c from font: %s\n", c, ft_strerror(error));
+        fprintf(stderr, "WARN: Failed to load character %c: Font %s: %s\n", c, font_set->fonts[i].filepath, ft_strerror(error));
         continue;
       }
 
-      if((long)font_set->faces[i]->glyph->bitmap.width != (long)font_set->faces[i]->glyph->bitmap.pitch)
+      if((long)font_set->fonts[i].face->glyph->bitmap.width != (long)font_set->fonts[i].face->glyph->bitmap.pitch)
       {
-        fprintf(stderr, "WARN: Bitmap is not tightly packed for character %c\n", c);
+        fprintf(stderr, "WARN: Bitmap is not tightly packed for character %c: Font %s\n", c, font_set->fonts[i].filepath);
         continue;
       }
 
       glyph = malloc(sizeof *glyph);
       glyph->key = glyph_key;
 
-      glyph->dimension = vec2(font_set->faces[i]->glyph->bitmap.width, font_set->faces[i]->glyph->bitmap.rows);
-      glyph->bearing   = vec2(font_set->faces[i]->glyph->bitmap_left, font_set->faces[i]->glyph->bitmap_top);
-      glyph->advance   = font_set->faces[i]->glyph->advance.x / 64.0f;
+      glyph->dimension = vec2(font_set->fonts[i].face->glyph->bitmap.width, font_set->fonts[i].face->glyph->bitmap.rows);
+      glyph->bearing   = vec2(font_set->fonts[i].face->glyph->bitmap_left, font_set->fonts[i].face->glyph->bitmap_top);
+      glyph->advance   = font_set->fonts[i].face->glyph->advance.x / 64.0f;
 
       glGenTextures(1, &glyph->texture);
       glBindTexture(GL_TEXTURE_2D, glyph->texture);
@@ -221,11 +194,12 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, font_set->faces[i]->glyph->bitmap.width, font_set->faces[i]->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, font_set->faces[i]->glyph->bitmap.buffer);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, font_set->fonts[i].face->glyph->bitmap.width, font_set->fonts[i].face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, font_set->fonts[i].face->glyph->bitmap.buffer);
 
       return glyph;
     }
 
+  fprintf(stderr, "ERROR: No font found for character %c\n", c);
   return NULL;
 }
 

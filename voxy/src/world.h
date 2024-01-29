@@ -34,8 +34,14 @@ struct chunk
 {
   struct chunk *next;
   size_t        hash;
+  ivec3_t       position;
 
-  ivec3_t position;
+  struct chunk *bottom;
+  struct chunk *top;
+  struct chunk *back;
+  struct chunk *front;
+  struct chunk *left;
+  struct chunk *right;
 
   struct tile tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
   bool mesh_dirty;
@@ -52,7 +58,7 @@ struct world
 void world_init(struct world *world, seed_t seed);
 void world_deinit(struct world *world);
 
-void world_invalidate_chunk_mesh(struct world *world, struct chunk *chunk);
+void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 
 void world_update(struct world *world, struct window *window, float dt);
 void world_update_player_control(struct world *world, struct window *window, float dt);

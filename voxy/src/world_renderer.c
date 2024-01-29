@@ -102,15 +102,6 @@ struct chunk_mesh_info
 {
   struct chunk *chunk;
 
-  struct chunk *bottom;
-  struct chunk *top;
-
-  struct chunk *back;
-  struct chunk *front;
-
-  struct chunk *left;
-  struct chunk *right;
-
   struct chunk_mesh_vertex *vertices;
   size_t                    vertex_count;
   size_t                    vertex_capacity;
@@ -128,14 +119,14 @@ static inline struct tile *chunk_mesh_info_tile_lookup(struct chunk_mesh_info *c
       if(cposition.x >= 0 && cposition.x < CHUNK_WIDTH)
         return &chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x];
 
-  if(cposition.z == -1)          return chunk_mesh_info->bottom ? &chunk_mesh_info->bottom->tiles[CHUNK_WIDTH-1][cposition.y][cposition.x] : NULL;
-  if(cposition.z == CHUNK_WIDTH) return chunk_mesh_info->top    ? &chunk_mesh_info->top   ->tiles[0]            [cposition.y][cposition.x] : NULL;
+  if(cposition.z == -1)          return chunk_mesh_info->chunk->bottom ? &chunk_mesh_info->chunk->bottom->tiles[CHUNK_WIDTH-1][cposition.y][cposition.x] : NULL;
+  if(cposition.z == CHUNK_WIDTH) return chunk_mesh_info->chunk->top    ? &chunk_mesh_info->chunk->top   ->tiles[0]            [cposition.y][cposition.x] : NULL;
 
-  if(cposition.y == -1)          return chunk_mesh_info->back  ? &chunk_mesh_info->back ->tiles[cposition.z][CHUNK_WIDTH-1][cposition.x] : NULL;
-  if(cposition.y == CHUNK_WIDTH) return chunk_mesh_info->front ? &chunk_mesh_info->front->tiles[cposition.z][0]            [cposition.x] : NULL;
+  if(cposition.y == -1)          return chunk_mesh_info->chunk->back  ? &chunk_mesh_info->chunk->back ->tiles[cposition.z][CHUNK_WIDTH-1][cposition.x] : NULL;
+  if(cposition.y == CHUNK_WIDTH) return chunk_mesh_info->chunk->front ? &chunk_mesh_info->chunk->front->tiles[cposition.z][0]            [cposition.x] : NULL;
 
-  if(cposition.x == -1)          return chunk_mesh_info->left  ? &chunk_mesh_info->left ->tiles[cposition.z][cposition.y][CHUNK_WIDTH-1] : NULL;
-  if(cposition.x == CHUNK_WIDTH) return chunk_mesh_info->right ? &chunk_mesh_info->right->tiles[cposition.z][cposition.y][0]             : NULL;
+  if(cposition.x == -1)          return chunk_mesh_info->chunk->left  ? &chunk_mesh_info->chunk->left ->tiles[cposition.z][cposition.y][CHUNK_WIDTH-1] : NULL;
+  if(cposition.x == CHUNK_WIDTH) return chunk_mesh_info->chunk->right ? &chunk_mesh_info->chunk->right->tiles[cposition.z][cposition.y][0]             : NULL;
 
   assert(0 && "Unreachable");
 }
@@ -247,12 +238,6 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
           struct chunk_mesh_info chunk_mesh_info;
 
           chunk_mesh_info.chunk  = chunk;
-          chunk_mesh_info.left   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk_position, ivec3(-1,  0,  0)));
-          chunk_mesh_info.right  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk_position, ivec3( 1,  0,  0)));
-          chunk_mesh_info.back   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk_position, ivec3( 0, -1,  0)));
-          chunk_mesh_info.front  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk_position, ivec3( 0,  1,  0)));
-          chunk_mesh_info.bottom = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk_position, ivec3( 0,  0, -1)));
-          chunk_mesh_info.top    = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk_position, ivec3( 0,  0,  1)));
 
           chunk_mesh_info.vertices        = NULL;
           chunk_mesh_info.vertex_count    = 0;

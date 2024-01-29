@@ -53,17 +53,23 @@ void world_deinit(struct world *world)
   chunk_hash_table_dispose(&world->chunks);
 }
 
-void world_invalidate_chunk_mesh(struct world *world, struct chunk *chunk)
+void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
 {
-  chunk->mesh_dirty = true;
+  chunk->left   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
+  chunk->right  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0)));
+  chunk->back   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0)));
+  chunk->front  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0)));
+  chunk->bottom = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1)));
+  chunk->top    = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1)));
 
-  struct chunk *neighbour_chunk;
-  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0))))) neighbour_chunk->mesh_dirty = true;
-  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0))))) neighbour_chunk->mesh_dirty = true;
-  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0))))) neighbour_chunk->mesh_dirty = true;
-  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0))))) neighbour_chunk->mesh_dirty = true;
-  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1))))) neighbour_chunk->mesh_dirty = true;
-  if((neighbour_chunk = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1))))) neighbour_chunk->mesh_dirty = true;
+  if(chunk->left)   chunk->left->right = chunk;
+  if(chunk->right)  chunk->right->left = chunk;
+  if(chunk->back)   chunk->back->front = chunk;
+  if(chunk->front)  chunk->front->back = chunk;
+  if(chunk->bottom) chunk->bottom->top = chunk;
+  if(chunk->top)    chunk->top->bottom = chunk;
+
+  chunk_hash_table_insert_unchecked(&world->chunks, chunk);
 }
 
 void world_update(struct world *world, struct window *window, float dt)

@@ -24,10 +24,12 @@
 #define TILE_ID_STONE 1
 #define TILE_ID_WATER 2
 #define TILE_ID_EMPTY 3
+#define TILE_ID_ETHER 4
 
 struct tile
 {
   uint8_t id;
+  uint8_t ether       : 1;
   uint8_t light_level : 4;
 };
 
@@ -46,6 +48,7 @@ struct chunk
 
   struct tile tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
   bool mesh_dirty;
+  bool light_dirty;
 };
 
 struct world
@@ -63,5 +66,6 @@ void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 
 void world_update(struct world *world, struct window *window, float dt);
 void world_update_player_control(struct world *world, struct window *window, float dt);
+void world_update_light(struct world *world);
 
 #endif // VOXY_WORLD_H

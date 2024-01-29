@@ -158,7 +158,7 @@ __attribute__((always_inline))
 static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_info, struct resource_pack *resource_pack, ivec3_t cposition, ivec3_t dcposition)
 {
   struct tile *ntile = chunk_mesh_info_tile_lookup(chunk_mesh_info, ivec3_add(cposition, dcposition));
-  if(!ntile || ntile->id == TILE_ID_EMPTY)
+  if(!ntile || ntile->id == TILE_ID_EMPTY || ntile->id == TILE_ID_ETHER)
   {
     //////////////////
     /// 1: Indices ///
@@ -210,10 +210,10 @@ static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_
     vertices[2].texture_index = texture_index;
     vertices[3].texture_index = texture_index;
 
-    vertices[0].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
-    vertices[1].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
-    vertices[2].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
-    vertices[3].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
+    vertices[0].light_level = ntile ? ntile->light_level / 15.0f : 0.0f;
+    vertices[1].light_level = ntile ? ntile->light_level / 15.0f : 0.0f;
+    vertices[2].light_level = ntile ? ntile->light_level / 15.0f : 0.0f;
+    vertices[3].light_level = ntile ? ntile->light_level / 15.0f : 0.0f;
 
     chunk_mesh_info_push_vertex(chunk_mesh_info, vertices[0]);
     chunk_mesh_info_push_vertex(chunk_mesh_info, vertices[1]);
@@ -272,7 +272,7 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
     for(int z = 0; z<CHUNK_WIDTH; ++z)
       for(int y = 0; y<CHUNK_WIDTH; ++y)
         for(int x = 0; x<CHUNK_WIDTH; ++x)
-          if(chunk_mesh_infos[i].chunk->tiles[z][y][x].id != TILE_ID_EMPTY)
+          if(chunk_mesh_infos[i].chunk->tiles[z][y][x].id != TILE_ID_EMPTY && chunk_mesh_infos[i].chunk->tiles[z][y][x].id != TILE_ID_ETHER)
           {
             ivec3_t position = ivec3(x, y, z);
             chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3(-1,  0,  0));

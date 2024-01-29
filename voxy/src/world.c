@@ -75,5 +75,6 @@ void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
 void world_update(struct world *world, struct window *window, float dt)
 {
   world_update_player_control(world, window, dt);
+  world_update_light(world);
 }
 

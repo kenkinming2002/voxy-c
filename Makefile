@@ -15,6 +15,7 @@ VOXY_SRCS += voxy/src/voxy.c
 VOXY_SRCS += voxy/src/window.c
 VOXY_SRCS += voxy/src/world.c
 VOXY_SRCS += voxy/src/world_generator.c
+VOXY_SRCS += voxy/src/world_light.c
 VOXY_SRCS += voxy/src/world_player_control.c
 VOXY_SRCS += voxy/src/world_renderer.c
 

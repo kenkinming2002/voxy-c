@@ -98,8 +98,8 @@ static void application_on_scroll(GLFWwindow *window, double xoffset, double yof
 
 static void application_update(struct application *application, float dt)
 {
-  world_update(&application->world, &application->window, dt);
   world_generator_update(&application->world_generator, &application->world);
+  world_update(&application->world, &application->window, dt);
   world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
 
   if(window_get_key(&application->window, GLFW_KEY_1) || window_get_key(&application->window, GLFW_KEY_KP_1)) application->selection = 1;

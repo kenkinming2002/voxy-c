@@ -114,6 +114,9 @@ static bool get_cave(seed_t seed, ivec3_t position)
 
 static uint8_t get_tile_id(struct chunk_info *chunk_info, struct section_info *section_info, ivec3_t global_position, ivec3_t local_position)
 {
+  if(global_position.z >= ETHER_HEIGHT)
+    return TILE_ID_ETHER;
+
   if(global_position.z > section_info->heights[local_position.y][local_position.x] && global_position.z <= 3.0f)
     return TILE_ID_WATER;
 
@@ -350,7 +353,8 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
               ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk->position, CHUNK_WIDTH), local_position);
 
               chunk->tiles[z][y][x].id          = get_tile_id(chunk_info, section_info, global_position, local_position);
-              chunk->tiles[z][y][x].light_level = 15;
+              chunk->tiles[z][y][x].ether       = false;
+              chunk->tiles[z][y][x].light_level = 0;
             }
 
         world_chunk_insert_unchecked(world, chunk);
@@ -358,7 +362,8 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
         ////////////////////////
         /// 4: Invalidations ///
         ////////////////////////
-        chunk->mesh_dirty = true;
+        chunk->mesh_dirty  = true;
+        chunk->light_dirty = true;
 
         if(chunk->left)   chunk->left  ->mesh_dirty = true;
         if(chunk->right)  chunk->right ->mesh_dirty = true;

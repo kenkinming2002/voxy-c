@@ -112,6 +112,23 @@ static bool get_cave(seed_t seed, ivec3_t position)
   return true;
 }
 
+static uint8_t get_tile_id(struct chunk_info *chunk_info, struct section_info *section_info, ivec3_t global_position, ivec3_t local_position)
+{
+  if(global_position.z > section_info->heights[local_position.y][local_position.x] && global_position.z <= 3.0f)
+    return TILE_ID_WATER;
+
+  if(chunk_info->caves[local_position.z][local_position.y][local_position.x])
+    return TILE_ID_EMPTY;
+
+  if(global_position.z <= section_info->heights[local_position.y][local_position.x])
+    return TILE_ID_STONE;
+
+  if(global_position.z <= section_info->heights[local_position.y][local_position.x] + 1.0f)
+    return TILE_ID_GRASS;
+
+  return TILE_ID_EMPTY;
+}
+
 ////////////////////////
 /// Thread Functions ///
 ////////////////////////
@@ -332,31 +349,8 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
               ivec3_t local_position  = ivec3(x, y, z);
               ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk->position, CHUNK_WIDTH), local_position);
 
-              if(global_position.z > section_info->heights[y][x] && global_position.z <= 3.0f)
-              {
-                chunk->tiles[z][y][x].id = TILE_ID_WATER;
-                continue;
-              }
-
-              if(chunk_info->caves[z][y][x])
-              {
-                chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
-                continue;
-              }
-
-              if(global_position.z <= section_info->heights[y][x])
-              {
-                chunk->tiles[z][y][x].id = TILE_ID_STONE;
-                continue;
-              }
-
-              if(global_position.z <= section_info->heights[y][x] + 1.0f)
-              {
-                chunk->tiles[z][y][x].id = TILE_ID_GRASS;
-                continue;
-              }
-
-              chunk->tiles[z][y][x].id = TILE_ID_EMPTY;
+              chunk->tiles[z][y][x].id          = get_tile_id(chunk_info, section_info, global_position, local_position);
+              chunk->tiles[z][y][x].light_level = 15;
             }
 
         world_chunk_insert_unchecked(world, chunk);

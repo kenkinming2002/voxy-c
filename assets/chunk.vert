@@ -1,10 +1,12 @@
 #version 330 core
-layout(location = 0) in vec3 vPosition;
-layout(location = 1) in vec2 vTexCoords;
-layout(location = 2) in uint vTexIndex;
+layout(location = 0) in vec3  vPosition;
+layout(location = 1) in vec2  vTexCoords;
+layout(location = 2) in uint  vTexIndex;
+layout(location = 3) in float vLightLevel;
 
-out vec2      fTexCoords;
-flat out uint fTexIndex;
+out vec2       fTexCoords;
+flat out uint  fTexIndex;
+out float      fLightLevel;
 
 out float visibility;
 
@@ -18,8 +20,9 @@ void main()
 {
   gl_Position = VP * vec4(vPosition, 1.0);
 
-  fTexCoords = vTexCoords;
-  fTexIndex  = vTexIndex;
+  fTexCoords  = vTexCoords;
+  fTexIndex   = vTexIndex;
+  fLightLevel = vLightLevel;
 
   vec4  pos  = V * vec4(vPosition, 1.0);
   float dist = length(pos.xyz);

@@ -28,6 +28,7 @@
 struct tile
 {
   uint8_t id;
+  uint8_t light_level : 4;
 };
 
 struct chunk

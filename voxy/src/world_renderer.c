@@ -93,9 +93,10 @@ void world_renderer_deinit(struct world_renderer *world_renderer)
 
 struct chunk_mesh_vertex
 {
-  fvec3_t position;
-  fvec2_t texture_coords;
-  uint32_t    texture_index;
+  fvec3_t  position;
+  fvec2_t  texture_coords;
+  uint32_t texture_index;
+  float    light_level;
 };
 
 struct chunk_mesh_info
@@ -209,6 +210,11 @@ static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_
     vertices[2].texture_index = texture_index;
     vertices[3].texture_index = texture_index;
 
+    vertices[0].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
+    vertices[1].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
+    vertices[2].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
+    vertices[3].light_level = ntile ? ntile->light_level / 15.0f : 1.0f;
+
     chunk_mesh_info_push_vertex(chunk_mesh_info, vertices[0]);
     chunk_mesh_info_push_vertex(chunk_mesh_info, vertices[1]);
     chunk_mesh_info_push_vertex(chunk_mesh_info, vertices[2]);
@@ -307,10 +313,12 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
 
     glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, position));
     glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_coords));
     glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_index));
+    glVertexAttribPointer (3, 1, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, light_level));
 
     chunk_mesh->count = chunk_mesh_infos[i].index_count;
   }

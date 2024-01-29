@@ -3,15 +3,15 @@
 
 #include "lin.h"
 
-struct mat4 mat4_translate(fvec3_t translation);
-struct mat4 mat4_translate_inverse(fvec3_t translation);
+fmat4_t fmat4_translate(fvec3_t translation);
+fmat4_t fmat4_translate_inverse(fvec3_t translation);
 
-struct mat4 mat4_rotate_x(float angle);
-struct mat4 mat4_rotate_y(float angle);
-struct mat4 mat4_rotate_z(float angle);
+fmat4_t fmat4_rotate_x(float angle);
+fmat4_t fmat4_rotate_y(float angle);
+fmat4_t fmat4_rotate_z(float angle);
 
-struct mat4 mat4_rotate(fvec3_t rotation);
-struct mat4 mat4_rotate_inverse(fvec3_t rotation);
+fmat4_t fmat4_rotate(fvec3_t rotation);
+fmat4_t fmat4_rotate_inverse(fvec3_t rotation);
 
 struct transform
 {
@@ -19,8 +19,8 @@ struct transform
   fvec3_t rotation; // Euler angle
 };
 
-struct mat4 transform_matrix(struct transform *transform);
-struct mat4 transform_matrix_inverse(struct transform *transform);
+fmat4_t transform_matrix(struct transform *transform);
+fmat4_t transform_matrix_inverse(struct transform *transform);
 
 fvec3_t transform_right  (struct transform *transform);
 fvec3_t transform_forward(struct transform *transform);

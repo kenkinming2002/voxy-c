@@ -2,43 +2,43 @@
 
 #include <math.h>
 
-struct mat4 camera_translation_matrix(struct camera *camera)
+fmat4_t camera_translation_matrix(struct camera *camera)
 {
-  return mat4_translate_inverse(camera->transform.translation);
+  return fmat4_translate_inverse(camera->transform.translation);
 }
 
-struct mat4 camera_rotation_matrix(struct camera *camera)
+fmat4_t camera_rotation_matrix(struct camera *camera)
 {
-  return mat4_rotate_inverse(camera->transform.rotation);
+  return fmat4_rotate_inverse(camera->transform.rotation);
 }
 
-struct mat4 camera_view_matrix(struct camera *camera)
+fmat4_t camera_view_matrix(struct camera *camera)
 {
   // Who need matrix inverse?
   return transform_matrix_inverse(&camera->transform);
 }
 
-struct mat4 camera_projection_matrix(struct camera *camera)
+fmat4_t camera_projection_matrix(struct camera *camera)
 {
-  struct mat4 result = mat4_identity();
-  struct mat4 tmp;
+  fmat4_t result = fmat4_identity();
+  fmat4_t tmp;
 
   // 1: Fixing axis orientation
-  tmp = mat4_zero();
+  tmp = fmat4_zero();
   tmp.values[0][0] =  1.0f;
   tmp.values[2][1] = -1.0f;
   tmp.values[1][2] =  1.0f;
   tmp.values[3][3] =  1.0f;
-  result = mat4_mul(tmp, result);
+  result = fmat4_mul(tmp, result);
 
   // 2: Actual perspective projection
-  tmp = mat4_zero();
+  tmp = fmat4_zero();
   tmp.values[0][0] = 1.0f / tanf(camera->fovy/2.0f) / camera->aspect;
   tmp.values[1][1] = 1.0f / tanf(camera->fovy/2.0f);
   tmp.values[2][2] = -camera->far              / (camera->far - camera->near);
   tmp.values[2][3] = -camera->near*camera->far / (camera->far - camera->near);
   tmp.values[3][2] = -1.0f;
-  result = mat4_mul(tmp, result);
+  result = fmat4_mul(tmp, result);
 
   return result;
 }

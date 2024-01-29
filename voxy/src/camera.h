@@ -13,9 +13,9 @@ struct camera
   float far;
 };
 
-struct mat4 camera_translation_matrix(struct camera *camera);
-struct mat4 camera_rotation_matrix(struct camera *camera);
-struct mat4 camera_view_matrix(struct camera *camera);
-struct mat4 camera_projection_matrix(struct camera *camera);
+fmat4_t camera_translation_matrix(struct camera *camera);
+fmat4_t camera_rotation_matrix(struct camera *camera);
+fmat4_t camera_view_matrix(struct camera *camera);
+fmat4_t camera_projection_matrix(struct camera *camera);
 
 #endif // VOXY_CAMERA_H

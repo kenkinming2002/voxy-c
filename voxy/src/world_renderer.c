@@ -362,12 +362,12 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
 
 void world_renderer_render(struct world_renderer *world_renderer, struct camera *camera)
 {
-  struct mat4 VP = mat4_identity();
-  VP = mat4_mul(camera_view_matrix(camera),       VP);
-  VP = mat4_mul(camera_projection_matrix(camera), VP);
+  fmat4_t VP = fmat4_identity();
+  VP = fmat4_mul(camera_view_matrix(camera),       VP);
+  VP = fmat4_mul(camera_projection_matrix(camera), VP);
 
-  struct mat4 V = mat4_identity();
-  V = mat4_mul(camera_view_matrix(camera), V);
+  fmat4_t V = fmat4_identity();
+  V = fmat4_mul(camera_view_matrix(camera), V);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);

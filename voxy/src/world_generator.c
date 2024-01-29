@@ -1,5 +1,4 @@
 #include "world_generator.h"
-#include "hash.h"
 #include "config.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
@@ -36,7 +35,7 @@ struct ivec2 section_info_key(struct section_info *section_info)
 
 size_t section_info_hash(struct ivec2 position)
 {
-  return hash2(position.x, position.y);
+  return ivec2_hash(position);
 }
 
 int section_info_compare(struct ivec2 position1, struct ivec2 position2)
@@ -61,7 +60,7 @@ struct ivec3 chunk_info_key(struct chunk_info *chunk_info)
 
 size_t chunk_info_hash(struct ivec3 position)
 {
-  return hash2(position.x, position.y);
+  return ivec3_hash(position);
 }
 
 int chunk_info_compare(struct ivec3 position1, struct ivec3 position2)

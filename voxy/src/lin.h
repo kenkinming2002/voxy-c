@@ -1,6 +1,8 @@
 #ifndef VOXY_LIN_H
 #define VOXY_LIN_H
 
+#include "random.h"
+
 #include <math.h>
 
 /*********
@@ -178,6 +180,15 @@ static inline struct mat4 mat4_identity() { return mat4(1.0f, 0.0f, 0.0f, 0.0f, 
     return prefix##vec##count##_div_s(a, prefix##vec##count##_length(a));                     \
   }
 
+#define VEC_DEFINE_OP_HASH(type, count, prefix)                               \
+  static inline seed_t prefix##vec##count##_hash(struct prefix##vec##count a) \
+  {                                                                           \
+    seed_t seed = 0x1313897312983;                                            \
+    for(unsigned i=0; i<count; ++i)                                           \
+      seed_combine(&seed, &a.values[i], sizeof a.values[i]);                  \
+    return seed;                                                              \
+  }
+
 #define VEC_DEFINE_OPS(type, count, prefix) \
   VEC_DEFINE_BINARY_OP(type, count, prefix, add, +)        \
   VEC_DEFINE_BINARY_OP(type, count, prefix, sub, -)        \
@@ -192,7 +203,8 @@ static inline struct mat4 mat4_identity() { return mat4(1.0f, 0.0f, 0.0f, 0.0f, 
   VEC_DEFINE_OP_DOT(type, count, prefix)                   \
   VEC_DEFINE_OP_LENGTH_SQUARED(type, count, prefix)        \
   VEC_DEFINE_OP_LENGTH(type, count, prefix)                \
-  VEC_DEFINE_OP_NORMALIZE(type, count, prefix)
+  VEC_DEFINE_OP_NORMALIZE(type, count, prefix)             \
+  VEC_DEFINE_OP_HASH(type, count, prefix)
 
 VEC_DEFINE_OPS(float, 2,)
 VEC_DEFINE_OPS(float, 3,)

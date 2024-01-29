@@ -1,5 +1,4 @@
 #include "world.h"
-#include "hash.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX chunk
@@ -23,7 +22,7 @@ struct ivec3 chunk_key(struct chunk *chunk)
 
 size_t chunk_hash(struct ivec3 position)
 {
-  return hash3(position.x, position.y, position.z);
+  return ivec3_hash(position);
 }
 
 int chunk_compare(struct ivec3 position1, struct ivec3 position2)

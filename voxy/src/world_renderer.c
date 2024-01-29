@@ -2,7 +2,6 @@
 
 #include "lin.h"
 #include "gl.h"
-#include "hash.h"
 #include "config.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
@@ -27,7 +26,7 @@ struct ivec3 chunk_mesh_key(struct chunk_mesh *chunk_mesh)
 
 size_t chunk_mesh_hash(struct ivec3 position)
 {
-  return hash3(position.x, position.y, position.z);
+  return ivec3_hash(position);
 }
 
 int chunk_mesh_compare(struct ivec3 position1, struct ivec3 position2)

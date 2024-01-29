@@ -1,7 +1,7 @@
 #include "ui.h"
 
 #include "gl.h"
-#include "lin.h"
+#include "vector.h"
 
 #include <assert.h>
 

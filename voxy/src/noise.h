@@ -1,7 +1,7 @@
 #ifndef VOXY_NOISE_H
 #define VOXY_NOISE_H
 
-#include "lin.h"
+#include "vector.h"
 #include "random.h"
 
 float noise_random2(seed_t seed, fvec2_t position);

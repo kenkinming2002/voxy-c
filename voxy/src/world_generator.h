@@ -2,7 +2,7 @@
 #define VOXY_WORLD_GENERATOR_H
 
 #include "world.h"
-#include "lin.h"
+#include "vector.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX section_info

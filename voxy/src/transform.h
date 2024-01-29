@@ -1,7 +1,8 @@
 #ifndef VOXY_TRANSFORM_H
 #define VOXY_TRANSFORM_H
 
-#include "lin.h"
+#include "vector.h"
+#include "matrix.h"
 
 fmat4_t fmat4_translate(fvec3_t translation);
 fmat4_t fmat4_translate_inverse(fvec3_t translation);

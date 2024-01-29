@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 /// Rule for light update
 ///
@@ -352,6 +353,7 @@ void world_update_light(struct world *world)
 {
   size_t count = 0;
 
+  clock_t begin = clock();
   for(;;)
   {
     bool updated = false;
@@ -383,7 +385,8 @@ void world_update_light(struct world *world)
     if(!updated)
       break;
   }
+  clock_t end = clock();
 
   if(count != 0)
-    fprintf(stderr, "DEBUG: Light System: Processed %zu chunks\n", count);
+    fprintf(stderr, "DEBUG: Light System: Processed %zu chunks in %f s\n", count, (float)(end - begin) / (float)CLOCKS_PER_SEC);
 }

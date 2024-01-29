@@ -2,14 +2,14 @@
 
 #include <math.h>
 
-float noise_random2(seed_t seed, struct vec2 position)
+float noise_random2(seed_t seed, fvec2_t position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
   return (float)seed_next(&seed) / (float)SEED_MAX;
 }
 
-float noise_random3(seed_t seed, struct vec3 position)
+float noise_random3(seed_t seed, fvec3_t position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
@@ -18,24 +18,24 @@ float noise_random3(seed_t seed, struct vec3 position)
 }
 
 
-static struct vec2 gradient2(seed_t seed, int ix, int iy)
+static fvec2_t gradient2(seed_t seed, int ix, int iy)
 {
   seed_combine(&seed, &ix, sizeof ix);
   seed_combine(&seed, &iy, sizeof iy);
 
   for(;;)
   {
-    struct vec2 vec = vec2(
+    fvec2_t vec = fvec2(
       ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f,
       ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f);
 
-    float length_squared = vec2_length_squared(vec);
+    float length_squared = fvec2_length_squared(vec);
     if(length_squared > 0.0f && length_squared <= 1.0f)
-      return vec2_normalize(vec);
+      return fvec2_normalize(vec);
   }
 }
 
-static struct vec3 gradient3(seed_t seed, int ix, int iy, int iz)
+static fvec3_t gradient3(seed_t seed, int ix, int iy, int iz)
 {
   seed_combine(&seed, &ix, sizeof ix);
   seed_combine(&seed, &iy, sizeof iy);
@@ -43,29 +43,29 @@ static struct vec3 gradient3(seed_t seed, int ix, int iy, int iz)
 
   for(;;)
   {
-    struct vec3 vec = vec3(
+    fvec3_t vec = fvec3(
       ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f,
       ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f,
       ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f);
 
-    float length_squared = vec3_length_squared(vec);
+    float length_squared = fvec3_length_squared(vec);
     if(length_squared > 0.0f && length_squared <= 1.0f)
-      return vec3_normalize(vec);
+      return fvec3_normalize(vec);
   }
 }
 
-static float value2(seed_t seed, struct vec2 position, int ix, int iy)
+static float value2(seed_t seed, fvec2_t position, int ix, int iy)
 {
-  struct vec2 gradient = gradient2(seed, ix, iy);
-  struct vec2 distance = vec2_sub(position, vec2(ix, iy));
-  return vec2_dot(gradient, distance);
+  fvec2_t gradient = gradient2(seed, ix, iy);
+  fvec2_t distance = fvec2_sub(position, fvec2(ix, iy));
+  return fvec2_dot(gradient, distance);
 }
 
-static float value3(seed_t seed, struct vec3 position, int ix, int iy, int iz)
+static float value3(seed_t seed, fvec3_t position, int ix, int iy, int iz)
 {
-  struct vec3 gradient = gradient3(seed, ix, iy, iz);
-  struct vec3 distance = vec3_sub(position, vec3(ix, iy, iz));
-  return vec3_dot(gradient, distance);
+  fvec3_t gradient = gradient3(seed, ix, iy, iz);
+  fvec3_t distance = fvec3_sub(position, fvec3(ix, iy, iz));
+  return fvec3_dot(gradient, distance);
 }
 
 static float interpolate(float a, float b, float t)
@@ -73,7 +73,7 @@ static float interpolate(float a, float b, float t)
   return a + (b - a) * t;
 }
 
-float noise_perlin2(seed_t seed, struct vec2 position)
+float noise_perlin2(seed_t seed, fvec2_t position)
 {
   int x0 = floorf(position.x), x1 = x0 + 1;
   int y0 = floorf(position.y), y1 = y0 + 1;
@@ -97,7 +97,7 @@ float noise_perlin2(seed_t seed, struct vec2 position)
     );
 }
 
-float noise_perlin3(seed_t seed, struct vec3 position)
+float noise_perlin3(seed_t seed, fvec3_t position)
 {
   int x0 = floorf(position.x), x1 = x0 + 1;
   int y0 = floorf(position.y), y1 = y0 + 1;
@@ -139,7 +139,7 @@ float noise_perlin3(seed_t seed, struct vec3 position)
     );
 }
 
-float noise_perlin2_ex(seed_t seed, struct vec2 position, float frequency, float lacunarity, float persistence, size_t octaves)
+float noise_perlin2_ex(seed_t seed, fvec2_t position, float frequency, float lacunarity, float persistence, size_t octaves)
 {
   float amplitude = 1.0f;
   float max_value = 0.0f;
@@ -147,14 +147,14 @@ float noise_perlin2_ex(seed_t seed, struct vec2 position, float frequency, float
   for(size_t i=0; i<octaves; ++i)
   {
     max_value += amplitude;
-    value += noise_perlin2(seed_next(&seed), vec2_mul_s(position, frequency)) * amplitude;
+    value += noise_perlin2(seed_next(&seed), fvec2_mul_scalar(position, frequency)) * amplitude;
     frequency *= lacunarity;
     amplitude *= persistence;
   }
   return value / max_value / (sqrtf(2.0f) / 4.0f);
 }
 
-float noise_perlin3_ex(seed_t seed, struct vec3 position, float frequency, float lacunarity, float persistence, size_t octaves)
+float noise_perlin3_ex(seed_t seed, fvec3_t position, float frequency, float lacunarity, float persistence, size_t octaves)
 {
   float amplitude = 1.0f;
   float max_value = 0.0f;
@@ -162,7 +162,7 @@ float noise_perlin3_ex(seed_t seed, struct vec3 position, float frequency, float
   for(size_t i=0; i<octaves; ++i)
   {
     max_value += amplitude;
-    value += noise_perlin3(seed_next(&seed), vec3_mul_s(position, frequency)) * amplitude;
+    value += noise_perlin3(seed_next(&seed), fvec3_mul_scalar(position, frequency)) * amplitude;
     frequency *= lacunarity;
     amplitude *= persistence;
   }

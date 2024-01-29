@@ -7,8 +7,8 @@
 
 struct ui_vertex
 {
-  struct vec2 position;
-  struct vec2 texture_coords;
+  fvec2_t position;
+  fvec2_t texture_coords;
 };
 
 int ui_init(struct ui *ui)
@@ -39,12 +39,12 @@ void ui_deinit(struct ui *ui)
   if(ui->program_quad)         glDeleteProgram(ui->program_quad);
 }
 
-void ui_begin(struct ui *ui, struct vec2 window_size)
+void ui_begin(struct ui *ui, fvec2_t window_size)
 {
   ui->window_size = window_size;
 }
 
-void ui_draw_quad(struct ui *ui, struct vec2 position, struct vec2 dimension, struct vec4 color)
+void ui_draw_quad(struct ui *ui, fvec2_t position, fvec2_t dimension, fvec4_t color)
 {
   glDisable(GL_CULL_FACE);
   glEnable(GL_BLEND);
@@ -62,7 +62,7 @@ void ui_draw_quad(struct ui *ui, struct vec2 position, struct vec2 dimension, st
   glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void ui_draw_quad_rounded(struct ui *ui, struct vec2 position, struct vec2 dimension, float radius, struct vec4 color)
+void ui_draw_quad_rounded(struct ui *ui, fvec2_t position, fvec2_t dimension, float radius, fvec4_t color)
 {
   glDisable(GL_CULL_FACE);
   glEnable(GL_BLEND);
@@ -81,7 +81,7 @@ void ui_draw_quad_rounded(struct ui *ui, struct vec2 position, struct vec2 dimen
   glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void ui_draw_texture_mono(struct ui *ui, struct vec2 position, struct vec2 dimension, GLuint texture)
+void ui_draw_texture_mono(struct ui *ui, fvec2_t position, fvec2_t dimension, GLuint texture)
 {
   glDisable(GL_CULL_FACE);
   glEnable(GL_BLEND);
@@ -140,14 +140,14 @@ static int utf8_next(const unsigned char **str)
   assert(0 && "Invalid UTF-8 String");
 }
 
-void ui_draw_text(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str, unsigned height)
+void ui_draw_text(struct ui *ui, struct font_set *font_set, fvec2_t position, const char *str, unsigned height)
 {
   int c;
   while((c = utf8_next((const unsigned char **)&str)))
   {
     struct glyph *glyph = font_set_get_glyph(font_set, c, height);
-    struct vec2 current_position  = vec2_add(position, glyph->bearing);
-    struct vec2 current_dimension = vec2_mul(glyph->dimension, vec2(1.0f, -1.0f));
+    fvec2_t current_position  = fvec2_add(position, glyph->bearing);
+    fvec2_t current_dimension = fvec2_mul(glyph->dimension, fvec2(1.0f, -1.0f));
     ui_draw_texture_mono(ui, current_position, current_dimension, glyph->texture);
     position.x += glyph->advance;
   }
@@ -165,7 +165,7 @@ static float font_compute_text_width(struct font_set *font_set, const char *str,
   return width;
 }
 
-void ui_draw_text_centered(struct ui *ui, struct font_set *font_set, struct vec2 position, const char *str, unsigned height)
+void ui_draw_text_centered(struct ui *ui, struct font_set *font_set, fvec2_t position, const char *str, unsigned height)
 {
   position.x -= font_compute_text_width(font_set, str, height) * 0.5f;
   ui_draw_text(ui, font_set, position, str, height);

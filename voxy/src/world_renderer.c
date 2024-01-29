@@ -7,7 +7,7 @@
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX chunk_mesh
 #define SC_HASH_TABLE_NODE_TYPE struct chunk_mesh
-#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include "hash_table.h"
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
@@ -19,17 +19,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-struct ivec3 chunk_mesh_key(struct chunk_mesh *chunk_mesh)
+ivec3_t chunk_mesh_key(struct chunk_mesh *chunk_mesh)
 {
   return chunk_mesh->position;
 }
 
-size_t chunk_mesh_hash(struct ivec3 position)
+size_t chunk_mesh_hash(ivec3_t position)
 {
   return ivec3_hash(position);
 }
 
-int chunk_mesh_compare(struct ivec3 position1, struct ivec3 position2)
+int chunk_mesh_compare(ivec3_t position1, ivec3_t position2)
 {
   if(position1.x != position2.x) return position1.x - position2.x;
   if(position1.y != position2.y) return position1.y - position2.y;
@@ -93,8 +93,8 @@ void world_renderer_deinit(struct world_renderer *world_renderer)
 
 struct chunk_mesh_vertex
 {
-  struct vec3 position;
-  struct vec2 texture_coords;
+  fvec3_t position;
+  fvec2_t texture_coords;
   uint32_t    texture_index;
 };
 
@@ -121,7 +121,7 @@ struct chunk_mesh_info
 };
 
 __attribute__((always_inline))
-static inline struct tile *chunk_mesh_info_tile_lookup(struct chunk_mesh_info *chunk_mesh_info, struct ivec3 cposition)
+static inline struct tile *chunk_mesh_info_tile_lookup(struct chunk_mesh_info *chunk_mesh_info, ivec3_t cposition)
 {
   if(cposition.z >= 0 && cposition.z < CHUNK_WIDTH)
     if(cposition.y >= 0 && cposition.y < CHUNK_WIDTH)
@@ -163,7 +163,7 @@ static inline void chunk_mesh_info_push_index(struct chunk_mesh_info *chunk_mesh
 }
 
 __attribute__((always_inline))
-static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_info, struct resource_pack *resource_pack, struct ivec3 cposition, struct ivec3 dcposition)
+static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_info, struct resource_pack *resource_pack, ivec3_t cposition, ivec3_t dcposition)
 {
   struct tile *ntile = chunk_mesh_info_tile_lookup(chunk_mesh_info, ivec3_add(cposition, dcposition));
   if(!ntile || ntile->id == TILE_ID_EMPTY)
@@ -181,27 +181,27 @@ static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_
     ///////////////////
     /// 2: Vertices ///
     ///////////////////
-    struct vec3 normal = vec3(dcposition.x, dcposition.y, dcposition.z);
-    struct vec3 axis2  = vec3_dot(normal, vec3(0.0f, 0.0f, 1.0f)) == 0.0f ? vec3(0.0f, 0.0f, 1.0f) : vec3(1.0f, 0.0f, 0.0f);
-    struct vec3 axis1  = vec3_cross(normal, axis2);
+    fvec3_t normal = fvec3(dcposition.x, dcposition.y, dcposition.z);
+    fvec3_t axis2  = fvec3_dot(normal, fvec3(0.0f, 0.0f, 1.0f)) == 0.0f ? fvec3(0.0f, 0.0f, 1.0f) : fvec3(1.0f, 0.0f, 0.0f);
+    fvec3_t axis1  = fvec3_cross(normal, axis2);
 
     struct chunk_mesh_vertex vertices[4];
 
-    struct vec3 center = vec3_zero();;
-    center = vec3_add  (center, vec3(chunk_mesh_info->chunk->position.x, chunk_mesh_info->chunk->position.y, chunk_mesh_info->chunk->position.z));
-    center = vec3_mul_s(center, CHUNK_WIDTH);
-    center = vec3_add  (center, vec3(cposition.x, cposition.y, cposition.z));
-    center = vec3_add  (center, vec3_mul_s(normal, 0.5f));
+    fvec3_t center = fvec3_zero();;
+    center = fvec3_add       (center, fvec3(chunk_mesh_info->chunk->position.x, chunk_mesh_info->chunk->position.y, chunk_mesh_info->chunk->position.z));
+    center = fvec3_mul_scalar(center, CHUNK_WIDTH);
+    center = fvec3_add       (center, fvec3(cposition.x, cposition.y, cposition.z));
+    center = fvec3_add       (center, fvec3_mul_scalar(normal, 0.5f));
 
-    vertices[0].position = vec3_add(center, vec3_add(vec3_mul_s(axis1, -0.5f), vec3_mul_s(axis2, -0.5f)));
-    vertices[1].position = vec3_add(center, vec3_add(vec3_mul_s(axis1, -0.5f), vec3_mul_s(axis2,  0.5f)));
-    vertices[2].position = vec3_add(center, vec3_add(vec3_mul_s(axis1,  0.5f), vec3_mul_s(axis2, -0.5f)));
-    vertices[3].position = vec3_add(center, vec3_add(vec3_mul_s(axis1,  0.5f), vec3_mul_s(axis2,  0.5f)));
+    vertices[0].position = fvec3_add(center, fvec3_add(fvec3_mul_scalar(axis1, -0.5f), fvec3_mul_scalar(axis2, -0.5f)));
+    vertices[1].position = fvec3_add(center, fvec3_add(fvec3_mul_scalar(axis1, -0.5f), fvec3_mul_scalar(axis2,  0.5f)));
+    vertices[2].position = fvec3_add(center, fvec3_add(fvec3_mul_scalar(axis1,  0.5f), fvec3_mul_scalar(axis2, -0.5f)));
+    vertices[3].position = fvec3_add(center, fvec3_add(fvec3_mul_scalar(axis1,  0.5f), fvec3_mul_scalar(axis2,  0.5f)));
 
-    vertices[0].texture_coords = vec2(0.0f, 0.0f);
-    vertices[1].texture_coords = vec2(0.0f, 1.0f);
-    vertices[2].texture_coords = vec2(1.0f, 0.0f);
-    vertices[3].texture_coords = vec2(1.0f, 1.0f);
+    vertices[0].texture_coords = fvec2(0.0f, 0.0f);
+    vertices[1].texture_coords = fvec2(0.0f, 1.0f);
+    vertices[2].texture_coords = fvec2(1.0f, 0.0f);
+    vertices[3].texture_coords = fvec2(1.0f, 1.0f);
 
     uint32_t texture_index;
     if     (dcposition.x == -1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_left;
@@ -231,7 +231,7 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
   size_t                  chunk_mesh_info_count    = 0;
   size_t                  chunk_mesh_info_capacity = 0;
 
-  struct ivec3 player_chunk_position = vec3_as_ivec3_floor(vec3_div_s(world->player_transform.translation, CHUNK_WIDTH));
+  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player_transform.translation, CHUNK_WIDTH));
 
   ////////////////////////////////////////////////////
   /// 1: Collect all chunks that need to be meshed ///
@@ -240,7 +240,7 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
     for(int dy = -RENDERER_LOAD_DISTANCE; dy<=RENDERER_LOAD_DISTANCE; ++dy)
       for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
       {
-        struct ivec3 chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
+        ivec3_t chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
         struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
         if(chunk && chunk->mesh_dirty)
         {
@@ -283,7 +283,7 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
         for(int x = 0; x<CHUNK_WIDTH; ++x)
           if(chunk_mesh_infos[i].chunk->tiles[z][y][x].id != TILE_ID_EMPTY)
           {
-            struct ivec3 position = ivec3(x, y, z);
+            ivec3_t position = ivec3(x, y, z);
             chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3(-1,  0,  0));
             chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3( 1,  0,  0));
             chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3( 0, -1,  0));

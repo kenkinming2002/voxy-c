@@ -181,8 +181,8 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       glyph = malloc(sizeof *glyph);
       glyph->key = glyph_key;
 
-      glyph->dimension = vec2(font_set->fonts[i].face->glyph->bitmap.width, font_set->fonts[i].face->glyph->bitmap.rows);
-      glyph->bearing   = vec2(font_set->fonts[i].face->glyph->bitmap_left, font_set->fonts[i].face->glyph->bitmap_top);
+      glyph->dimension = fvec2(font_set->fonts[i].face->glyph->bitmap.width, font_set->fonts[i].face->glyph->bitmap.rows);
+      glyph->bearing   = fvec2(font_set->fonts[i].face->glyph->bitmap_left, font_set->fonts[i].face->glyph->bitmap_top);
       glyph->advance   = font_set->fonts[i].face->glyph->advance.x / 64.0f;
 
       glGenTextures(1, &glyph->texture);

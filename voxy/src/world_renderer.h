@@ -9,7 +9,7 @@
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX chunk_mesh
 #define SC_HASH_TABLE_NODE_TYPE struct chunk_mesh
-#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include "hash_table.h"
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
@@ -23,7 +23,7 @@ struct chunk_mesh
   struct chunk_mesh *next;
   size_t             hash;
 
-  struct ivec3 position;
+  ivec3_t position;
 
   GLuint vao;
   GLuint vbo;

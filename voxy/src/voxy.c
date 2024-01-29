@@ -135,7 +135,7 @@ static void application_render(struct application *application)
     .aspect    = (float)width / (float)height,
   });
 
-  ui_begin(&application->ui, vec2(width, height));
+  ui_begin(&application->ui, fvec2(width, height));
 
   const int count = 9;
 
@@ -150,12 +150,12 @@ static void application_render(struct application *application)
   char buffer[32];
 
   snprintf(buffer, sizeof buffer, "Selected %d 你好 😀", application->selection);
-  ui_draw_text_centered(&application->ui, &application->font_set, vec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
-  ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal, margin_vertical), vec2(total_width, total_height), sep, vec4(0.9f, 0.9f, 0.9f, 0.3f));
+  ui_draw_text_centered(&application->ui, &application->font_set, fvec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
+  ui_draw_quad_rounded(&application->ui, fvec2(margin_horizontal, margin_vertical), fvec2(total_width, total_height), sep, fvec4(0.9f, 0.9f, 0.9f, 0.3f));
   for(int i=0; i<count; ++i)
   {
-    struct vec4 color = i + 1 == application->selection ? vec4(0.95f, 0.75f, 0.75f, 0.8f) : vec4(0.95f, 0.95f, 0.95f, 0.7f);
-    ui_draw_quad_rounded(&application->ui, vec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), vec2(inner_width, inner_width), sep, color);
+    fvec4_t color = i + 1 == application->selection ? fvec4(0.95f, 0.75f, 0.75f, 0.8f) : fvec4(0.95f, 0.95f, 0.95f, 0.7f);
+    ui_draw_quad_rounded(&application->ui, fvec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), fvec2(inner_width, inner_width), sep, color);
   }
 
   window_swap_buffers(&application->window);

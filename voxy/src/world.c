@@ -3,7 +3,7 @@
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX chunk
 #define SC_HASH_TABLE_NODE_TYPE struct chunk
-#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include "hash_table.h"
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
@@ -15,17 +15,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct ivec3 chunk_key(struct chunk *chunk)
+ivec3_t chunk_key(struct chunk *chunk)
 {
   return chunk->position;
 }
 
-size_t chunk_hash(struct ivec3 position)
+size_t chunk_hash(ivec3_t position)
 {
   return ivec3_hash(position);
 }
 
-int chunk_compare(struct ivec3 position1, struct ivec3 position2)
+int chunk_compare(ivec3_t position1, ivec3_t position2)
 {
   if(position1.x != position2.x) return position1.x - position2.x;
   if(position1.y != position2.y) return position1.y - position2.y;
@@ -44,8 +44,8 @@ void world_init(struct world *world, seed_t seed)
 
   chunk_hash_table_init(&world->chunks);
 
-  world->player_transform.translation = vec3_zero();
-  world->player_transform.rotation    = vec3_zero();
+  world->player_transform.translation = fvec3_zero();
+  world->player_transform.rotation    = fvec3_zero();
 }
 
 void world_deinit(struct world *world)

@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-struct mat4 mat4_translate(struct vec3 translation)
+struct mat4 mat4_translate(fvec3_t translation)
 {
   struct mat4 mat = mat4_identity();
   mat.values[0][3] = translation.x;
@@ -11,9 +11,9 @@ struct mat4 mat4_translate(struct vec3 translation)
   return mat;
 }
 
-struct mat4 mat4_translate_inverse(struct vec3 translation)
+struct mat4 mat4_translate_inverse(fvec3_t translation)
 {
-  return mat4_translate(vec3_neg(translation));
+  return mat4_translate(fvec3_neg(translation));
 }
 
 struct mat4 mat4_rotate_x(float angle)
@@ -46,7 +46,7 @@ struct mat4 mat4_rotate_z(float angle)
   return result;
 }
 
-struct mat4 mat4_rotate(struct vec3 rotation)
+struct mat4 mat4_rotate(fvec3_t rotation)
 {
   struct mat4 mat = mat4_identity();
   mat = mat4_mul(mat4_rotate_y(rotation.roll),  mat);
@@ -55,7 +55,7 @@ struct mat4 mat4_rotate(struct vec3 rotation)
   return mat;
 }
 
-struct mat4 mat4_rotate_inverse(struct vec3 rotation)
+struct mat4 mat4_rotate_inverse(fvec3_t rotation)
 {
   struct mat4 mat = mat4_identity();
   mat = mat4_mul(mat4_rotate_z(-rotation.yaw),   mat);
@@ -80,32 +80,32 @@ struct mat4 transform_matrix_inverse(struct transform *transform)
   return mat;
 }
 
-struct vec3 transform_right(struct transform *transform)
+fvec3_t transform_right(struct transform *transform)
 {
-  struct vec4 result = mat4_mul_v(transform_matrix(transform), vec4(1.0f, 0.0f, 0.0f, 1.0f));
-  return vec3(result.x, result.y, result.z);
+  fvec4_t result = mat4_mul_v(transform_matrix(transform), fvec4(1.0f, 0.0f, 0.0f, 1.0f));
+  return fvec3(result.x, result.y, result.z);
 }
 
-struct vec3 transform_forward(struct transform *transform)
+fvec3_t transform_forward(struct transform *transform)
 {
-  struct vec4 result = mat4_mul_v(transform_matrix(transform), vec4(0.0f, 1.0f, 0.0f, 1.0f));
-  return vec3(result.x, result.y, result.z);
+  fvec4_t result = mat4_mul_v(transform_matrix(transform), fvec4(0.0f, 1.0f, 0.0f, 1.0f));
+  return fvec3(result.x, result.y, result.z);
 }
 
-struct vec3 transform_up(struct transform *transform)
+fvec3_t transform_up(struct transform *transform)
 {
-  struct vec4 result = mat4_mul_v(transform_matrix(transform), vec4(0.0f, 0.0f, 1.0f, 1.0f));
-  return vec3(result.x, result.y, result.z);
+  fvec4_t result = mat4_mul_v(transform_matrix(transform), fvec4(0.0f, 0.0f, 1.0f, 1.0f));
+  return fvec3(result.x, result.y, result.z);
 }
 
-void transform_rotate(struct transform *transform, struct vec3 rotation)
+void transform_rotate(struct transform *transform, fvec3_t rotation)
 {
-  transform->rotation = vec3_add(transform->rotation, rotation);
+  transform->rotation = fvec3_add(transform->rotation, rotation);
 }
 
-void transform_local_translate(struct transform *transform, struct vec3 translation)
+void transform_local_translate(struct transform *transform, fvec3_t translation)
 {
-  struct vec4 offset = mat4_mul_v(mat4_rotate(transform->rotation), vec4(translation.x, translation.y, translation.z, 1.0f));
-  transform->translation = vec3_add(transform->translation, vec3(offset.x, offset.y, offset.z));
+  fvec4_t offset = mat4_mul_v(mat4_rotate(transform->rotation), fvec4(translation.x, translation.y, translation.z, 1.0f));
+  transform->translation = fvec3_add(transform->translation, fvec3(offset.x, offset.y, offset.z));
 }
 

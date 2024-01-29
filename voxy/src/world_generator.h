@@ -7,7 +7,7 @@
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX section_info
 #define SC_HASH_TABLE_NODE_TYPE struct section_info
-#define SC_HASH_TABLE_KEY_TYPE struct ivec2
+#define SC_HASH_TABLE_KEY_TYPE ivec2_t
 #include "hash_table.h"
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
@@ -17,7 +17,7 @@
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX chunk_info
 #define SC_HASH_TABLE_NODE_TYPE struct chunk_info
-#define SC_HASH_TABLE_KEY_TYPE struct ivec3
+#define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include "hash_table.h"
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
@@ -32,7 +32,7 @@ struct section_info
   struct section_info *next;
   struct section_info *next_list;
   size_t               hash;
-  struct ivec2         position;
+  ivec2_t         position;
 
   atomic_bool done;
   float heights[CHUNK_WIDTH][CHUNK_WIDTH];
@@ -43,7 +43,7 @@ struct chunk_info
   struct chunk_info *next;
   struct chunk_info *next_list;
   size_t             hash;
-  struct ivec3       position;
+  ivec3_t       position;
 
   atomic_bool done;
   bool caves[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]; // FIXME: bitmap?
@@ -77,6 +77,6 @@ void world_generator_deinit(struct world_generator *world_generator);
 void world_generator_update(struct world_generator *world_generator, struct world *world);
 void world_generator_update_spawn_player(struct world_generator *world_generator, struct world *world);
 void world_generator_update_generate_chunks(struct world_generator *world_generator, struct world *world);
-void world_generator_update_generate_chunk(struct world_generator *world_generator, struct world *world, struct ivec3 chunk_position);
+void world_generator_update_generate_chunk(struct world_generator *world_generator, struct world *world, ivec3_t chunk_position);
 
 #endif // VOXY_WORLD_GENERATOR_H

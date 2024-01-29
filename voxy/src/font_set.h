@@ -19,8 +19,8 @@ struct glyph
   size_t        hash;
 
   struct glyph_key key;
-  struct vec2      dimension;
-  struct vec2      bearing;
+  fvec2_t      dimension;
+  fvec2_t      bearing;
   float            advance;
   GLuint           texture;
 };

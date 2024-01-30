@@ -70,7 +70,7 @@ struct world_generator
 };
 
 void world_generator_init(struct world_generator *world_generator, seed_t seed);
-void world_generator_deinit(struct world_generator *world_generator);
+void world_generator_fini(struct world_generator *world_generator);
 
 void world_generator_update(struct world_generator *world_generator, struct world *world);
 void world_generator_update_spawn_player(struct world_generator *world_generator, struct world *world);

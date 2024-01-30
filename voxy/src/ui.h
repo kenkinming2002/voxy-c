@@ -16,7 +16,7 @@ struct ui
 };
 
 int ui_init(struct ui *ui);
-void ui_deinit(struct ui *ui);
+void ui_fini(struct ui *ui);
 
 void ui_begin(struct ui *ui, fvec2_t window_size);
 

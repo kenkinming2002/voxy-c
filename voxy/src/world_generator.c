@@ -234,7 +234,7 @@ void world_generator_init(struct world_generator *world_generator, seed_t seed)
   }
 }
 
-void world_generator_deinit(struct world_generator *world_generator)
+void world_generator_fini(struct world_generator *world_generator)
 {
   atomic_store_explicit(&world_generator->thread_shutdown, true, memory_order_release);
 

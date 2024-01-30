@@ -49,7 +49,7 @@ void world_init(struct world *world, seed_t seed)
   world->player.transform.rotation    = fvec3_zero();
 }
 
-void world_deinit(struct world *world)
+void world_fini(struct world *world)
 {
   chunk_hash_table_dispose(&world->chunks);
 }

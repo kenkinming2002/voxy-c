@@ -63,24 +63,24 @@ static int application_init(struct application *application)
   return 0;
 
 error:
-  if(font_set_loaded)            font_set_deinit(&application->font_set);
-  if(ui_initialized)             ui_deinit(&application->ui);
-  if(world_renderer_initialized) world_renderer_deinit(&application->world_renderer);
+  if(font_set_loaded)            font_set_fini(&application->font_set);
+  if(ui_initialized)             ui_fini(&application->ui);
+  if(world_renderer_initialized) world_renderer_fini(&application->world_renderer);
   if(resource_pack_loaded)       resource_pack_unload(&application->resource_pack);
-  if(window_initialized)         window_deinit(&application->window);
+  if(window_initialized)         window_fini(&application->window);
   return -1;
 }
 
-static void application_deinit(struct application *application)
+static void application_fini(struct application *application)
 {
-  world_generator_deinit(&application->world_generator);
-  world_deinit(&application->world);
+  world_generator_fini(&application->world_generator);
+  world_fini(&application->world);
 
-  font_set_deinit(&application->font_set);
-  ui_deinit(&application->ui);
-  world_renderer_deinit(&application->world_renderer);
+  font_set_fini(&application->font_set);
+  ui_fini(&application->ui);
+  world_renderer_fini(&application->world_renderer);
   resource_pack_unload(&application->resource_pack);
-  window_deinit(&application->window);
+  window_fini(&application->window);
 }
 
 static void application_on_scroll(GLFWwindow *window, double xoffset, double yoffset)
@@ -188,5 +188,5 @@ int main()
     return EXIT_FAILURE;
 
   application_run(&application);
-  application_deinit(&application);
+  application_fini(&application);
 }

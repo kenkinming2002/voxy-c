@@ -55,7 +55,7 @@ error:
   return -1;
 }
 
-void window_deinit(struct window *window)
+void window_fini(struct window *window)
 {
   glfwDestroyWindow(window->window);
   glfwTerminate();

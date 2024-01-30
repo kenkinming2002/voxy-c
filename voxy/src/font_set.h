@@ -54,7 +54,7 @@ int font_load(struct font *font, const char *filepath);
 void font_unload(struct font *font);
 
 void font_set_init(struct font_set *font_set);
-void font_set_deinit(struct font_set *font_set);
+void font_set_fini(struct font_set *font_set);
 int font_set_load(struct font_set *font_set, const char *filepath);
 int font_set_load_system(struct font_set *font_set);
 

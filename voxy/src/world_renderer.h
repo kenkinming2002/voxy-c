@@ -39,7 +39,7 @@ struct world_renderer
 };
 
 int world_renderer_init(struct world_renderer *world_renderer, struct resource_pack *resource_pack);
-void world_renderer_deinit(struct world_renderer *world_renderer);
+void world_renderer_fini(struct world_renderer *world_renderer);
 
 void world_renderer_update(struct world_renderer *world_renderer, struct resource_pack *resource_pack, struct world *world);
 void world_renderer_render(struct world_renderer *world_renderer, struct camera *camera);

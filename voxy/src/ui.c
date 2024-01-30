@@ -27,11 +27,11 @@ int ui_init(struct ui *ui)
   return 0;
 
 error:
-  ui_deinit(ui);
+  ui_fini(ui);
   return -1;
 }
 
-void ui_deinit(struct ui *ui)
+void ui_fini(struct ui *ui)
 {
   if(ui->vao)                  glDeleteVertexArrays(1, &ui->vao);
   if(ui->program_texture_mono) glDeleteProgram(ui->program_texture_mono);

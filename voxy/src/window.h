@@ -13,7 +13,7 @@ struct window
 };
 
 int window_init(struct window *window, const char *title, unsigned width, unsigned height);
-void window_deinit(struct window *window);
+void window_fini(struct window *window);
 
 int window_should_close(struct window *window);
 void window_swap_buffers(struct window *window);

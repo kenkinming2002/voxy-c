@@ -66,7 +66,7 @@ struct world
 };
 
 void world_init(struct world *world, seed_t seed);
-void world_deinit(struct world *world);
+void world_fini(struct world *world);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 

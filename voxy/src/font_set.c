@@ -91,7 +91,7 @@ void font_set_init(struct font_set *font_set)
   glyph_hash_table_init(&font_set->glyphs);
 }
 
-void font_set_deinit(struct font_set *font_set)
+void font_set_fini(struct font_set *font_set)
 {
   glyph_hash_table_dispose(&font_set->glyphs);
   for(size_t i=0; i<font_set->font_count; ++i)

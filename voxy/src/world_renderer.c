@@ -84,7 +84,7 @@ error:
   return -1;
 }
 
-void world_renderer_deinit(struct world_renderer *world_renderer)
+void world_renderer_fini(struct world_renderer *world_renderer)
 {
   glDeleteProgram(world_renderer->chunk_program);
   glDeleteTextures(1, &world_renderer->chunk_block_texture_array);

@@ -47,13 +47,20 @@ void glyph_dispose(struct glyph *glyph)
 /////////////////
 /// Free Type ///
 /////////////////
+static FT_Library ft;
+
+static void ft_atexit()
+{
+  FT_Done_FreeType(ft);
+}
+
 static FT_Library ft_handle()
 {
-  static FT_Library ft;
-  static int ft_initialized;
-  if(!ft_initialized)
+  if(!ft)
+  {
     FT_Init_FreeType(&ft);
-
+    atexit(ft_atexit);
+  }
   return ft;
 }
 
@@ -75,7 +82,10 @@ static int fc_ensure_init()
 {
   static int fc_initialized;
   if(!fc_initialized)
+  {
     fc_initialized = FcInit();
+    atexit(FcFini);
+  }
 
   return fc_initialized ? 0 : -1;
 }
@@ -140,6 +150,9 @@ int font_set_load_system(struct font_set *font_set)
     if(FcPatternGetString(fc_font_set->fonts[i], FC_FILE, 0, &file) == FcResultMatch)
       font_set_load(font_set, (const char *)file);
   }
+  FcFontSetDestroy(fc_font_set);
+  FcObjectSetDestroy(fc_object_set);
+  FcPatternDestroy(fc_pattern);
   return 0;
 }
 

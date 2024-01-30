@@ -132,74 +132,49 @@ static uint8_t get_tile_id(struct chunk_info *chunk_info, struct section_info *s
   return TILE_ID_EMPTY;
 }
 
-////////////////////////
-/// Thread Functions ///
-////////////////////////
-void *world_generator_create_section_infos(void *arg)
+struct section_info_generate_info
 {
-  struct world_generator *world_generator = arg;
-  struct section_info    *section_info;
-  bool                    shutdown;
-  for(;;)
-  {
-    pthread_mutex_lock(&world_generator->section_infos_mutex);
-    while(!(shutdown = atomic_load_explicit(&world_generator->thread_shutdown, memory_order_acquire)) && !world_generator->section_infos_pending)
-      pthread_cond_wait(&world_generator->section_infos_cond, &world_generator->section_infos_mutex);
+  seed_t               seed;
+  struct section_info *section_info;
+};
 
-    if(shutdown)
-      break;
+struct chunk_info_generate_info
+{
+  seed_t             seed;
+  struct chunk_info *chunk_info;
+};
 
-    section_info                           = world_generator->section_infos_pending;
-    world_generator->section_infos_pending = world_generator->section_infos_pending->next_list;
-    pthread_mutex_unlock(&world_generator->section_infos_mutex);
+static void world_generator_generate_section_info(void *arg)
+{
+  seed_t               seed         = ((struct section_info_generate_info *)arg)->seed;
+  struct section_info *section_info = ((struct section_info_generate_info *)arg)->section_info;
 
+  for(int y = 0; y<CHUNK_WIDTH; ++y)
+    for(int x = 0; x<CHUNK_WIDTH; ++x)
+    {
+      ivec2_t local_position  = ivec2(x, y);
+      ivec2_t global_position = ivec2_add(ivec2_mul_scalar(section_info->position, CHUNK_WIDTH), local_position);
+      section_info->heights[y][x] = get_height(seed, global_position);
+    }
+
+  atomic_store_explicit(&section_info->done, true, memory_order_release);
+}
+
+static void world_generator_generate_chunk_info(void *arg)
+{
+  seed_t             seed       = ((struct chunk_info_generate_info *)arg)->seed;
+  struct chunk_info *chunk_info = ((struct chunk_info_generate_info *)arg)->chunk_info;
+
+  for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
       {
-        ivec2_t local_position  = ivec2(x, y);
-        ivec2_t global_position = ivec2_add(ivec2_mul_scalar(section_info->position, CHUNK_WIDTH), local_position);
-        section_info->heights[y][x] = get_height(world_generator->seed, global_position);
+        ivec3_t local_position  = ivec3(x, y, z);
+        ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk_info->position, CHUNK_WIDTH), local_position);
+        chunk_info->caves[z][y][x] = get_cave(seed, global_position);
       }
 
-    atomic_store_explicit(&section_info->done, true, memory_order_release);
-  }
-
-  pthread_mutex_unlock(&world_generator->section_infos_mutex);
-  return NULL;
-}
-
-void *world_generator_create_chunk_infos(void *arg)
-{
-  struct world_generator *world_generator = arg;
-  struct chunk_info      *chunk_info;
-  bool                    shutdown;
-  for(;;)
-  {
-    pthread_mutex_lock(&world_generator->chunk_infos_mutex);
-    while(!(shutdown = atomic_load_explicit(&world_generator->thread_shutdown, memory_order_acquire)) && !world_generator->chunk_infos_pending)
-      pthread_cond_wait(&world_generator->chunk_infos_cond, &world_generator->chunk_infos_mutex);
-
-    if(shutdown)
-      break;
-
-    chunk_info                           = world_generator->chunk_infos_pending;
-    world_generator->chunk_infos_pending = world_generator->chunk_infos_pending->next_list;
-    pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
-
-    for(int z = 0; z<CHUNK_WIDTH; ++z)
-      for(int y = 0; y<CHUNK_WIDTH; ++y)
-        for(int x = 0; x<CHUNK_WIDTH; ++x)
-        {
-          ivec3_t local_position  = ivec3(x, y, z);
-          ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk_info->position, CHUNK_WIDTH), local_position);
-          chunk_info->caves[z][y][x] = get_cave(world_generator->seed, global_position);
-        }
-
-    atomic_store_explicit(&chunk_info->done, true, memory_order_release);
-  }
-
-  pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
-  return NULL;
+  atomic_store_explicit(&chunk_info->done, true, memory_order_release);
 }
 
 ////////////
@@ -208,56 +183,16 @@ void *world_generator_create_chunk_infos(void *arg)
 void world_generator_init(struct world_generator *world_generator, seed_t seed)
 {
   world_generator->seed = seed;
-
-  world_generator->thread_shutdown = false;
-  world_generator->thread_count    = get_nprocs();
-
+  thread_pool_init(&world_generator->thread_pool);
   section_info_hash_table_init(&world_generator->section_infos);
   chunk_info_hash_table_init(&world_generator->chunk_infos);
-
-  world_generator->section_infos_pending = NULL;
-  world_generator->chunk_infos_pending   = NULL;
-
-  pthread_mutex_init(&world_generator->section_infos_mutex, NULL);
-  pthread_mutex_init(&world_generator->chunk_infos_mutex,   NULL);
-
-  pthread_cond_init(&world_generator->section_infos_cond, NULL);
-  pthread_cond_init(&world_generator->chunk_infos_cond,   NULL);
-
-  world_generator->section_infos_threads = malloc(world_generator->thread_count * sizeof *world_generator->section_infos_threads);
-  world_generator->chunk_infos_threads   = malloc(world_generator->thread_count * sizeof *world_generator->chunk_infos_threads);
-
-  for(int i=0; i<world_generator->thread_count; ++i)
-  {
-    pthread_create(&world_generator->section_infos_threads[i], NULL, &world_generator_create_section_infos, world_generator);
-    pthread_create(&world_generator->chunk_infos_threads[i],   NULL, &world_generator_create_chunk_infos,   world_generator);
-  }
 }
 
 void world_generator_fini(struct world_generator *world_generator)
 {
-  atomic_store_explicit(&world_generator->thread_shutdown, true, memory_order_release);
-
-  pthread_cond_broadcast(&world_generator->section_infos_cond);
-  pthread_cond_broadcast(&world_generator->chunk_infos_cond);
-
-  for(int i=0; i<world_generator->thread_count; ++i)
-  {
-    pthread_join(world_generator->section_infos_threads[i], NULL);
-    pthread_join(world_generator->chunk_infos_threads[i],   NULL);
-  }
-
-  free(world_generator->section_infos_threads);
-  free(world_generator->chunk_infos_threads);
-
+  thread_pool_fini(&world_generator->thread_pool);
   section_info_hash_table_dispose(&world_generator->section_infos);
   chunk_info_hash_table_dispose(&world_generator->chunk_infos);
-
-  pthread_mutex_destroy(&world_generator->section_infos_mutex);
-  pthread_mutex_destroy(&world_generator->chunk_infos_mutex);
-
-  pthread_cond_destroy(&world_generator->section_infos_cond);
-  pthread_cond_destroy(&world_generator->chunk_infos_cond);
 }
 
 void world_generator_update(struct world_generator *world_generator, struct world *world)
@@ -313,11 +248,10 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
           section_info->done     = false;
           section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
 
-          pthread_mutex_lock(&world_generator->section_infos_mutex);
-          section_info->next_list                = world_generator->section_infos_pending;
-          world_generator->section_infos_pending = section_info;
-          pthread_mutex_unlock(&world_generator->section_infos_mutex);
-          pthread_cond_signal(&world_generator->section_infos_cond);
+          struct section_info_generate_info *section_info_generate_info = malloc(sizeof *section_info_generate_info);
+          section_info_generate_info->seed         = world_generator->seed;
+          section_info_generate_info->section_info = section_info;
+          thread_pool_enqueue(&world_generator->thread_pool, world_generator_generate_section_info, section_info_generate_info);
         }
 
         chunk_info = chunk_info_hash_table_lookup(&world_generator->chunk_infos, chunk_position);
@@ -328,11 +262,10 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
           chunk_info->done     = false;
           chunk_info_hash_table_insert_unchecked(&world_generator->chunk_infos, chunk_info);
 
-          pthread_mutex_lock(&world_generator->chunk_infos_mutex);
-          chunk_info->next_list                = world_generator->chunk_infos_pending;
-          world_generator->chunk_infos_pending = chunk_info;
-          pthread_mutex_unlock(&world_generator->chunk_infos_mutex);
-          pthread_cond_signal(&world_generator->chunk_infos_cond);
+          struct chunk_info_generate_info *chunk_info_generate_info = malloc(sizeof *chunk_info_generate_info);
+          chunk_info_generate_info->seed       = world_generator->seed;
+          chunk_info_generate_info->chunk_info = chunk_info;
+          thread_pool_enqueue(&world_generator->thread_pool, world_generator_generate_chunk_info, chunk_info_generate_info);
         }
 
         if(!section_info || !atomic_load_explicit(&section_info->done, memory_order_acquire)) continue;

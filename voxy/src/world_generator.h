@@ -3,6 +3,7 @@
 
 #include "world.h"
 #include "vector.h"
+#include "thread_pool.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX section_info
@@ -53,20 +54,9 @@ struct world_generator
 {
   seed_t seed;
 
-  atomic_bool thread_shutdown;
-  int         thread_count;
-
-  struct section_info_hash_table  section_infos;
-  struct section_info            *section_infos_pending;
-  pthread_mutex_t                 section_infos_mutex;
-  pthread_cond_t                  section_infos_cond;
-  pthread_t                      *section_infos_threads;
-
-  struct chunk_info_hash_table  chunk_infos;
-  struct chunk_info            *chunk_infos_pending;
-  pthread_mutex_t               chunk_infos_mutex;
-  pthread_cond_t                chunk_infos_cond;
-  pthread_t                    *chunk_infos_threads;
+  struct thread_pool thread_pool;
+  struct section_info_hash_table section_infos;
+  struct chunk_info_hash_table   chunk_infos;
 };
 
 void world_generator_init(struct world_generator *world_generator, seed_t seed);

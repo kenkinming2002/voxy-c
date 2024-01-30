@@ -4,7 +4,7 @@
 #include "math.h"
 #include "noise.h"
 #include "transform.h"
-#include "window.h"
+#include "input.h"
 #include "config.h"
 
 #define SC_HASH_TABLE_INTERFACE
@@ -70,8 +70,8 @@ void world_fini(struct world *world);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 
-void world_update(struct world *world, struct window *window, float dt);
-void world_update_player_control(struct world *world, struct window *window, float dt);
+void world_update(struct world *world, struct input *input, float dt);
+void world_update_player_control(struct world *world, struct input *input, float dt);
 void world_update_light(struct world *world);
 
 #endif // VOXY_WORLD_H

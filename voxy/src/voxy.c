@@ -98,19 +98,16 @@ static void application_on_scroll(GLFWwindow *window, double xoffset, double yof
 
 static void application_update(struct application *application, float dt)
 {
-  world_generator_update(&application->world_generator, &application->world);
-  world_update(&application->world, &application->window, dt);
-  world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
+  struct input input;
+  window_get_input(&application->window, &input);
 
-  if(window_get_key(&application->window, GLFW_KEY_1) || window_get_key(&application->window, GLFW_KEY_KP_1)) application->selection = 1;
-  if(window_get_key(&application->window, GLFW_KEY_2) || window_get_key(&application->window, GLFW_KEY_KP_2)) application->selection = 2;
-  if(window_get_key(&application->window, GLFW_KEY_3) || window_get_key(&application->window, GLFW_KEY_KP_3)) application->selection = 3;
-  if(window_get_key(&application->window, GLFW_KEY_4) || window_get_key(&application->window, GLFW_KEY_KP_4)) application->selection = 4;
-  if(window_get_key(&application->window, GLFW_KEY_5) || window_get_key(&application->window, GLFW_KEY_KP_5)) application->selection = 5;
-  if(window_get_key(&application->window, GLFW_KEY_6) || window_get_key(&application->window, GLFW_KEY_KP_6)) application->selection = 6;
-  if(window_get_key(&application->window, GLFW_KEY_7) || window_get_key(&application->window, GLFW_KEY_KP_7)) application->selection = 7;
-  if(window_get_key(&application->window, GLFW_KEY_8) || window_get_key(&application->window, GLFW_KEY_KP_8)) application->selection = 8;
-  if(window_get_key(&application->window, GLFW_KEY_9) || window_get_key(&application->window, GLFW_KEY_KP_9)) application->selection = 9;
+  for(unsigned i=1; i<=9; ++i)
+    if(input.selects[i-1])
+      application->selection = i;
+
+  world_generator_update(&application->world_generator, &application->world);
+  world_update(&application->world, &input, dt);
+  world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
 }
 
 static inline float minf(float a, float b)

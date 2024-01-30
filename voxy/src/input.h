@@ -1,0 +1,16 @@
+#ifndef VOXY_INPUT_H
+#define VOXY_INPUT_H
+
+#include "vector.h"
+
+#include <stdbool.h>
+
+struct input
+{
+  fvec2_t mouse_motion;
+  fvec3_t keyboard_motion;
+
+  bool selects[9];
+};
+
+#endif // VOXY_INPUT_H

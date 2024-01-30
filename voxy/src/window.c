@@ -33,7 +33,7 @@ int window_init(struct window *window, const char *title, unsigned width, unsign
     goto error;
   }
   glfwSetInputMode(window->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwGetCursorPos(window->window, &window->xpos, &window->ypos);
+  window->mouse_position = window_get_mouse_position(window);
 
   // 3: Initialize OpenGL Context
   glfwMakeContextCurrent(window->window);
@@ -82,33 +82,52 @@ void window_get_framebuffer_size(struct window *window, int *width, int *height)
   glfwGetFramebufferSize(window->window, width, height);
 }
 
-void window_get_mouse_motion(struct window *window, float *dx, float *dy)
+fvec2_t window_get_mouse_position(struct window *window)
 {
-  double new_xpos, new_ypos;
-  glfwGetCursorPos(window->window, &new_xpos, &new_ypos);
-
-  *dx = new_xpos - window->xpos;
-  *dy = new_ypos - window->ypos;
-
-  window->xpos = new_xpos;
-  window->ypos = new_ypos;
+  double x, y;
+  glfwGetCursorPos(window->window, &x, &y);
+  return fvec2(x, y);
 }
 
-void window_get_keyboard_motion(struct window *window, float *dx, float *dy, float *dz)
+fvec2_t window_get_mouse_motion(struct window *window)
 {
-  *dx = 0.0f;
-  *dy = 0.0f;
-  *dz = 0.0f;
+  fvec2_t mouse_position_new = window_get_mouse_position(window);
+  fvec2_t mouse_motion = fvec2_sub(mouse_position_new, window->mouse_position);
+  window->mouse_position = mouse_position_new;
+  return mouse_motion;
+}
 
-  if(glfwGetKey(window->window, GLFW_KEY_D))          *dx += 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_A))          *dx -= 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_W))          *dy += 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_S))          *dy -= 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_SPACE))      *dz += 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_LEFT_SHIFT)) *dz -= 1.0f;
+fvec3_t window_get_keyboard_motion(struct window *window)
+{
+  fvec3_t keyboard_motion = fvec3_zero();;
+
+  if(glfwGetKey(window->window, GLFW_KEY_D))          keyboard_motion.x += 1.0f;
+  if(glfwGetKey(window->window, GLFW_KEY_A))          keyboard_motion.x -= 1.0f;
+  if(glfwGetKey(window->window, GLFW_KEY_W))          keyboard_motion.y += 1.0f;
+  if(glfwGetKey(window->window, GLFW_KEY_S))          keyboard_motion.y -= 1.0f;
+  if(glfwGetKey(window->window, GLFW_KEY_SPACE))      keyboard_motion.z += 1.0f;
+  if(glfwGetKey(window->window, GLFW_KEY_LEFT_SHIFT)) keyboard_motion.z -= 1.0f;
+
+  return fvec3_normalize(keyboard_motion);
 }
 
 int window_get_key(struct window *window, int key)
 {
   return glfwGetKey(window->window, key);
+}
+
+void window_get_input(struct window *window, struct input *input)
+{
+  input->mouse_motion    = window_get_mouse_motion(window);
+  input->keyboard_motion = window_get_keyboard_motion(window);
+
+  input->selects[0] = glfwGetKey(window->window, GLFW_KEY_1) || glfwGetKey(window->window, GLFW_KEY_KP_1);
+  input->selects[1] = glfwGetKey(window->window, GLFW_KEY_2) || glfwGetKey(window->window, GLFW_KEY_KP_2);
+  input->selects[2] = glfwGetKey(window->window, GLFW_KEY_3) || glfwGetKey(window->window, GLFW_KEY_KP_3);
+  input->selects[3] = glfwGetKey(window->window, GLFW_KEY_4) || glfwGetKey(window->window, GLFW_KEY_KP_4);
+  input->selects[4] = glfwGetKey(window->window, GLFW_KEY_5) || glfwGetKey(window->window, GLFW_KEY_KP_5);
+  input->selects[5] = glfwGetKey(window->window, GLFW_KEY_6) || glfwGetKey(window->window, GLFW_KEY_KP_6);
+  input->selects[6] = glfwGetKey(window->window, GLFW_KEY_7) || glfwGetKey(window->window, GLFW_KEY_KP_7);
+  input->selects[7] = glfwGetKey(window->window, GLFW_KEY_8) || glfwGetKey(window->window, GLFW_KEY_KP_8);
+  input->selects[8] = glfwGetKey(window->window, GLFW_KEY_9) || glfwGetKey(window->window, GLFW_KEY_KP_9);
 }

@@ -51,11 +51,17 @@ struct chunk
   bool light_dirty;
 };
 
+struct player
+{
+  bool             spawned;
+  struct transform transform;
+};
+
 struct world
 {
   seed_t seed;
 
-  struct transform        player_transform;
+  struct player           player;
   struct chunk_hash_table chunks;
 };
 

@@ -207,8 +207,7 @@ void *world_generator_create_chunk_infos(void *arg)
 ////////////
 void world_generator_init(struct world_generator *world_generator, seed_t seed)
 {
-  world_generator->seed            = seed;
-  world_generator->player_spawned  = false;
+  world_generator->seed = seed;
 
   world_generator->thread_shutdown = false;
   world_generator->thread_count    = get_nprocs();
@@ -269,15 +268,15 @@ void world_generator_update(struct world_generator *world_generator, struct worl
 
 void world_generator_update_spawn_player(struct world_generator *world_generator, struct world *world)
 {
-  if(!world_generator->player_spawned)
+  if(!world->player.spawned)
   {
-    world_generator->player_spawned     = true;
-    world->player_transform.translation = fvec3(0.0f, 0.0f, get_height(world->seed, ivec2(0, 0)) + 2.0f);
-    world->player_transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
+    world->player.spawned = true;
+    world->player.transform.translation = fvec3(0.0f, 0.0f, get_height(world->seed, ivec2(0, 0)) + 2.0f);
+    world->player.transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
     printf("Spawning player at (%f, %f, %f)\n",
-        world->player_transform.translation.x,
-        world->player_transform.translation.y,
-        world->player_transform.translation.z);
+        world->player.transform.translation.x,
+        world->player.transform.translation.y,
+        world->player.transform.translation.z);
   }
 }
 
@@ -287,7 +286,7 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
   struct chunk_info   *chunk_info;
   struct chunk        *chunk;
 
-  ivec3_t player_chunk_position   = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player_transform.translation, CHUNK_WIDTH));
+  ivec3_t player_chunk_position   = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player.transform.translation, CHUNK_WIDTH));
   ivec2_t player_section_position = ivec2(player_chunk_position.x, player_chunk_position.y);
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)

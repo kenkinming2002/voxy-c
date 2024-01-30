@@ -15,7 +15,7 @@ void world_update_player_control(struct world *world, struct window *window, flo
   translation = fvec3_normalize(translation);
   translation = fvec3_mul_scalar(translation, MOVE_SPEED * dt);
 
-  transform_rotate(&world->player_transform, rotation);
-  transform_local_translate(&world->player_transform, translation);
+  transform_rotate(&world->player.transform, rotation);
+  transform_local_translate(&world->player.transform, translation);
 }
 

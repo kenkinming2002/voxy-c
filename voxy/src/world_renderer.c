@@ -228,7 +228,7 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
   size_t                  chunk_mesh_info_count    = 0;
   size_t                  chunk_mesh_info_capacity = 0;
 
-  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player_transform.translation, CHUNK_WIDTH));
+  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player.transform.translation, CHUNK_WIDTH));
 
   ////////////////////////////////////////////////////
   /// 1: Collect all chunks that need to be meshed ///

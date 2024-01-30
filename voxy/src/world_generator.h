@@ -53,8 +53,6 @@ struct world_generator
 {
   seed_t seed;
 
-  bool player_spawned;
-
   atomic_bool thread_shutdown;
   int         thread_count;
 

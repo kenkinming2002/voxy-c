@@ -34,7 +34,7 @@ struct section_info
   struct section_info *next;
   struct section_info *next_list;
   size_t               hash;
-  ivec2_t         position;
+  ivec2_t              position;
 
   atomic_bool done;
   float heights[CHUNK_WIDTH][CHUNK_WIDTH];
@@ -45,7 +45,7 @@ struct chunk_info
   struct chunk_info *next;
   struct chunk_info *next_list;
   size_t             hash;
-  ivec3_t       position;
+  ivec3_t            position;
 
   atomic_bool done;
   bool caves[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]; // FIXME: bitmap?

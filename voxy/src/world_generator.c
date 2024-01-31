@@ -2,6 +2,7 @@
 
 #include "noise.h"
 #include "world.h"
+#include "utils.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX section_info
@@ -149,49 +150,63 @@ static uint8_t get_tile_id(struct chunk_info *chunk_info, struct section_info *s
   return TILE_ID_EMPTY;
 }
 
-struct section_info_generate_info
+struct section_info_generate_job
 {
+  struct thread_pool_job base;
+
   seed_t               seed;
   struct section_info *section_info;
 };
 
-struct chunk_info_generate_info
+struct chunk_info_generate_job
 {
+  struct thread_pool_job base;
+
   seed_t             seed;
   struct chunk_info *chunk_info;
 };
 
-static void world_generator_generate_section_info_job(void *arg)
+static void world_generator_generate_section_info_job_invoke(struct thread_pool_job *_job)
 {
-  seed_t               seed         = ((struct section_info_generate_info *)arg)->seed;
-  struct section_info *section_info = ((struct section_info_generate_info *)arg)->section_info;
+  struct section_info_generate_job *job = container_of(_job, struct section_info_generate_job, base);
 
   for(int y = 0; y<CHUNK_WIDTH; ++y)
     for(int x = 0; x<CHUNK_WIDTH; ++x)
     {
       ivec2_t local_position  = ivec2(x, y);
-      ivec2_t global_position = ivec2_add(ivec2_mul_scalar(section_info->position, CHUNK_WIDTH), local_position);
-      section_info->heights[y][x] = get_height(seed, global_position);
+      ivec2_t global_position = ivec2_add(ivec2_mul_scalar(job->section_info->position, CHUNK_WIDTH), local_position);
+      job->section_info->heights[y][x] = get_height(job->seed, global_position);
     }
 
-  atomic_store_explicit(&section_info->done, true, memory_order_release);
+  atomic_store_explicit(&job->section_info->done, true, memory_order_release);
 }
 
-static void world_generator_generate_chunk_info_job(void *arg)
+static void world_generator_generate_section_info_job_destroy(struct thread_pool_job *_job)
 {
-  seed_t             seed       = ((struct chunk_info_generate_info *)arg)->seed;
-  struct chunk_info *chunk_info = ((struct chunk_info_generate_info *)arg)->chunk_info;
+  struct section_info_generate_job *job = container_of(_job, struct section_info_generate_job, base);
+  free(job);
+}
+
+static void world_generator_generate_chunk_info_job_invoke(struct thread_pool_job *_job)
+{
+  struct chunk_info_generate_job *job = container_of(_job, struct chunk_info_generate_job, base);
 
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
       {
         ivec3_t local_position  = ivec3(x, y, z);
-        ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk_info->position, CHUNK_WIDTH), local_position);
-        chunk_info->caves[z][y][x] = get_cave(seed, global_position);
+        ivec3_t global_position = ivec3_add(ivec3_mul_scalar(job->chunk_info->position, CHUNK_WIDTH), local_position);
+        job->chunk_info->caves[z][y][x] = get_cave(job->seed, global_position);
       }
 
-  atomic_store_explicit(&chunk_info->done, true, memory_order_release);
+  atomic_store_explicit(&job->chunk_info->done, true, memory_order_release);
+}
+
+static void world_generator_generate_chunk_info_job_destroy(struct thread_pool_job *_job)
+{
+  struct chunk_info_generate_job *job = container_of(_job, struct chunk_info_generate_job, base);
+  free(job);
 }
 
 struct section_info *world_generator_generate_section_info(struct world_generator *world_generator, ivec2_t position)
@@ -205,11 +220,12 @@ struct section_info *world_generator_generate_section_info(struct world_generato
   section_info->done     = false;
   section_info_hash_table_insert_unchecked(&world_generator->section_infos, section_info);
 
-  struct section_info_generate_info *section_info_generate_info = malloc(sizeof *section_info_generate_info);
-  section_info_generate_info->seed         = world_generator->seed;
-  section_info_generate_info->section_info = section_info;
-  thread_pool_enqueue(&world_generator->thread_pool, world_generator_generate_section_info_job, section_info_generate_info);
-
+  struct section_info_generate_job *job = malloc(sizeof *job);
+  job->base.invoke  = world_generator_generate_section_info_job_invoke;
+  job->base.destroy = world_generator_generate_section_info_job_destroy;
+  job->seed         = world_generator->seed;
+  job->section_info = section_info;
+  thread_pool_enqueue(&world_generator->thread_pool, &job->base);
   return NULL;
 }
 
@@ -224,11 +240,12 @@ struct chunk_info *world_generator_generate_chunk_info(struct world_generator *w
   chunk_info->done     = false;
   chunk_info_hash_table_insert_unchecked(&world_generator->chunk_infos, chunk_info);
 
-  struct chunk_info_generate_info *chunk_info_generate_info = malloc(sizeof *chunk_info_generate_info);
-  chunk_info_generate_info->seed         = world_generator->seed;
-  chunk_info_generate_info->chunk_info = chunk_info;
-  thread_pool_enqueue(&world_generator->thread_pool, world_generator_generate_chunk_info_job, chunk_info_generate_info);
-
+  struct chunk_info_generate_job *job = malloc(sizeof *job);
+  job->base.invoke  = world_generator_generate_chunk_info_job_invoke;
+  job->base.destroy = world_generator_generate_chunk_info_job_destroy;
+  job->seed         = world_generator->seed;
+  job->chunk_info   = chunk_info;
+  thread_pool_enqueue(&world_generator->thread_pool, &job->base);
   return NULL;
 }
 

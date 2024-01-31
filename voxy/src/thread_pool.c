@@ -28,10 +28,8 @@ static void *thread_pool_func(void *arg)
       thread_pool->tail = NULL;
 
     pthread_mutex_unlock(&thread_pool->mutex);
-
-    job->func(job->arg);
-    free(job->arg);
-    free(job);
+    job->invoke(job);
+    job->destroy(job);
   }
 }
 
@@ -65,19 +63,14 @@ void thread_pool_fini(struct thread_pool *thread_pool)
   while(job)
   {
     struct thread_pool_job *next = job->next;
-    free(job->arg);
-    free(job);
+    job->destroy(job);
     job = next;
   }
 }
 
-void thread_pool_enqueue(struct thread_pool *thread_pool, void(*func)(void*), void *arg)
+void thread_pool_enqueue(struct thread_pool *thread_pool, struct thread_pool_job *job)
 {
-  struct thread_pool_job *job = malloc(sizeof *job);
   job->next = NULL;
-  job->func = func;
-  job->arg  = arg;
-
   pthread_mutex_lock(&thread_pool->mutex);
   if(thread_pool->tail)
   {

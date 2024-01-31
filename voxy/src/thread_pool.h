@@ -8,8 +8,8 @@ struct thread_pool_job
 {
   struct thread_pool_job *next;
 
-  void(*func)(void *);
-  void *arg;
+  void(*invoke)(struct thread_pool_job *);
+  void(*destroy)(struct thread_pool_job *);
 };
 
 struct thread_pool
@@ -27,6 +27,6 @@ struct thread_pool
 
 void thread_pool_init(struct thread_pool *thread_pool);
 void thread_pool_fini(struct thread_pool *thread_pool);
-void thread_pool_enqueue(struct thread_pool *thread_pool, void(*func)(void *), void *arg);
+void thread_pool_enqueue(struct thread_pool *thread_pool, struct thread_pool_job *job);
 
 #endif // THREAD_POOL_H

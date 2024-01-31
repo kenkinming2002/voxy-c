@@ -37,7 +37,7 @@ struct light_infos
   struct light_info items[CHUNK_WIDTH+2][CHUNK_WIDTH+2][CHUNK_WIDTH+2];
 };
 
-static inline struct tile       *get_tile      (struct chunk       *chunk,       int x, int y, int z) { return &chunk->tiles[z][y][x]; }
+static inline struct tile       *get_tile      (struct chunk       *chunk,       int x, int y, int z) { return &chunk->chunk_data->tiles[z][y][x]; }
 static inline struct light_info *get_light_info(struct light_infos *light_infos, int x, int y, int z) { return &light_infos->items[z+1][y+1][x+1]; }
 
 static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk)

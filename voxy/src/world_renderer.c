@@ -118,16 +118,16 @@ static inline struct tile *chunk_mesh_info_tile_lookup(struct chunk_mesh_info *c
   if(cposition.z >= 0 && cposition.z < CHUNK_WIDTH)
     if(cposition.y >= 0 && cposition.y < CHUNK_WIDTH)
       if(cposition.x >= 0 && cposition.x < CHUNK_WIDTH)
-        return &chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x];
+        return &chunk_mesh_info->chunk->chunk_data->tiles[cposition.z][cposition.y][cposition.x];
 
-  if(cposition.z == -1)          return chunk_mesh_info->chunk->bottom ? &chunk_mesh_info->chunk->bottom->tiles[CHUNK_WIDTH-1][cposition.y][cposition.x] : NULL;
-  if(cposition.z == CHUNK_WIDTH) return chunk_mesh_info->chunk->top    ? &chunk_mesh_info->chunk->top   ->tiles[0]            [cposition.y][cposition.x] : NULL;
+  if(cposition.z == -1)          return chunk_mesh_info->chunk->bottom ? &chunk_mesh_info->chunk->bottom->chunk_data->tiles[CHUNK_WIDTH-1][cposition.y][cposition.x] : NULL;
+  if(cposition.z == CHUNK_WIDTH) return chunk_mesh_info->chunk->top    ? &chunk_mesh_info->chunk->top   ->chunk_data->tiles[0]            [cposition.y][cposition.x] : NULL;
 
-  if(cposition.y == -1)          return chunk_mesh_info->chunk->back  ? &chunk_mesh_info->chunk->back ->tiles[cposition.z][CHUNK_WIDTH-1][cposition.x] : NULL;
-  if(cposition.y == CHUNK_WIDTH) return chunk_mesh_info->chunk->front ? &chunk_mesh_info->chunk->front->tiles[cposition.z][0]            [cposition.x] : NULL;
+  if(cposition.y == -1)          return chunk_mesh_info->chunk->back  ? &chunk_mesh_info->chunk->back ->chunk_data->tiles[cposition.z][CHUNK_WIDTH-1][cposition.x] : NULL;
+  if(cposition.y == CHUNK_WIDTH) return chunk_mesh_info->chunk->front ? &chunk_mesh_info->chunk->front->chunk_data->tiles[cposition.z][0]            [cposition.x] : NULL;
 
-  if(cposition.x == -1)          return chunk_mesh_info->chunk->left  ? &chunk_mesh_info->chunk->left ->tiles[cposition.z][cposition.y][CHUNK_WIDTH-1] : NULL;
-  if(cposition.x == CHUNK_WIDTH) return chunk_mesh_info->chunk->right ? &chunk_mesh_info->chunk->right->tiles[cposition.z][cposition.y][0]             : NULL;
+  if(cposition.x == -1)          return chunk_mesh_info->chunk->left  ? &chunk_mesh_info->chunk->left ->chunk_data->tiles[cposition.z][cposition.y][CHUNK_WIDTH-1] : NULL;
+  if(cposition.x == CHUNK_WIDTH) return chunk_mesh_info->chunk->right ? &chunk_mesh_info->chunk->right->chunk_data->tiles[cposition.z][cposition.y][0]             : NULL;
 
   assert(0 && "Unreachable");
 }
@@ -196,12 +196,12 @@ static inline void chunk_mesh_info_emit_face(struct chunk_mesh_info *chunk_mesh_
     vertices[3].texture_coords = fvec2(1.0f, 1.0f);
 
     uint32_t texture_index;
-    if     (dcposition.x == -1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_left;
-    else if(dcposition.x ==  1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_right;
-    else if(dcposition.y == -1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_back;
-    else if(dcposition.y ==  1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_front;
-    else if(dcposition.z == -1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_bottom;
-    else if(dcposition.z ==  1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->tiles[cposition.z][cposition.y][cposition.x].id].texture_top;
+    if     (dcposition.x == -1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->chunk_data->tiles[cposition.z][cposition.y][cposition.x].id].texture_left;
+    else if(dcposition.x ==  1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->chunk_data->tiles[cposition.z][cposition.y][cposition.x].id].texture_right;
+    else if(dcposition.y == -1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->chunk_data->tiles[cposition.z][cposition.y][cposition.x].id].texture_back;
+    else if(dcposition.y ==  1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->chunk_data->tiles[cposition.z][cposition.y][cposition.x].id].texture_front;
+    else if(dcposition.z == -1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->chunk_data->tiles[cposition.z][cposition.y][cposition.x].id].texture_bottom;
+    else if(dcposition.z ==  1) texture_index = resource_pack->block_infos[chunk_mesh_info->chunk->chunk_data->tiles[cposition.z][cposition.y][cposition.x].id].texture_top;
     else
       assert(0 && "Unreachable");
 
@@ -272,7 +272,7 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
     for(int z = 0; z<CHUNK_WIDTH; ++z)
       for(int y = 0; y<CHUNK_WIDTH; ++y)
         for(int x = 0; x<CHUNK_WIDTH; ++x)
-          if(chunk_mesh_infos[i].chunk->tiles[z][y][x].id != TILE_ID_EMPTY && chunk_mesh_infos[i].chunk->tiles[z][y][x].id != TILE_ID_ETHER)
+          if(chunk_mesh_infos[i].chunk->chunk_data->tiles[z][y][x].id != TILE_ID_EMPTY && chunk_mesh_infos[i].chunk->chunk_data->tiles[z][y][x].id != TILE_ID_ETHER)
           {
             ivec3_t position = ivec3(x, y, z);
             chunk_mesh_info_emit_face(&chunk_mesh_infos[i], resource_pack, position, ivec3(-1,  0,  0));

@@ -33,6 +33,11 @@ struct tile
   uint8_t light_level : 4;
 };
 
+struct chunk_data
+{
+  struct tile tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+};
+
 struct chunk
 {
   struct chunk *next;
@@ -46,7 +51,8 @@ struct chunk
   struct chunk *left;
   struct chunk *right;
 
-  struct tile tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+  struct chunk_data *chunk_data;
+
   bool mesh_dirty;
   bool light_dirty;
 };

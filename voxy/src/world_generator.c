@@ -276,7 +276,7 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
         //////////////////////////
         chunk = malloc(sizeof *chunk);
         chunk->position = chunk_position;
-
+        chunk->chunk_data = malloc(sizeof *chunk->chunk_data);
         for(int z = 0; z<CHUNK_WIDTH; ++z)
           for(int y = 0; y<CHUNK_WIDTH; ++y)
             for(int x = 0; x<CHUNK_WIDTH; ++x)
@@ -284,9 +284,9 @@ void world_generator_update_generate_chunks(struct world_generator *world_genera
               ivec3_t local_position  = ivec3(x, y, z);
               ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk->position, CHUNK_WIDTH), local_position);
 
-              chunk->tiles[z][y][x].id          = get_tile_id(chunk_info, section_info, global_position, local_position);
-              chunk->tiles[z][y][x].ether       = false;
-              chunk->tiles[z][y][x].light_level = 0;
+              chunk->chunk_data->tiles[z][y][x].id          = get_tile_id(chunk_info, section_info, global_position, local_position);
+              chunk->chunk_data->tiles[z][y][x].ether       = false;
+              chunk->chunk_data->tiles[z][y][x].light_level = 0;
             }
 
         world_chunk_insert_unchecked(world, chunk);

@@ -35,6 +35,7 @@ int chunk_compare(ivec3_t position1, ivec3_t position2)
 
 void chunk_dispose(struct chunk *chunk)
 {
+  free(chunk->chunk_data);
   free(chunk);
 }
 

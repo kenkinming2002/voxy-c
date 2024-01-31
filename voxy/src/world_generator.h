@@ -1,9 +1,9 @@
 #ifndef VOXY_WORLD_GENERATOR_H
 #define VOXY_WORLD_GENERATOR_H
 
-#include "world.h"
-#include "vector.h"
+#include "config.h"
 #include "thread_pool.h"
+#include "vector.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX section_info
@@ -25,8 +25,9 @@
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_INTERFACE
 
-#include <stdatomic.h>
 #include <pthread.h>
+#include <stdatomic.h>
+#include <stdbool.h>
 
 struct section_info
 {
@@ -62,9 +63,13 @@ struct world_generator
 void world_generator_init(struct world_generator *world_generator, seed_t seed);
 void world_generator_fini(struct world_generator *world_generator);
 
-void world_generator_update(struct world_generator *world_generator, struct world *world);
-void world_generator_update_spawn_player(struct world_generator *world_generator, struct world *world);
-void world_generator_update_generate_chunks(struct world_generator *world_generator, struct world *world);
-void world_generator_update_generate_chunk(struct world_generator *world_generator, struct world *world, ivec3_t chunk_position);
+/// On first call, the following functions may submit a job to a internal thread
+/// pool in order to generate the relevant structures, and then return NULL to
+/// indicate that the result is not yet available.
+struct section_info *world_generator_generate_section_info(struct world_generator *world_generator, ivec2_t position);
+struct chunk_info *world_generator_generate_chunk_info(struct world_generator *world_generator, ivec3_t position);
+struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, ivec3_t position);
+
+float world_generator_get_height(struct world_generator *world_generator, ivec2_t position);
 
 #endif // VOXY_WORLD_GENERATOR_H

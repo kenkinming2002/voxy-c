@@ -6,6 +6,7 @@
 #include "transform.h"
 #include "input.h"
 #include "config.h"
+#include "world_generator.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX chunk
@@ -76,8 +77,10 @@ void world_fini(struct world *world);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 
-void world_update(struct world *world, struct input *input, float dt);
+void world_update(struct world *world, struct world_generator *world_generator, struct input *input, float dt);
+
 void world_update_player_control(struct world *world, struct input *input, float dt);
+void world_update_generate(struct world *world, struct world_generator *world_generator);
 void world_update_light(struct world *world);
 
 #endif // VOXY_WORLD_H

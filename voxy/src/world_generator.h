@@ -16,8 +16,8 @@
 #undef SC_HASH_TABLE_INTERFACE
 
 #define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_PREFIX chunk_info
-#define SC_HASH_TABLE_NODE_TYPE struct chunk_info
+#define SC_HASH_TABLE_PREFIX chunk_data_wrapper
+#define SC_HASH_TABLE_NODE_TYPE struct chunk_data_wrapper
 #define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include "hash_table.h"
 #undef SC_HASH_TABLE_PREFIX
@@ -40,15 +40,14 @@ struct section_info
   float heights[CHUNK_WIDTH][CHUNK_WIDTH];
 };
 
-struct chunk_info
+struct chunk_data_wrapper
 {
-  struct chunk_info *next;
-  struct chunk_info *next_list;
-  size_t             hash;
-  ivec3_t            position;
+  struct chunk_data_wrapper *next;
+  struct chunk_data_wrapper *next_list;
+  size_t                     hash;
+  ivec3_t                    position;
 
-  atomic_bool done;
-  bool caves[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]; // FIXME: bitmap?
+  struct chunk_data * _Atomic chunk_data;
 };
 
 struct world_generator
@@ -57,7 +56,7 @@ struct world_generator
 
   struct thread_pool thread_pool;
   struct section_info_hash_table section_infos;
-  struct chunk_info_hash_table   chunk_infos;
+  struct chunk_data_wrapper_hash_table   chunk_data_wrappers;
 };
 
 void world_generator_init(struct world_generator *world_generator, seed_t seed);
@@ -67,7 +66,6 @@ void world_generator_fini(struct world_generator *world_generator);
 /// pool in order to generate the relevant structures, and then return NULL to
 /// indicate that the result is not yet available.
 struct section_info *world_generator_generate_section_info(struct world_generator *world_generator, ivec2_t position);
-struct chunk_info *world_generator_generate_chunk_info(struct world_generator *world_generator, ivec3_t position);
 struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, ivec3_t position);
 
 float world_generator_get_height(struct world_generator *world_generator, ivec2_t position);

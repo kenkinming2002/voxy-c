@@ -50,8 +50,8 @@ static inline fvec2_t gradient2(seed_t seed, int ix, int iy)
   for(;;)
   {
     fvec2_t vec = fvec2(
-      ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f,
-      ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f);
+      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f,
+      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f);
 
     float length_squared = fvec2_length_squared(vec);
     if(length_squared > 0.0f && length_squared <= 1.0f)
@@ -68,9 +68,9 @@ static inline fvec3_t gradient3(seed_t seed, int ix, int iy, int iz)
   for(;;)
   {
     fvec3_t vec = fvec3(
-      ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f,
-      ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f,
-      ((float)seed_next(&seed) / SEED_MAX) * 2.0f - 1.0f);
+      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f,
+      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f,
+      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f);
 
     float length_squared = fvec3_length_squared(vec);
     if(length_squared > 0.0f && length_squared <= 1.0f)

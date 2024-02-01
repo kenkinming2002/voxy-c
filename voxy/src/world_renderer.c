@@ -1,49 +1,14 @@
 #include "world_renderer.h"
 
 #include <voxy/math/vector.h>
+
 #include "gl.h"
 #include "config.h"
-
-#define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_PREFIX chunk_mesh
-#define SC_HASH_TABLE_NODE_TYPE struct chunk_mesh
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include "hash_table.h"
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_IMPLEMENTATION
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-ivec3_t chunk_mesh_key(struct chunk_mesh *chunk_mesh)
-{
-  return chunk_mesh->position;
-}
-
-size_t chunk_mesh_hash(ivec3_t position)
-{
-  return ivec3_hash(position);
-}
-
-int chunk_mesh_compare(ivec3_t position1, ivec3_t position2)
-{
-  if(position1.x != position2.x) return position1.x - position2.x;
-  if(position1.y != position2.y) return position1.y - position2.y;
-  if(position1.z != position2.z) return position1.z - position2.z;
-  return 0;
-}
-
-void chunk_mesh_dispose(struct chunk_mesh *chunk_mesh)
-{
-  glDeleteVertexArrays(1, &chunk_mesh->vao);
-  glDeleteBuffers(1, &chunk_mesh->vbo);
-  glDeleteBuffers(1, &chunk_mesh->ibo);
-  free(chunk_mesh);
-}
 
 int world_renderer_init(struct world_renderer *world_renderer, struct resource_pack *resource_pack)
 {
@@ -71,7 +36,6 @@ int world_renderer_init(struct world_renderer *world_renderer, struct resource_p
     goto error;
   }
 
-  chunk_mesh_hash_table_init(&world_renderer->chunk_meshes);
   return 0;
 
 error:
@@ -88,7 +52,6 @@ void world_renderer_fini(struct world_renderer *world_renderer)
 {
   glDeleteProgram(world_renderer->chunk_program);
   glDeleteTextures(1, &world_renderer->chunk_block_texture_array);
-  chunk_mesh_hash_table_dispose(&world_renderer->chunk_meshes);
 }
 
 struct chunk_mesh_vertex
@@ -289,17 +252,16 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
   //////////////////////////////
   for(size_t i=0; i<chunk_mesh_info_count; ++i)
   {
-    struct chunk_mesh *chunk_mesh = chunk_mesh_hash_table_lookup(&world_renderer->chunk_meshes, chunk_mesh_infos[i].chunk->position);
+    struct chunk_mesh *chunk_mesh = chunk_mesh_infos[i].chunk->chunk_mesh;
     if(!chunk_mesh)
     {
       chunk_mesh = malloc(sizeof *chunk_mesh);
-      chunk_mesh->position = chunk_mesh_infos[i].chunk->position;
 
       glGenVertexArrays(1, &chunk_mesh->vao);
       glGenBuffers(1, &chunk_mesh->vbo);
       glGenBuffers(1, &chunk_mesh->ibo);
 
-      chunk_mesh_hash_table_insert_unchecked(&world_renderer->chunk_meshes, chunk_mesh);
+      chunk_mesh_infos[i].chunk->chunk_mesh = chunk_mesh;
     }
 
     glBindVertexArray(chunk_mesh->vao);
@@ -326,20 +288,20 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
   //////////////////////////////
   /// 4: Unload chunk meshes ///
   //////////////////////////////
-  for(size_t i=0; i<world_renderer->chunk_meshes.bucket_count; ++i)
-    for(struct chunk_mesh **chunk_mesh = &world_renderer->chunk_meshes.buckets[i].head; *chunk_mesh;)
-      if((*chunk_mesh)->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || (*chunk_mesh)->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
-         (*chunk_mesh)->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || (*chunk_mesh)->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||
-         (*chunk_mesh)->position.z < player_chunk_position.z - RENDERER_UNLOAD_DISTANCE || (*chunk_mesh)->position.z > player_chunk_position.z + RENDERER_UNLOAD_DISTANCE)
-      {
-        struct chunk_mesh *tmp = *chunk_mesh;
-        *chunk_mesh = (*chunk_mesh)->next;
-        chunk_mesh_dispose(tmp);
+  for(size_t i=0; i<world->chunks.bucket_count; ++i)
+    for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)
+      if(chunk->chunk_mesh)
+        if(chunk->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || chunk->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
+           chunk->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || chunk->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||
+           chunk->position.z < player_chunk_position.z - RENDERER_UNLOAD_DISTANCE || chunk->position.z > player_chunk_position.z + RENDERER_UNLOAD_DISTANCE)
+        {
+          glDeleteVertexArrays(1, &chunk->chunk_mesh->vao);
+          glDeleteBuffers(1, &chunk->chunk_mesh->vbo);
+          glDeleteBuffers(1, &chunk->chunk_mesh->ibo);
+          free(chunk->chunk_mesh);
 
-        world_renderer->chunk_meshes.load -= 1;
-      }
-      else
-        chunk_mesh = &(*chunk_mesh)->next;
+          chunk->chunk_mesh = NULL;
+        }
 
   //////////////////
   /// 5: Cleanup ///
@@ -352,8 +314,7 @@ void world_renderer_update(struct world_renderer *world_renderer, struct resourc
   free(chunk_mesh_infos);
 }
 
-
-void world_renderer_render(struct world_renderer *world_renderer, struct camera *camera)
+void world_renderer_render(struct world_renderer *world_renderer, struct world *world, struct camera *camera)
 {
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(camera),       VP);
@@ -370,12 +331,13 @@ void world_renderer_render(struct world_renderer *world_renderer, struct camera 
   glUniformMatrix4fv(glGetUniformLocation(world_renderer->chunk_program, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_CUBE_MAP, world_renderer->chunk_block_texture_array);
 
-  for(size_t i=0; i<world_renderer->chunk_meshes.bucket_count; ++i)
-    for(struct chunk_mesh *chunk_mesh = world_renderer->chunk_meshes.buckets[i].head; chunk_mesh; chunk_mesh = chunk_mesh->next)
-    {
-      glBindVertexArray(chunk_mesh->vao);
-      glDrawElements(GL_TRIANGLES, chunk_mesh->count, GL_UNSIGNED_INT, 0);
-    }
+  for(size_t i=0; i<world->chunks.bucket_count; ++i)
+    for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)
+      if(chunk->chunk_mesh)
+      {
+        glBindVertexArray(chunk->chunk_mesh->vao);
+        glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count, GL_UNSIGNED_INT, 0);
+      }
 
   glDisable(GL_CULL_FACE);
   glDisable(GL_DEPTH_TEST);

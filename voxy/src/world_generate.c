@@ -30,6 +30,7 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
           chunk = malloc(sizeof *chunk);
           chunk->position   = position;
           chunk->chunk_data = chunk_data;
+          chunk->chunk_mesh = NULL;
 
           world_chunk_insert_unchecked(world, chunk);
 

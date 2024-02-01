@@ -123,7 +123,7 @@ static void application_render(struct application *application)
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  world_renderer_render(&application->world_renderer, &(struct camera) {
+  world_renderer_render(&application->world_renderer, &application->world, &(struct camera) {
     .transform = application->world.player.transform,
     .fovy      = M_PI / 2.0f,
     .near      = 1.0f,

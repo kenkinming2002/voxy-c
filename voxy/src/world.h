@@ -1,10 +1,11 @@
 #ifndef VOXY_WORLD_H
 #define VOXY_WORLD_H
 
+#include "config.h"
+#include "glad/glad.h"
+#include "input.h"
 #include "math.h"
 #include "transform.h"
-#include "input.h"
-#include "config.h"
 #include "world_generator.h"
 
 #define SC_HASH_TABLE_INTERFACE
@@ -32,6 +33,14 @@ struct chunk_data
   struct tile tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 };
 
+struct chunk_mesh
+{
+  GLuint vao;
+  GLuint vbo;
+  GLuint ibo;
+  GLsizei count;
+};
+
 struct chunk
 {
   struct chunk *next;
@@ -46,6 +55,7 @@ struct chunk
   struct chunk *right;
 
   struct chunk_data *chunk_data;
+  struct chunk_mesh *chunk_mesh;
 
   bool mesh_dirty;
   bool light_dirty;

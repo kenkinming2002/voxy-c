@@ -100,13 +100,11 @@ static void application_update(struct application *application, float dt)
 {
   struct input input;
   window_get_input(&application->window, &input);
-
   for(unsigned i=1; i<=9; ++i)
     if(input.selects[i-1])
       application->selection = i;
 
   world_update(&application->world, &application->world_generator,  &application->resource_pack,&input, dt);
-  world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
 }
 
 static inline float minf(float a, float b)

@@ -79,5 +79,6 @@ void world_update(struct world *world, struct world_generator *world_generator, 
   world_update_player_control(world, input, dt);
   world_update_generate(world, world_generator, resource_pack);
   world_update_light(world, resource_pack);
+  world_update_mesh(world, resource_pack);
 }
 

@@ -41,6 +41,18 @@ int resource_pack_load(struct resource_pack *resource_pack, const char *filepath
   }
   resource_pack->block_texture_info_count = *value;
 
+  if(!(resource_pack->generate_heights = dlsym(resource_pack->handle, "generate_heights")))
+  {
+    fprintf(stderr, "ERROR: Missing symbol generate_heights from resource pack %s\n", filepath);
+    goto error;
+  }
+
+  if(!(resource_pack->generate_tiles = dlsym(resource_pack->handle, "generate_tiles")))
+  {
+    fprintf(stderr, "ERROR: Missing symbol generate_tiles from resource pack %s\n", filepath);
+    goto error;
+  }
+
   return 0;
 
 error:

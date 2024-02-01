@@ -105,7 +105,7 @@ static void application_update(struct application *application, float dt)
     if(input.selects[i-1])
       application->selection = i;
 
-  world_update(&application->world, &application->world_generator, &input, dt);
+  world_update(&application->world, &application->world_generator,  &application->resource_pack,&input, dt);
   world_renderer_update(&application->world_renderer, &application->resource_pack, &application->world);
 }
 

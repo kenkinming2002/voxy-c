@@ -1,7 +1,7 @@
 #ifndef VOXY_INPUT_H
 #define VOXY_INPUT_H
 
-#include "vector.h"
+#include <voxy/math/vector.h>
 
 #include <stdbool.h>
 

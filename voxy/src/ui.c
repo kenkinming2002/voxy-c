@@ -1,7 +1,7 @@
 #include "ui.h"
 
 #include "gl.h"
-#include "vector.h"
+#include <voxy/math/vector.h>
 
 #include <assert.h>
 

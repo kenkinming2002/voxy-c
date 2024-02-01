@@ -1,9 +1,10 @@
-#ifndef VOXY_VECTOR_H
-#define VOXY_VECTOR_H
+#ifndef VOXY_MATH_VECTOR_H
+#define VOXY_MATH_VECTOR_H
 
-#include "random.h"
+#include <voxy/math/random.h>
 
 #include <math.h>
+#include <stddef.h>
 
 /// Data-Types
 typedef struct { union { float values[2]; struct { float x, y;       };                                                                   }; } fvec2_t;
@@ -96,4 +97,4 @@ static inline fvec3_t fvec3_cross(fvec3_t lhs, fvec3_t rhs)
   );
 }
 
-#endif // VOXY_VECTOR_H
+#endif // VOXY_MATH_VECTOR_H

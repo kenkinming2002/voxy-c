@@ -2,7 +2,7 @@
 #define VOXY_FONT_SET_H
 
 #include "glad/glad.h"
-#include "vector.h"
+#include <voxy/math/vector.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

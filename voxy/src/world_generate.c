@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void world_update_generate(struct world *world, struct world_generator *world_generator)
+void world_update_generate(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack)
 {
   if(!world->player.spawned)
   {
     world->player.spawned = true;
-    world->player.transform.translation = fvec3(0.0f, 0.0f, world_generator_get_height(world_generator, ivec2(0, 0)) + 2.0f);
+    world->player.transform.translation = fvec3(0.0f, 0.0f, world_generator_get_height(world_generator, ivec2(0, 0), resource_pack) + 2.0f);
     world->player.transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
     printf("Spawning player at (%f, %f, %f)\n",
         world->player.transform.translation.x,
@@ -25,7 +25,7 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
       {
         ivec3_t position = ivec3_add(player_position, ivec3(dx, dy, dz));
-        if(!(chunk = chunk_hash_table_lookup(&world->chunks, position)) && (chunk_data = world_generator_generate_chunk_data(world_generator, position))) // :)
+        if(!(chunk = chunk_hash_table_lookup(&world->chunks, position)) && (chunk_data = world_generator_generate_chunk_data(world_generator, position, resource_pack))) // :)
         {
           chunk = malloc(sizeof *chunk);
           chunk->position   = position;

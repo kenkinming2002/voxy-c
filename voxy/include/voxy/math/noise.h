@@ -1,15 +1,39 @@
-#include "noise.h"
+#ifndef VOXY_NOISE_H
+#define VOXY_NOISE_H
 
-#include <math.h>
+#include <voxy/math/vector.h>
+#include <voxy/math/random.h>
 
-float noise_random2(seed_t seed, fvec2_t position)
+//////////////////
+/// Interfaces ///
+//////////////////
+
+static inline float noise_random2(seed_t seed, fvec2_t position);
+static inline float noise_random3(seed_t seed, fvec3_t position);
+
+static inline float noise_perlin2(seed_t seed, fvec2_t position);
+static inline float noise_perlin3(seed_t seed, fvec3_t position);
+
+static inline float noise_perlin2_ex(seed_t seed, fvec2_t position, float frequency, float lacunarity, float persistence, size_t octaves);
+static inline float noise_perlin3_ex(seed_t seed, fvec3_t position, float frequency, float lacunarity, float persistence, size_t octaves);
+
+static inline float ease_in(float x, float factor);
+static inline float ease_out(float x, float factor);
+static inline float smooth_step(float x);
+static inline float smoother_step(float x);
+
+///////////////////////
+/// Implementations ///
+///////////////////////
+
+static inline float noise_random2(seed_t seed, fvec2_t position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
   return (float)seed_next(&seed) / (float)SEED_MAX;
 }
 
-float noise_random3(seed_t seed, fvec3_t position)
+static inline float noise_random3(seed_t seed, fvec3_t position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
@@ -18,7 +42,7 @@ float noise_random3(seed_t seed, fvec3_t position)
 }
 
 
-static fvec2_t gradient2(seed_t seed, int ix, int iy)
+static inline fvec2_t gradient2(seed_t seed, int ix, int iy)
 {
   seed_combine(&seed, &ix, sizeof ix);
   seed_combine(&seed, &iy, sizeof iy);
@@ -35,7 +59,7 @@ static fvec2_t gradient2(seed_t seed, int ix, int iy)
   }
 }
 
-static fvec3_t gradient3(seed_t seed, int ix, int iy, int iz)
+static inline fvec3_t gradient3(seed_t seed, int ix, int iy, int iz)
 {
   seed_combine(&seed, &ix, sizeof ix);
   seed_combine(&seed, &iy, sizeof iy);
@@ -54,26 +78,26 @@ static fvec3_t gradient3(seed_t seed, int ix, int iy, int iz)
   }
 }
 
-static float value2(seed_t seed, fvec2_t position, int ix, int iy)
+static inline float value2(seed_t seed, fvec2_t position, int ix, int iy)
 {
   fvec2_t gradient = gradient2(seed, ix, iy);
   fvec2_t distance = fvec2_sub(position, fvec2(ix, iy));
   return fvec2_dot(gradient, distance);
 }
 
-static float value3(seed_t seed, fvec3_t position, int ix, int iy, int iz)
+static inline float value3(seed_t seed, fvec3_t position, int ix, int iy, int iz)
 {
   fvec3_t gradient = gradient3(seed, ix, iy, iz);
   fvec3_t distance = fvec3_sub(position, fvec3(ix, iy, iz));
   return fvec3_dot(gradient, distance);
 }
 
-static float interpolate(float a, float b, float t)
+static inline float interpolate(float a, float b, float t)
 {
   return a + (b - a) * t;
 }
 
-float noise_perlin2(seed_t seed, fvec2_t position)
+static inline float noise_perlin2(seed_t seed, fvec2_t position)
 {
   int x0 = floorf(position.x), x1 = x0 + 1;
   int y0 = floorf(position.y), y1 = y0 + 1;
@@ -97,7 +121,7 @@ float noise_perlin2(seed_t seed, fvec2_t position)
     );
 }
 
-float noise_perlin3(seed_t seed, fvec3_t position)
+static inline float noise_perlin3(seed_t seed, fvec3_t position)
 {
   int x0 = floorf(position.x), x1 = x0 + 1;
   int y0 = floorf(position.y), y1 = y0 + 1;
@@ -139,7 +163,7 @@ float noise_perlin3(seed_t seed, fvec3_t position)
     );
 }
 
-float noise_perlin2_ex(seed_t seed, fvec2_t position, float frequency, float lacunarity, float persistence, size_t octaves)
+static inline float noise_perlin2_ex(seed_t seed, fvec2_t position, float frequency, float lacunarity, float persistence, size_t octaves)
 {
   float amplitude = 1.0f;
   float max_value = 0.0f;
@@ -154,7 +178,7 @@ float noise_perlin2_ex(seed_t seed, fvec2_t position, float frequency, float lac
   return value / max_value / (sqrtf(2.0f) / 4.0f);
 }
 
-float noise_perlin3_ex(seed_t seed, fvec3_t position, float frequency, float lacunarity, float persistence, size_t octaves)
+static inline float noise_perlin3_ex(seed_t seed, fvec3_t position, float frequency, float lacunarity, float persistence, size_t octaves)
 {
   float amplitude = 1.0f;
   float max_value = 0.0f;
@@ -169,27 +193,27 @@ float noise_perlin3_ex(seed_t seed, fvec3_t position, float frequency, float lac
   return value / max_value / (sqrtf(3.0f) / 4.0f);
 }
 
-float ease_in(float x, float factor)
+static inline float ease_in(float x, float factor)
 {
   return (expf(x * factor) - 1.0f)/(expf(factor) - 1.0f);
 }
 
-float ease_out(float x, float factor)
+static inline float ease_out(float x, float factor)
 {
   return logf(x * factor + 1.0f) / logf(factor + 1.0f);
 }
 
-float smooth_step(float x)
+static inline float smooth_step(float x)
 {
   return 3.0f * x * x
        - 2.0f * x * x * x;
 }
 
-float smoother_step(float x)
+static inline float smoother_step(float x)
 {
   return 6.0f  * x * x * x * x * x
        - 15.0f * x * x * x * x
        + 10.0f * x * x * x;
 }
 
-
+#endif // VOXY_NOISE_H

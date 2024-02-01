@@ -2,7 +2,6 @@
 #define VOXY_WORLD_H
 
 #include "math.h"
-#include "noise.h"
 #include "transform.h"
 #include "input.h"
 #include "config.h"
@@ -20,12 +19,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-
-#define TILE_ID_GRASS 0
-#define TILE_ID_STONE 1
-#define TILE_ID_WATER 2
-#define TILE_ID_EMPTY 3
-#define TILE_ID_ETHER 4
 
 struct tile
 {
@@ -77,10 +70,10 @@ void world_fini(struct world *world);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 
-void world_update(struct world *world, struct world_generator *world_generator, struct input *input, float dt);
+void world_update(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack, struct input *input, float dt);
 
 void world_update_player_control(struct world *world, struct input *input, float dt);
-void world_update_generate(struct world *world, struct world_generator *world_generator);
-void world_update_light(struct world *world);
+void world_update_generate(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack);
+void world_update_light(struct world *world, struct resource_pack *resource_pack);
 
 #endif // VOXY_WORLD_H

@@ -1,10 +1,6 @@
 #ifndef VOXY_CONFIG_H
 #define VOXY_CONFIG_H
 
-#define CHUNK_WIDTH 16
-
-#define ETHER_HEIGHT 128
-
 #define GENERATOR_DISTANCE 8
 
 #define RENDERER_LOAD_DISTANCE   4

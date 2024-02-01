@@ -1,9 +1,12 @@
 #ifndef VOXY_WORLD_GENERATOR_H
 #define VOXY_WORLD_GENERATOR_H
 
+#include <voxy/config.h>
+#include <voxy/math/vector.h>
+
+#include "resource_pack.h"
 #include "config.h"
 #include "thread_pool.h"
-#include "vector.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX section_info
@@ -65,9 +68,9 @@ void world_generator_fini(struct world_generator *world_generator);
 /// On first call, the following functions may submit a job to a internal thread
 /// pool in order to generate the relevant structures, and then return NULL to
 /// indicate that the result is not yet available.
-struct section_info *world_generator_generate_section_info(struct world_generator *world_generator, ivec2_t position);
-struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, ivec3_t position);
+struct section_info *world_generator_generate_section_info(struct world_generator *world_generator, ivec2_t position, struct resource_pack *resource_pack);
+struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, ivec3_t position, struct resource_pack *resource_pack);
 
-float world_generator_get_height(struct world_generator *world_generator, ivec2_t position);
+float world_generator_get_height(struct world_generator *world_generator, ivec2_t position, struct resource_pack *resource_pack);
 
 #endif // VOXY_WORLD_GENERATOR_H

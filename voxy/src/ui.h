@@ -2,7 +2,7 @@
 #define VOXY_UI_H
 
 #include "glad/glad.h"
-#include "vector.h"
+#include <voxy/math/vector.h>
 #include "font_set.h"
 
 struct ui

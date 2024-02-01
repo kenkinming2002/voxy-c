@@ -1,7 +1,7 @@
-#ifndef VOXY_MATRIX_H
-#define VOXY_MATRIX_H
+#ifndef VOXY_MATH_MATRIX_H
+#define VOXY_MATH_MATRIX_H
 
-#include "vector.h"
+#include <voxy/math/vector.h>
 
 typedef struct { float values[2][2]; } fmat2_t;
 typedef struct { float values[3][3]; } fmat3_t;
@@ -53,4 +53,4 @@ MATRIX_DEFINE_OPS(f, 2)
 MATRIX_DEFINE_OPS(f, 3)
 MATRIX_DEFINE_OPS(f, 4)
 
-#endif // VOXY_MATRIX_H
+#endif // VOXY_MATH_MATRIX_H

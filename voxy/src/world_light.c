@@ -21,9 +21,9 @@
 ///  - If the computed light level is below 0, it will be set to 0.
 ///
 
-static inline bool    tile_is_opaque  (struct tile tile) { return tile.id != TILE_ID_EMPTY && tile.id != TILE_ID_ETHER; }
-static inline bool    tile_is_ether   (struct tile tile) { return tile.id == TILE_ID_ETHER; }
-static inline uint8_t tile_light_level(struct tile tile) { (void)tile; return 0; }
+//static inline bool    tile_is_opaque  (struct tile tile) { return tile.id != TILE_ID_EMPTY && tile.id != TILE_ID_ETHER; }
+//static inline bool    tile_is_ether   (struct tile tile) { return tile.id == TILE_ID_ETHER; }
+//static inline uint8_t tile_light_level(struct tile tile) { (void)tile; return 0; }
 
 struct light_info
 {
@@ -40,7 +40,7 @@ struct light_infos
 static inline struct tile       *get_tile      (struct chunk       *chunk,       int x, int y, int z) { return &chunk->chunk_data->tiles[z][y][x]; }
 static inline struct light_info *get_light_info(struct light_infos *light_infos, int x, int y, int z) { return &light_infos->items[z+1][y+1][x+1]; }
 
-static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk)
+static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk, struct resource_pack *resource_pack)
 {
   for(int z=0; z<CHUNK_WIDTH+2; ++z)
     for(int y=0; y<CHUNK_WIDTH+2; ++y)
@@ -58,9 +58,9 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
         struct tile       *tile       = get_tile      (chunk,       x, y, z);
         struct light_info *light_info = get_light_info(light_infos, x, y, z);
 
-        light_info->opaque      = tile_is_opaque(*tile);
-        light_info->ether       = tile_is_ether(*tile);
-        light_info->light_level = tile_light_level(*tile);
+        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = resource_pack->block_infos[tile->id].ether;
+        light_info->light_level = resource_pack->block_infos[tile->id].light_level;
       }
 
   if(chunk->bottom)
@@ -70,7 +70,7 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
         struct tile       *tile       = get_tile      (chunk->bottom, x, y, CHUNK_WIDTH-1);
         struct light_info *light_info = get_light_info(light_infos  , x, y, -1           );
 
-        light_info->opaque      = tile_is_opaque(*tile);
+        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = tile->ether;
         light_info->light_level = tile->light_level;
       }
@@ -82,7 +82,7 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
         struct tile       *tile       = get_tile      (chunk->top , x, y, 0          );
         struct light_info *light_info = get_light_info(light_infos, x, y, CHUNK_WIDTH);
 
-        light_info->opaque      = tile_is_opaque(*tile);
+        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = tile->ether;
         light_info->light_level = tile->light_level;
       }
@@ -94,7 +94,7 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
         struct tile       *tile       = get_tile      (chunk->back, x, CHUNK_WIDTH-1, z);
         struct light_info *light_info = get_light_info(light_infos, x, -1           , z);
 
-        light_info->opaque      = tile_is_opaque(*tile);
+        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = tile->ether;
         light_info->light_level = tile->light_level;
       }
@@ -106,7 +106,7 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
         struct tile       *tile       = get_tile      (chunk->front, x, 0          , z);
         struct light_info *light_info = get_light_info(light_infos , x, CHUNK_WIDTH, z);
 
-        light_info->opaque      = tile_is_opaque(*tile);
+        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = tile->ether;
         light_info->light_level = tile->light_level;
       }
@@ -118,7 +118,7 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
         struct tile       *tile       = get_tile      (chunk->left, CHUNK_WIDTH-1, y, z);
         struct light_info *light_info = get_light_info(light_infos, -1           , y, z);
 
-        light_info->opaque      = tile_is_opaque(*tile);
+        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = tile->ether;
         light_info->light_level = tile->light_level;
       }
@@ -130,7 +130,7 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
         struct tile       *tile       = get_tile      (chunk->right, 0          , y, z);
         struct light_info *light_info = get_light_info(light_infos , CHUNK_WIDTH, y, z);
 
-        light_info->opaque      = tile_is_opaque(*tile);
+        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = tile->ether;
         light_info->light_level = tile->light_level;
       }
@@ -349,7 +349,7 @@ static inline void light_infos_propagate_light(struct light_infos *light_infos)
   }
 }
 
-void world_update_light(struct world *world)
+void world_update_light(struct world *world, struct resource_pack *resource_pack)
 {
   size_t count = 0;
 
@@ -363,7 +363,7 @@ void world_update_light(struct world *world)
         {
           struct light_infos light_infos;
 
-          light_infos_load(&light_infos, chunk);
+          light_infos_load(&light_infos, chunk, resource_pack);
           light_infos_propagate_ether(&light_infos);
           light_infos_apply_ether(&light_infos);
           light_infos_propagate_light(&light_infos);

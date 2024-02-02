@@ -11,6 +11,7 @@ struct input
   fvec3_t keyboard_motion;
 
   bool selects[9];
+  int scroll;
 };
 
 #endif // VOXY_INPUT_H

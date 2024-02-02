@@ -30,11 +30,7 @@ struct application
 
   struct world           world;
   struct world_generator world_generator;
-
-  int selection;
 };
-
-static void application_on_scroll(GLFWwindow *window, double xoffset, double offset);
 
 static int application_init(struct application *application)
 {
@@ -54,9 +50,6 @@ static int application_init(struct application *application)
   world_init(&application->world, seed);
   world_generator_init(&application->world_generator, seed);
 
-  glfwSetWindowUserPointer(application->window.window, application);
-  glfwSetScrollCallback(application->window.window, application_on_scroll);
-
   return 0;
 }
 
@@ -74,28 +67,11 @@ static void application_fini(struct application *application)
   resource_pack_unload(&application->resource_pack);
 }
 
-static void application_on_scroll(GLFWwindow *window, double xoffset, double yoffset)
-{
-  (void)xoffset;
-
-  struct application *application = glfwGetWindowUserPointer(window);
-  if(yoffset > 0.0f) ++application->selection;
-  if(yoffset < 0.0f) --application->selection;
-  application->selection -= 1;
-  application->selection += 9;
-  application->selection %= 9;
-  application->selection += 1;
-}
-
 static void application_update(struct application *application, float dt)
 {
   struct input input;
   window_get_input(&application->window, &input);
-  for(unsigned i=1; i<=9; ++i)
-    if(input.selects[i-1])
-      application->selection = i;
-
-  world_update(&application->world, &application->world_generator,  &application->resource_pack,&input, dt);
+  world_update(&application->world, &application->world_generator, &application->resource_pack, &input, dt);
 }
 
 static inline float minf(float a, float b)
@@ -129,12 +105,12 @@ static void application_render(struct application *application)
 
   char buffer[32];
 
-  snprintf(buffer, sizeof buffer, "Selected %d 你好 😀", application->selection);
+  snprintf(buffer, sizeof buffer, "Selected %d 你好 😀", application->world.player.selection);
   ui_draw_text_centered(&application->ui, &application->font_set, fvec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
   ui_draw_quad_rounded(&application->ui, fvec2(margin_horizontal, margin_vertical), fvec2(total_width, total_height), sep, fvec4(0.9f, 0.9f, 0.9f, 0.3f));
   for(int i=0; i<count; ++i)
   {
-    fvec4_t color = i + 1 == application->selection ? fvec4(0.95f, 0.75f, 0.75f, 0.8f) : fvec4(0.95f, 0.95f, 0.95f, 0.7f);
+    fvec4_t color = i + 1 == application->world.player.selection ? fvec4(0.95f, 0.75f, 0.75f, 0.8f) : fvec4(0.95f, 0.95f, 0.95f, 0.7f);
     ui_draw_quad_rounded(&application->ui, fvec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), fvec2(inner_width, inner_width), sep, color);
   }
 

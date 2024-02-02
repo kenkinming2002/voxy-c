@@ -10,5 +10,15 @@ void world_update_player_control(struct world *world, struct input *input, float
 
   transform_rotate(&world->player.transform, rotation);
   transform_local_translate(&world->player.transform, translation);
+
+  for(unsigned i=1; i<=9; ++i)
+    if(input->selects[i-1])
+      world->player.selection = i;
+
+  world->player.selection += input->scroll;
+  world->player.selection -= 1;
+  world->player.selection += 9;
+  world->player.selection %= 9;
+  world->player.selection += 1;
 }
 

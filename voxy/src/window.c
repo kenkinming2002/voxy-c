@@ -9,6 +9,15 @@ static void glfw_error_callback(int error, const char *description)
   fprintf(stderr, "ERROR: %s\n", description);
 }
 
+static void glfw_scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+  (void)xoffset;
+
+  struct window *_window = glfwGetWindowUserPointer(window);
+  if(yoffset > 0.0f) ++_window->scroll;
+  if(yoffset < 0.0f) --_window->scroll;
+}
+
 int window_init(struct window *window, const char *title, unsigned width, unsigned height)
 {
   bool glfw_initialized = false;
@@ -42,6 +51,10 @@ int window_init(struct window *window, const char *title, unsigned width, unsign
     fprintf(stderr, "ERROR: Failed to load OpenGL\n");
     goto error;
   }
+
+  // 4: Callback
+  glfwSetWindowUserPointer(window->window, window);
+  glfwSetScrollCallback(window->window, glfw_scroll_callback);
 
   return 0;
 
@@ -82,6 +95,25 @@ void window_get_framebuffer_size(struct window *window, int *width, int *height)
   glfwGetFramebufferSize(window->window, width, height);
 }
 
+void window_get_input(struct window *window, struct input *input)
+{
+  input->mouse_motion    = window_get_mouse_motion(window);
+  input->keyboard_motion = window_get_keyboard_motion(window);
+
+  input->selects[0] = glfwGetKey(window->window, GLFW_KEY_1) || glfwGetKey(window->window, GLFW_KEY_KP_1);
+  input->selects[1] = glfwGetKey(window->window, GLFW_KEY_2) || glfwGetKey(window->window, GLFW_KEY_KP_2);
+  input->selects[2] = glfwGetKey(window->window, GLFW_KEY_3) || glfwGetKey(window->window, GLFW_KEY_KP_3);
+  input->selects[3] = glfwGetKey(window->window, GLFW_KEY_4) || glfwGetKey(window->window, GLFW_KEY_KP_4);
+  input->selects[4] = glfwGetKey(window->window, GLFW_KEY_5) || glfwGetKey(window->window, GLFW_KEY_KP_5);
+  input->selects[5] = glfwGetKey(window->window, GLFW_KEY_6) || glfwGetKey(window->window, GLFW_KEY_KP_6);
+  input->selects[6] = glfwGetKey(window->window, GLFW_KEY_7) || glfwGetKey(window->window, GLFW_KEY_KP_7);
+  input->selects[7] = glfwGetKey(window->window, GLFW_KEY_8) || glfwGetKey(window->window, GLFW_KEY_KP_8);
+  input->selects[8] = glfwGetKey(window->window, GLFW_KEY_9) || glfwGetKey(window->window, GLFW_KEY_KP_9);
+
+  input->scroll = window->scroll;
+  window->scroll = 0;
+}
+
 fvec2_t window_get_mouse_position(struct window *window)
 {
   double x, y;
@@ -116,18 +148,3 @@ int window_get_key(struct window *window, int key)
   return glfwGetKey(window->window, key);
 }
 
-void window_get_input(struct window *window, struct input *input)
-{
-  input->mouse_motion    = window_get_mouse_motion(window);
-  input->keyboard_motion = window_get_keyboard_motion(window);
-
-  input->selects[0] = glfwGetKey(window->window, GLFW_KEY_1) || glfwGetKey(window->window, GLFW_KEY_KP_1);
-  input->selects[1] = glfwGetKey(window->window, GLFW_KEY_2) || glfwGetKey(window->window, GLFW_KEY_KP_2);
-  input->selects[2] = glfwGetKey(window->window, GLFW_KEY_3) || glfwGetKey(window->window, GLFW_KEY_KP_3);
-  input->selects[3] = glfwGetKey(window->window, GLFW_KEY_4) || glfwGetKey(window->window, GLFW_KEY_KP_4);
-  input->selects[4] = glfwGetKey(window->window, GLFW_KEY_5) || glfwGetKey(window->window, GLFW_KEY_KP_5);
-  input->selects[5] = glfwGetKey(window->window, GLFW_KEY_6) || glfwGetKey(window->window, GLFW_KEY_KP_6);
-  input->selects[6] = glfwGetKey(window->window, GLFW_KEY_7) || glfwGetKey(window->window, GLFW_KEY_KP_7);
-  input->selects[7] = glfwGetKey(window->window, GLFW_KEY_8) || glfwGetKey(window->window, GLFW_KEY_KP_8);
-  input->selects[8] = glfwGetKey(window->window, GLFW_KEY_9) || glfwGetKey(window->window, GLFW_KEY_KP_9);
-}

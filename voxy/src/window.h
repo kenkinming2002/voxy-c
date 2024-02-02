@@ -11,6 +11,7 @@ struct window
 {
   GLFWwindow *window;
   fvec2_t mouse_position;
+  int scroll;
 };
 
 int window_init(struct window *window, const char *title, unsigned width, unsigned height);
@@ -20,9 +21,9 @@ int window_should_close(struct window *window);
 void window_swap_buffers(struct window *window);
 void window_handle_events(struct window *window);
 
-void window_get_input(struct window *window, struct input *input);
-
 void window_get_framebuffer_size(struct window *window, int *width, int *height);
+
+void window_get_input(struct window *window, struct input *input);
 
 fvec2_t window_get_mouse_position(struct window *window);
 fvec2_t window_get_mouse_motion(struct window *window);

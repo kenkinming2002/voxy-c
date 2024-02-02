@@ -70,6 +70,7 @@ struct player
 {
   bool             spawned;
   struct transform transform;
+  int              selection;
 };
 
 struct world

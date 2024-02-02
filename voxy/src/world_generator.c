@@ -77,6 +77,7 @@ int chunk_data_wrapper_compare(ivec3_t position1, ivec3_t position2)
 
 void chunk_data_wrapper_dispose(struct chunk_data_wrapper *chunk_data_wrapper)
 {
+  free(chunk_data_wrapper->chunk_data);
   free(chunk_data_wrapper);
 }
 
@@ -190,7 +191,7 @@ struct chunk_data *world_generator_generate_chunk_data(struct world_generator *w
 
   struct chunk_data_wrapper *chunk_data_wrapper;
   if((chunk_data_wrapper = chunk_data_wrapper_hash_table_lookup(&world_generator->chunk_data_wrappers, position)))
-    return atomic_load_explicit(&chunk_data_wrapper->chunk_data, memory_order_consume) ? chunk_data_wrapper->chunk_data : NULL;
+    return atomic_exchange_explicit(&chunk_data_wrapper->chunk_data, NULL, memory_order_consume);
 
   chunk_data_wrapper = malloc(sizeof *chunk_data_wrapper);
   chunk_data_wrapper->position = position;

@@ -25,9 +25,6 @@ struct application
   struct window   window;
   struct renderer renderer;
 
-  struct ui       ui;
-  struct font_set font_set;
-
   struct world           world;
   struct world_generator world_generator;
 };
@@ -40,12 +37,6 @@ static int application_init(struct application *application)
 
   CHECK(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT));
   CHECK(renderer_init(&application->renderer, &application->resource_pack));
-  CHECK(ui_init(&application->ui));
-
-  font_set_init(&application->font_set);
-  font_set_load(&application->font_set, "assets/arial.ttf");
-  font_set_load(&application->font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
-  font_set_load_system(&application->font_set);
 
   world_init(&application->world, seed);
   world_generator_init(&application->world_generator, seed);
@@ -58,9 +49,6 @@ static void application_fini(struct application *application)
   world_generator_fini(&application->world_generator);
   world_fini(&application->world);
 
-  font_set_fini(&application->font_set);
-
-  ui_fini(&application->ui);
   renderer_fini(&application->renderer);
   window_fini(&application->window);
 
@@ -74,11 +62,6 @@ static void application_update(struct application *application, float dt)
   world_update(&application->world, &application->world_generator, &application->resource_pack, &input, dt);
 }
 
-static inline float minf(float a, float b)
-{
-  return a < b ? a : b;
-}
-
 static void application_render(struct application *application)
 {
   int width, height;
@@ -90,30 +73,6 @@ static void application_render(struct application *application)
     .far       = 1000.0f,
     .aspect    = (float)width / (float)height,
   }, &application->world);
-
-  ui_begin(&application->ui, fvec2(width, height));
-
-  const int count = 9;
-
-  const float sep               = minf(width, height) * 0.006f;
-  const float inner_width       = minf(width, height) * 0.05f;
-  const float outer_width       = inner_width + 2.0f * sep;
-  const float total_width       = count * inner_width + (count + 1) * sep;
-  const float total_height      = outer_width;
-  const float margin_horizontal = (width - total_width) * 0.5f;
-  const float margin_vertical   = height * 0.03f;
-
-  char buffer[32];
-
-  snprintf(buffer, sizeof buffer, "Selected %d 你好 😀", application->world.player.selection);
-  ui_draw_text_centered(&application->ui, &application->font_set, fvec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
-  ui_draw_quad_rounded(&application->ui, fvec2(margin_horizontal, margin_vertical), fvec2(total_width, total_height), sep, fvec4(0.9f, 0.9f, 0.9f, 0.3f));
-  for(int i=0; i<count; ++i)
-  {
-    fvec4_t color = i + 1 == application->world.player.selection ? fvec4(0.95f, 0.75f, 0.75f, 0.8f) : fvec4(0.95f, 0.95f, 0.95f, 0.7f);
-    ui_draw_quad_rounded(&application->ui, fvec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), fvec2(inner_width, inner_width), sep, color);
-  }
-
   window_swap_buffers(&application->window);
 }
 

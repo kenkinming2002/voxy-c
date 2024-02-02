@@ -9,6 +9,7 @@ int renderer_init(struct renderer *renderer, struct resource_pack *resource_pack
 {
   size_t       filepath_count;
   const char **filepaths = NULL;
+  bool ui_initialized = false;
 
   renderer->chunk_program             = 0;
   renderer->chunk_block_texture_array = 0;
@@ -31,9 +32,23 @@ int renderer_init(struct renderer *renderer, struct resource_pack *resource_pack
   }
 
   free(filepaths);
+
+  if(ui_init(&renderer->ui) != 0)
+  {
+    fprintf(stderr, "ERROR: Failed to initialize ui\n");
+    goto error;
+  }
+  ui_initialized = true;
+
+  font_set_init(&renderer->font_set);
+  font_set_load(&renderer->font_set, "assets/arial.ttf");
+  font_set_load(&renderer->font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
+  font_set_load_system(&renderer->font_set);
+
   return 0;
 
 error:
+  if(ui_initialized) ui_fini(&renderer->ui);
   if(renderer->chunk_program             != 0) glDeleteProgram(renderer->chunk_program);
   if(renderer->chunk_block_texture_array != 0) glDeleteTextures(1, &renderer->chunk_block_texture_array);
   if(filepaths)
@@ -43,6 +58,8 @@ error:
 
 void renderer_fini(struct renderer *renderer)
 {
+  font_set_fini(&renderer->font_set);
+  ui_fini(&renderer->ui);
   glDeleteProgram(renderer->chunk_program);
   glDeleteTextures(1, &renderer->chunk_block_texture_array);
 }
@@ -57,4 +74,5 @@ void renderer_render(struct renderer *renderer, struct window *window, struct ca
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   renderer_render_chunks(renderer, camera, world);
+  renderer_render_ui(renderer, window, world);
 }

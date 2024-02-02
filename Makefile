@@ -7,6 +7,7 @@ VOXY_SRCS += voxy/src/gl.c
 VOXY_SRCS += voxy/src/glad.c
 VOXY_SRCS += voxy/src/renderer.c
 VOXY_SRCS += voxy/src/renderer_chunks.c
+VOXY_SRCS += voxy/src/renderer_ui.c
 VOXY_SRCS += voxy/src/resource_pack.c
 VOXY_SRCS += voxy/src/stb_image.c
 VOXY_SRCS += voxy/src/thread_pool.c

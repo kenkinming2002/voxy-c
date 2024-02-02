@@ -11,6 +11,8 @@ void renderer_render_chunks(struct renderer *renderer, struct camera *camera, st
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glUseProgram(renderer->chunk_program);
   glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
@@ -21,8 +23,11 @@ void renderer_render_chunks(struct renderer *renderer, struct camera *camera, st
     for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)
       if(chunk->chunk_mesh)
       {
-        glBindVertexArray(chunk->chunk_mesh->vao);
-        glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(chunk->chunk_mesh->vao_opaque);
+        glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_opaque, GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(chunk->chunk_mesh->vao_transparent);
+        glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
       }
 
   glDisable(GL_CULL_FACE);

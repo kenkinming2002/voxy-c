@@ -37,9 +37,9 @@ void chunk_dispose(struct chunk *chunk)
 {
   if(chunk->chunk_mesh)
   {
-    glDeleteVertexArrays(1, &chunk->chunk_mesh->vao);
-    glDeleteBuffers(1, &chunk->chunk_mesh->vbo);
-    glDeleteBuffers(1, &chunk->chunk_mesh->ibo);
+    glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_opaque);
+    glDeleteBuffers(1, &chunk->chunk_mesh->vbo_opaque);
+    glDeleteBuffers(1, &chunk->chunk_mesh->ibo_opaque);
   }
 
   free(chunk->chunk_mesh);

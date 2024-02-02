@@ -27,11 +27,11 @@ enum texture
 };
 
 const struct block_info block_infos[] = {
-  [TILE_GRASS] = { .name = "grass", .type = BLOCK_TYPE_OPAQUE,    .ether = false, .light_level = 0, .texture_left = TEXTURE_GRASS_SIDE, .texture_right = TEXTURE_GRASS_SIDE, .texture_back = TEXTURE_GRASS_SIDE, .texture_front = TEXTURE_GRASS_SIDE, .texture_bottom = TEXTURE_GRASS_BOTTOM, .texture_top = TEXTURE_GRASS_TOP },
-  [TILE_STONE] = { .name = "stone", .type = BLOCK_TYPE_OPAQUE,    .ether = false, .light_level = 0, .texture_left = TEXTURE_STONE,      .texture_right = TEXTURE_STONE,      .texture_back = TEXTURE_STONE,      .texture_front = TEXTURE_STONE,      .texture_bottom = TEXTURE_STONE,        .texture_top = TEXTURE_STONE     },
-  [TILE_WATER] = { .name = "water", .type = BLOCK_TYPE_OPAQUE,    .ether = false, .light_level = 0, .texture_left = TEXTURE_WATER,      .texture_right = TEXTURE_WATER,      .texture_back = TEXTURE_WATER,      .texture_front = TEXTURE_WATER,      .texture_bottom = TEXTURE_WATER,        .texture_top = TEXTURE_WATER     },
-  [TILE_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE, .ether = false, .light_level = 0,  },
-  [TILE_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE, .ether = true,  .light_level = 15, },
+  [TILE_GRASS] = { .name = "grass", .type = BLOCK_TYPE_OPAQUE,      .ether = false, .light_level = 0, .texture_left = TEXTURE_GRASS_SIDE, .texture_right = TEXTURE_GRASS_SIDE, .texture_back = TEXTURE_GRASS_SIDE, .texture_front = TEXTURE_GRASS_SIDE, .texture_bottom = TEXTURE_GRASS_BOTTOM, .texture_top = TEXTURE_GRASS_TOP },
+  [TILE_STONE] = { .name = "stone", .type = BLOCK_TYPE_OPAQUE,      .ether = false, .light_level = 0, .texture_left = TEXTURE_STONE,      .texture_right = TEXTURE_STONE,      .texture_back = TEXTURE_STONE,      .texture_front = TEXTURE_STONE,      .texture_bottom = TEXTURE_STONE,        .texture_top = TEXTURE_STONE     },
+  [TILE_WATER] = { .name = "water", .type = BLOCK_TYPE_TRANSPARENT, .ether = false, .light_level = 0, .texture_left = TEXTURE_WATER,      .texture_right = TEXTURE_WATER,      .texture_back = TEXTURE_WATER,      .texture_front = TEXTURE_WATER,      .texture_bottom = TEXTURE_WATER,        .texture_top = TEXTURE_WATER     },
+  [TILE_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE,   .ether = false, .light_level = 0,  },
+  [TILE_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE,   .ether = true,  .light_level = 15, },
 };
 
 const struct block_texture_info block_texture_infos[] = {

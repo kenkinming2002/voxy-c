@@ -35,10 +35,15 @@ struct chunk_data
 
 struct chunk_mesh
 {
-  GLuint vao;
-  GLuint vbo;
-  GLuint ibo;
-  GLsizei count;
+  GLuint vao_opaque;
+  GLuint vbo_opaque;
+  GLuint ibo_opaque;
+  GLsizei count_opaque;
+
+  GLuint vao_transparent;
+  GLuint vbo_transparent;
+  GLuint ibo_transparent;
+  GLsizei count_transparent;
 };
 
 struct chunk

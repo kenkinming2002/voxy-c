@@ -25,7 +25,12 @@ void renderer_render_chunks(struct renderer *renderer, struct camera *camera, st
       {
         glBindVertexArray(chunk->chunk_mesh->vao_opaque);
         glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_opaque, GL_UNSIGNED_INT, 0);
+      }
 
+  for(size_t i=0; i<world->chunks.bucket_count; ++i)
+    for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)
+      if(chunk->chunk_mesh)
+      {
         glBindVertexArray(chunk->chunk_mesh->vao_transparent);
         glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
       }

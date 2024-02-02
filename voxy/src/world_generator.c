@@ -98,63 +98,6 @@ void world_generator_fini(struct world_generator *world_generator)
   chunk_data_wrapper_hash_table_dispose(&world_generator->chunk_data_wrappers);
 }
 
-////////////////
-/// Features ///
-////////////////
-//static float lerpf(float a, float b, float t)
-//{
-//  return a + (b - a) * t;
-//}
-//
-//static float get_height(seed_t seed, ivec2_t position)
-//{
-//  float value1 = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 1/200.0f, 2.3f, 0.4f, 8);
-//  value1 = fabs(value1);
-//  value1 = powf(value1, 2.0f);
-//  value1 = ease_out(value1, 3.0f);
-//  value1 = value1 * 100.0f;
-//
-//  float value2 = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 1/2000.0f, 2.1f, 0.6f, 8);
-//  value2 = 0.5f * (value2 + 1.0f);
-//  value2 = smooth_step(value2);
-//
-//  return value1 * value2;
-//}
-//
-//static bool get_cave(seed_t seed, ivec3_t position)
-//{
-//  // Reference: https://blog.danol.cz/voxel-cave-generation-using-3d-perlin-noise-isosurfaces/
-//  float threshold = lerpf(0.0f, 0.1f, 1.0f/(1.0f+expf(position.z/1000.0f)));
-//  for(unsigned i=0; i<2; ++i)
-//  {
-//    float value = noise_perlin3_ex(seed_next(&seed), ivec3_as_fvec3(position), 0.02f, 1.5f, 0.3f, 4);
-//    if(fabs(value) > threshold)
-//      return false;
-//  }
-//  return true;
-//}
-//
-//static uint8_t get_tile_id(seed_t seed, ivec3_t position, float height)
-//{
-//  assert(0 && "Unimplemented");
-//  //if(position.z >= ETHER_HEIGHT)
-//  //  return TILE_ID_ETHER;
-//
-//  //if(position.z > height && position.z <= 3.0f)
-//  //  return TILE_ID_WATER;
-//
-//  //if(get_cave(seed, position))
-//  //  return TILE_ID_EMPTY;
-//
-//  //if(position.z <= height)
-//  //  return TILE_ID_STONE;
-//
-//  //if(position.z <= height + 1.0f)
-//  //  return TILE_ID_GRASS;
-//
-//  //return TILE_ID_EMPTY;
-//}
-
 ////////////
 /// Jobs ///
 ////////////

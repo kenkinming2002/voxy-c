@@ -39,138 +39,139 @@ error:
   return NULL;
 }
 
-GLuint gl_shader_load(GLenum target, const char *filepath)
+int gl_shader_load(struct gl_shader *shader, GLenum target, const char *filepath)
 {
-  GLuint shader = glCreateShader(target);
+  char *shader_source;
+  if(!(shader_source = read_file(filepath)))
+    return -1;
 
-  char *shader_source = read_file(filepath);
-  if(!shader_source)
-    goto error;
-
-  glShaderSource(shader, 1, (const char *const *)&shader_source, NULL);
-  glCompileShader(shader);
+  shader->id = glCreateShader(target);
+  glShaderSource(shader->id, 1, (const char *const *)&shader_source, NULL);
+  glCompileShader(shader->id);
+  free(shader_source);
 
   GLint success;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+  glGetShaderiv(shader->id, GL_COMPILE_STATUS, &success);
   if(!success)
   {
     GLint  info_log_length;
     char  *info_log;
 
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_length);
+    glGetShaderiv(shader->id, GL_INFO_LOG_LENGTH, &info_log_length);
     info_log = malloc(info_log_length);
-    glGetShaderInfoLog(shader, info_log_length, NULL, info_log);
+    glGetShaderInfoLog(shader->id, info_log_length, NULL, info_log);
 
     fprintf(stderr, "ERROR: Failed to compile shader: %s\n", info_log);
     free(info_log);
-    goto error;
+
+    glDeleteShader(shader->id);
+    return -1;
   }
-
-  free(shader_source);
-  return shader;
-
-error:
-  glDeleteShader(shader);
-  if(shader_source)
-    free(shader_source);
 
   return 0;
 }
 
-GLuint gl_program_link(GLuint vertex_shader, GLuint fragment_shader)
+void gl_shader_fini(struct gl_shader *shader)
 {
-  GLuint program = glCreateProgram();
-  glAttachShader(program, vertex_shader);
-  glAttachShader(program, fragment_shader);
-  glLinkProgram(program);
+  glDeleteShader(shader->id);
+}
+
+int gl_program_load(struct gl_program *program, size_t count, GLenum targets[count], const char *filepaths[count])
+{
+  int result;
+
+  struct gl_shader shaders[count];
+  size_t           shader_count = 0;
+
+  for(shader_count=0; shader_count<count; ++shader_count)
+    if(gl_shader_load(&shaders[shader_count], targets[shader_count], filepaths[shader_count]) != 0)
+    {
+      result = -1;
+      goto out;
+    }
+
+  result = gl_program_link(program, count, shaders);
+
+out:
+  for(size_t i=0; i<shader_count; ++i)
+    gl_shader_fini(&shaders[i]);
+  return result;
+}
+
+int gl_program_link(struct gl_program *program, size_t count, struct gl_shader shaders[count])
+{
+  program->id = glCreateProgram();
+  for(size_t i=0; i<count; ++i)
+    glAttachShader(program->id, shaders[i].id);
+  glLinkProgram(program->id);
 
   GLint success;
-  glGetProgramiv(program, GL_LINK_STATUS, &success);
+  glGetProgramiv(program->id, GL_LINK_STATUS, &success);
   if(!success)
   {
     GLint  info_log_length;
     char  *info_log;
 
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
+    glGetProgramiv(program->id, GL_INFO_LOG_LENGTH, &info_log_length);
     info_log = malloc(info_log_length);
-    glGetProgramInfoLog(program, info_log_length, NULL, info_log);
+    glGetProgramInfoLog(program->id, info_log_length, NULL, info_log);
 
     fprintf(stderr, "ERROR: Failed to link program: %s\n", info_log);
     free(info_log);
-    goto error;
+
+    glDeleteProgram(program->id);
+    return -1;
   }
 
-  return program;
-
-error:
-  glDeleteProgram(program);
   return 0;
 }
 
-GLuint gl_program_load(const char *vertex_shader_filepath, const char *fragment_shader_filepath)
+void gl_program_fini(struct gl_program *program)
 {
-  GLuint program         = 0;
-  GLuint vertex_shader   = 0;
-  GLuint fragment_shader = 0;
-
-  if((vertex_shader = gl_shader_load(GL_VERTEX_SHADER, vertex_shader_filepath)) == 0)
-    goto error;
-
-  if((fragment_shader = gl_shader_load(GL_FRAGMENT_SHADER, fragment_shader_filepath)) == 0)
-    goto error;
-
-  if((program = gl_program_link(vertex_shader, fragment_shader)) == 0)
-    goto error;
-
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-  return program;
-
-error:
-  if(vertex_shader)   glDeleteShader(vertex_shader);
-  if(fragment_shader) glDeleteShader(fragment_shader);
-  return 0;
+  glDeleteProgram(program->id);
 }
 
-GLuint gl_array_texture_load(size_t count, const char *filepaths[count])
+int gl_array_texture_2d_load(struct gl_array_texture_2d *array_texture_2d, size_t count, const char *filepaths[count])
 {
   stbi_set_flip_vertically_on_load(1);
 
-  size_t width = 0, height = 0;
+  int width, height;
   unsigned char *texels = NULL;
   for(size_t i=0; i<count; ++i)
   {
     int x, y, n;
-    unsigned char *data = stbi_load(filepaths[i], &x, &y, &n, 4);
-    if(!data)
+    unsigned char *bytes = stbi_load(filepaths[i], &x, &y, &n, 4);
+    if(!bytes)
     {
       fprintf(stderr, "ERROR: Failed to load image for array texture from %s: %s\n", filepaths[i], stbi_failure_reason());
+
       free(texels);
-      return 0;
+      stbi_image_free(bytes);
+      return -1;
     }
 
     if(!texels)
     {
       width  = x;
       height = y;
-      texels = malloc(count * width * height * 4);
-    }
-    else if((size_t)x != width || (size_t)y != height)
-    {
-      fprintf(stderr, "ERROR: Array texture must be comprised of images of same dimension: Expected %zux%zu: Got %dx%d from %s\n", width, height, x, y, filepaths[i]);
-      stbi_image_free(data);
-      free(texels);
-      return 0;
+      texels = malloc(count * width * height * 4 * sizeof *texels);
     }
 
-    memcpy(&texels[i * width * height * 4], data, width * height * 4);
-    stbi_image_free(data);
+    if(width != x || height != y)
+    {
+      fprintf(stderr, "ERROR: Array texture must be comprised of images of same dimension: Expected %dx%d: Got %dx%d from %s\n", width, height, x, y, filepaths[i]);
+
+      free(texels);
+      stbi_image_free(bytes);
+      return -1;
+    }
+
+    memcpy(&texels[i * width * height * 4], bytes, width * height * 4);
+    stbi_image_free(bytes);
   }
 
-  GLuint array_texture;
-
-  glGenTextures(1, &array_texture);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, array_texture);
+  glGenTextures(1, &array_texture_2d->id);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, array_texture_2d->id);
 
   glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -180,5 +181,10 @@ GLuint gl_array_texture_load(size_t count, const char *filepaths[count])
   glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, width, height, count, 0, GL_RGBA, GL_UNSIGNED_BYTE, texels);
 
   free(texels);
-  return array_texture;
+  return 0;
+}
+
+void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d)
+{
+  glDeleteTextures(1, &array_texture_2d->id);
 }

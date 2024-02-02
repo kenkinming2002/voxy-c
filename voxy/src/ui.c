@@ -1,42 +1,39 @@
 #include "ui.h"
 
-#include "gl.h"
+#include "check.h"
+
 #include <voxy/math/vector.h>
 
 #include <assert.h>
-
-struct ui_vertex
-{
-  fvec2_t position;
-  fvec2_t texture_coords;
-};
+#include <stdbool.h>
 
 int ui_init(struct ui *ui)
 {
-  ui->program_quad         = 0;
-  ui->program_quad_rounded = 0;
-  ui->program_texture_mono = 0;
-  ui->vao                  = 0;
+  VOXY_CHECK_DECLARE(program_quad);
+  VOXY_CHECK_DECLARE(program_quad_rounded);
+  VOXY_CHECK_DECLARE(program_texture_mono);
 
-  if((ui->program_quad         = gl_program_load("assets/ui_quad.vert",         "assets/ui_quad.frag"))         == 0) goto error;
-  if((ui->program_quad_rounded = gl_program_load("assets/ui_quad_rounded.vert", "assets/ui_quad_rounded.frag")) == 0) goto error;
-  if((ui->program_texture_mono = gl_program_load("assets/ui_texture_mono.vert", "assets/ui_texture_mono.frag")) == 0) goto error;
+  VOXY_CHECK_INIT(program_quad,         gl_program_load(&ui->program_quad,         2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/ui_quad.vert",         "assets/ui_quad.frag"        }));
+  VOXY_CHECK_INIT(program_quad_rounded, gl_program_load(&ui->program_quad_rounded, 2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/ui_quad_rounded.vert", "assets/ui_quad_rounded.frag"}));
+  VOXY_CHECK_INIT(program_texture_mono, gl_program_load(&ui->program_texture_mono, 2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/ui_texture_mono.vert", "assets/ui_texture_mono.frag"}));
 
   glGenVertexArrays(1, &ui->vao);
   glBindVertexArray(ui->vao);
+
   return 0;
 
 error:
-  ui_fini(ui);
+  VOXY_CHECK_FINI(program_quad,         gl_program_fini(&ui->program_quad));
+  VOXY_CHECK_FINI(program_quad_rounded, gl_program_fini(&ui->program_quad_rounded));
+  VOXY_CHECK_FINI(program_texture_mono, gl_program_fini(&ui->program_texture_mono));
   return -1;
 }
 
 void ui_fini(struct ui *ui)
 {
-  if(ui->vao)                  glDeleteVertexArrays(1, &ui->vao);
-  if(ui->program_texture_mono) glDeleteProgram(ui->program_texture_mono);
-  if(ui->program_quad_rounded) glDeleteProgram(ui->program_quad_rounded);
-  if(ui->program_quad)         glDeleteProgram(ui->program_quad);
+  gl_program_fini(&ui->program_quad);
+  gl_program_fini(&ui->program_quad_rounded);
+  gl_program_fini(&ui->program_texture_mono);
 }
 
 void ui_begin(struct ui *ui, fvec2_t window_size)
@@ -50,13 +47,13 @@ void ui_draw_quad(struct ui *ui, fvec2_t position, fvec2_t dimension, fvec4_t co
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glUseProgram(ui->program_quad);
+  glUseProgram(ui->program_quad.id);
 
-  glUniform2f(glGetUniformLocation(ui->program_quad, "window_size"), ui->window_size.x, ui->window_size.y);
-  glUniform2f(glGetUniformLocation(ui->program_quad, "position"   ), position   .x, position   .y);
-  glUniform2f(glGetUniformLocation(ui->program_quad, "dimension"  ), dimension  .x, dimension  .y);
+  glUniform2f(glGetUniformLocation(ui->program_quad.id, "window_size"), ui->window_size.x, ui->window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_quad.id, "position"   ), position   .x, position   .y);
+  glUniform2f(glGetUniformLocation(ui->program_quad.id, "dimension"  ), dimension  .x, dimension  .y);
 
-  glUniform4f(glGetUniformLocation(ui->program_quad, "color"), color.r, color.g, color.b, color.a);
+  glUniform4f(glGetUniformLocation(ui->program_quad.id, "color"), color.r, color.g, color.b, color.a);
 
   glBindVertexArray(ui->vao);
   glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -68,14 +65,14 @@ void ui_draw_quad_rounded(struct ui *ui, fvec2_t position, fvec2_t dimension, fl
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glUseProgram(ui->program_quad_rounded);
+  glUseProgram(ui->program_quad_rounded.id);
 
-  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "window_size"), ui->window_size.x, ui->window_size.y);
-  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "position"   ), position   .x, position   .y);
-  glUniform2f(glGetUniformLocation(ui->program_quad_rounded, "dimension"  ), dimension  .x, dimension  .y);
+  glUniform2f(glGetUniformLocation(ui->program_quad_rounded.id, "window_size"), ui->window_size.x, ui->window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_quad_rounded.id, "position"   ), position   .x, position   .y);
+  glUniform2f(glGetUniformLocation(ui->program_quad_rounded.id, "dimension"  ), dimension  .x, dimension  .y);
 
-  glUniform4f(glGetUniformLocation(ui->program_quad_rounded, "color"), color.r, color.g, color.b, color.a);
-  glUniform1f(glGetUniformLocation(ui->program_quad_rounded, "radius"), radius);
+  glUniform4f(glGetUniformLocation(ui->program_quad_rounded.id, "color"), color.r, color.g, color.b, color.a);
+  glUniform1f(glGetUniformLocation(ui->program_quad_rounded.id, "radius"), radius);
 
   glBindVertexArray(ui->vao);
   glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -87,11 +84,11 @@ void ui_draw_texture_mono(struct ui *ui, fvec2_t position, fvec2_t dimension, GL
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glUseProgram(ui->program_texture_mono);
+  glUseProgram(ui->program_texture_mono.id);
 
-  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "window_size"), ui->window_size.x, ui->window_size.y);
-  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "position"   ), position   .x, position   .y);
-  glUniform2f(glGetUniformLocation(ui->program_texture_mono, "dimension"  ), dimension  .x, dimension  .y);
+  glUniform2f(glGetUniformLocation(ui->program_texture_mono.id, "window_size"), ui->window_size.x, ui->window_size.y);
+  glUniform2f(glGetUniformLocation(ui->program_texture_mono.id, "position"   ), position   .x, position   .y);
+  glUniform2f(glGetUniformLocation(ui->program_texture_mono.id, "dimension"  ), dimension  .x, dimension  .y);
 
   glBindTexture(GL_TEXTURE_2D, texture);
   glBindVertexArray(ui->vao);

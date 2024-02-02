@@ -14,10 +14,10 @@ void renderer_render_chunks(struct renderer *renderer, struct camera *camera, st
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glUseProgram(renderer->chunk_program);
-  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
-  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "V"),  1, GL_TRUE, (const float *)&V);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, renderer->chunk_block_texture_array);
+  glUseProgram(renderer->chunk_program.id);
+  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
+  glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program.id, "V"),  1, GL_TRUE, (const float *)&V);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, renderer->chunk_array_texture_2d.id);
 
   for(size_t i=0; i<world->chunks.bucket_count; ++i)
     for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)

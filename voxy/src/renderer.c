@@ -1,67 +1,47 @@
 #include "renderer.h"
 
-#include "gl.h"
+#include "check.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 int renderer_init(struct renderer *renderer, struct resource_pack *resource_pack)
 {
-  size_t       filepath_count;
-  const char **filepaths = NULL;
-  bool ui_initialized = false;
-
-  renderer->chunk_program             = 0;
-  renderer->chunk_block_texture_array = 0;
-
-  if((renderer->chunk_program = gl_program_load("assets/chunk.vert", "assets/chunk.frag")) == 0)
-  {
-    fprintf(stderr, "ERROR: Failed to load chunk shader\n");
-    goto error;
-  }
-
-  filepath_count = resource_pack->block_texture_info_count;
-  filepaths      = malloc(filepath_count * sizeof *filepaths);
+  size_t       filepath_count = resource_pack->block_texture_info_count;
+  const char **filepaths      = malloc(filepath_count * sizeof *filepaths);
   for(size_t i=0; i<filepath_count; ++i)
     filepaths[i] = resource_pack->block_texture_infos[i].filepath;
 
-  if((renderer->chunk_block_texture_array = gl_array_texture_load(filepath_count, filepaths)) == 0)
-  {
-    fprintf(stderr, "ERROR: Failed to load block textures\n");
-    goto error;
-  }
+  VOXY_CHECK_DECLARE(chunk_program);
+  VOXY_CHECK_DECLARE(chunk_array_texture_2d);
+  VOXY_CHECK_DECLARE(ui);
 
-  free(filepaths);
-
-  if(ui_init(&renderer->ui) != 0)
-  {
-    fprintf(stderr, "ERROR: Failed to initialize ui\n");
-    goto error;
-  }
-  ui_initialized = true;
+  VOXY_CHECK_INIT(chunk_program,          gl_program_load(&renderer->chunk_program, 2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/chunk.vert", "assets/chunk.frag"}));
+  VOXY_CHECK_INIT(chunk_array_texture_2d, gl_array_texture_2d_load(&renderer->chunk_array_texture_2d, filepath_count, filepaths));
+  VOXY_CHECK_INIT(ui,                     ui_init(&renderer->ui));
 
   font_set_init(&renderer->font_set);
   font_set_load(&renderer->font_set, "assets/arial.ttf");
   font_set_load(&renderer->font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
   font_set_load_system(&renderer->font_set);
 
+  free(filepaths);
   return 0;
 
 error:
-  if(ui_initialized) ui_fini(&renderer->ui);
-  if(renderer->chunk_program             != 0) glDeleteProgram(renderer->chunk_program);
-  if(renderer->chunk_block_texture_array != 0) glDeleteTextures(1, &renderer->chunk_block_texture_array);
-  if(filepaths)
-    free(filepaths);
+  VOXY_CHECK_FINI(chunk_program,          gl_program_fini(&renderer->chunk_program));
+  VOXY_CHECK_FINI(chunk_array_texture_2d, gl_array_texture_2d_fini(&renderer->chunk_array_texture_2d));
+  VOXY_CHECK_FINI(ui,                     ui_fini(&renderer->ui));
+  free(filepaths);
   return -1;
 }
 
 void renderer_fini(struct renderer *renderer)
 {
-  font_set_fini(&renderer->font_set);
+  gl_program_fini(&renderer->chunk_program);
+  gl_array_texture_2d_fini(&renderer->chunk_array_texture_2d);
   ui_fini(&renderer->ui);
-  glDeleteProgram(renderer->chunk_program);
-  glDeleteTextures(1, &renderer->chunk_block_texture_array);
+  font_set_fini(&renderer->font_set);
 }
 
 void renderer_render(struct renderer *renderer, struct window *window, struct camera *camera, struct world *world)

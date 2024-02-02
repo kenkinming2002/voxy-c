@@ -8,11 +8,12 @@
 #include "ui.h"
 #include "window.h"
 #include "world.h"
+#include "gl.h"
 
 struct renderer
 {
-  GLuint chunk_program;
-  GLuint chunk_block_texture_array;
+  struct gl_program          chunk_program;
+  struct gl_array_texture_2d chunk_array_texture_2d;
 
   struct ui       ui;
   struct font_set font_set;

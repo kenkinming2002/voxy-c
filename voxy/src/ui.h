@@ -1,15 +1,17 @@
 #ifndef VOXY_UI_H
 #define VOXY_UI_H
 
-#include "glad/glad.h"
 #include <voxy/math/vector.h>
+
+#include "gl.h"
 #include "font_set.h"
 
 struct ui
 {
-  GLuint program_quad;
-  GLuint program_quad_rounded;
-  GLuint program_texture_mono;
+  struct gl_program program_quad;
+  struct gl_program program_quad_rounded;
+  struct gl_program program_texture_mono;
+
   GLuint vao;
 
   fvec2_t window_size;

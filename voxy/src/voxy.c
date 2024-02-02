@@ -22,14 +22,14 @@ struct application
 {
   struct resource_pack resource_pack;
 
-  struct world           world;
-  struct world_generator world_generator;
-
   struct window   window;
   struct renderer renderer;
 
   struct ui       ui;
   struct font_set font_set;
+
+  struct world           world;
+  struct world_generator world_generator;
 
   int selection;
 };
@@ -42,9 +42,6 @@ static int application_init(struct application *application)
 
   CHECK(resource_pack_load(&application->resource_pack, RESOURCE_PACK_FILEPATH));
 
-  world_init(&application->world, seed);
-  world_generator_init(&application->world_generator, seed);
-
   CHECK(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT));
   CHECK(renderer_init(&application->renderer, &application->resource_pack));
   CHECK(ui_init(&application->ui));
@@ -54,6 +51,9 @@ static int application_init(struct application *application)
   font_set_load(&application->font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
   font_set_load_system(&application->font_set);
 
+  world_init(&application->world, seed);
+  world_generator_init(&application->world_generator, seed);
+
   glfwSetWindowUserPointer(application->window.window, application);
   glfwSetScrollCallback(application->window.window, application_on_scroll);
 
@@ -62,14 +62,14 @@ static int application_init(struct application *application)
 
 static void application_fini(struct application *application)
 {
+  world_generator_fini(&application->world_generator);
+  world_fini(&application->world);
+
   font_set_fini(&application->font_set);
 
   ui_fini(&application->ui);
   renderer_fini(&application->renderer);
   window_fini(&application->window);
-
-  world_generator_fini(&application->world_generator);
-  world_fini(&application->world);
 
   resource_pack_unload(&application->resource_pack);
 }

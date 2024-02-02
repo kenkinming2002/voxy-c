@@ -141,7 +141,7 @@ GLuint gl_array_texture_load(size_t count, const char *filepaths[count])
   for(size_t i=0; i<count; ++i)
   {
     int x, y, n;
-    unsigned char *data = stbi_load(filepaths[i], &x, &y, &n, 3);
+    unsigned char *data = stbi_load(filepaths[i], &x, &y, &n, 4);
     if(!data)
     {
       fprintf(stderr, "ERROR: Failed to load image for array texture from %s: %s\n", filepaths[i], stbi_failure_reason());
@@ -153,7 +153,7 @@ GLuint gl_array_texture_load(size_t count, const char *filepaths[count])
     {
       width  = x;
       height = y;
-      texels = malloc(count * width * height * 3);
+      texels = malloc(count * width * height * 4);
     }
     else if((size_t)x != width || (size_t)y != height)
     {
@@ -163,22 +163,22 @@ GLuint gl_array_texture_load(size_t count, const char *filepaths[count])
       return 0;
     }
 
-    memcpy(&texels[i * width * height * 3], data, width * height * 3);
+    memcpy(&texels[i * width * height * 4], data, width * height * 4);
     stbi_image_free(data);
   }
 
-  GLuint cube_map;
+  GLuint array_texture;
 
-  glGenTextures(1, &cube_map);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, cube_map);
+  glGenTextures(1, &array_texture);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, array_texture);
 
   glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, width, height, count, 0, GL_RGB, GL_UNSIGNED_BYTE, texels);
+  glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, width, height, count, 0, GL_RGBA, GL_UNSIGNED_BYTE, texels);
 
   free(texels);
-  return cube_map;
+  return array_texture;
 }

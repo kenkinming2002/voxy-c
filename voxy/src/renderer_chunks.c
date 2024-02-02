@@ -15,7 +15,7 @@ void renderer_render_chunks(struct renderer *renderer, struct camera *camera, st
   glUseProgram(renderer->chunk_program);
   glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "VP"), 1, GL_TRUE, (const float *)&VP);
   glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program, "V"),  1, GL_TRUE, (const float *)&V);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, renderer->chunk_block_texture_array);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, renderer->chunk_block_texture_array);
 
   for(size_t i=0; i<world->chunks.bucket_count; ++i)
     for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)

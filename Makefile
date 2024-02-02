@@ -5,6 +5,8 @@ VOXY_SRCS += voxy/src/camera.c
 VOXY_SRCS += voxy/src/font_set.c
 VOXY_SRCS += voxy/src/gl.c
 VOXY_SRCS += voxy/src/glad.c
+VOXY_SRCS += voxy/src/renderer.c
+VOXY_SRCS += voxy/src/renderer_chunks.c
 VOXY_SRCS += voxy/src/resource_pack.c
 VOXY_SRCS += voxy/src/stb_image.c
 VOXY_SRCS += voxy/src/thread_pool.c
@@ -18,7 +20,6 @@ VOXY_SRCS += voxy/src/world_generator.c
 VOXY_SRCS += voxy/src/world_light.c
 VOXY_SRCS += voxy/src/world_mesh.c
 VOXY_SRCS += voxy/src/world_player_control.c
-VOXY_SRCS += voxy/src/world_renderer.c
 
 RESOURCE_PACK_SRCS += resource_pack/src/resource_pack.c
 

@@ -1,10 +1,10 @@
 #include "camera.h"
 #include "font_set.h"
+#include "renderer.h"
 #include "ui.h"
 #include "window.h"
 #include "world.h"
 #include "world_generator.h"
-#include "world_renderer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,14 +16,17 @@
 #define WINDOW_TITLE "voxy"
 #define RESOURCE_PACK_FILEPATH "resource_pack/resource_pack.so"
 
+#define CHECK(expr) if((expr) != 0) { fprintf(stderr, "%s:%d: ERROR: %s != 0\n", __FILE__, __LINE__, #expr); exit(EXIT_FAILURE); }
+
 struct application
 {
+  struct resource_pack resource_pack;
+
   struct world           world;
   struct world_generator world_generator;
 
-  struct window          window;
-  struct resource_pack   resource_pack;
-  struct world_renderer  world_renderer;
+  struct window   window;
+  struct renderer renderer;
 
   struct ui       ui;
   struct font_set font_set;
@@ -35,52 +38,40 @@ static void application_on_scroll(GLFWwindow *window, double xoffset, double off
 
 static int application_init(struct application *application)
 {
-  bool window_initialized         = false;
-  bool resource_pack_loaded       = false;
-  bool world_renderer_initialized = false;
-  bool ui_initialized             = false;
-  bool font_set_loaded            = false;
+  seed_t seed = time(NULL);
 
-  if(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT)   != 0) goto error; else window_initialized         = true;
-  if(resource_pack_load(&application->resource_pack, RESOURCE_PACK_FILEPATH)        != 0) goto error; else resource_pack_loaded       = true;
-  if(world_renderer_init(&application->world_renderer, &application->resource_pack) != 0) goto error; else world_renderer_initialized = true;
-  if(ui_init(&application->ui)                                                      != 0) goto error; else ui_initialized             = true;
+  CHECK(resource_pack_load(&application->resource_pack, RESOURCE_PACK_FILEPATH));
+
+  world_init(&application->world, seed);
+  world_generator_init(&application->world_generator, seed);
+
+  CHECK(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT));
+  CHECK(renderer_init(&application->renderer, &application->resource_pack));
+  CHECK(ui_init(&application->ui));
 
   font_set_init(&application->font_set);
   font_set_load(&application->font_set, "assets/arial.ttf");
   font_set_load(&application->font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
   font_set_load_system(&application->font_set);
-  font_set_loaded = true;
 
   glfwSetWindowUserPointer(application->window.window, application);
-  glfwSetScrollCallback(application->window.window, &application_on_scroll);
+  glfwSetScrollCallback(application->window.window, application_on_scroll);
 
-  application->selection = 0;
-
-  seed_t seed = time(NULL);
-  world_init(&application->world, seed);
-  world_generator_init(&application->world_generator, seed);
   return 0;
-
-error:
-  if(font_set_loaded)            font_set_fini(&application->font_set);
-  if(ui_initialized)             ui_fini(&application->ui);
-  if(world_renderer_initialized) world_renderer_fini(&application->world_renderer);
-  if(resource_pack_loaded)       resource_pack_unload(&application->resource_pack);
-  if(window_initialized)         window_fini(&application->window);
-  return -1;
 }
 
 static void application_fini(struct application *application)
 {
+  font_set_fini(&application->font_set);
+
+  ui_fini(&application->ui);
+  renderer_fini(&application->renderer);
+  window_fini(&application->window);
+
   world_generator_fini(&application->world_generator);
   world_fini(&application->world);
 
-  font_set_fini(&application->font_set);
-  ui_fini(&application->ui);
-  world_renderer_fini(&application->world_renderer);
   resource_pack_unload(&application->resource_pack);
-  window_fini(&application->window);
 }
 
 static void application_on_scroll(GLFWwindow *window, double xoffset, double yoffset)
@@ -116,18 +107,13 @@ static void application_render(struct application *application)
 {
   int width, height;
   window_get_framebuffer_size(&application->window, &width, &height);
-
-  glViewport(0, 0, width, height);
-  glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  world_renderer_render(&application->world_renderer, &application->world, &(struct camera) {
+  renderer_render(&application->renderer, &application->window, &(struct camera) {
     .transform = application->world.player.transform,
     .fovy      = M_PI / 2.0f,
     .near      = 1.0f,
     .far       = 1000.0f,
     .aspect    = (float)width / (float)height,
-  });
+  }, &application->world);
 
   ui_begin(&application->ui, fvec2(width, height));
 

@@ -145,16 +145,16 @@ static inline bool get_cave(seed_t seed, ivec3_t position)
 
 static inline uint8_t get_tile(seed_t seed, ivec3_t position, float height)
 {
-  float height1 = height;
-  float height2 = height1 + 1.0f;
+  int height1 = floorf(height);
+  int height2 = height1 + 1;
 
-  if(position.z <= height1)
+  if(position.z < height1)
     return get_cave(seed, position) ? TILE_EMPTY : TILE_STONE;
 
-  if(position.z <= height2)
+  if(position.z < height2)
     return TILE_GRASS;
 
-  if(position.z <= WATER_HEIGHT)
+  if(position.z < WATER_HEIGHT)
     return TILE_WATER;
 
   if(position.z >= ETHER_HEIGHT)
@@ -173,14 +173,79 @@ void generate_heights(seed_t seed, ivec2_t position, float heights[CHUNK_WIDTH][
     }
 }
 
+static uint8_t TREE[6][5][5] = {
+  {
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_LOG,   TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+  },
+  {
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_LOG,   TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+  },
+  {
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_LOG,   TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+  },
+  {
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LOG,   TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+  },
+  {
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LOG,   TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+  },
+  {
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_EMPTY, },
+    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+  },
+};
+
+static void place_tile(uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position, uint8_t tile)
+{
+  if(position.x < 0 || position.x >= CHUNK_WIDTH) return;
+  if(position.y < 0 || position.y >= CHUNK_WIDTH) return;
+  if(position.z < 0 || position.z >= CHUNK_WIDTH) return;
+  tiles[position.z][position.y][position.x] = tile;
+}
+
+static void place_tree(uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position)
+{
+  for(int z=0; z<6; ++z)
+    for(int y=0; y<5; ++y)
+      for(int x=0; x<5; ++x)
+        if(TREE[z][y][x] != TILE_EMPTY)
+          place_tile(tiles, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
+}
+
 void generate_tiles(seed_t seed, ivec3_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH], uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
 {
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
       {
-        ivec3_t real_position = ivec3_add(ivec3_mul_scalar(position, CHUNK_WIDTH), ivec3(x, y, z));
-        tiles[z][y][x] = get_tile(seed, real_position, heights[y][x]);
+        ivec3_t local_position  = ivec3(x, y, z);
+        ivec3_t global_position = ivec3_add(ivec3_mul_scalar(position, CHUNK_WIDTH), local_position);
+        tiles[z][y][x] = get_tile(seed, global_position, heights[y][x]);
       }
+
+  place_tree(tiles, ivec3(7, 7, floorf(heights[7][7]) + 1 - position.z * CHUNK_WIDTH));
 }
 

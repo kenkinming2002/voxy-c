@@ -163,16 +163,6 @@ static inline uint8_t get_tile(seed_t seed, ivec3_t position, float height)
   return TILE_EMPTY;
 }
 
-void generate_heights(seed_t seed, ivec2_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH])
-{
-  for(int y = 0; y<CHUNK_WIDTH; ++y)
-    for(int x = 0; x<CHUNK_WIDTH; ++x)
-    {
-      ivec2_t real_position = ivec2_add(ivec2_mul_scalar(position, CHUNK_WIDTH), ivec2(x, y));
-      heights[y][x] = get_height(seed, real_position);
-    }
-}
-
 static uint8_t TREE[6][5][5] = {
   {
     {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
@@ -235,6 +225,16 @@ static void place_tree(uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ive
           place_tile(tiles, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
 }
 
+void generate_heights(seed_t seed, ivec2_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH])
+{
+  for(int y = 0; y<CHUNK_WIDTH; ++y)
+    for(int x = 0; x<CHUNK_WIDTH; ++x)
+    {
+      ivec2_t real_position = ivec2_add(ivec2_mul_scalar(position, CHUNK_WIDTH), ivec2(x, y));
+      heights[y][x] = get_height(seed, real_position);
+    }
+}
+
 void generate_tiles(seed_t seed, ivec3_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH], uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
 {
   for(int z = 0; z<CHUNK_WIDTH; ++z)
@@ -246,6 +246,18 @@ void generate_tiles(seed_t seed, ivec3_t position, float heights[CHUNK_WIDTH][CH
         tiles[z][y][x] = get_tile(seed, global_position, heights[y][x]);
       }
 
-  place_tree(tiles, ivec3(7, 7, floorf(heights[7][7]) + 1 - position.z * CHUNK_WIDTH));
+  seed_t seed_tree = seed ^ 0b1010110101011111010110110101010101010101010101101010000101011101;
+  for(int y = -2; y<CHUNK_WIDTH+2; ++y)
+    for(int x = -2; x<CHUNK_WIDTH+2; ++x)
+    {
+      ivec2_t local_position  = ivec2(x, y);
+      ivec2_t global_position = ivec2_add(ivec2_mul_scalar(ivec2(position.x, position.y), CHUNK_WIDTH), local_position);
+      if(noise_random2i(seed_tree, global_position) < 0.005f)
+      {
+        int height = floorf(get_height(seed, global_position)) + 1;
+        if(height >= WATER_HEIGHT)
+          place_tree(tiles, ivec3(x, y, height - position.z * CHUNK_WIDTH));
+      }
+    }
 }
 

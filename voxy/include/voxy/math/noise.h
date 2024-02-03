@@ -8,8 +8,11 @@
 /// Interfaces ///
 //////////////////
 
-static inline float noise_random2(seed_t seed, fvec2_t position);
-static inline float noise_random3(seed_t seed, fvec3_t position);
+static inline float noise_random2i(seed_t seed, ivec2_t position);
+static inline float noise_random3i(seed_t seed, ivec3_t position);
+
+static inline float noise_random2f(seed_t seed, fvec2_t position);
+static inline float noise_random3f(seed_t seed, fvec3_t position);
 
 static inline float noise_perlin2(seed_t seed, fvec2_t position);
 static inline float noise_perlin3(seed_t seed, fvec3_t position);
@@ -26,21 +29,71 @@ static inline float smoother_step(float x);
 /// Implementations ///
 ///////////////////////
 
-static inline float noise_random2(seed_t seed, fvec2_t position)
+static inline float noise_random2i(seed_t seed, ivec2_t position)
+{
+  // FIXME: WTH
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  seed *= 0b1010110110101010101010101010101010101010;
+
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  seed *= 0b1001010101010110101101011010101010101000;
+
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  seed *= 0b0101011010101010101010110101010100101001;
+
+  seed *= position.x;
+  seed ^= 0b0010101011010101010101010101101010101011;
+  seed *= position.y;
+  seed ^= 0b0110101010110101010100110101011101010001;
+
+  return (float)seed_next(&seed) / (float)SEED_MAX;
+}
+
+static inline float noise_random3i(seed_t seed, ivec3_t position)
+{
+  // FIXME: WTH
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  seed_combine(&seed, &position.z, sizeof position.z);
+  seed *= 0b1010110101111010101010101010101000010101;
+
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  seed_combine(&seed, &position.z, sizeof position.z);
+  seed *= 0b1001010101101011101010101011010110101010;
+
+  seed_combine(&seed, &position.x, sizeof position.x);
+  seed_combine(&seed, &position.y, sizeof position.y);
+  seed_combine(&seed, &position.z, sizeof position.z);
+  seed *= 0b0101010111010101010101010100010101010101;
+
+  seed *= position.x;
+  seed ^= 0b0010101011010101010101010101101010101011;
+  seed *= position.y;
+  seed ^= 0b1010101101110101111010111001010011010010;
+  seed *= position.y;
+  seed ^= 0b1010101010000001100101010101010111010010;
+
+  return (float)seed_next(&seed) / (float)SEED_MAX;
+}
+
+static inline float noise_random2f(seed_t seed, fvec2_t position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
   return (float)seed_next(&seed) / (float)SEED_MAX;
 }
 
-static inline float noise_random3(seed_t seed, fvec3_t position)
+static inline float noise_random3f(seed_t seed, fvec3_t position)
 {
   seed_combine(&seed, &position.x, sizeof position.x);
   seed_combine(&seed, &position.y, sizeof position.y);
   seed_combine(&seed, &position.z, sizeof position.z);
   return (float)seed_next(&seed) / (float)SEED_MAX;
 }
-
 
 static inline fvec2_t gradient2(seed_t seed, int ix, int iy)
 {

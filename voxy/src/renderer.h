@@ -22,8 +22,8 @@ struct renderer
 int renderer_init(struct renderer *renderer, struct resource_pack *resource_pack);
 void renderer_fini(struct renderer *renderer);
 
-void renderer_render(struct renderer *renderer, struct window *window, struct camera *camera, struct world *world);
+void renderer_render(struct renderer *renderer, int width, int height, struct camera *camera, struct world *world);
 void renderer_render_chunks(struct renderer *renderer, struct camera *camera, struct world *world);
-void renderer_render_ui(struct renderer *renderer, struct window *window, struct world *world);
+void renderer_render_ui(struct renderer *renderer, int width, int height, struct world *world);
 
 #endif // VOXY_RENDERER_H

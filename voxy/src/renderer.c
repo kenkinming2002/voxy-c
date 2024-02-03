@@ -44,15 +44,12 @@ void renderer_fini(struct renderer *renderer)
   font_set_fini(&renderer->font_set);
 }
 
-void renderer_render(struct renderer *renderer, struct window *window, struct camera *camera, struct world *world)
+void renderer_render(struct renderer *renderer, int width, int height, struct camera *camera, struct world *world)
 {
-  int width, height;
-  window_get_framebuffer_size(window, &width, &height);
-
   glViewport(0, 0, width, height);
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   renderer_render_chunks(renderer, camera, world);
-  renderer_render_ui(renderer, window, world);
+  renderer_render_ui(renderer, width, height, world);
 }

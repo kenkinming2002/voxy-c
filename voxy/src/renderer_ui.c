@@ -5,11 +5,8 @@ static inline float minf(float a, float b)
   return a < b ? a : b;
 }
 
-void renderer_render_ui(struct renderer *renderer, struct window *window, struct world *world)
+void renderer_render_ui(struct renderer *renderer, int width, int height, struct world *world)
 {
-  int width, height;
-  window_get_framebuffer_size(window, &width, &height);
-
   ui_begin(&renderer->ui, fvec2(width, height));
 
   const int count = 9;

@@ -10,49 +10,25 @@
 
 int application_init(struct application *application)
 {
-  seed_t seed = time(NULL);
-
-  CHECK(resource_pack_load(&application->resource_pack, RESOURCE_PACK_FILEPATH));
-
   CHECK(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT));
-  CHECK(renderer_init(&application->renderer, &application->resource_pack));
-
-  world_init(&application->world, seed);
-  world_generator_init(&application->world_generator, seed);
-
+  CHECK(application_main_game_init(&application->main_game));
   return 0;
 }
 
 void application_fini(struct application *application)
 {
-  world_generator_fini(&application->world_generator);
-  world_fini(&application->world);
-
-  renderer_fini(&application->renderer);
+  application_main_game_fini(&application->main_game);
   window_fini(&application->window);
-
-  resource_pack_unload(&application->resource_pack);
 }
 
-void application_update(struct application *application, float dt)
+void application_update(struct application *application, struct input *input, float dt)
 {
-  struct input input;
-  window_get_input(&application->window, &input);
-  world_update(&application->world, &application->world_generator, &application->resource_pack, &input, dt);
+  application_main_game_update(&application->main_game, input, dt);
 }
 
-void application_render(struct application *application)
+void application_render(struct application *application, int width, int height)
 {
-  int width, height;
-  window_get_framebuffer_size(&application->window, &width, &height);
-  renderer_render(&application->renderer, &application->window, &(struct camera) {
-    .transform = application->world.player.transform,
-    .fovy      = M_PI / 2.0f,
-    .near      = 1.0f,
-    .far       = 1000.0f,
-    .aspect    = (float)width / (float)height,
-  }, &application->world);
-  window_swap_buffers(&application->window);
+  application_main_game_render(&application->main_game, width, height);
 
 }
 
@@ -71,8 +47,15 @@ void application_run(struct application *application)
     dt        = next_time - prev_time;
     prev_time = next_time;
 
-    application_update(application, dt);
-    application_render(application);
+    struct input input;
+    window_get_input(&application->window, &input);
+    application_update(application, &input, dt);
+
+    int width, height;
+    window_get_framebuffer_size(&application->window, &width, &height);
+    application_render(application, width, height);
+
+    window_swap_buffers(&application->window);
   }
 }
 

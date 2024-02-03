@@ -5,7 +5,7 @@ static inline float minf(float a, float b)
   return a < b ? a : b;
 }
 
-void renderer_render_ui(struct renderer *renderer, int width, int height, struct world *world)
+void renderer_render_ui(struct renderer *renderer, int width, int height, struct resource_pack *resource_pack, struct world *world)
 {
   ui_begin(&renderer->ui, fvec2(width, height));
 
@@ -22,7 +22,7 @@ void renderer_render_ui(struct renderer *renderer, int width, int height, struct
   char buffer[32];
 
   snprintf(buffer, sizeof buffer, "Selected %d 你好 😀", world->player.selection);
-  ui_draw_text_centered(&renderer->ui, &renderer->font_set, fvec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
+  ui_draw_text_centered(&renderer->ui, &resource_pack->font_set, fvec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
   ui_draw_quad_rounded(&renderer->ui, fvec2(margin_horizontal, margin_vertical), fvec2(total_width, total_height), sep, fvec4(0.9f, 0.9f, 0.9f, 0.3f));
   for(int i=0; i<count; ++i)
   {

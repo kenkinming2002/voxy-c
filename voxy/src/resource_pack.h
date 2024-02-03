@@ -1,6 +1,9 @@
 #ifndef VOXY_RESOURCE_PACK_H
 #define VOXY_RESOURCE_PACK_H
 
+#include "gl.h"
+#include "font_set.h"
+
 #include <voxy/resource_pack.h>
 
 struct resource_pack
@@ -15,6 +18,9 @@ struct resource_pack
 
   void (*generate_heights)(seed_t seed, ivec2_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH]);
   void (*generate_tiles)(seed_t seed, ivec3_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH], uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
+
+  struct font_set            font_set;
+  struct gl_array_texture_2d block_array_texture;
 };
 
 int resource_pack_load(struct resource_pack *resource_pack, const char *filepath);

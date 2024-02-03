@@ -12,7 +12,7 @@ int application_main_game_init(struct application_main_game *application_main_ga
   seed_t seed = time(NULL);
 
   CHECK(resource_pack_load(&application_main_game->resource_pack, RESOURCE_PACK_FILEPATH));
-  CHECK(renderer_init(&application_main_game->renderer, &application_main_game->resource_pack));
+  CHECK(renderer_init(&application_main_game->renderer));
 
   world_init(&application_main_game->world, seed);
   world_generator_init(&application_main_game->world_generator, seed);
@@ -41,6 +41,6 @@ void application_main_game_render(struct application_main_game *application_main
   camera.near      = 1.0f;
   camera.far       = 1000.0f;
   camera.aspect    = (float)width / (float)height;
-  renderer_render(&application_main_game->renderer, width, height, &camera, &application_main_game->world);
+  renderer_render(&application_main_game->renderer, width, height, &application_main_game->resource_pack, &camera, &application_main_game->world);
 }
 

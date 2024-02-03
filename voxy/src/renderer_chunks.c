@@ -1,6 +1,6 @@
 #include "renderer.h"
 
-void renderer_render_chunks(struct renderer *renderer, struct camera *camera, struct world *world)
+void renderer_render_chunks(struct renderer *renderer, struct camera *camera, struct resource_pack *resource_pack, struct world *world)
 {
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(camera),       VP);
@@ -17,7 +17,7 @@ void renderer_render_chunks(struct renderer *renderer, struct camera *camera, st
   glUseProgram(renderer->chunk_program.id);
   glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
   glUniformMatrix4fv(glGetUniformLocation(renderer->chunk_program.id, "V"),  1, GL_TRUE, (const float *)&V);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, renderer->chunk_array_texture_2d.id);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, resource_pack->block_array_texture.id);
 
   for(size_t i=0; i<world->chunks.bucket_count; ++i)
     for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)

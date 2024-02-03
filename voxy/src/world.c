@@ -63,6 +63,23 @@ void world_fini(struct world *world)
   chunk_hash_table_dispose(&world->chunks);
 }
 
+struct tile *world_get_tile(struct world *world, ivec3_t position)
+{
+  ivec3_t chunk_position;
+  ivec3_t tile_position;
+  for(int i=0; i<3; ++i)
+  {
+    tile_position.values[i]  = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
+    chunk_position.values[i] = (position.values[i] - tile_position.values[i]) / CHUNK_WIDTH;
+  }
+
+  struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
+  if(!chunk || !chunk->chunk_data)
+    return NULL;
+
+  return &chunk->chunk_data->tiles[tile_position.z][tile_position.y][tile_position.x];
+}
+
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
 {
   chunk->left   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
@@ -84,7 +101,7 @@ void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
 
 void world_update(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack, struct input *input, float dt)
 {
-  world_update_player_control(world, input, dt);
+  world_update_player_control(world, resource_pack, input, dt);
   world_update_generate(world, world_generator, resource_pack);
   world_update_light(world, resource_pack);
   world_update_mesh(world, resource_pack);

@@ -71,6 +71,12 @@ struct player
   bool             spawned;
   struct transform transform;
   int              selection;
+
+  bool has_target_destroy;
+  bool has_target_place;
+
+  ivec3_t target_destroy;
+  ivec3_t target_place;
 };
 
 struct world
@@ -84,11 +90,13 @@ struct world
 void world_init(struct world *world, seed_t seed);
 void world_fini(struct world *world);
 
+struct tile *world_get_tile(struct world *world, ivec3_t position);
+
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 
 void world_update(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack, struct input *input, float dt);
 
-void world_update_player_control(struct world *world, struct input *input, float dt);
+void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct input *input, float dt);
 void world_update_generate(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack);
 void world_update_light(struct world *world, struct resource_pack *resource_pack);
 void world_update_mesh(struct world *world, struct resource_pack *resource_pack);

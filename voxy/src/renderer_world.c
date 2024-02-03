@@ -70,9 +70,21 @@ void renderer_world_render(struct renderer_world *renderer_world, int width, int
         glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
       }
 
-  glUseProgram(renderer_world->program_outline.id);
-  glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_outline.id, "VP"), 1, GL_TRUE, (const float *)&VP);
-  glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), 0.0f, 0.0f, 10.0f);
+  if(world->player.has_target_place || world->player.has_target_destroy)
+  {
+    glUseProgram(renderer_world->program_outline.id);
+    glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_outline.id, "VP"), 1, GL_TRUE, (const float *)&VP);
 
-  glDrawArrays(GL_LINES, 0, 24);
+    if(world->player.has_target_destroy)
+    {
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.target_destroy.x, world->player.target_destroy.y, world->player.target_destroy.z);
+      glDrawArrays(GL_LINES, 0, 24);
+    }
+
+    if(world->player.has_target_destroy &&world->player.has_target_place)
+    {
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.target_place.x, world->player.target_place.y, world->player.target_place.z);
+      glDrawArrays(GL_LINES, 0, 24);
+    }
+  }
 }

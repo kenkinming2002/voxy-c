@@ -1,6 +1,8 @@
 #include "world.h"
 
-void world_update_player_control(struct world *world, struct input *input, float dt)
+#include "ray_cast.h"
+
+void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct input *input, float dt)
 {
   static const float MOVE_SPEED = 50.0f;
   static const float PAN_SPEED  = 0.002f;
@@ -20,5 +22,27 @@ void world_update_player_control(struct world *world, struct input *input, float
   world->player.selection += 9;
   world->player.selection %= 9;
   world->player.selection += 1;
+
+  fvec3_t position  = world->player.transform.translation;
+  fvec3_t direction = fvec3_normalize(transform_forward(&world->player.transform));
+
+  world->player.has_target_destroy = false;
+  world->player.has_target_place   = false;
+
+  struct ray_cast ray_cast;
+  ray_cast_init(&ray_cast, position);
+  while(ray_cast.distance < 20.0f)
+  {
+    struct tile *tile = world_get_tile(world, ray_cast.iposition);
+    if(tile && resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE)
+    {
+      world->player.has_target_destroy = true;
+      world->player.target_destroy     = ray_cast.iposition;
+      break;
+    }
+    world->player.has_target_place = true;
+    world->player.target_place     = ray_cast.iposition;
+    ray_cast_step(&ray_cast, direction);
+  }
 }
 

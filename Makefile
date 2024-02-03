@@ -7,6 +7,7 @@ VOXY_SRCS += voxy/src/camera.c
 VOXY_SRCS += voxy/src/font_set.c
 VOXY_SRCS += voxy/src/gl.c
 VOXY_SRCS += voxy/src/glad.c
+VOXY_SRCS += voxy/src/ray_cast.c
 VOXY_SRCS += voxy/src/renderer_ui.c
 VOXY_SRCS += voxy/src/renderer_world.c
 VOXY_SRCS += voxy/src/resource_pack.c

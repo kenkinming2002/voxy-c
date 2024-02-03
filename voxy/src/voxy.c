@@ -9,3 +9,4 @@ int main()
   application_run(&application);
   application_fini(&application);
 }
+

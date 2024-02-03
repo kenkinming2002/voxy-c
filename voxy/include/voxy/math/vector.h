@@ -58,6 +58,8 @@ static inline ivec4_t fvec4_as_ivec4_round(fvec4_t vec) { return ivec4(roundf(ve
 
 #define VECTOR_DEFINE_OP_HASH(prefix, type, count) static inline size_t VECTOR_FUNCTION_NAME(prefix, count, hash) (VECTOR_TYPE(prefix, count) a) { seed_t result = 0; for(unsigned i=0; i<count; ++i) seed_combine(&result, &a.values[i], sizeof a.values[i]); return result; }
 
+#define VECTOR_DEFINE_OP_COPYSIGN(prefix, type, count) static inline VECTOR_TYPE(prefix, count) VECTOR_FUNCTION_NAME(prefix, count, copysign) (VECTOR_TYPE(prefix, count) a, VECTOR_TYPE(prefix, count) b) { VECTOR_TYPE(prefix, count) result; for(unsigned i=0; i<count; ++i) result.values[i] = copysign(a.values[i], b.values[i]); return result; }
+
 #define VECTOR_DEFINE_OPS(prefix, type, count)                \
   VECTOR_DEFINE_OP_NULLARY(prefix, type, count, zero, 0)      \
   VECTOR_DEFINE_OP_UNARY  (prefix, type, count, neg, -)       \
@@ -78,7 +80,9 @@ static inline ivec4_t fvec4_as_ivec4_round(fvec4_t vec) { return ivec4(roundf(ve
   VECTOR_DEFINE_OP_LENGTH        (prefix, type, count)        \
   VECTOR_DEFINE_OP_NORMALIZE     (prefix, type, count)        \
                                                               \
-  VECTOR_DEFINE_OP_HASH(prefix, type, count)
+  VECTOR_DEFINE_OP_HASH(prefix, type, count)                  \
+                                                              \
+  VECTOR_DEFINE_OP_COPYSIGN(prefix, type, count)
 
 VECTOR_DEFINE_OPS(f, float, 2)
 VECTOR_DEFINE_OPS(f, float, 3)

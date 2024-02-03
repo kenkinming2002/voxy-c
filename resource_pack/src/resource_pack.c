@@ -10,36 +10,101 @@
 
 enum tile
 {
-  TILE_GRASS,
-  TILE_STONE,
-  TILE_WATER,
   TILE_EMPTY,
   TILE_ETHER,
+  TILE_STONE,
+  TILE_GRASS,
+  TILE_LOG,
+  TILE_LEAVE,
+  TILE_WATER,
 };
 
 enum texture
 {
+  TEXTURE_STONE,
   TEXTURE_GRASS_BOTTOM,
   TEXTURE_GRASS_TOP,
   TEXTURE_GRASS_SIDE,
-  TEXTURE_STONE,
+  TEXTURE_LOG_TOP_BOTTOM,
+  TEXTURE_LOG_SIDE,
+  TEXTURE_LEAVE,
   TEXTURE_WATER,
 };
 
 const struct block_info block_infos[] = {
-  [TILE_GRASS] = { .name = "grass", .type = BLOCK_TYPE_OPAQUE,      .ether = false, .light_level = 0, .texture_left = TEXTURE_GRASS_SIDE, .texture_right = TEXTURE_GRASS_SIDE, .texture_back = TEXTURE_GRASS_SIDE, .texture_front = TEXTURE_GRASS_SIDE, .texture_bottom = TEXTURE_GRASS_BOTTOM, .texture_top = TEXTURE_GRASS_TOP },
-  [TILE_STONE] = { .name = "stone", .type = BLOCK_TYPE_OPAQUE,      .ether = false, .light_level = 0, .texture_left = TEXTURE_STONE,      .texture_right = TEXTURE_STONE,      .texture_back = TEXTURE_STONE,      .texture_front = TEXTURE_STONE,      .texture_bottom = TEXTURE_STONE,        .texture_top = TEXTURE_STONE     },
-  [TILE_WATER] = { .name = "water", .type = BLOCK_TYPE_TRANSPARENT, .ether = false, .light_level = 0, .texture_left = TEXTURE_WATER,      .texture_right = TEXTURE_WATER,      .texture_back = TEXTURE_WATER,      .texture_front = TEXTURE_WATER,      .texture_bottom = TEXTURE_WATER,        .texture_top = TEXTURE_WATER     },
-  [TILE_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE,   .ether = false, .light_level = 0,  },
-  [TILE_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE,   .ether = true,  .light_level = 15, },
+  [TILE_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE, .ether = false, .light_level = 0,  },
+  [TILE_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE, .ether = true,  .light_level = 15, },
+  [TILE_STONE] = {
+    .name           = "stone",
+    .type           = BLOCK_TYPE_OPAQUE,
+    .ether          = false,
+    .light_level    = 0,
+    .texture_left   = TEXTURE_STONE,
+    .texture_right  = TEXTURE_STONE,
+    .texture_back   = TEXTURE_STONE,
+    .texture_front  = TEXTURE_STONE,
+    .texture_bottom = TEXTURE_STONE,
+    .texture_top    = TEXTURE_STONE
+  },
+  [TILE_GRASS] = {
+    .name           = "grass",
+    .type           = BLOCK_TYPE_OPAQUE,
+    .ether          = false,
+    .light_level    = 0,
+    .texture_left   = TEXTURE_GRASS_SIDE,
+    .texture_right  = TEXTURE_GRASS_SIDE,
+    .texture_back   = TEXTURE_GRASS_SIDE,
+    .texture_front  = TEXTURE_GRASS_SIDE,
+    .texture_bottom = TEXTURE_GRASS_BOTTOM,
+    .texture_top    = TEXTURE_GRASS_TOP,
+  },
+  [TILE_LOG] = {
+    .name           = "log",
+    .type           = BLOCK_TYPE_OPAQUE,
+    .ether          = false,
+    .light_level    = 0,
+    .texture_left   = TEXTURE_LOG_SIDE,
+    .texture_right  = TEXTURE_LOG_SIDE,
+    .texture_back   = TEXTURE_LOG_SIDE,
+    .texture_front  = TEXTURE_LOG_SIDE,
+    .texture_bottom = TEXTURE_LOG_TOP_BOTTOM,
+    .texture_top    = TEXTURE_LOG_TOP_BOTTOM
+  },
+  [TILE_LEAVE] = {
+    .name           = "leave",
+    .type           = BLOCK_TYPE_OPAQUE,
+    .ether          = false,
+    .light_level    = 0,
+    .texture_left   = TEXTURE_LEAVE,
+    .texture_right  = TEXTURE_LEAVE,
+    .texture_back   = TEXTURE_LEAVE,
+    .texture_front  = TEXTURE_LEAVE,
+    .texture_bottom = TEXTURE_LEAVE,
+    .texture_top    = TEXTURE_LEAVE
+  },
+  [TILE_WATER] = {
+    .name           = "water",
+    .type           = BLOCK_TYPE_TRANSPARENT,
+    .ether          = false,
+    .light_level    = 0,
+    .texture_left   = TEXTURE_WATER,
+    .texture_right  = TEXTURE_WATER,
+    .texture_back   = TEXTURE_WATER,
+    .texture_front  = TEXTURE_WATER,
+    .texture_bottom = TEXTURE_WATER,
+    .texture_top    = TEXTURE_WATER
+  },
 };
 
 const struct block_texture_info block_texture_infos[] = {
-  [TEXTURE_GRASS_BOTTOM] = { .filepath = "assets/grass_bottom.png" },
-  [TEXTURE_GRASS_TOP]    = { .filepath = "assets/grass_top.png"    },
-  [TEXTURE_GRASS_SIDE]   = { .filepath = "assets/grass_side.png"   },
-  [TEXTURE_STONE]        = { .filepath = "assets/stone.png"        },
-  [TEXTURE_WATER]        = { .filepath = "assets/water.png"        },
+  [TEXTURE_STONE]          = { .filepath = "assets/stone.png"          },
+  [TEXTURE_GRASS_BOTTOM]   = { .filepath = "assets/grass_bottom.png"   },
+  [TEXTURE_GRASS_TOP]      = { .filepath = "assets/grass_top.png"      },
+  [TEXTURE_GRASS_SIDE]     = { .filepath = "assets/grass_side.png"     },
+  [TEXTURE_LOG_TOP_BOTTOM] = { .filepath = "assets/log_top_bottom.png" },
+  [TEXTURE_LOG_SIDE]       = { .filepath = "assets/log_side.png"       },
+  [TEXTURE_LEAVE]          = { .filepath = "assets/leave.png"          },
+  [TEXTURE_WATER]          = { .filepath = "assets/water.png"          },
 };
 
 const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];

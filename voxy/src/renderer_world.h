@@ -5,7 +5,8 @@
 
 struct renderer_world
 {
-  struct gl_program chunk_program;
+  struct gl_program program_chunk;
+  struct gl_program program_outline;
 };
 
 int renderer_world_init(struct renderer_world *renderer_world);

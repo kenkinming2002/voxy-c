@@ -3,15 +3,28 @@
 #include "camera.h"
 #include "resource_pack.h"
 #include "world.h"
+#include "check.h"
 
 int renderer_world_init(struct renderer_world *renderer_world)
 {
-  return gl_program_load(&renderer_world->chunk_program, 2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/chunk.vert", "assets/chunk.frag"});
+  VOXY_CHECK_DECLARE(program_chunk);
+  VOXY_CHECK_DECLARE(program_outline);
+
+  VOXY_CHECK_INIT(program_chunk,   gl_program_load(&renderer_world->program_chunk,   2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/chunk.vert",   "assets/chunk.frag"}));
+  VOXY_CHECK_INIT(program_outline, gl_program_load(&renderer_world->program_outline, 2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/outline.vert", "assets/outline.frag"}));
+
+  return 0;
+
+error:
+  VOXY_CHECK_FINI(program_chunk,   gl_program_fini(&renderer_world->program_chunk));
+  VOXY_CHECK_FINI(program_outline, gl_program_fini(&renderer_world->program_outline));
+  return -1;
 }
 
 void renderer_world_fini(struct renderer_world *renderer_world)
 {
-  gl_program_fini(&renderer_world->chunk_program);
+  gl_program_fini(&renderer_world->program_chunk);
+  gl_program_fini(&renderer_world->program_outline);
 }
 
 void renderer_world_render(struct renderer_world *renderer_world, int width, int height, struct world *world, struct resource_pack *resource_pack)
@@ -34,10 +47,11 @@ void renderer_world_render(struct renderer_world *renderer_world, int width, int
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glLineWidth(5.0f);
 
-  glUseProgram(renderer_world->chunk_program.id);
-  glUniformMatrix4fv(glGetUniformLocation(renderer_world->chunk_program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
-  glUniformMatrix4fv(glGetUniformLocation(renderer_world->chunk_program.id, "V"),  1, GL_TRUE, (const float *)&V);
+  glUseProgram(renderer_world->program_chunk.id);
+  glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_chunk.id, "VP"), 1, GL_TRUE, (const float *)&VP);
+  glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_chunk.id, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_2D_ARRAY, resource_pack->block_array_texture.id);
 
   for(size_t i=0; i<world->chunks.bucket_count; ++i)
@@ -55,4 +69,10 @@ void renderer_world_render(struct renderer_world *renderer_world, int width, int
         glBindVertexArray(chunk->chunk_mesh->vao_transparent);
         glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
       }
+
+  glUseProgram(renderer_world->program_outline.id);
+  glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_outline.id, "VP"), 1, GL_TRUE, (const float *)&VP);
+  glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), 0.0f, 0.0f, 10.0f);
+
+  glDrawArrays(GL_LINES, 0, 24);
 }

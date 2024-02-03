@@ -210,6 +210,7 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, font_set->fonts[i].face->glyph->bitmap.width, font_set->fonts[i].face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, font_set->fonts[i].face->glyph->bitmap.buffer);
 
       glyph_hash_table_insert_unchecked(&font_set->glyphs, glyph);
+      break;
     }
 
   if(!glyph)

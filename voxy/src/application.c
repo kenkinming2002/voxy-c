@@ -12,11 +12,15 @@ int application_init(struct application *application)
 {
   CHECK(window_init(&application->window, WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT));
   CHECK(application_main_game_init(&application->main_game));
+  CHECK(renderer_world_init(&application->renderer_world));
+  CHECK(renderer_ui_init(&application->renderer_ui));
   return 0;
 }
 
 void application_fini(struct application *application)
 {
+  renderer_ui_fini(&application->renderer_ui);
+  renderer_world_fini(&application->renderer_world);
   application_main_game_fini(&application->main_game);
   window_fini(&application->window);
 }
@@ -28,8 +32,7 @@ void application_update(struct application *application, struct input *input, fl
 
 void application_render(struct application *application, int width, int height)
 {
-  application_main_game_render(&application->main_game, width, height);
-
+  application_main_game_render(&application->main_game, width, height, &application->renderer_world, &application->renderer_ui);
 }
 
 void application_run(struct application *application)

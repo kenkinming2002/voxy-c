@@ -1,13 +1,18 @@
 #ifndef VOXY_APPLICATION_H
 #define VOXY_APPLICATION_H
 
-#include "application_main_game.h"
-#include "renderer.h"
 #include "window.h"
+#include "renderer_world.h"
+#include "renderer_ui.h"
+
+#include "application_main_game.h"
 
 struct application
 {
-  struct window   window;
+  struct window window;
+  struct renderer_world renderer_world;
+  struct renderer_ui    renderer_ui;
+
   struct application_main_game main_game;
 };
 

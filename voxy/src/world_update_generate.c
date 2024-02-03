@@ -8,7 +8,7 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
   if(!world->player.spawned)
   {
     world->player.spawned = true;
-    world->player.transform.translation = fvec3(0.0f, 0.0f, world_generator_get_height(world_generator, ivec2(0, 0), resource_pack) + 2.0f);
+    world->player.transform.translation = world_generator_generate_spawn(world_generator, resource_pack);
     world->player.transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
     printf("Spawning player at (%f, %f, %f)\n",
         world->player.transform.translation.x,

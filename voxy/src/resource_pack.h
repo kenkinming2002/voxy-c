@@ -16,8 +16,8 @@ struct resource_pack
   size_t block_info_count;
   size_t block_texture_info_count;
 
-  void (*generate_heights)(seed_t seed, ivec2_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH]);
-  void (*generate_tiles)(seed_t seed, ivec3_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH], uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
+  void (*generate_tiles)(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
+  fvec3_t (*generate_spawn)(seed_t seed);
 
   struct font_set            font_set;
   struct gl_array_texture_2d block_array_texture;

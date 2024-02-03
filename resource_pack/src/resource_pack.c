@@ -130,6 +130,11 @@ static inline float get_height(seed_t seed, ivec2_t position)
   return value1 * value2;
 }
 
+static inline bool get_tree(seed_t seed, ivec2_t position)
+{
+  return noise_random2i(seed, position) < 0.005f;
+}
+
 static inline bool get_cave(seed_t seed, ivec3_t position)
 {
   // Reference: https://blog.danol.cz/voxel-cave-generation-using-3d-perlin-noise-isosurfaces/
@@ -225,39 +230,52 @@ static void place_tree(uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ive
           place_tile(tiles, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
 }
 
-void generate_heights(seed_t seed, ivec2_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH])
+void generate_tiles(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
 {
-  for(int y = 0; y<CHUNK_WIDTH; ++y)
-    for(int x = 0; x<CHUNK_WIDTH; ++x)
-    {
-      ivec2_t real_position = ivec2_add(ivec2_mul_scalar(position, CHUNK_WIDTH), ivec2(x, y));
-      heights[y][x] = get_height(seed, real_position);
-    }
-}
+  seed_t seed_height = seed ^ 0b0101010110101010111010110001001011011010111011010101111010101000;
+  seed_t seed_tile   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
+  seed_t seed_tree   = seed ^ 0b1010110101011111010110110101010101010101010101101010000101011101;
 
-void generate_tiles(seed_t seed, ivec3_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH], uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
-{
+  float heights[CHUNK_WIDTH+4][CHUNK_WIDTH+4];
+  bool  trees  [CHUNK_WIDTH+4][CHUNK_WIDTH+4];
+
+  for(int y = -2; y<CHUNK_WIDTH+2; ++y)
+    for(int x = -2; x<CHUNK_WIDTH+2; ++x)
+    {
+      ivec2_t local_position  = ivec2(x, y);
+      ivec2_t global_position = ivec2_add(ivec2_mul_scalar(ivec2(position.x, position.y), CHUNK_WIDTH), local_position);
+      heights[y+2][x+2] = get_height(seed_height, global_position);
+      trees  [y+2][x+2] = get_tree(seed_tree, global_position);
+    }
+
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
       {
         ivec3_t local_position  = ivec3(x, y, z);
         ivec3_t global_position = ivec3_add(ivec3_mul_scalar(position, CHUNK_WIDTH), local_position);
-        tiles[z][y][x] = get_tile(seed, global_position, heights[y][x]);
+        tiles[z][y][x] = get_tile(seed_tile, global_position, heights[y+2][x+2]);
       }
 
-  seed_t seed_tree = seed ^ 0b1010110101011111010110110101010101010101010101101010000101011101;
   for(int y = -2; y<CHUNK_WIDTH+2; ++y)
     for(int x = -2; x<CHUNK_WIDTH+2; ++x)
-    {
-      ivec2_t local_position  = ivec2(x, y);
-      ivec2_t global_position = ivec2_add(ivec2_mul_scalar(ivec2(position.x, position.y), CHUNK_WIDTH), local_position);
-      if(noise_random2i(seed_tree, global_position) < 0.005f)
+      if(trees[y+2][x+2])
       {
-        int height = floorf(get_height(seed, global_position)) + 1;
+        int height = floorf(heights[y+2][x+2]) + 1;
         if(height >= WATER_HEIGHT)
           place_tree(tiles, ivec3(x, y, height - position.z * CHUNK_WIDTH));
       }
-    }
 }
 
+fvec3_t generate_spawn(seed_t seed)
+{
+  seed_t seed_height = seed ^ 0b0101010110101010111010110001001011011010111011010101111010101000;
+  seed_t seed_tile   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
+  seed_t seed_tree   = seed ^ 0b1010110101011111010110110101010101010101010101101010000101011101;
+
+  (void)seed_height;
+  (void)seed_tile;
+  (void)seed_tree;
+
+  return fvec3(0.0f, 0.0f, get_height(seed_height, ivec2(0, 0)));
+}

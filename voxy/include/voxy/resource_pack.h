@@ -42,7 +42,7 @@ extern const struct block_texture_info block_texture_infos[];
 extern const size_t block_info_count;
 extern const size_t block_texture_info_count;
 
-void generate_heights(seed_t seed, ivec2_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH]);
-void generate_tiles(seed_t seed, ivec3_t position, float heights[CHUNK_WIDTH][CHUNK_WIDTH], uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
+void generate_tiles(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
+fvec3_t generate_spawn(seed_t seed);
 
 #endif // VOXY_INTERFACE_RESOURCE_PACK_H

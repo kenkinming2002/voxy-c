@@ -32,8 +32,8 @@ int resource_pack_load(struct resource_pack *resource_pack, const char *filepath
   LOAD_SYMBOL_FUNC(block_infos);
   LOAD_SYMBOL_TYPE(block_info_count, size_t);
 
-  LOAD_SYMBOL_FUNC(generate_heights);
   LOAD_SYMBOL_FUNC(generate_tiles);
+  LOAD_SYMBOL_FUNC(generate_spawn);
 
 #undef LOAD_SYMBOL_FUNC
 #undef LOAD_SYMBOL_TYPE

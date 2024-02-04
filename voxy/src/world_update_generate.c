@@ -18,10 +18,10 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
 
     for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
       for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
-      world->player.inventory.items[j][i] = ITEM_NONE;
+      world->player.inventory.items[j][i].id = ITEM_NONE;
 
     for(int i=0; i<HOTBAR_SIZE; ++i)
-      world->player.hotbar.items[i] = ITEM_NONE;
+      world->player.hotbar.items[i].id = ITEM_NONE;
 
     world->player.inventory.hovered = false;
     world->player.inventory.opened = false;
@@ -31,7 +31,7 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
 
     int count = mini(resource_pack->item_info_count, HOTBAR_SIZE);
     for(int i=0; i<count; ++i)
-      world->player.hotbar.items[i] = i;
+      world->player.hotbar.items[i].id = i;
 
     world->player.cooldown = 0.0f;
 

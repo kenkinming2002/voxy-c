@@ -146,8 +146,8 @@ static inline void application_main_game_render_ui(struct application_main_game 
       const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
       const fvec4_t cell_color     = player->hotbar.hovered && i == player->hotbar.hover ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
 
-      const uint8_t               cell_item_id      = player->hotbar.items[i];
-      const struct gl_texture_2d *cell_item_texture = cell_item_id != ITEM_NONE ? &resource_pack->item_textures[cell_item_id] : NULL;
+      const struct item          *cell_item         = &player->hotbar.items[i];
+      const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
 
       renderer_ui_draw_quad_rounded(renderer_ui, cell_position, cell_dimension, round, cell_color);
       if(cell_item_texture)
@@ -160,8 +160,8 @@ static inline void application_main_game_render_ui(struct application_main_game 
     {
       const fvec2_t tooltip_position = fvec2(width * 0.5f, hotbar_position.y + hotbar_dimension.y + margin);
 
-      uint8_t     tooltip_item_id   = player->hotbar.items[player->hotbar.selection];
-      const char *tooltip_item_name = tooltip_item_id != ITEM_NONE ? application_main_game->resource_pack.item_infos[tooltip_item_id].name : NULL;
+      const struct item *tooltip_item      = &player->hotbar.items[player->hotbar.selection];
+      const char        *tooltip_item_name = tooltip_item->id != ITEM_NONE ? application_main_game->resource_pack.item_infos[tooltip_item->id].name : NULL;
 
       renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, tooltip_position, tooltip_item_name ? tooltip_item_name : "none", UI_TEXT_SIZE);
     }
@@ -185,8 +185,8 @@ static inline void application_main_game_render_ui(struct application_main_game 
           const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
           const fvec4_t cell_color     = player->inventory.hovered && i == player->inventory.hover_i && j == player->inventory.hover_j ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
 
-          const uint8_t               cell_item_id      = player->inventory.items[j][i];
-          const struct gl_texture_2d *cell_item_texture = cell_item_id != ITEM_NONE ? &resource_pack->item_textures[cell_item_id] : NULL;
+          const struct item          *cell_item         = &player->inventory.items[j][i];
+          const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
 
           renderer_ui_draw_quad_rounded(renderer_ui, cell_position, cell_dimension, round, cell_color);
           if(cell_item_texture)

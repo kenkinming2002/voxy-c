@@ -73,9 +73,14 @@ struct chunk
 #define INVENTORY_SIZE_HORIZONTAL 9
 #define INVENTORY_SIZE_VERTICAL   5
 
+struct item
+{
+  uint8_t id;
+};
+
 struct inventory
 {
-  uint8_t items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
+  struct item items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
 
   bool    hovered;
   uint8_t hover_i;
@@ -86,7 +91,7 @@ struct inventory
 
 struct hotbar
 {
-  uint8_t items[HOTBAR_SIZE];
+  struct item items[HOTBAR_SIZE];
 
   bool    hovered;
   uint8_t hover;

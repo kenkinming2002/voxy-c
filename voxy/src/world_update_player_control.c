@@ -78,12 +78,12 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
 
     if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
     {
-      uint8_t item_id = world->player.hotbar.items[world->player.hotbar.selection];
-      if(item_id != ITEM_NONE)
+      const struct item *item = &world->player.hotbar.items[world->player.hotbar.selection];
+      if(item->id != ITEM_NONE)
       {
         world->player.cooldown = 0.0f;
 
-        uint8_t block_id = resource_pack->item_infos[item_id].block_id;
+        uint8_t block_id = resource_pack->item_infos[item->id].block_id;
 
         int radius = input->state_ctrl ? 2 : 0;
         for(int dz=-radius; dz<=radius; ++dz)

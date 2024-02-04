@@ -18,6 +18,19 @@ static void glfw_scroll_callback(GLFWwindow *window, double xoffset, double yoff
   if(yoffset < 0.0f) --_window->scroll;
 }
 
+static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+  (void)mods;
+
+  struct window *_window = glfwGetWindowUserPointer(window);
+  if(action == GLFW_PRESS)
+    switch(button)
+    {
+    case GLFW_MOUSE_BUTTON_LEFT:  _window->click_left  += 1; break;
+    case GLFW_MOUSE_BUTTON_RIGHT: _window->click_right += 1; break;
+    }
+}
+
 int window_init(struct window *window, const char *title, unsigned width, unsigned height)
 {
   bool glfw_initialized = false;
@@ -55,6 +68,7 @@ int window_init(struct window *window, const char *title, unsigned width, unsign
   // 4: Callback
   glfwSetWindowUserPointer(window->window, window);
   glfwSetScrollCallback(window->window, glfw_scroll_callback);
+  glfwSetMouseButtonCallback(window->window, glfw_mouse_button_callback);
 
   return 0;
 
@@ -110,8 +124,12 @@ void window_get_input(struct window *window, struct input *input)
   input->selects[7] = glfwGetKey(window->window, GLFW_KEY_8) || glfwGetKey(window->window, GLFW_KEY_KP_8);
   input->selects[8] = glfwGetKey(window->window, GLFW_KEY_9) || glfwGetKey(window->window, GLFW_KEY_KP_9);
 
-  input->scroll = window->scroll;
-  window->scroll = 0;
+  input->scroll      = window->scroll;      window->scroll      = 0;
+  input->click_left  = window->click_left;  window->click_left  = 0;
+  input->click_right = window->click_right; window->click_right = 0;
+
+  input->state_left  = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_LEFT);
+  input->state_right = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_RIGHT);
 }
 
 fvec2_t window_get_mouse_position(struct window *window)

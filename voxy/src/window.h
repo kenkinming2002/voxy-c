@@ -11,6 +11,9 @@ struct window
 {
   GLFWwindow *window;
   fvec2_t mouse_position;
+
+  int click_left;
+  int click_right;
   int scroll;
 };
 

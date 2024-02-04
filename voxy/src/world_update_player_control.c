@@ -26,6 +26,7 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   fvec3_t position  = world->player.transform.translation;
   fvec3_t direction = fvec3_normalize(transform_forward(&world->player.transform));
 
+retry:
   world->player.has_target_destroy = false;
   world->player.has_target_place   = false;
 
@@ -43,6 +44,40 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
     world->player.has_target_place = true;
     world->player.target_place     = ray_cast.iposition;
     ray_cast_step(&ray_cast, direction);
+  }
+
+  struct tile *tile;
+
+  if(input->state_left && world->player.has_target_destroy && (tile = world_get_tile(world, world->player.target_destroy)))
+  {
+    tile->id = 0;
+    input->state_left = false;
+
+    world_invalidate_tile(world, world->player.target_destroy);
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(-1, 0, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3( 1, 0, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0, -1, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0,  1, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0, 0, -1)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0, 0,  1)));
+
+    goto retry;
+  }
+
+  if(input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
+  {
+    tile->id = 2;
+    input->state_right = false;
+
+    world_invalidate_tile(world, world->player.target_destroy);
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(-1, 0, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3( 1, 0, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0, -1, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0,  1, 0)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0, 0, -1)));
+    world_invalidate_tile(world, ivec3_add(world->player.target_destroy, ivec3(0, 0,  1)));
+
+    goto retry;
   }
 }
 

@@ -91,6 +91,7 @@ void world_init(struct world *world, seed_t seed);
 void world_fini(struct world *world);
 
 struct tile *world_get_tile(struct world *world, ivec3_t position);
+void world_invalidate_tile(struct world *world, ivec3_t position);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 

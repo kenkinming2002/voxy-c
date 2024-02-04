@@ -49,11 +49,9 @@ static inline void application_main_game_update_ui(struct application_main_game 
   struct world  *world  = &application_main_game->world;
   struct player *player = &world->player;
 
-  *cursor = player->inventory.opened;
-
-  //////////////////
-  /// 0: Metrics ///
-  //////////////////
+  ///////////////////
+  ///  UI Metrics ///
+  ///////////////////
   const float base       = minf(width, height);
   const float margin     = base * 0.008f;
   const float cell_width = base * 0.05f;
@@ -63,13 +61,21 @@ static inline void application_main_game_update_ui(struct application_main_game 
   (void)margin;
   (void)round;
 
+  ////////////////////////////
+  /// Open/Close Inventory ///
+  ////////////////////////////
+  if(input->click_i % 2 == 1)
+    world->player.inventory.opened = !world->player.inventory.opened;
+
+  *cursor = player->inventory.opened;
+
   if(player->inventory.opened)
   {
     int i, j;
 
-    /////////////////
-    /// 1: Hotbar ///
-    /////////////////
+    ///////////////
+    ///  Hotbar ///
+    ///////////////
     const float   hotbar_width     = cell_sep + HOTBAR_SIZE * (cell_sep + cell_width);
     const float   hotbar_height    = 2 * cell_sep + cell_width;
     const fvec2_t hotbar_position  = fvec2((width - hotbar_width) * 0.5f, margin);
@@ -87,9 +93,9 @@ static inline void application_main_game_update_ui(struct application_main_game 
     else
       player->hotbar.hovered = false;
 
-    ////////////////////
-    /// 2: Inventory ///
-    ////////////////////
+    /////////////////
+    /// Inventory ///
+    /////////////////
     const float   inventory_width     = cell_sep + INVENTORY_SIZE_HORIZONTAL * (cell_sep + cell_width);
     const float   inventory_height    = cell_sep + INVENTORY_SIZE_VERTICAL   * (cell_sep + cell_width);
     const fvec2_t inventory_position  = fvec2((width - inventory_width) * 0.5f, (height - inventory_height) * 0.5f);
@@ -107,6 +113,19 @@ static inline void application_main_game_update_ui(struct application_main_game 
     }
     else
       player->inventory.hovered = false;
+  }
+  else
+  {
+    /////////////////////////////
+    /// Hotbar item selection ///
+    /////////////////////////////
+    for(unsigned i=0; i<9; ++i)
+      if(input->selects[i])
+        world->player.hotbar.selection = i;
+
+    world->player.hotbar.selection += input->scroll;
+    world->player.hotbar.selection += 9;
+    world->player.hotbar.selection %= 9;
   }
 }
 

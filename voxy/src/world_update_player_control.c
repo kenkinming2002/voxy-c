@@ -36,9 +36,6 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   if(!world->player.spawned)
     return;
 
-  if(input->click_i % 2 == 1)
-    world->player.inventory.opened = !world->player.inventory.opened;
-
   if(!world->player.inventory.opened)
   {
     fvec3_t rotation    = fvec3_mul_scalar(fvec3(input->mouse_motion.x, input->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
@@ -47,13 +44,6 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
     transform_rotate(&world->player.transform, rotation);
     transform_local_translate(&world->player.transform, translation);
 
-    for(unsigned i=0; i<9; ++i)
-      if(input->selects[i])
-        world->player.hotbar.selection = i;
-
-    world->player.hotbar.selection += input->scroll;
-    world->player.hotbar.selection += 9;
-    world->player.hotbar.selection %= 9;
     world->player.cooldown += dt;
 
     struct tile *tile;

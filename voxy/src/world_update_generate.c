@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+int mini(int a, int b)
+{
+  return a < b ? a : b;
+}
+
 void world_update_generate(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack)
 {
   if(!world->player.spawned)
@@ -11,11 +16,19 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
     world->player.transform.translation = world_generator_generate_spawn(world_generator, resource_pack);
     world->player.transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
 
-    int count = (int)resource_pack->item_info_count < 9 ? (int)resource_pack->item_info_count : 9;
+    for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
+      for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
+      world->player.inventory.items[i][j] = ITEM_NONE;
 
-    world->player.inventory.hotbar_selection = 0;
-    for(int i=0; i<9; ++i)     world->player.inventory.hotbar_items[i] = ITEM_NONE;
-    for(int i=0; i<count; ++i) world->player.inventory.hotbar_items[i] = i;
+    for(int i=0; i<HOTBAR_SIZE; ++i)
+      world->player.hotbar.items[i] = ITEM_NONE;
+
+    world->player.inventory.opened = false;
+    world->player.hotbar.selection = 0;
+
+    int count = mini(resource_pack->item_info_count, HOTBAR_SIZE);
+    for(int i=0; i<count; ++i)
+      world->player.hotbar.items[i] = i;
 
     printf("Spawning player at (%f, %f, %f) with %d items\n",
         world->player.transform.translation.x,

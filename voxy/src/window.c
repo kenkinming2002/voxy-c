@@ -31,6 +31,19 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
     }
 }
 
+static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+  (void)scancode;
+  (void)mods;
+
+  struct window *_window = glfwGetWindowUserPointer(window);
+  if(action == GLFW_PRESS)
+    switch(key)
+    {
+    case GLFW_KEY_I: _window->click_i += 1; break;
+    }
+}
+
 int window_init(struct window *window, const char *title, unsigned width, unsigned height)
 {
   bool glfw_initialized = false;
@@ -69,6 +82,7 @@ int window_init(struct window *window, const char *title, unsigned width, unsign
   glfwSetWindowUserPointer(window->window, window);
   glfwSetScrollCallback(window->window, glfw_scroll_callback);
   glfwSetMouseButtonCallback(window->window, glfw_mouse_button_callback);
+  glfwSetKeyCallback(window->window, glfw_key_callback);
 
   return 0;
 
@@ -127,6 +141,7 @@ void window_get_input(struct window *window, struct input *input)
   input->scroll      = window->scroll;      window->scroll      = 0;
   input->click_left  = window->click_left;  window->click_left  = 0;
   input->click_right = window->click_right; window->click_right = 0;
+  input->click_i     = window->click_i;     window->click_i     = 0;
 
   input->state_left  = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_LEFT);
   input->state_right = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_RIGHT);

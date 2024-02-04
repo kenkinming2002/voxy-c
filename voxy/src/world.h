@@ -69,10 +69,20 @@ struct chunk
   bool light_dirty;
 };
 
+#define HOTBAR_SIZE 9
+#define INVENTORY_SIZE_HORIZONTAL 9
+#define INVENTORY_SIZE_VERTICAL   5
+
 struct inventory
 {
-  uint8_t hotbar_items[9];
-  uint8_t hotbar_selection;
+  uint8_t items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
+  bool    opened;
+};
+
+struct hotbar
+{
+  uint8_t items[HOTBAR_SIZE];
+  uint8_t selection;
 };
 
 struct player
@@ -80,7 +90,9 @@ struct player
   bool spawned;
 
   struct transform transform;
+
   struct inventory inventory;
+  struct hotbar    hotbar;
 
   bool has_target_destroy;
   bool has_target_place;

@@ -14,6 +14,7 @@ struct window
 
   int click_left;
   int click_right;
+  int click_i;
   int scroll;
 };
 

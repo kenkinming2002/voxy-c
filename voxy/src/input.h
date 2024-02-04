@@ -13,6 +13,7 @@ struct input
   bool selects[9];
   int click_left;
   int click_right;
+  int click_i;
   int scroll;
 
   bool state_left;

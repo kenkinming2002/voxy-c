@@ -131,6 +131,38 @@ void gl_program_fini(struct gl_program *program)
   glDeleteProgram(program->id);
 }
 
+int gl_texture_2d_load(struct gl_texture_2d *texture_2d, const char *filepath)
+{
+  stbi_set_flip_vertically_on_load(1);
+
+  int x, y, n;
+  unsigned char *bytes = stbi_load(filepath, &x, &y, &n, 4);
+  if(!bytes)
+  {
+    fprintf(stderr, "ERROR: Failed to load image for texture from %s: %s\n", filepath, stbi_failure_reason());
+    stbi_image_free(bytes);
+    return -1;
+  }
+
+  glGenTextures(1, &texture_2d->id);
+  glBindTexture(GL_TEXTURE_2D, texture_2d->id);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+
+  stbi_image_free(bytes);
+  return 0;
+}
+
+void gl_texture_2d_fini(struct gl_texture_2d *texture_2d)
+{
+  glDeleteTextures(1, &texture_2d->id);
+}
+
 int gl_array_texture_2d_load(struct gl_array_texture_2d *array_texture_2d, size_t count, const char *filepaths[count])
 {
   stbi_set_flip_vertically_on_load(1);

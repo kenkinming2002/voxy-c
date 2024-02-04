@@ -18,7 +18,7 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
 
     for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
       for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
-      world->player.inventory.items[i][j] = ITEM_NONE;
+      world->player.inventory.items[j][i] = ITEM_NONE;
 
     for(int i=0; i<HOTBAR_SIZE; ++i)
       world->player.hotbar.items[i] = ITEM_NONE;

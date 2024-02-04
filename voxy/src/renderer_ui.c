@@ -11,10 +11,12 @@ int renderer_ui_init(struct renderer_ui *renderer_ui)
 {
   VOXY_CHECK_DECLARE(program_quad);
   VOXY_CHECK_DECLARE(program_quad_rounded);
+  VOXY_CHECK_DECLARE(program_texture);
   VOXY_CHECK_DECLARE(program_texture_mono);
 
   VOXY_CHECK_INIT(program_quad,         gl_program_load(&renderer_ui->program_quad,         2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/ui_quad.vert",         "assets/ui_quad.frag"        }));
   VOXY_CHECK_INIT(program_quad_rounded, gl_program_load(&renderer_ui->program_quad_rounded, 2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/ui_quad_rounded.vert", "assets/ui_quad_rounded.frag"}));
+  VOXY_CHECK_INIT(program_texture,      gl_program_load(&renderer_ui->program_texture,      2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/ui_texture.vert",      "assets/ui_texture.frag"     }));
   VOXY_CHECK_INIT(program_texture_mono, gl_program_load(&renderer_ui->program_texture_mono, 2, (GLenum[]){GL_VERTEX_SHADER, GL_FRAGMENT_SHADER}, (const char *[]){"assets/ui_texture_mono.vert", "assets/ui_texture_mono.frag"}));
 
   glGenVertexArrays(1, &renderer_ui->vao);
@@ -25,6 +27,7 @@ int renderer_ui_init(struct renderer_ui *renderer_ui)
 error:
   VOXY_CHECK_FINI(program_quad,         gl_program_fini(&renderer_ui->program_quad));
   VOXY_CHECK_FINI(program_quad_rounded, gl_program_fini(&renderer_ui->program_quad_rounded));
+  VOXY_CHECK_FINI(program_texture,      gl_program_fini(&renderer_ui->program_texture));
   VOXY_CHECK_FINI(program_texture_mono, gl_program_fini(&renderer_ui->program_texture_mono));
   return -1;
 }
@@ -33,6 +36,7 @@ void renderer_ui_fini(struct renderer_ui *renderer_ui)
 {
   gl_program_fini(&renderer_ui->program_quad);
   gl_program_fini(&renderer_ui->program_quad_rounded);
+  gl_program_fini(&renderer_ui->program_texture);
   gl_program_fini(&renderer_ui->program_texture_mono);
 }
 
@@ -79,6 +83,23 @@ void renderer_ui_draw_quad_rounded(struct renderer_ui *renderer_ui, fvec2_t posi
   glUniform4f(glGetUniformLocation(renderer_ui->program_quad_rounded.id, "color"), color.r, color.g, color.b, color.a);
   glUniform1f(glGetUniformLocation(renderer_ui->program_quad_rounded.id, "radius"), radius);
 
+  glBindVertexArray(renderer_ui->vao);
+  glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void renderer_ui_draw_texture(struct renderer_ui *renderer_ui, fvec2_t position, fvec2_t dimension, GLuint texture)
+{
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glUseProgram(renderer_ui->program_texture.id);
+
+  glUniform2f(glGetUniformLocation(renderer_ui->program_texture_mono.id, "window_size"), renderer_ui->window_size.x, renderer_ui->window_size.y);
+  glUniform2f(glGetUniformLocation(renderer_ui->program_texture_mono.id, "position"   ), position   .x, position   .y);
+  glUniform2f(glGetUniformLocation(renderer_ui->program_texture_mono.id, "dimension"  ), dimension  .x, dimension  .y);
+
+  glBindTexture(GL_TEXTURE_2D, texture);
   glBindVertexArray(renderer_ui->vao);
   glDrawArrays(GL_TRIANGLES, 0, 6);
 }

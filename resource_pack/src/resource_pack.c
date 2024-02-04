@@ -116,10 +116,10 @@ const struct block_texture_info block_texture_infos[] = {
 };
 
 const struct item_info item_infos[] = {
-  [ITEM_STONE] = { .name = "stone", .texture_filepath = NULL, .block_id = TILE_STONE, },
-  [ITEM_GRASS] = { .name = "grass", .texture_filepath = NULL, .block_id = TILE_GRASS, },
-  [ITEM_LOG]   = { .name = "log",   .texture_filepath = NULL, .block_id = TILE_LOG,   },
-  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = NULL, .block_id = TILE_LEAVE, },
+  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/stone_item.png", .block_id = TILE_STONE, },
+  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/grass_item.png", .block_id = TILE_GRASS, },
+  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/log_item.png",   .block_id = TILE_LOG,   },
+  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/leave_item.png", .block_id = TILE_LEAVE, },
 };
 
 const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];

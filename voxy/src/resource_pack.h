@@ -21,8 +21,9 @@ struct resource_pack
   void (*generate_tiles)(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
   fvec3_t (*generate_spawn)(seed_t seed);
 
-  struct font_set            font_set;
-  struct gl_array_texture_2d block_array_texture;
+  struct font_set             font_set;
+  struct gl_array_texture_2d  block_array_texture;
+  struct gl_texture_2d       *item_textures;
 };
 
 int resource_pack_load(struct resource_pack *resource_pack, const char *filepath);

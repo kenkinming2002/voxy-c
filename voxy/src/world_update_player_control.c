@@ -36,22 +36,51 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   if(!world->player.spawned)
     return;
 
-  if(!world->player.inventory.opened)
+  if(world->player.inventory.opened)
+    return;
+
+  ////////////////
+  /// Movement ///
+  ////////////////
+  fvec3_t rotation    = fvec3_mul_scalar(fvec3(input->mouse_motion.x, input->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
+  fvec3_t translation = fvec3_mul_scalar(input->keyboard_motion, PLAYER_MOVE_SPEED * dt);
+
+  transform_rotate(&world->player.transform, rotation);
+  transform_local_translate(&world->player.transform, translation);
+
+  ///////////////////////////////////
+  /// Block placement/destruction ///
+  ///////////////////////////////////
+  world->player.cooldown += dt;
+
+  struct tile *tile;
+
+  world_update_player_ray_cast(world, resource_pack);
+  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_left && world->player.has_target_destroy && (tile = world_get_tile(world, world->player.target_destroy)))
   {
-    fvec3_t rotation    = fvec3_mul_scalar(fvec3(input->mouse_motion.x, input->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
-    fvec3_t translation = fvec3_mul_scalar(input->keyboard_motion, PLAYER_MOVE_SPEED * dt);
+    world->player.cooldown = 0.0f;
 
-    transform_rotate(&world->player.transform, rotation);
-    transform_local_translate(&world->player.transform, translation);
-
-    world->player.cooldown += dt;
-
-    struct tile *tile;
+    int radius = input->state_ctrl ? 2 : 0;
+    for(int dz=-radius; dz<=radius; ++dz)
+      for(int dy=-radius; dy<=radius; ++dy)
+        for(int dx=-radius; dx<=radius; ++dx)
+        {
+          ivec3_t offset = ivec3(dx, dy, dz);
+          if(ivec3_length_squared(offset) <= radius * radius)
+            world_tile_set_id(world, ivec3_add(world->player.target_destroy, offset), 0);
+        }
 
     world_update_player_ray_cast(world, resource_pack);
-    if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_left && world->player.has_target_destroy && (tile = world_get_tile(world, world->player.target_destroy)))
+  }
+
+  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
+  {
+    const struct item *item = &world->player.hotbar.items[world->player.hotbar.selection];
+    if(item->id != ITEM_NONE)
     {
       world->player.cooldown = 0.0f;
+
+      uint8_t block_id = resource_pack->item_infos[item->id].block_id;
 
       int radius = input->state_ctrl ? 2 : 0;
       for(int dz=-radius; dz<=radius; ++dz)
@@ -60,33 +89,10 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
           {
             ivec3_t offset = ivec3(dx, dy, dz);
             if(ivec3_length_squared(offset) <= radius * radius)
-              world_tile_set_id(world, ivec3_add(world->player.target_destroy, offset), 0);
+              world_tile_set_id(world, ivec3_add(world->player.target_place, offset), block_id);
           }
 
       world_update_player_ray_cast(world, resource_pack);
-    }
-
-    if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
-    {
-      const struct item *item = &world->player.hotbar.items[world->player.hotbar.selection];
-      if(item->id != ITEM_NONE)
-      {
-        world->player.cooldown = 0.0f;
-
-        uint8_t block_id = resource_pack->item_infos[item->id].block_id;
-
-        int radius = input->state_ctrl ? 2 : 0;
-        for(int dz=-radius; dz<=radius; ++dz)
-          for(int dy=-radius; dy<=radius; ++dy)
-            for(int dx=-radius; dx<=radius; ++dx)
-            {
-              ivec3_t offset = ivec3(dx, dy, dz);
-              if(ivec3_length_squared(offset) <= radius * radius)
-                world_tile_set_id(world, ivec3_add(world->player.target_place, offset), block_id);
-            }
-
-        world_update_player_ray_cast(world, resource_pack);
-      }
     }
   }
 }

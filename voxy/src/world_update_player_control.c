@@ -29,7 +29,7 @@ static void world_update_player_ray_cast(struct world *world, struct resource_pa
 
 #define PLAYER_MOVE_SPEED 50.0f
 #define PLAYER_PAN_SPEED  0.002f
-#define PLAYER_ACTION_COOLDOWN 0.1f
+#define PLAYER_ACTION_COOLDOWN 0.5f
 
 void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct input *input, float dt)
 {

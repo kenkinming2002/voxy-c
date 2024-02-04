@@ -43,6 +43,10 @@ void application_main_game_render(struct application_main_game *application_main
 
   renderer_world_render(renderer_world, width, height, &application_main_game->world, &application_main_game->resource_pack);
   renderer_ui_begin(renderer_ui, fvec2(width, height));
+
+  char buffer[256];
+
+  // 1: Hotbar
   {
     const int count = 9;
 
@@ -54,8 +58,6 @@ void application_main_game_render(struct application_main_game *application_main
     const float margin_horizontal = (width - total_width) * 0.5f;
     const float margin_vertical   = height * 0.03f;
 
-    char buffer[32];
-
     snprintf(buffer, sizeof buffer, "Selected %d 你好 😀", application_main_game->world.player.selection);
     renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, fvec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
     renderer_ui_draw_quad_rounded(renderer_ui, fvec2(margin_horizontal, margin_vertical), fvec2(total_width, total_height), sep, fvec4(0.9f, 0.9f, 0.9f, 0.3f));
@@ -63,6 +65,18 @@ void application_main_game_render(struct application_main_game *application_main
     {
       fvec4_t color = i + 1 == application_main_game->world.player.selection ? fvec4(0.95f, 0.75f, 0.75f, 0.8f) : fvec4(0.95f, 0.95f, 0.95f, 0.7f);
       renderer_ui_draw_quad_rounded(renderer_ui, fvec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), fvec2(inner_width, inner_width), sep, color);
+    }
+  }
+
+  // 2: Block name
+  {
+    const float margin_vertical = height * 0.03f;
+
+    struct tile *tile;
+    if(application_main_game->world.player.has_target_destroy && (tile = world_get_tile(&application_main_game->world, application_main_game->world.player.target_destroy)))
+    {
+      const char *name = application_main_game->resource_pack.block_infos[tile->id].name;
+      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, fvec2(width * 0.5f, height - margin_vertical - 24), name, 24);
     }
   }
 }

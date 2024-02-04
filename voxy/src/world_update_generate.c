@@ -33,6 +33,8 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
     for(int i=0; i<count; ++i)
       world->player.hotbar.items[i] = i;
 
+    world->player.cooldown = 0.0f;
+
     printf("Spawning player at (%f, %f, %f) with %d items\n",
         world->player.transform.translation.x,
         world->player.transform.translation.y,

@@ -29,6 +29,7 @@ static void world_update_player_ray_cast(struct world *world, struct resource_pa
 
 #define PLAYER_MOVE_SPEED 50.0f
 #define PLAYER_PAN_SPEED  0.002f
+#define PLAYER_ACTION_COOLDOWN 0.1f
 
 void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct input *input, float dt)
 {
@@ -53,12 +54,15 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
     world->player.hotbar.selection += input->scroll;
     world->player.hotbar.selection += 9;
     world->player.hotbar.selection %= 9;
+    world->player.cooldown += dt;
 
     struct tile *tile;
 
     world_update_player_ray_cast(world, resource_pack);
-    if(input->state_left && world->player.has_target_destroy && (tile = world_get_tile(world, world->player.target_destroy)))
+    if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_left && world->player.has_target_destroy && (tile = world_get_tile(world, world->player.target_destroy)))
     {
+      world->player.cooldown = 0.0f;
+
       int radius = input->state_ctrl ? 2 : 0;
       for(int dz=-radius; dz<=radius; ++dz)
         for(int dy=-radius; dy<=radius; ++dy)
@@ -72,11 +76,13 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
       world_update_player_ray_cast(world, resource_pack);
     }
 
-    if(input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
+    if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
     {
       uint8_t item_id = world->player.hotbar.items[world->player.hotbar.selection];
       if(item_id != ITEM_NONE)
       {
+        world->player.cooldown = 0.0f;
+
         uint8_t block_id = resource_pack->item_infos[item_id].block_id;
 
         int radius = input->state_ctrl ? 2 : 0;

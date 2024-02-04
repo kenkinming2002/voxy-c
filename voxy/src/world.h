@@ -103,6 +103,8 @@ struct player
   struct inventory inventory;
   struct hotbar    hotbar;
 
+  float cooldown;
+
   bool has_target_destroy;
   bool has_target_place;
 

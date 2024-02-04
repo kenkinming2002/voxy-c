@@ -30,9 +30,9 @@ void application_update(struct application *application, struct input *input, fl
   application_main_game_update(&application->main_game, input, dt);
 }
 
-void application_render(struct application *application, int width, int height)
+void application_render(struct application *application, int width, int height, bool *cursor)
 {
-  application_main_game_render(&application->main_game, width, height, &application->renderer_world, &application->renderer_ui);
+  application_main_game_render(&application->main_game, width, height, cursor, &application->renderer_world, &application->renderer_ui);
 }
 
 void application_run(struct application *application)
@@ -55,9 +55,11 @@ void application_run(struct application *application)
     application_update(application, &input, dt);
 
     int width, height;
+    bool cursor;
+    window_get_cursor(&application->window, &cursor);
     window_get_framebuffer_size(&application->window, &width, &height);
-    application_render(application, width, height);
-
+    application_render(application, width, height, &cursor);
+    window_set_cursor(&application->window, cursor);
     window_swap_buffers(&application->window);
   }
 }

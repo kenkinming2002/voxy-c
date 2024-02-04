@@ -68,6 +68,7 @@ int window_init(struct window *window, const char *title, unsigned width, unsign
     goto error;
   }
   glfwSetInputMode(window->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  window->cursor         = false;
   window->mouse_position = window_get_mouse_position(window);
 
   // 3: Initialize OpenGL Context
@@ -121,6 +122,20 @@ void window_handle_events(struct window *window)
 void window_get_framebuffer_size(struct window *window, int *width, int *height)
 {
   glfwGetFramebufferSize(window->window, width, height);
+}
+
+void window_get_cursor(struct window *window, bool *cursor)
+{
+  *cursor = window->cursor;
+}
+
+void window_set_cursor(struct window *window, bool cursor)
+{
+  if(window->cursor != cursor)
+  {
+    glfwSetInputMode(window->window, GLFW_CURSOR, cursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+    window->cursor = cursor;
+  }
 }
 
 void window_get_input(struct window *window, struct input *input)

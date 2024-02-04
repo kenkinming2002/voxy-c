@@ -10,6 +10,9 @@
 struct window
 {
   GLFWwindow *window;
+
+  bool cursor;
+
   fvec2_t mouse_position;
 
   int click_left;
@@ -26,6 +29,9 @@ void window_swap_buffers(struct window *window);
 void window_handle_events(struct window *window);
 
 void window_get_framebuffer_size(struct window *window, int *width, int *height);
+
+void window_get_cursor(struct window *window, bool *cursor);
+void window_set_cursor(struct window *window, bool cursor);
 
 void window_get_input(struct window *window, struct input *input);
 

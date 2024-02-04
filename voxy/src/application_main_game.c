@@ -44,7 +44,7 @@ static inline float minf(float a, float b)
 
 #define UI_TEXT_SIZE 28
 
-static inline void application_main_game_render_ui(struct application_main_game *application_main_game, int width, int height, struct renderer_ui *renderer_ui)
+static inline void application_main_game_render_ui(struct application_main_game *application_main_game, int width, int height, bool *cursor, struct renderer_ui *renderer_ui)
 {
   if(!application_main_game->world.player.spawned)
     return;
@@ -127,15 +127,17 @@ static inline void application_main_game_render_ui(struct application_main_game 
 
     renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, hover_position, hover_tile_name ? hover_tile_name : "none", UI_TEXT_SIZE);
   }
+
+  *cursor = player->inventory.opened;
 }
 
-void application_main_game_render(struct application_main_game *application_main_game, int width, int height, struct renderer_world *renderer_world, struct renderer_ui *renderer_ui)
+void application_main_game_render(struct application_main_game *application_main_game, int width, int height, bool *cursor, struct renderer_world *renderer_world, struct renderer_ui *renderer_ui)
 {
   glViewport(0, 0, width, height);
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   renderer_world_render(renderer_world, width, height, &application_main_game->world, &application_main_game->resource_pack);
-  application_main_game_render_ui(application_main_game, width, height, renderer_ui);
+  application_main_game_render_ui(application_main_game, width, height, cursor, renderer_ui);
 }
 

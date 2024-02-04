@@ -39,6 +39,12 @@ static inline float minf(float a, float b)
 #define UI_HOTBAR_COLOR_BACKGROUND fvec4(0.9f, 0.9f, 0.9f, 0.3f)
 #define UI_HOTBAR_COLOR_SELECTED   fvec4(0.95f, 0.75f, 0.75f, 0.8f)
 #define UI_HOTBAR_COLOR_DEFAULT    fvec4(0.95f, 0.95f, 0.95f, 0.7f)
+
+#define UI_INVENTORY_COUNT_HORIZONTAL 9
+#define UI_INVENTORY_COUNT_VERTICAL   5
+#define UI_INVENTORY_COLOR_BACKGROUND fvec4(0.9f, 0.9f, 0.9f, 1.0f)
+#define UI_INVENTORY_COLOR_CELL       fvec4(0.3f, 0.3f, 0.3f, 1.0f)
+
 #define UI_TEXT_SIZE 28
 
 static inline void application_main_game_render_ui(struct application_main_game *application_main_game, int width, int height, struct renderer_ui *renderer_ui)
@@ -90,8 +96,28 @@ static inline void application_main_game_render_ui(struct application_main_game 
 
     renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, tooltip_position, tooltip_item_name ? tooltip_item_name : "none", UI_TEXT_SIZE);
 
+    ////////////////////
+    /// 3: Inventory ///
+    ////////////////////
+    const float   inventory_width     = cell_sep + UI_INVENTORY_COUNT_HORIZONTAL * (cell_sep + cell_width);
+    const float   inventory_height    = cell_sep + UI_INVENTORY_COUNT_VERTICAL   * (cell_sep + cell_width);
+    const fvec2_t inventory_position  = fvec2((width - inventory_width) * 0.5f, (height - inventory_height) * 0.5f);
+    const fvec2_t inventory_dimension = fvec2(inventory_width, inventory_height);
+
+    renderer_ui_draw_quad_rounded(renderer_ui, inventory_position, inventory_dimension, round, UI_INVENTORY_COLOR_BACKGROUND);
+
+    for(int y=0; y<UI_INVENTORY_COUNT_VERTICAL; ++y)
+      for(int x=0; x<UI_INVENTORY_COUNT_HORIZONTAL; ++x)
+      {
+        const fvec2_t cell_position  = fvec2_add(inventory_position, fvec2(cell_sep + x * (cell_sep + cell_width), cell_sep + y * (cell_sep + cell_width)));
+        const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
+        const fvec4_t cell_color     = UI_INVENTORY_COLOR_CELL;
+
+        renderer_ui_draw_quad_rounded(renderer_ui, cell_position, cell_dimension, round, cell_color);
+      }
+
     ////////////////
-    /// 3: Hover ///
+    /// 4: Hover ///
     ////////////////
     const fvec2_t hover_position = fvec2(width * 0.5f, height - margin - UI_TEXT_SIZE);
 

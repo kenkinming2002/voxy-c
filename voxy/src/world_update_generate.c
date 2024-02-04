@@ -13,7 +13,7 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
 
     int count = (int)resource_pack->item_info_count < 9 ? (int)resource_pack->item_info_count : 9;
 
-    world->player.inventory.hotbar_selection = 1;
+    world->player.inventory.hotbar_selection = 0;
     for(int i=0; i<9; ++i)     world->player.inventory.hotbar_items[i] = ITEM_NONE;
     for(int i=0; i<count; ++i) world->player.inventory.hotbar_items[i] = i;
 

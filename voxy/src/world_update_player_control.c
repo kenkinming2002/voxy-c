@@ -41,15 +41,13 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   transform_rotate(&world->player.transform, rotation);
   transform_local_translate(&world->player.transform, translation);
 
-  for(unsigned i=1; i<=9; ++i)
-    if(input->selects[i-1])
+  for(unsigned i=0; i<9; ++i)
+    if(input->selects[i])
       world->player.inventory.hotbar_selection = i;
 
   world->player.inventory.hotbar_selection += input->scroll;
-  world->player.inventory.hotbar_selection -= 1;
   world->player.inventory.hotbar_selection += 9;
   world->player.inventory.hotbar_selection %= 9;
-  world->player.inventory.hotbar_selection += 1;
 
   struct tile *tile;
 
@@ -71,7 +69,7 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
 
   if(input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
   {
-    uint8_t item_id = world->player.inventory.hotbar_items[world->player.inventory.hotbar_selection - 1];
+    uint8_t item_id = world->player.inventory.hotbar_items[world->player.inventory.hotbar_selection];
     if(item_id != ITEM_NONE)
     {
       uint8_t block_id = resource_pack->item_infos[item_id].block_id;

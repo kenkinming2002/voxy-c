@@ -152,12 +152,14 @@ static inline void application_main_game_render_ui(struct application_main_game 
     //////////////////
     /// 2: Tooltip ///
     //////////////////
-    const fvec2_t tooltip_position = fvec2(width * 0.5f, hotbar_position.y + hotbar_dimension.y + margin);
+    {
+      const fvec2_t tooltip_position = fvec2(width * 0.5f, hotbar_position.y + hotbar_dimension.y + margin);
 
-    uint8_t     tooltip_item_id   = player->hotbar.items[player->hotbar.selection];
-    const char *tooltip_item_name = tooltip_item_id != ITEM_NONE ? application_main_game->resource_pack.item_infos[tooltip_item_id].name : NULL;
+      uint8_t     tooltip_item_id   = player->hotbar.items[player->hotbar.selection];
+      const char *tooltip_item_name = tooltip_item_id != ITEM_NONE ? application_main_game->resource_pack.item_infos[tooltip_item_id].name : NULL;
 
-    renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, tooltip_position, tooltip_item_name ? tooltip_item_name : "none", UI_TEXT_SIZE);
+      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, tooltip_position, tooltip_item_name ? tooltip_item_name : "none", UI_TEXT_SIZE);
+    }
 
     ////////////////////
     /// 3: Inventory ///
@@ -182,16 +184,18 @@ static inline void application_main_game_render_ui(struct application_main_game 
         }
     }
 
-    ////////////////
-    /// 4: Hover ///
-    ////////////////
-    const fvec2_t hover_position = fvec2(width * 0.5f, height - margin - UI_TEXT_SIZE);
+    //////////////////
+    /// 4: Tooltip ///
+    /////////////////
+    {
+      const fvec2_t tooltip_position = fvec2(width * 0.5f, height - margin - UI_TEXT_SIZE);
 
-    struct tile *hover_tile      = application_main_game->world.player.has_target_destroy ? world_get_tile(&application_main_game->world, application_main_game->world.player.target_destroy) : NULL;
-    uint8_t      hover_tile_id   = hover_tile ? hover_tile->id : BLOCK_NONE;
-    const char  *hover_tile_name = hover_tile_id != BLOCK_NONE ? resource_pack->block_infos[hover_tile_id].name : NULL;
+      struct tile *tooltip_tile      = application_main_game->world.player.has_target_destroy ? world_get_tile(&application_main_game->world, application_main_game->world.player.target_destroy) : NULL;
+      uint8_t      tooltip_tile_id   = tooltip_tile ? tooltip_tile->id : BLOCK_NONE;
+      const char  *tooltip_tile_name = tooltip_tile_id != BLOCK_NONE ? resource_pack->block_infos[tooltip_tile_id].name : NULL;
 
-    renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, hover_position, hover_tile_name ? hover_tile_name : "none", UI_TEXT_SIZE);
+      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, tooltip_position, tooltip_tile_name ? tooltip_tile_name : "none", UI_TEXT_SIZE);
+    }
   }
 }
 

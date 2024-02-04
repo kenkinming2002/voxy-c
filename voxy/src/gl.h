@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-struct gl_shader  { GLuint id; };
+struct gl_shader { GLuint id; };
 struct gl_program { GLuint id; };
 struct gl_array_texture_2d { GLuint id; };
 

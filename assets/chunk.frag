@@ -14,7 +14,8 @@ const vec4 skyColor = vec4(0.2, 0.3, 0.3, 1.0);
 void main()
 {
   vec4 tmp = texture(blockTextureArray, vec3(fTexCoords, float(fTexIndex)));
-  tmp = tmp * vec4(fLightLevel, fLightLevel, fLightLevel, 1.0);
+  float lightLevel = mix(fLightLevel, 1.0, 0.3);
+  tmp = tmp * vec4(lightLevel, lightLevel, lightLevel, 1.0);
   tmp = mix(skyColor, tmp, visibility);
   color = tmp;
 }

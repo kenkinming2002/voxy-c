@@ -98,6 +98,23 @@ void world_invalidate_tile(struct world *world, ivec3_t position)
   }
 }
 
+void world_tile_set_id(struct world *world, ivec3_t position, uint8_t id)
+{
+  struct tile *tile = world_get_tile(world, position);
+  if(tile)
+  {
+    tile->id = id;
+
+    world_invalidate_tile(world, position);
+    world_invalidate_tile(world, ivec3_add(position, ivec3(-1, 0, 0)));
+    world_invalidate_tile(world, ivec3_add(position, ivec3( 1, 0, 0)));
+    world_invalidate_tile(world, ivec3_add(position, ivec3(0, -1, 0)));
+    world_invalidate_tile(world, ivec3_add(position, ivec3(0,  1, 0)));
+    world_invalidate_tile(world, ivec3_add(position, ivec3(0, 0, -1)));
+    world_invalidate_tile(world, ivec3_add(position, ivec3(0, 0,  1)));
+  }
+}
+
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
 {
   chunk->left   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));

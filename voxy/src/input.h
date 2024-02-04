@@ -17,6 +17,7 @@ struct input
 
   bool state_left;
   bool state_right;
+  bool state_ctrl;
 };
 
 #endif // VOXY_INPUT_H

@@ -130,6 +130,7 @@ void window_get_input(struct window *window, struct input *input)
 
   input->state_left  = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_LEFT);
   input->state_right = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_RIGHT);
+  input->state_ctrl  = glfwGetKey(window->window, GLFW_KEY_LEFT_CONTROL) || glfwGetKey(window->window, GLFW_KEY_RIGHT_CONTROL);
 }
 
 fvec2_t window_get_mouse_position(struct window *window)

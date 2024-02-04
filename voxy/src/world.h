@@ -92,6 +92,7 @@ void world_fini(struct world *world);
 
 struct tile *world_get_tile(struct world *world, ivec3_t position);
 void world_invalidate_tile(struct world *world, ivec3_t position);
+void world_tile_set_id(struct world *world, ivec3_t position, uint8_t id);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 

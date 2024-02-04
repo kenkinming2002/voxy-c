@@ -76,12 +76,21 @@ struct chunk
 struct inventory
 {
   uint8_t items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
+
+  bool    hovered;
+  uint8_t hover_i;
+  uint8_t hover_j;
+
   bool    opened;
 };
 
 struct hotbar
 {
   uint8_t items[HOTBAR_SIZE];
+
+  bool    hovered;
+  uint8_t hover;
+
   uint8_t selection;
 };
 

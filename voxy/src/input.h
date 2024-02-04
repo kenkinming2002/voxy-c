@@ -7,7 +7,9 @@
 
 struct input
 {
+  fvec2_t mouse_position;
   fvec2_t mouse_motion;
+
   fvec3_t keyboard_motion;
 
   bool selects[9];

@@ -23,7 +23,10 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
     for(int i=0; i<HOTBAR_SIZE; ++i)
       world->player.hotbar.items[i] = ITEM_NONE;
 
+    world->player.inventory.hovered = false;
     world->player.inventory.opened = false;
+
+    world->player.hotbar.hovered = false;
     world->player.hotbar.selection = 0;
 
     int count = mini(resource_pack->item_info_count, HOTBAR_SIZE);

@@ -140,7 +140,13 @@ void window_set_cursor(struct window *window, bool cursor)
 
 void window_get_input(struct window *window, struct input *input)
 {
-  input->mouse_motion    = window_get_mouse_motion(window);
+  int width, height;
+  window_get_framebuffer_size(window, &width, &height);
+
+  input->mouse_motion     = window_get_mouse_motion(window);
+  input->mouse_position   = window->mouse_position;
+  input->mouse_position.y = height - input->mouse_position.y;
+
   input->keyboard_motion = window_get_keyboard_motion(window);
 
   input->selects[0] = glfwGetKey(window->window, GLFW_KEY_1) || glfwGetKey(window->window, GLFW_KEY_KP_1);

@@ -20,6 +20,8 @@ static inline float noise_perlin3(seed_t seed, fvec3_t position);
 static inline float noise_perlin2_ex(seed_t seed, fvec2_t position, float frequency, float lacunarity, float persistence, size_t octaves);
 static inline float noise_perlin3_ex(seed_t seed, fvec3_t position, float frequency, float lacunarity, float persistence, size_t octaves);
 
+static inline float lerp(float a, float b, float t);
+
 static inline float ease_in(float x, float factor);
 static inline float ease_out(float x, float factor);
 static inline float smooth_step(float x);
@@ -95,59 +97,50 @@ static inline float noise_random3f(seed_t seed, fvec3_t position)
   return (float)seed_next(&seed) / (float)SEED_MAX;
 }
 
-static inline fvec2_t gradient2(seed_t seed, int ix, int iy)
+static inline fvec2_t noise_perlin_gradient2(seed_t seed, int ix, int iy)
 {
   seed_combine(&seed, &ix, sizeof ix);
   seed_combine(&seed, &iy, sizeof iy);
 
-  for(;;)
-  {
-    fvec2_t vec = fvec2(
-      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f,
-      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f);
+  float theta = seed_rand(&seed, 0.0f, 2.0f * M_PI);
 
-    float length_squared = fvec2_length_squared(vec);
-    if(length_squared > 0.0f && length_squared <= 1.0f)
-      return fvec2_normalize(vec);
-  }
+  float x, y;
+  sincosf(theta, &x, &y);
+
+  return fvec2(x, y);
 }
 
-static inline fvec3_t gradient3(seed_t seed, int ix, int iy, int iz)
+static inline fvec3_t noise_perlin_gradient3(seed_t seed, int ix, int iy, int iz)
 {
   seed_combine(&seed, &ix, sizeof ix);
   seed_combine(&seed, &iy, sizeof iy);
   seed_combine(&seed, &iz, sizeof iz);
 
-  for(;;)
-  {
-    fvec3_t vec = fvec3(
-      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f,
-      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f,
-      ((float)seed_next(&seed) / (float)SEED_MAX) * 2.0f - 1.0f);
+  float theta = seed_rand(&seed, 0.0f, 2.0f * M_PI);
+  float z     = seed_rand(&seed, -1.0f, 1.0f);
 
-    float length_squared = fvec3_length_squared(vec);
-    if(length_squared > 0.0f && length_squared <= 1.0f)
-      return fvec3_normalize(vec);
-  }
+  float x, y;
+  sincosf(theta, &x, &y);
+
+  float r = sqrtf(1.0f - z * z);
+  x *= r;
+  y *= r;
+
+  return fvec3(x, y, z);
 }
 
-static inline float value2(seed_t seed, fvec2_t position, int ix, int iy)
+static inline float noise_perlin_value2(seed_t seed, fvec2_t position, int ix, int iy)
 {
-  fvec2_t gradient = gradient2(seed, ix, iy);
+  fvec2_t gradient = noise_perlin_gradient2(seed, ix, iy);
   fvec2_t distance = fvec2_sub(position, fvec2(ix, iy));
   return fvec2_dot(gradient, distance);
 }
 
-static inline float value3(seed_t seed, fvec3_t position, int ix, int iy, int iz)
+static inline float noise_perlin_value3(seed_t seed, fvec3_t position, int ix, int iy, int iz)
 {
-  fvec3_t gradient = gradient3(seed, ix, iy, iz);
+  fvec3_t gradient = noise_perlin_gradient3(seed, ix, iy, iz);
   fvec3_t distance = fvec3_sub(position, fvec3(ix, iy, iz));
   return fvec3_dot(gradient, distance);
-}
-
-static inline float interpolate(float a, float b, float t)
-{
-  return a + (b - a) * t;
 }
 
 static inline float noise_perlin2(seed_t seed, fvec2_t position)
@@ -159,15 +152,15 @@ static inline float noise_perlin2(seed_t seed, fvec2_t position)
   float ty = position.y - (float)y0;
 
   return
-    interpolate(
-      interpolate(
-        value2(seed, position, x0, y0),
-        value2(seed, position, x1, y0),
+    lerp(
+      lerp(
+        noise_perlin_value2(seed, position, x0, y0),
+        noise_perlin_value2(seed, position, x1, y0),
         tx
       ),
-      interpolate(
-        value2(seed, position, x0, y1),
-        value2(seed, position, x1, y1),
+      lerp(
+        noise_perlin_value2(seed, position, x0, y1),
+        noise_perlin_value2(seed, position, x1, y1),
         tx
       ),
       ty
@@ -185,29 +178,29 @@ static inline float noise_perlin3(seed_t seed, fvec3_t position)
   float tz = position.z - z0;
 
   return
-    interpolate(
-      interpolate(
-        interpolate(
-          value3(seed, position, x0, y0, z0),
-          value3(seed, position, x1, y0, z0),
+    lerp(
+      lerp(
+        lerp(
+          noise_perlin_value3(seed, position, x0, y0, z0),
+          noise_perlin_value3(seed, position, x1, y0, z0),
           tx
         ),
-        interpolate(
-          value3(seed, position, x0, y1, z0),
-          value3(seed, position, x1, y1, z0),
+        lerp(
+          noise_perlin_value3(seed, position, x0, y1, z0),
+          noise_perlin_value3(seed, position, x1, y1, z0),
           tx
         ),
         ty
       ),
-      interpolate(
-        interpolate(
-          value3(seed, position, x0, y0, z1),
-          value3(seed, position, x1, y0, z1),
+      lerp(
+        lerp(
+          noise_perlin_value3(seed, position, x0, y0, z1),
+          noise_perlin_value3(seed, position, x1, y0, z1),
           tx
         ),
-        interpolate(
-          value3(seed, position, x0, y1, z1),
-          value3(seed, position, x1, y1, z1),
+        lerp(
+          noise_perlin_value3(seed, position, x0, y1, z1),
+          noise_perlin_value3(seed, position, x1, y1, z1),
           tx
         ),
         ty
@@ -244,6 +237,11 @@ static inline float noise_perlin3_ex(seed_t seed, fvec3_t position, float freque
     amplitude *= persistence;
   }
   return value / max_value / (sqrtf(3.0f) / 4.0f);
+}
+
+static inline float lerp(float a, float b, float t)
+{
+  return a + (b - a) * t;
 }
 
 static inline float ease_in(float x, float factor)

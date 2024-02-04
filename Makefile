@@ -1,5 +1,6 @@
 CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
+CFLAGS += -D_GNU_SOURCE
 
 VOXY_SRCS += voxy/src/application.c
 VOXY_SRCS += voxy/src/application_main_game.c

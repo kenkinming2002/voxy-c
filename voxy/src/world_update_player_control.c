@@ -29,6 +29,9 @@ static void world_update_player_ray_cast(struct world *world, struct resource_pa
 
 void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct input *input, float dt)
 {
+  if(!world->player.spawned)
+    return;
+
   static const float MOVE_SPEED = 50.0f;
   static const float PAN_SPEED  = 0.002f;
 
@@ -40,13 +43,13 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
 
   for(unsigned i=1; i<=9; ++i)
     if(input->selects[i-1])
-      world->player.selection = i;
+      world->player.inventory.hotbar_selection = i;
 
-  world->player.selection += input->scroll;
-  world->player.selection -= 1;
-  world->player.selection += 9;
-  world->player.selection %= 9;
-  world->player.selection += 1;
+  world->player.inventory.hotbar_selection += input->scroll;
+  world->player.inventory.hotbar_selection -= 1;
+  world->player.inventory.hotbar_selection += 9;
+  world->player.inventory.hotbar_selection %= 9;
+  world->player.inventory.hotbar_selection += 1;
 
   struct tile *tile;
 
@@ -68,17 +71,23 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
 
   if(input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
   {
-    int radius = input->state_ctrl ? 2 : 0;
-    for(int dz=-radius; dz<=radius; ++dz)
-      for(int dy=-radius; dy<=radius; ++dy)
-        for(int dx=-radius; dx<=radius; ++dx)
-        {
-          ivec3_t offset = ivec3(dx, dy, dz);
-          if(ivec3_length_squared(offset) <= radius * radius)
-            world_tile_set_id(world, ivec3_add(world->player.target_place, offset), 2);
-        }
+    uint8_t item_id = world->player.inventory.hotbar_items[world->player.inventory.hotbar_selection - 1];
+    if(item_id != ITEM_NONE)
+    {
+      uint8_t block_id = resource_pack->item_infos[item_id].block_id;
 
-    world_update_player_ray_cast(world, resource_pack);
+      int radius = input->state_ctrl ? 2 : 0;
+      for(int dz=-radius; dz<=radius; ++dz)
+        for(int dy=-radius; dy<=radius; ++dy)
+          for(int dx=-radius; dx<=radius; ++dx)
+          {
+            ivec3_t offset = ivec3(dx, dy, dz);
+            if(ivec3_length_squared(offset) <= radius * radius)
+              world_tile_set_id(world, ivec3_add(world->player.target_place, offset), block_id);
+          }
+
+      world_update_player_ray_cast(world, resource_pack);
+    }
   }
 }
 

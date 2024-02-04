@@ -58,12 +58,15 @@ void application_main_game_render(struct application_main_game *application_main
     const float margin_horizontal = (width - total_width) * 0.5f;
     const float margin_vertical   = height * 0.03f;
 
-    snprintf(buffer, sizeof buffer, "Selected %d 你好 😀", application_main_game->world.player.selection);
+    uint8_t     item_id   = application_main_game->world.player.spawned ? application_main_game->world.player.inventory.hotbar_items[application_main_game->world.player.inventory.hotbar_selection - 1] : ITEM_NONE;
+    const char *item_name = item_id != ITEM_NONE ? application_main_game->resource_pack.item_infos[item_id].name : "none";
+
+    snprintf(buffer, sizeof buffer, "Selected %s", item_name);
     renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, fvec2(width * 0.5f, margin_vertical + outer_width + sep), buffer, 24);
     renderer_ui_draw_quad_rounded(renderer_ui, fvec2(margin_horizontal, margin_vertical), fvec2(total_width, total_height), sep, fvec4(0.9f, 0.9f, 0.9f, 0.3f));
     for(int i=0; i<count; ++i)
     {
-      fvec4_t color = i + 1 == application_main_game->world.player.selection ? fvec4(0.95f, 0.75f, 0.75f, 0.8f) : fvec4(0.95f, 0.95f, 0.95f, 0.7f);
+      fvec4_t color = i + 1 == application_main_game->world.player.inventory.hotbar_selection ? fvec4(0.95f, 0.75f, 0.75f, 0.8f) : fvec4(0.95f, 0.95f, 0.95f, 0.7f);
       renderer_ui_draw_quad_rounded(renderer_ui, fvec2(margin_horizontal + i * inner_width + (i + 1) * sep, margin_vertical + sep), fvec2(inner_width, inner_width), sep, color);
     }
   }

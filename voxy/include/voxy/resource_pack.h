@@ -36,11 +36,21 @@ struct block_texture_info
   const char *filepath;
 };
 
+struct item_info
+{
+  const char *name;
+
+  const char *texture_filepath;
+  uint8_t     block_id;
+};
+
 extern const struct block_info         block_infos[];
 extern const struct block_texture_info block_texture_infos[];
+extern const struct item_info          item_infos[];
 
 extern const size_t block_info_count;
 extern const size_t block_texture_info_count;
+extern const size_t item_info_count;
 
 void generate_tiles(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
 fvec3_t generate_spawn(seed_t seed);

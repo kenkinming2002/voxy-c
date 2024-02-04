@@ -31,6 +31,14 @@ enum texture
   TEXTURE_WATER,
 };
 
+enum item
+{
+  ITEM_STONE,
+  ITEM_GRASS,
+  ITEM_LOG,
+  ITEM_LEAVE,
+};
+
 const struct block_info block_infos[] = {
   [TILE_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE, .ether = false, .light_level = 0,  },
   [TILE_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE, .ether = true,  .light_level = 15, },
@@ -107,8 +115,16 @@ const struct block_texture_info block_texture_infos[] = {
   [TEXTURE_WATER]          = { .filepath = "assets/water.png"          },
 };
 
+const struct item_info item_infos[] = {
+  [ITEM_STONE] = { .name = "stone", .texture_filepath = NULL, .block_id = TILE_STONE, },
+  [ITEM_GRASS] = { .name = "grass", .texture_filepath = NULL, .block_id = TILE_GRASS, },
+  [ITEM_LOG]   = { .name = "log",   .texture_filepath = NULL, .block_id = TILE_LOG,   },
+  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = NULL, .block_id = TILE_LEAVE, },
+};
+
 const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];
 const size_t block_texture_info_count = sizeof block_texture_infos / sizeof block_texture_infos[0];
+const size_t item_info_count          = sizeof item_infos / sizeof item_infos[0];
 
 static inline float lerpf(float a, float b, float t)
 {

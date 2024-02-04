@@ -10,10 +10,18 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
     world->player.spawned = true;
     world->player.transform.translation = world_generator_generate_spawn(world_generator, resource_pack);
     world->player.transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
-    printf("Spawning player at (%f, %f, %f)\n",
+
+    int count = (int)resource_pack->item_info_count < 9 ? (int)resource_pack->item_info_count : 9;
+
+    world->player.inventory.hotbar_selection = 1;
+    for(int i=0; i<9; ++i)     world->player.inventory.hotbar_items[i] = ITEM_NONE;
+    for(int i=0; i<count; ++i) world->player.inventory.hotbar_items[i] = i;
+
+    printf("Spawning player at (%f, %f, %f) with %d items\n",
         world->player.transform.translation.x,
         world->player.transform.translation.y,
-        world->player.transform.translation.z);
+        world->player.transform.translation.z,
+        count);
   }
 
   struct chunk      *chunk;

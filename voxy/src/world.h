@@ -21,6 +21,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#define BLOCK_NONE UINT8_MAX
+#define ITEM_NONE  UINT8_MAX
+
 struct tile
 {
   uint8_t id;
@@ -66,11 +69,18 @@ struct chunk
   bool light_dirty;
 };
 
+struct inventory
+{
+  uint8_t hotbar_items[9];
+  uint8_t hotbar_selection;
+};
+
 struct player
 {
-  bool             spawned;
+  bool spawned;
+
   struct transform transform;
-  int              selection;
+  struct inventory inventory;
 
   bool has_target_destroy;
   bool has_target_place;

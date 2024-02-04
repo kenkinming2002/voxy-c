@@ -6,7 +6,6 @@
 #include <errno.h>
 #include <string.h>
 
-
 int resource_pack_load(struct resource_pack *resource_pack, const char *filepath)
 {
   VOXY_CHECK_DECLARE(font_set);
@@ -21,21 +20,22 @@ int resource_pack_load(struct resource_pack *resource_pack, const char *filepath
     goto error;
   }
 
-#define LOAD_SYMBOL_FUNC(name)       do { if(!(resource_pack->name = dlsym(resource_pack->handle, #name))) { fprintf(stderr, "ERROR: Missing symbol %s from resource pack %s\n", #name, filepath); goto error; } } while(0)
+#define LOAD_SYMBOL_ADDR(name)       do { if(!(resource_pack->name = dlsym(resource_pack->handle, #name))) { fprintf(stderr, "ERROR: Missing symbol %s from resource pack %s\n", #name, filepath); goto error; } } while(0)
 #define LOAD_SYMBOL_TYPE(name, type) do { type *value; if(!(value = dlsym(resource_pack->handle, #name))) { fprintf(stderr, "ERROR: Missing symbol %s from resource pack %s\n", #name, filepath); goto error; } resource_pack->name = *value; } while(0)
 
-  LOAD_SYMBOL_FUNC(block_infos);
-
-  LOAD_SYMBOL_FUNC(block_texture_infos);
+  LOAD_SYMBOL_ADDR(block_texture_infos);
   LOAD_SYMBOL_TYPE(block_texture_info_count, size_t);
 
-  LOAD_SYMBOL_FUNC(block_infos);
+  LOAD_SYMBOL_ADDR(block_infos);
   LOAD_SYMBOL_TYPE(block_info_count, size_t);
 
-  LOAD_SYMBOL_FUNC(generate_tiles);
-  LOAD_SYMBOL_FUNC(generate_spawn);
+  LOAD_SYMBOL_ADDR(item_infos);
+  LOAD_SYMBOL_TYPE(item_info_count, size_t);
 
-#undef LOAD_SYMBOL_FUNC
+  LOAD_SYMBOL_ADDR(generate_tiles);
+  LOAD_SYMBOL_ADDR(generate_spawn);
+
+#undef LOAD_SYMBOL_ADDR
 #undef LOAD_SYMBOL_TYPE
 
   filepath_count = resource_pack->block_texture_info_count;

@@ -12,9 +12,11 @@ struct resource_pack
 
   const struct block_info         *block_infos;
   const struct block_texture_info *block_texture_infos;
+  const struct item_info          *item_infos;
 
   size_t block_info_count;
   size_t block_texture_info_count;
+  size_t item_info_count;
 
   void (*generate_tiles)(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
   fvec3_t (*generate_spawn)(seed_t seed);

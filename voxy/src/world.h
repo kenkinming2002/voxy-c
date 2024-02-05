@@ -98,7 +98,9 @@ struct player
 
   struct inventory inventory;
   struct hotbar    hotbar;
-  struct item     *hover;
+  struct item     *item_hover;
+  struct item      item_hold;
+  fvec2_t          item_hold_position;
 
   float cooldown;
 

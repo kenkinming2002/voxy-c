@@ -73,7 +73,7 @@ static inline void application_main_game_update_ui(struct application_main_game 
   {
     int i, j;
 
-    player->hover = NULL;
+    player->item_hover = NULL;
 
     ///////////////
     ///  Hotbar ///
@@ -88,7 +88,7 @@ static inline void application_main_game_update_ui(struct application_main_game 
     i = floorf((input->mouse_position.x - hotbar_position.x - cell_sep) / (cell_sep + cell_width));
     j = floorf((input->mouse_position.y - hotbar_position.y - cell_sep) / (cell_sep + cell_width));
     if(0 <= i && i < HOTBAR_SIZE && j == 0)
-      player->hover = &player->hotbar.items[i];
+      player->item_hover = &player->hotbar.items[i];
 
     /////////////////
     /// Inventory ///
@@ -103,7 +103,18 @@ static inline void application_main_game_update_ui(struct application_main_game 
     i = floorf((input->mouse_position.x - inventory_position.x - cell_sep) / (cell_sep + cell_width));
     j = floorf((input->mouse_position.y - inventory_position.y - cell_sep) / (cell_sep + cell_width));
     if(0 <= i && i < INVENTORY_SIZE_HORIZONTAL && 0 <= j && j < INVENTORY_SIZE_VERTICAL)
-      player->hover = &player->inventory.items[j][i];
+      player->item_hover = &player->inventory.items[j][i];
+
+    /////////////////////
+    /// Item Movement ///
+    /////////////////////
+    if(input->click_left)
+    {
+      struct item tmp = player->item_hold;
+      player->item_hold = *player->item_hover;
+      *player->item_hover = tmp;
+    }
+    player->item_hold_position = input->mouse_position;
   }
   else
   {
@@ -154,7 +165,7 @@ static inline void application_main_game_render_ui(struct application_main_game 
     {
       const fvec2_t cell_position  = fvec2_add(hotbar_position, fvec2(cell_sep + i * (cell_sep + cell_width), cell_sep));
       const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
-      const fvec4_t cell_color     = &player->hotbar.items[i] == player->hover ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
+      const fvec4_t cell_color     = &player->hotbar.items[i] == player->item_hover ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
 
       const struct item          *cell_item         = &player->hotbar.items[i];
       const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
@@ -193,7 +204,7 @@ static inline void application_main_game_render_ui(struct application_main_game 
         {
           const fvec2_t cell_position  = fvec2_add(inventory_position, fvec2(cell_sep + i * (cell_sep + cell_width), cell_sep + j * (cell_sep + cell_width)));
           const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
-          const fvec4_t cell_color     = &player->inventory.items[j][i] == player->hover ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
+          const fvec4_t cell_color     = &player->inventory.items[j][i] == player->item_hover ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
 
           const struct item          *cell_item         = &player->inventory.items[j][i];
           const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
@@ -215,6 +226,20 @@ static inline void application_main_game_render_ui(struct application_main_game 
       const char  *tooltip_tile_name = tooltip_tile_id != BLOCK_NONE ? resource_pack->block_infos[tooltip_tile_id].name : NULL;
 
       renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, tooltip_position, tooltip_tile_name ? tooltip_tile_name : "none", UI_TEXT_SIZE);
+    }
+
+    ///////////////
+    /// 5: Hold ///
+    ///////////////
+    {
+      const fvec2_t cell_position  = fvec2_sub(player->item_hold_position, fvec2_mul_scalar(fvec2(cell_width, cell_width), 0.5f));
+      const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
+
+      const struct item          *cell_item         = &player->item_hold;
+      const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
+
+      if(cell_item_texture)
+        renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
     }
   }
 }

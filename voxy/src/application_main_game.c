@@ -73,6 +73,8 @@ static inline void application_main_game_update_ui(struct application_main_game 
   {
     int i, j;
 
+    player->hover = NULL;
+
     ///////////////
     ///  Hotbar ///
     ///////////////
@@ -86,12 +88,7 @@ static inline void application_main_game_update_ui(struct application_main_game 
     i = floorf((input->mouse_position.x - hotbar_position.x - cell_sep) / (cell_sep + cell_width));
     j = floorf((input->mouse_position.y - hotbar_position.y - cell_sep) / (cell_sep + cell_width));
     if(0 <= i && i < HOTBAR_SIZE && j == 0)
-    {
-      player->hotbar.hovered = true;
-      player->hotbar.hover   = i;
-    }
-    else
-      player->hotbar.hovered = false;
+      player->hover = &player->hotbar.items[i];
 
     /////////////////
     /// Inventory ///
@@ -106,13 +103,7 @@ static inline void application_main_game_update_ui(struct application_main_game 
     i = floorf((input->mouse_position.x - inventory_position.x - cell_sep) / (cell_sep + cell_width));
     j = floorf((input->mouse_position.y - inventory_position.y - cell_sep) / (cell_sep + cell_width));
     if(0 <= i && i < INVENTORY_SIZE_HORIZONTAL && 0 <= j && j < INVENTORY_SIZE_VERTICAL)
-    {
-      player->inventory.hovered = true;
-      player->inventory.hover_i = i;
-      player->inventory.hover_j = j;
-    }
-    else
-      player->inventory.hovered = false;
+      player->hover = &player->inventory.items[j][i];
   }
   else
   {
@@ -163,7 +154,7 @@ static inline void application_main_game_render_ui(struct application_main_game 
     {
       const fvec2_t cell_position  = fvec2_add(hotbar_position, fvec2(cell_sep + i * (cell_sep + cell_width), cell_sep));
       const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
-      const fvec4_t cell_color     = player->hotbar.hovered && i == player->hotbar.hover ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
+      const fvec4_t cell_color     = &player->hotbar.items[i] == player->hover ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
 
       const struct item          *cell_item         = &player->hotbar.items[i];
       const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
@@ -202,7 +193,7 @@ static inline void application_main_game_render_ui(struct application_main_game 
         {
           const fvec2_t cell_position  = fvec2_add(inventory_position, fvec2(cell_sep + i * (cell_sep + cell_width), cell_sep + j * (cell_sep + cell_width)));
           const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
-          const fvec4_t cell_color     = player->inventory.hovered && i == player->inventory.hover_i && j == player->inventory.hover_j ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
+          const fvec4_t cell_color     = &player->inventory.items[j][i] == player->hover ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
 
           const struct item          *cell_item         = &player->inventory.items[j][i];
           const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;

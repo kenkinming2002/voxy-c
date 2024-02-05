@@ -81,21 +81,12 @@ struct item
 struct inventory
 {
   struct item items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
-
-  bool    hovered;
-  uint8_t hover_i;
-  uint8_t hover_j;
-
-  bool    opened;
+  bool opened;
 };
 
 struct hotbar
 {
   struct item items[HOTBAR_SIZE];
-
-  bool    hovered;
-  uint8_t hover;
-
   uint8_t selection;
 };
 
@@ -107,6 +98,7 @@ struct player
 
   struct inventory inventory;
   struct hotbar    hotbar;
+  struct item     *hover;
 
   float cooldown;
 

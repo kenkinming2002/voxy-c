@@ -90,11 +90,49 @@ void application_main_game_update_ui(struct application_main_game *application_m
     /// Item Movement ///
     /////////////////////
     {
-      if(input->click_left)
+      if(player->item_hovered)
       {
-        struct item tmp = player->item_held;
-        player->item_held = *player->item_hovered;
-        *player->item_hovered = tmp;
+        if(input->click_left)
+        {
+          if(player->item_held.id == player->item_hovered->id)
+          {
+            unsigned count    = player->item_held.count;
+            unsigned capacity = ITEM_MAX_STACK - player->item_hovered->count;
+            if(count > capacity)
+              count = capacity;
+
+            player->item_held.count     -= count;
+            player->item_hovered->count += count;
+          }
+          else
+          {
+            struct item tmp = player->item_held;
+            player->item_held = *player->item_hovered;
+            *player->item_hovered = tmp;
+          }
+        }
+        else if(input->click_right)
+        {
+          if(player->item_held.id == player->item_hovered->id)
+          {
+            unsigned count    = player->item_hovered->count / 2;
+            unsigned capacity = ITEM_MAX_STACK - player->item_held.count;
+            if(count > capacity)
+              count = capacity;
+
+            player->item_hovered->count -= count;
+            player->item_held.count     += count;
+          }
+          else if(player->item_held.id == ITEM_NONE)
+          {
+            player->item_held.id    = player->item_hovered->id;
+            player->item_held.count = player->item_hovered->count / 2;
+            player->item_hovered->count -= player->item_held.count;
+          }
+        }
+
+        if(player->item_hovered->count == 0) player->item_hovered->id = ITEM_NONE;
+        if(player->item_held.count     == 0) player->item_held.id     = ITEM_NONE;
       }
       player->item_held_position = input->mouse_position;
     }

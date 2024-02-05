@@ -72,6 +72,7 @@ struct chunk
 #define HOTBAR_SIZE 9
 #define INVENTORY_SIZE_HORIZONTAL 9
 #define INVENTORY_SIZE_VERTICAL   5
+#define ITEM_MAX_STACK 64
 
 struct item
 {

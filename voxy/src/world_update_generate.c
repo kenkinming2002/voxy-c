@@ -34,10 +34,10 @@ void world_update_generate(struct world *world, struct world_generator *world_ge
     world->player.item_hovered = NULL;
     world->player.item_held.id = ITEM_NONE;
 
-    int count = mini(resource_pack->item_info_count, HOTBAR_SIZE);
+    int count = mini(resource_pack->item_info_count * 2, HOTBAR_SIZE);
     for(int i=0; i<count; ++i)
     {
-      world->player.hotbar.items[i].id = i;
+      world->player.hotbar.items[i].id = i % resource_pack->item_info_count;
       world->player.hotbar.items[i].count = 8 * (i + 1);
     }
 

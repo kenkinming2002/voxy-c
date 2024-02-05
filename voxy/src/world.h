@@ -76,6 +76,7 @@ struct chunk
 struct item
 {
   uint8_t id;
+  uint8_t count;
 };
 
 struct inventory

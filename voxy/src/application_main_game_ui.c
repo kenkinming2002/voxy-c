@@ -17,6 +17,7 @@
 #define UI_INVENTORY_COLOR_DEFAULT    fvec4(0.95f, 0.95f, 0.95f, 0.7f)
 
 #define UI_TEXT_SIZE 28
+#define UI_TEXT_SIZE_ITEM_COUNT 20
 
 static inline float minf(float a, float b)
 {
@@ -151,12 +152,22 @@ void application_main_game_render_ui(struct application_main_game *application_m
       const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
       const fvec4_t cell_color     = &player->hotbar.items[i] == player->item_hovered ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
 
-      const struct item          *cell_item         = &player->hotbar.items[i];
-      const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
 
       renderer_ui_draw_quad_rounded(renderer_ui, cell_position, cell_dimension, round, cell_color);
-      if(cell_item_texture)
+
+      const struct item *cell_item = &player->hotbar.items[i];
+      if(cell_item->id != ITEM_NONE)
+      {
+        const uint8_t               cell_item_id      = cell_item->id;
+        const uint8_t               cell_item_count   = cell_item->count;
+        const struct gl_texture_2d *cell_item_texture = &resource_pack->item_textures[cell_item_id];
+
+        char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
+        snprintf(buffer, sizeof buffer, "%u", cell_item_count);
+
         renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
+        renderer_ui_draw_text(renderer_ui, &resource_pack->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+      }
     }
 
     /////////////////////
@@ -189,12 +200,21 @@ void application_main_game_render_ui(struct application_main_game *application_m
           const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
           const fvec4_t cell_color     = &player->inventory.items[j][i] == player->item_hovered ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
 
-          const struct item          *cell_item         = &player->inventory.items[j][i];
-          const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
-
           renderer_ui_draw_quad_rounded(renderer_ui, cell_position, cell_dimension, round, cell_color);
-          if(cell_item_texture)
+
+          const struct item *cell_item = &player->inventory.items[j][i];
+          if(cell_item->id != ITEM_NONE)
+          {
+            const uint8_t               cell_item_id      = cell_item->id;
+            const uint8_t               cell_item_count   = cell_item->count;
+            const struct gl_texture_2d *cell_item_texture = &resource_pack->item_textures[cell_item_id];
+
+            char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
+            snprintf(buffer, sizeof buffer, "%u", cell_item_count);
+
             renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
+            renderer_ui_draw_text(renderer_ui, &resource_pack->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+          }
         }
     }
 
@@ -216,11 +236,19 @@ void application_main_game_render_ui(struct application_main_game *application_m
       const fvec2_t cell_position  = fvec2_sub(player->item_held_position, fvec2_mul_scalar(fvec2(cell_width, cell_width), 0.5f));
       const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
 
-      const struct item          *cell_item         = &player->item_held;
-      const struct gl_texture_2d *cell_item_texture = cell_item->id != ITEM_NONE ? &resource_pack->item_textures[cell_item->id] : NULL;
+      const struct item *cell_item = &player->item_held;
+      if(cell_item->id != ITEM_NONE)
+      {
+        const uint8_t               cell_item_id      = cell_item->id;
+        const uint8_t               cell_item_count   = cell_item->count;
+        const struct gl_texture_2d *cell_item_texture = &resource_pack->item_textures[cell_item_id];
 
-      if(cell_item_texture)
+        char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
+        snprintf(buffer, sizeof buffer, "%u", cell_item_count);
+
         renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
+        renderer_ui_draw_text(renderer_ui, &resource_pack->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+      }
     }
   }
 }

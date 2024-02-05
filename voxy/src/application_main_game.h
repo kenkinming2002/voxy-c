@@ -20,7 +20,10 @@ int application_main_game_init(struct application_main_game *application_main_ga
 void application_main_game_fini(struct application_main_game *application_main_game);
 
 void application_main_game_update(struct application_main_game *application_main_game, int width, int height, bool *cursor, struct input *input, float dt);
+void application_main_game_update_ui(struct application_main_game *application_main_game, int width, int height, bool *cursor, struct input *input);
+
 void application_main_game_render(struct application_main_game *application_main_game, int width, int height, struct renderer_world *renderer_world, struct renderer_ui *renderer_ui);
+void application_main_game_render_ui(struct application_main_game *application_main_game, int width, int height, struct renderer_ui *renderer_ui);
 
 #endif // VOXY_APPLICATION_MAIN_GAME_H
 

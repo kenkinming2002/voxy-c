@@ -149,6 +149,8 @@ int window_init(struct window *window, const char *title, unsigned width, unsign
 
   double xpos, ypos;
   glfwSetInputMode(window->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwGetWindowSize(window->window, &window->width, &window->height);
+  glfwGetFramebufferSize(window->window, &window->framebuffer_width, &window->framebuffer_height);
   glfwGetCursorPos(window->window, &xpos, &ypos);
   window->mouse_position = fvec2(xpos, window->height - ypos);
 

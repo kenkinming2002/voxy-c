@@ -25,19 +25,19 @@ void application_main_game_fini(struct application_main_game *application_main_g
   resource_pack_unload(&application_main_game->resource_pack);
 }
 
-void application_main_game_update(struct application_main_game *application_main_game, int width, int height, bool *cursor, struct input *input, float dt)
+void application_main_game_update(struct application_main_game *application_main_game, struct window *window, float dt)
 {
-  world_update(&application_main_game->world, &application_main_game->world_generator, &application_main_game->resource_pack, input, dt);
-  application_main_game_update_ui(application_main_game, width, height, cursor, input);
+  world_update(&application_main_game->world, &application_main_game->world_generator, &application_main_game->resource_pack, window, dt);
+  application_main_game_update_ui(application_main_game, window);
 }
 
-void application_main_game_render(struct application_main_game *application_main_game, int width, int height, struct renderer_world *renderer_world, struct renderer_ui *renderer_ui)
+void application_main_game_render(struct application_main_game *application_main_game, struct window *window, struct renderer_world *renderer_world, struct renderer_ui *renderer_ui)
 {
-  glViewport(0, 0, width, height);
+  glViewport(0, 0, window->width, window->height);
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  renderer_world_render(renderer_world, width, height, &application_main_game->world, &application_main_game->resource_pack);
-  application_main_game_render_ui(application_main_game, width, height, renderer_ui);
+  renderer_world_render(renderer_world, window, &application_main_game->world, &application_main_game->resource_pack);
+  application_main_game_render_ui(application_main_game, window, renderer_ui);
 }
 

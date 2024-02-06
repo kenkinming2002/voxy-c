@@ -25,14 +25,14 @@ void application_fini(struct application *application)
   window_fini(&application->window);
 }
 
-void application_update(struct application *application, int width, int height, bool *cursor, struct input *input, float dt)
+void application_update(struct application *application, float dt)
 {
-  application_main_game_update(&application->main_game, width, height, cursor, input, dt);
+  application_main_game_update(&application->main_game, &application->window, dt);
 }
 
-void application_render(struct application *application, int width, int height)
+void application_render(struct application *application)
 {
-  application_main_game_render(&application->main_game, width, height, &application->renderer_world, &application->renderer_ui);
+  application_main_game_render(&application->main_game, &application->window, &application->renderer_world, &application->renderer_ui);
 }
 
 void application_run(struct application *application)
@@ -44,25 +44,14 @@ void application_run(struct application *application)
   prev_time = glfwGetTime();
   while(!window_should_close(&application->window))
   {
-    window_handle_events(&application->window);
-
     next_time = glfwGetTime();
     dt        = next_time - prev_time;
     prev_time = next_time;
 
-    struct input input;
-    int width, height;
-    bool cursor;
-
-    window_get_input(&application->window, &input);
-    window_get_cursor(&application->window, &cursor);
-    window_get_framebuffer_size(&application->window, &width, &height);
-
-    application_update(application, width, height, &cursor, &input, dt);
-    application_render(application, width, height);
-
-    window_set_cursor(&application->window, cursor);
-    window_swap_buffers(&application->window);
+    window_begin(&application->window);
+    application_update(application, dt);
+    application_render(application);
+    window_end(&application->window);
   }
 }
 

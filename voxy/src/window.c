@@ -11,24 +11,13 @@ static void glfw_error_callback(int error, const char *description)
 
 static void glfw_scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-  (void)xoffset;
-
   struct window *_window = glfwGetWindowUserPointer(window);
-  if(yoffset > 0.0f) ++_window->scroll;
-  if(yoffset < 0.0f) --_window->scroll;
-}
 
-static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-  (void)mods;
+  if(xoffset > 0.0f) ++_window->mouse_scroll.x;
+  if(xoffset < 0.0f) --_window->mouse_scroll.x;
 
-  struct window *_window = glfwGetWindowUserPointer(window);
-  if(action == GLFW_PRESS)
-    switch(button)
-    {
-    case GLFW_MOUSE_BUTTON_LEFT:  _window->click_left  += 1; break;
-    case GLFW_MOUSE_BUTTON_RIGHT: _window->click_right += 1; break;
-    }
+  if(yoffset > 0.0f) ++_window->mouse_scroll.y;
+  if(yoffset < 0.0f) --_window->mouse_scroll.y;
 }
 
 static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -36,64 +25,141 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
   (void)scancode;
   (void)mods;
 
+  size_t mask = 0;
+  switch(key)
+  {
+    case GLFW_KEY_1: mask = 1LL << KEY_1; break;
+    case GLFW_KEY_2: mask = 1LL << KEY_2; break;
+    case GLFW_KEY_3: mask = 1LL << KEY_3; break;
+    case GLFW_KEY_4: mask = 1LL << KEY_4; break;
+    case GLFW_KEY_5: mask = 1LL << KEY_5; break;
+    case GLFW_KEY_6: mask = 1LL << KEY_6; break;
+    case GLFW_KEY_7: mask = 1LL << KEY_7; break;
+    case GLFW_KEY_8: mask = 1LL << KEY_8; break;
+    case GLFW_KEY_9: mask = 1LL << KEY_9; break;
+
+    case GLFW_KEY_KP_1: mask = 1ULL << KEY_KP_1; break;
+    case GLFW_KEY_KP_2: mask = 1ULL << KEY_KP_2; break;
+    case GLFW_KEY_KP_3: mask = 1ULL << KEY_KP_3; break;
+    case GLFW_KEY_KP_4: mask = 1ULL << KEY_KP_4; break;
+    case GLFW_KEY_KP_5: mask = 1ULL << KEY_KP_5; break;
+    case GLFW_KEY_KP_6: mask = 1ULL << KEY_KP_6; break;
+    case GLFW_KEY_KP_7: mask = 1ULL << KEY_KP_7; break;
+    case GLFW_KEY_KP_8: mask = 1ULL << KEY_KP_8; break;
+    case GLFW_KEY_KP_9: mask = 1ULL << KEY_KP_9; break;
+
+    case GLFW_KEY_A: mask = 1ULL << KEY_A; break;
+    case GLFW_KEY_B: mask = 1ULL << KEY_B; break;
+    case GLFW_KEY_C: mask = 1ULL << KEY_C; break;
+    case GLFW_KEY_D: mask = 1ULL << KEY_D; break;
+    case GLFW_KEY_E: mask = 1ULL << KEY_E; break;
+    case GLFW_KEY_F: mask = 1ULL << KEY_F; break;
+    case GLFW_KEY_G: mask = 1ULL << KEY_G; break;
+    case GLFW_KEY_H: mask = 1ULL << KEY_H; break;
+    case GLFW_KEY_I: mask = 1ULL << KEY_I; break;
+    case GLFW_KEY_J: mask = 1ULL << KEY_J; break;
+    case GLFW_KEY_K: mask = 1ULL << KEY_K; break;
+    case GLFW_KEY_L: mask = 1ULL << KEY_L; break;
+    case GLFW_KEY_M: mask = 1ULL << KEY_M; break;
+    case GLFW_KEY_N: mask = 1ULL << KEY_N; break;
+    case GLFW_KEY_O: mask = 1ULL << KEY_O; break;
+    case GLFW_KEY_P: mask = 1ULL << KEY_P; break;
+    case GLFW_KEY_Q: mask = 1ULL << KEY_Q; break;
+    case GLFW_KEY_R: mask = 1ULL << KEY_R; break;
+    case GLFW_KEY_S: mask = 1ULL << KEY_S; break;
+    case GLFW_KEY_T: mask = 1ULL << KEY_T; break;
+    case GLFW_KEY_U: mask = 1ULL << KEY_U; break;
+    case GLFW_KEY_V: mask = 1ULL << KEY_V; break;
+    case GLFW_KEY_W: mask = 1ULL << KEY_W; break;
+    case GLFW_KEY_X: mask = 1ULL << KEY_X; break;
+    case GLFW_KEY_Y: mask = 1ULL << KEY_Y; break;
+    case GLFW_KEY_Z: mask = 1ULL << KEY_Z; break;
+
+    case GLFW_KEY_LEFT_SHIFT:  mask = 1ULL << KEY_SHIFT; break;
+    case GLFW_KEY_RIGHT_SHIFT: mask = 1ULL << KEY_SHIFT; break;
+
+    case GLFW_KEY_LEFT_CONTROL:  mask = 1ULL << KEY_CTRL; break;
+    case GLFW_KEY_RIGHT_CONTROL: mask = 1ULL << KEY_CTRL; break;
+
+    case GLFW_KEY_SPACE: mask = 1ULL << KEY_SPACE; break;
+  }
+
   struct window *_window = glfwGetWindowUserPointer(window);
-  if(action == GLFW_PRESS)
-    switch(key)
-    {
-    case GLFW_KEY_I: _window->click_i += 1; break;
-    }
+  switch(action)
+  {
+  case GLFW_PRESS:   _window->states |= mask;  break;
+  case GLFW_RELEASE: _window->states &= ~mask; break;
+  }
+}
+
+static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+  (void)mods;
+
+  size_t mask = 0;
+  switch(button)
+  {
+    case GLFW_MOUSE_BUTTON_LEFT:   mask = 1ULL << BUTTON_LEFT;   break;
+    case GLFW_MOUSE_BUTTON_RIGHT:  mask = 1ULL << BUTTON_RIGHT;  break;
+    case GLFW_MOUSE_BUTTON_MIDDLE: mask = 1ULL << BUTTON_MIDDLE; break;
+  }
+
+  struct window *_window = glfwGetWindowUserPointer(window);
+  switch(action)
+  {
+  case GLFW_PRESS:   _window->states |= mask;  break;
+  case GLFW_RELEASE: _window->states &= ~mask; break;
+  }
 }
 
 int window_init(struct window *window, const char *title, unsigned width, unsigned height)
 {
-  bool glfw_initialized = false;
-  window->window = NULL;
-
   // 1: Initialize GLFW
   glfwSetErrorCallback(&glfw_error_callback);
   if(!glfwInit())
   {
     fprintf(stderr, "ERROR: Failed to initialize GLFW\n");
-    goto error;
+    goto error_glfw_init;
   }
-  glfw_initialized = true;
 
   // 2: Create GLFW window
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-  window->window = glfwCreateWindow(width, height, title, NULL, NULL);
-  if(!window->window)
+  if(!(window->window = glfwCreateWindow(width, height, title, NULL, NULL)))
   {
     fprintf(stderr, "ERROR: Failed to create window\n");
-    goto error;
+    goto error_glfw_window;
   }
-  glfwSetInputMode(window->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  window->cursor         = false;
-  window->mouse_position = window_get_mouse_position(window);
 
   // 3: Initialize OpenGL Context
   glfwMakeContextCurrent(window->window);
   if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
     fprintf(stderr, "ERROR: Failed to load OpenGL\n");
-    goto error;
+    goto error_glad;
   }
 
   // 4: Callback
   glfwSetWindowUserPointer(window->window, window);
   glfwSetScrollCallback(window->window, glfw_scroll_callback);
-  glfwSetMouseButtonCallback(window->window, glfw_mouse_button_callback);
   glfwSetKeyCallback(window->window, glfw_key_callback);
+  glfwSetMouseButtonCallback(window->window, glfw_mouse_button_callback);
+
+  // 5: Setup
+  window->states = 0;
+
+  double xpos, ypos;
+  glfwSetInputMode(window->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwGetCursorPos(window->window, &xpos, &ypos);
+  window->mouse_position = window->mouse_position;
 
   return 0;
 
-error:
-  if(glfw_initialized)
-    glfwTerminate();
-
-  if(window->window)
-    glfwDestroyWindow(window->window);
-
+error_glad:
+  glfwDestroyWindow(window->window);
+error_glfw_window:
+  glfwTerminate();
+error_glfw_init:
   return -1;
 }
 
@@ -108,98 +174,33 @@ int window_should_close(struct window *window)
   return glfwWindowShouldClose(window->window);
 }
 
-void window_swap_buffers(struct window *window)
+void window_begin(struct window *window)
+{
+  size_t  old_states         = window->states;
+  fvec2_t old_mouse_position = window->mouse_position;
+
+  window->mouse_scroll = ivec2_zero();
+
+  glfwPollEvents();
+  glfwGetWindowSize(window->window, &window->width, &window->height);
+  glfwGetFramebufferSize(window->window, &window->framebuffer_width, &window->framebuffer_height);
+
+  window->presses  = ~old_states & window->states;
+  window->releases = old_states & ~window->states;
+
+  double xpos, ypos;
+  glfwGetCursorPos(window->window, &xpos, &ypos);
+  window->mouse_position = fvec2(xpos, window->height - ypos);
+  window->mouse_motion   = fvec2_sub(window->mouse_position, old_mouse_position);
+}
+
+void window_end(struct window *window)
 {
   glfwSwapBuffers(window->window);
 }
 
-void window_handle_events(struct window *window)
+void window_set_cursor(struct window *window, int cursor)
 {
-  (void)window;
-  glfwPollEvents();
-}
-
-void window_get_framebuffer_size(struct window *window, int *width, int *height)
-{
-  glfwGetFramebufferSize(window->window, width, height);
-}
-
-void window_get_cursor(struct window *window, bool *cursor)
-{
-  *cursor = window->cursor;
-}
-
-void window_set_cursor(struct window *window, bool cursor)
-{
-  if(window->cursor != cursor)
-  {
-    glfwSetInputMode(window->window, GLFW_CURSOR, cursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
-    window->cursor = cursor;
-  }
-}
-
-void window_get_input(struct window *window, struct input *input)
-{
-  int width, height;
-  window_get_framebuffer_size(window, &width, &height);
-
-  input->mouse_motion     = window_get_mouse_motion(window);
-  input->mouse_position   = window->mouse_position;
-  input->mouse_position.y = height - input->mouse_position.y;
-
-  input->keyboard_motion = window_get_keyboard_motion(window);
-
-  input->selects[0] = glfwGetKey(window->window, GLFW_KEY_1) || glfwGetKey(window->window, GLFW_KEY_KP_1);
-  input->selects[1] = glfwGetKey(window->window, GLFW_KEY_2) || glfwGetKey(window->window, GLFW_KEY_KP_2);
-  input->selects[2] = glfwGetKey(window->window, GLFW_KEY_3) || glfwGetKey(window->window, GLFW_KEY_KP_3);
-  input->selects[3] = glfwGetKey(window->window, GLFW_KEY_4) || glfwGetKey(window->window, GLFW_KEY_KP_4);
-  input->selects[4] = glfwGetKey(window->window, GLFW_KEY_5) || glfwGetKey(window->window, GLFW_KEY_KP_5);
-  input->selects[5] = glfwGetKey(window->window, GLFW_KEY_6) || glfwGetKey(window->window, GLFW_KEY_KP_6);
-  input->selects[6] = glfwGetKey(window->window, GLFW_KEY_7) || glfwGetKey(window->window, GLFW_KEY_KP_7);
-  input->selects[7] = glfwGetKey(window->window, GLFW_KEY_8) || glfwGetKey(window->window, GLFW_KEY_KP_8);
-  input->selects[8] = glfwGetKey(window->window, GLFW_KEY_9) || glfwGetKey(window->window, GLFW_KEY_KP_9);
-
-  input->scroll      = window->scroll;      window->scroll      = 0;
-  input->click_left  = window->click_left;  window->click_left  = 0;
-  input->click_right = window->click_right; window->click_right = 0;
-  input->click_i     = window->click_i;     window->click_i     = 0;
-
-  input->state_left  = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_LEFT);
-  input->state_right = glfwGetMouseButton(window->window, GLFW_MOUSE_BUTTON_RIGHT);
-  input->state_ctrl  = glfwGetKey(window->window, GLFW_KEY_LEFT_CONTROL) || glfwGetKey(window->window, GLFW_KEY_RIGHT_CONTROL);
-}
-
-fvec2_t window_get_mouse_position(struct window *window)
-{
-  double x, y;
-  glfwGetCursorPos(window->window, &x, &y);
-  return fvec2(x, y);
-}
-
-fvec2_t window_get_mouse_motion(struct window *window)
-{
-  fvec2_t mouse_position_new = window_get_mouse_position(window);
-  fvec2_t mouse_motion = fvec2_sub(mouse_position_new, window->mouse_position);
-  window->mouse_position = mouse_position_new;
-  return mouse_motion;
-}
-
-fvec3_t window_get_keyboard_motion(struct window *window)
-{
-  fvec3_t keyboard_motion = fvec3_zero();;
-
-  if(glfwGetKey(window->window, GLFW_KEY_D))          keyboard_motion.x += 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_A))          keyboard_motion.x -= 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_W))          keyboard_motion.y += 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_S))          keyboard_motion.y -= 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_SPACE))      keyboard_motion.z += 1.0f;
-  if(glfwGetKey(window->window, GLFW_KEY_LEFT_SHIFT)) keyboard_motion.z -= 1.0f;
-
-  return fvec3_normalize(keyboard_motion);
-}
-
-int window_get_key(struct window *window, int key)
-{
-  return glfwGetKey(window->window, key);
+  glfwSetInputMode(window->window, GLFW_CURSOR, cursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
 

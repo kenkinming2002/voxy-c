@@ -24,7 +24,7 @@ static inline float minf(float a, float b)
   return a < b ? a : b;
 }
 
-void application_main_game_update_ui(struct application_main_game *application_main_game, int width, int height, bool *cursor, struct input *input)
+void application_main_game_update_ui(struct application_main_game *application_main_game, struct window *window)
 {
   if(!application_main_game->world.player.spawned)
     return;
@@ -35,7 +35,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
   ///////////////////
   ///  UI Metrics ///
   ///////////////////
-  const float base       = minf(width, height);
+  const float base       = minf(window->width, window->height);
   const float margin     = base * 0.008f;
   const float cell_width = base * 0.05f;
   const float cell_sep   = base * 0.006f;
@@ -43,10 +43,11 @@ void application_main_game_update_ui(struct application_main_game *application_m
   ////////////////////////////
   /// Open/Close Inventory ///
   ////////////////////////////
-  if(input->click_i % 2 == 1)
+  if(window->presses & (1ULL << KEY_I))
+  {
     world->player.inventory.opened = !world->player.inventory.opened;
-
-  *cursor = player->inventory.opened;
+    window_set_cursor(window, player->inventory.opened);
+  }
 
   if(player->inventory.opened)
   {
@@ -58,13 +59,13 @@ void application_main_game_update_ui(struct application_main_game *application_m
     {
       const float   hotbar_width     = cell_sep + HOTBAR_SIZE * (cell_sep + cell_width);
       const float   hotbar_height    = 2 * cell_sep + cell_width;
-      const fvec2_t hotbar_position  = fvec2((width - hotbar_width) * 0.5f, margin);
+      const fvec2_t hotbar_position  = fvec2((window->width - hotbar_width) * 0.5f, margin);
       const fvec2_t hotbar_dimension = fvec2(hotbar_width, hotbar_height);
 
       (void)hotbar_dimension;
 
-      const int i = floorf((input->mouse_position.x - hotbar_position.x - cell_sep) / (cell_sep + cell_width));
-      const int j = floorf((input->mouse_position.y - hotbar_position.y - cell_sep) / (cell_sep + cell_width));
+      const int i = floorf((window->mouse_position.x - hotbar_position.x - cell_sep) / (cell_sep + cell_width));
+      const int j = floorf((window->mouse_position.y - hotbar_position.y - cell_sep) / (cell_sep + cell_width));
       if(0 <= i && i < HOTBAR_SIZE && j == 0)
         player->item_hovered = &player->hotbar.items[i];
     }
@@ -75,13 +76,13 @@ void application_main_game_update_ui(struct application_main_game *application_m
     {
       const float   inventory_width     = cell_sep + INVENTORY_SIZE_HORIZONTAL * (cell_sep + cell_width);
       const float   inventory_height    = cell_sep + INVENTORY_SIZE_VERTICAL   * (cell_sep + cell_width);
-      const fvec2_t inventory_position  = fvec2((width - inventory_width) * 0.5f, (height - inventory_height) * 0.5f);
+      const fvec2_t inventory_position  = fvec2((window->width - inventory_width) * 0.5f, (window->height - inventory_height) * 0.5f);
       const fvec2_t inventory_dimension = fvec2(inventory_width, inventory_height);
 
       (void)inventory_dimension;
 
-      const int i = floorf((input->mouse_position.x - inventory_position.x - cell_sep) / (cell_sep + cell_width));
-      const int j = floorf((input->mouse_position.y - inventory_position.y - cell_sep) / (cell_sep + cell_width));
+      const int i = floorf((window->mouse_position.x - inventory_position.x - cell_sep) / (cell_sep + cell_width));
+      const int j = floorf((window->mouse_position.y - inventory_position.y - cell_sep) / (cell_sep + cell_width));
       if(0 <= i && i < INVENTORY_SIZE_HORIZONTAL && 0 <= j && j < INVENTORY_SIZE_VERTICAL)
         player->item_hovered = &player->inventory.items[j][i];
     }
@@ -92,7 +93,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
     {
       if(player->item_hovered)
       {
-        if(input->click_left)
+        if(window->presses & (1ULL << BUTTON_LEFT))
         {
           if(player->item_held.id == player->item_hovered->id)
           {
@@ -111,7 +112,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
             *player->item_hovered = tmp;
           }
         }
-        else if(input->click_right)
+        else if(window->presses & (1ULL << BUTTON_RIGHT))
         {
           if(player->item_held.id == player->item_hovered->id)
           {
@@ -134,7 +135,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
         if(player->item_hovered->count == 0) player->item_hovered->id = ITEM_NONE;
         if(player->item_held.count     == 0) player->item_held.id     = ITEM_NONE;
       }
-      player->item_held_position = input->mouse_position;
+      player->item_held_position = window->mouse_position;
     }
   }
   else
@@ -143,18 +144,24 @@ void application_main_game_update_ui(struct application_main_game *application_m
     /// Hotbar item selection ///
     /////////////////////////////
     {
-      for(unsigned i=0; i<9; ++i)
-        if(input->selects[i])
-          world->player.hotbar.selection = i;
+      if(window->presses & (1ULL << KEY_1)) world->player.hotbar.selection = 0;
+      if(window->presses & (1ULL << KEY_2)) world->player.hotbar.selection = 1;
+      if(window->presses & (1ULL << KEY_3)) world->player.hotbar.selection = 2;
+      if(window->presses & (1ULL << KEY_4)) world->player.hotbar.selection = 3;
+      if(window->presses & (1ULL << KEY_5)) world->player.hotbar.selection = 4;
+      if(window->presses & (1ULL << KEY_6)) world->player.hotbar.selection = 5;
+      if(window->presses & (1ULL << KEY_7)) world->player.hotbar.selection = 6;
+      if(window->presses & (1ULL << KEY_8)) world->player.hotbar.selection = 7;
+      if(window->presses & (1ULL << KEY_9)) world->player.hotbar.selection = 8;
 
-      world->player.hotbar.selection += input->scroll;
+      world->player.hotbar.selection += window->mouse_scroll.x;
       world->player.hotbar.selection += 9;
       world->player.hotbar.selection %= 9;
     }
   }
 }
 
-void application_main_game_render_ui(struct application_main_game *application_main_game, int width, int height, struct renderer_ui *renderer_ui)
+void application_main_game_render_ui(struct application_main_game *application_main_game, struct window *window, struct renderer_ui *renderer_ui)
 {
   if(!application_main_game->world.player.spawned)
     return;
@@ -163,12 +170,12 @@ void application_main_game_render_ui(struct application_main_game *application_m
   struct world         *world         = &application_main_game->world;
   struct player        *player        = &world->player;
 
-  renderer_ui_begin(renderer_ui, fvec2(width, height));
+  renderer_ui_begin(renderer_ui, fvec2(window->width, window->height));
   {
     ///////////////
     /// Metrics ///
     ///////////////
-    const float base       = minf(width, height);
+    const float base       = minf(window->width, window->height);
     const float margin     = base * 0.008f;
     const float cell_width = base * 0.05f;
     const float cell_sep   = base * 0.006f;
@@ -179,7 +186,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     //////////////
     const float   hotbar_width     = cell_sep + HOTBAR_SIZE * (cell_sep + cell_width);
     const float   hotbar_height    = 2 * cell_sep + cell_width;
-    const fvec2_t hotbar_position  = fvec2((width - hotbar_width) * 0.5f, margin);
+    const fvec2_t hotbar_position  = fvec2((window->width - hotbar_width) * 0.5f, margin);
     const fvec2_t hotbar_dimension = fvec2(hotbar_width, hotbar_height);
 
     renderer_ui_draw_quad_rounded(renderer_ui, hotbar_position, hotbar_dimension, round, UI_HOTBAR_COLOR_BACKGROUND);
@@ -211,7 +218,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     /////////////////////
     /// Selected Item ///
     /////////////////////
-    const fvec2_t selected_item_text_position = fvec2(width * 0.5f, hotbar_position.y + hotbar_dimension.y + margin);
+    const fvec2_t selected_item_text_position = fvec2(window->width * 0.5f, hotbar_position.y + hotbar_dimension.y + margin);
 
     const struct item *selected_item      = &player->hotbar.items[player->hotbar.selection];
     const uint8_t      selected_item_id   = selected_item->id;
@@ -224,7 +231,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     /////////////////
     const float   inventory_width     = cell_sep + INVENTORY_SIZE_HORIZONTAL * (cell_sep + cell_width);
     const float   inventory_height    = cell_sep + INVENTORY_SIZE_VERTICAL   * (cell_sep + cell_width);
-    const fvec2_t inventory_position  = fvec2((width - inventory_width) * 0.5f, (height - inventory_height) * 0.5f);
+    const fvec2_t inventory_position  = fvec2((window->width - inventory_width) * 0.5f, (window->height - inventory_height) * 0.5f);
     const fvec2_t inventory_dimension = fvec2(inventory_width, inventory_height);
 
     if(player->inventory.opened)
@@ -259,7 +266,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     ///////////////////
     /// Target Tile ///
     ///////////////////
-    const fvec2_t target_tile_text_position = fvec2(width * 0.5f, height - margin - UI_TEXT_SIZE);
+    const fvec2_t target_tile_text_position = fvec2(window->width * 0.5f, window->height - margin - UI_TEXT_SIZE);
 
     const struct tile *target_tile      = application_main_game->world.player.has_target_destroy ? world_get_tile(&application_main_game->world, application_main_game->world.player.target_destroy) : NULL;
     const uint8_t      target_tile_id   = target_tile ? target_tile->id : BLOCK_NONE;

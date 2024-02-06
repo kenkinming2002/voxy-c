@@ -27,14 +27,14 @@ void renderer_world_fini(struct renderer_world *renderer_world)
   gl_program_fini(&renderer_world->program_outline);
 }
 
-void renderer_world_render(struct renderer_world *renderer_world, int width, int height, struct world *world, struct resource_pack *resource_pack)
+void renderer_world_render(struct renderer_world *renderer_world, struct window *window, struct world *world, struct resource_pack *resource_pack)
 {
   struct camera camera;
   camera.transform = world->player.transform;
   camera.fovy      = M_PI / 2.0f;
   camera.near      = 1.0f;
   camera.far       = 1000.0f;
-  camera.aspect    = (float)width / (float)height;
+  camera.aspect    = (float)window->width / (float)window->height;
 
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(&camera),       VP);

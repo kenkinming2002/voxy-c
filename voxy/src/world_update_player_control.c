@@ -31,7 +31,7 @@ static void world_update_player_ray_cast(struct world *world, struct resource_pa
 #define PLAYER_PAN_SPEED  0.002f
 #define PLAYER_ACTION_COOLDOWN 0.5f
 
-void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct input *input, float dt)
+void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct window *window, float dt)
 {
   if(!world->player.spawned)
     return;
@@ -42,8 +42,18 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   ////////////////
   /// Movement ///
   ////////////////
-  fvec3_t rotation    = fvec3_mul_scalar(fvec3(input->mouse_motion.x, input->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
-  fvec3_t translation = fvec3_mul_scalar(input->keyboard_motion, PLAYER_MOVE_SPEED * dt);
+  fvec3_t rotation = fvec3_mul_scalar(fvec3(window->mouse_motion.x, -window->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
+  fvec3_t translation = fvec3_zero();
+
+  if(window->states & (1ULL << KEY_A))     translation.x -= 1.0f;
+  if(window->states & (1ULL << KEY_D))     translation.x += 1.0f;
+  if(window->states & (1ULL << KEY_S))     translation.y -= 1.0f;
+  if(window->states & (1ULL << KEY_W))     translation.y += 1.0f;
+  if(window->states & (1ULL << KEY_SHIFT)) translation.z -= 1.0f;
+  if(window->states & (1ULL << KEY_SPACE)) translation.z += 1.0f;
+
+  translation = fvec3_normalize(translation);
+  translation = fvec3_mul_scalar(translation, PLAYER_MOVE_SPEED * dt);
 
   transform_rotate(&world->player.transform, rotation);
   transform_local_translate(&world->player.transform, translation);
@@ -56,11 +66,11 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   struct tile *tile;
 
   world_update_player_ray_cast(world, resource_pack);
-  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_left && world->player.has_target_destroy && (tile = world_get_tile(world, world->player.target_destroy)))
+  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && (window->states & 1ULL << BUTTON_LEFT) && world->player.has_target_destroy && (tile = world_get_tile(world, world->player.target_destroy)))
   {
     world->player.cooldown = 0.0f;
 
-    int radius = input->state_ctrl ? 2 : 0;
+    int radius = window->states & 1ULL << KEY_CTRL ? 2 : 0;
     for(int dz=-radius; dz<=radius; ++dz)
       for(int dy=-radius; dy<=radius; ++dy)
         for(int dx=-radius; dx<=radius; ++dx)
@@ -73,7 +83,7 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
     world_update_player_ray_cast(world, resource_pack);
   }
 
-  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && input->state_right && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
+  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && (window->states & 1ULL << BUTTON_RIGHT) && world->player.has_target_place && (tile = world_get_tile(world, world->player.target_place)))
   {
     const struct item *item = &world->player.hotbar.items[world->player.hotbar.selection];
     if(item->id != ITEM_NONE)
@@ -82,7 +92,7 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
 
       uint8_t block_id = resource_pack->item_infos[item->id].block_id;
 
-      int radius = input->state_ctrl ? 2 : 0;
+      int radius = window->states & 1ULL << KEY_CTRL ? 2 : 0;
       for(int dz=-radius; dz<=radius; ++dz)
         for(int dy=-radius; dy<=radius; ++dy)
           for(int dx=-radius; dx<=radius; ++dx)

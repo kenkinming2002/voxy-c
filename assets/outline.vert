@@ -2,6 +2,7 @@
 
 uniform mat4 VP;
 uniform vec3 position;
+uniform vec3 dimension;
 
 void main()
 {
@@ -21,7 +22,7 @@ void main()
       vec3(-0.5,  0.5, -0.5), vec3(-0.5,  0.5,  0.5),
       vec3( 0.5,  0.5, -0.5), vec3( 0.5,  0.5,  0.5));
 
-  gl_Position = VP * vec4(position + factors[gl_VertexID], 1.0);
+  gl_Position = VP * vec4(position + factors[gl_VertexID] * dimension, 1.0);
 }
 
 

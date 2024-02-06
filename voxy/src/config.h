@@ -28,4 +28,7 @@
 #define PLAYER_PAN_SPEED  0.002f
 #define PLAYER_ACTION_COOLDOWN 0.5f
 
+#define PLAYER_EYE_HEIGHT 1.9f
+#define PLAYER_DIMENSION fvec3(1.0f, 1.0f, 2.0f)
+
 #endif // VOXY_CONFIG_H

@@ -37,8 +37,9 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
   camera.far       = 1000.0f;
   camera.aspect    = (float)window->width / (float)window->height;
 
+  camera.transform.translation.z += PLAYER_EYE_HEIGHT;
   if(world->player.third_person)
-    transform_local_translate(&camera.transform, fvec3(0.0f, -30.0f, 0.0f));
+    transform_local_translate(&camera.transform, fvec3(0.0f, -5.0f, 0.0f));
 
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(&camera),       VP);
@@ -51,7 +52,7 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glLineWidth(5.0f);
+  glLineWidth(3.0f);
 
   glUseProgram(renderer_world->program_chunk.id);
   glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_chunk.id, "VP"), 1, GL_TRUE, (const float *)&VP);
@@ -74,7 +75,7 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
         glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
       }
 
-  if(world->player.has_target_place || world->player.has_target_destroy)
+  if(world->player.has_target_place || world->player.has_target_destroy || world->player.third_person)
   {
     glUseProgram(renderer_world->program_outline.id);
     glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_outline.id, "VP"), 1, GL_TRUE, (const float *)&VP);
@@ -82,12 +83,24 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
     if(world->player.has_target_destroy)
     {
       glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.target_destroy.x, world->player.target_destroy.y, world->player.target_destroy.z);
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "dimension"), 1.0f, 1.0f, 1.0f);
+      glUniform4f(glGetUniformLocation(renderer_world->program_outline.id, "color"),     1.0f, 1.0f, 1.0f, 1.0f);
       glDrawArrays(GL_LINES, 0, 24);
     }
 
     if(world->player.has_target_destroy &&world->player.has_target_place)
     {
       glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.target_place.x, world->player.target_place.y, world->player.target_place.z);
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "dimension"), 1.0f, 1.0f, 1.0f);
+      glUniform4f(glGetUniformLocation(renderer_world->program_outline.id, "color"),     1.0f, 1.0f, 1.0f, 1.0f);
+      glDrawArrays(GL_LINES, 0, 24);
+    }
+
+    if(world->player.third_person)
+    {
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.transform.translation.x, world->player.transform.translation.y, world->player.transform.translation.z + PLAYER_DIMENSION.z * 0.5f);
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "dimension"), PLAYER_DIMENSION.x, PLAYER_DIMENSION.y, PLAYER_DIMENSION.z);
+      glUniform4f(glGetUniformLocation(renderer_world->program_outline.id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
       glDrawArrays(GL_LINES, 0, 24);
     }
   }

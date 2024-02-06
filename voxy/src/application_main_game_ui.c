@@ -1,23 +1,14 @@
 #include "application_main_game.h"
 
+#include "window.h"
+#include "renderer_ui.h"
+
 /// To any future reader:
 ///
 /// The following code may look messy and full of code duplication. However, the
 /// author has already tried but failed to find any way of refactoring the code
 /// without making it significantly more complex. As the saying goes, if it
 /// ain't broke, don't fix it.
-
-#define UI_HOTBAR_COLOR_BACKGROUND fvec4(0.9f, 0.9f, 0.9f, 0.3f)
-#define UI_HOTBAR_COLOR_SELECTED   fvec4(0.95f, 0.75f, 0.75f, 0.8f)
-#define UI_HOTBAR_COLOR_HOVER      fvec4(0.4f,  0.8f,  0.2f,  0.8f)
-#define UI_HOTBAR_COLOR_DEFAULT    fvec4(0.95f, 0.95f, 0.95f, 0.7f)
-
-#define UI_INVENTORY_COLOR_BACKGROUND fvec4(0.9f, 0.9f, 0.9f, 1.0f)
-#define UI_INVENTORY_COLOR_HOVER      fvec4(0.4f,  0.8f,  0.2f,  0.8f)
-#define UI_INVENTORY_COLOR_DEFAULT    fvec4(0.95f, 0.95f, 0.95f, 0.7f)
-
-#define UI_TEXT_SIZE 28
-#define UI_TEXT_SIZE_ITEM_COUNT 20
 
 static inline float minf(float a, float b)
 {

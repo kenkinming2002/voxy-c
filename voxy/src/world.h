@@ -3,10 +3,7 @@
 
 #include "config.h"
 #include "glad/glad.h"
-#include "window.h"
-#include "math.h"
 #include "transform.h"
-#include "world_generator.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX chunk
@@ -17,6 +14,8 @@
 #undef SC_HASH_TABLE_NODE_TYPE
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_INTERFACE
+
+#include <voxy/config.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -129,6 +128,10 @@ void world_invalidate_tile(struct world *world, ivec3_t position);
 void world_tile_set_id(struct world *world, ivec3_t position, uint8_t id);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
+
+struct window;
+struct resource_pack;
+struct world_generator;
 
 void world_update(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack, struct window *window, float dt);
 

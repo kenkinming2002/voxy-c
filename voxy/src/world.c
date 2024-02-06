@@ -10,9 +10,6 @@
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_IMPLEMENTATION
 
-#include <assert.h>
-#include <float.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 ivec3_t chunk_key(struct chunk *chunk)

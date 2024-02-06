@@ -1,7 +1,5 @@
 #include "ray_cast.h"
 
-#include <stdio.h>
-
 void ray_cast_init(struct ray_cast *ray_cast, fvec3_t position)
 {
   ray_cast->fposition = position;

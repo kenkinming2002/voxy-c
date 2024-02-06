@@ -1,5 +1,7 @@
 #include "world.h"
 
+#include "resource_pack.h"
+
 #include <stdlib.h>
 
 struct chunk_mesh_vertex

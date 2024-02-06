@@ -1,10 +1,4 @@
 #include "application.h"
-#include "check.h"
-
-#define WINDOW_WIDTH  1024
-#define WINDOW_HEIGHT 720
-#define WINDOW_TITLE "voxy"
-#define RESOURCE_PACK_FILEPATH "resource_pack/resource_pack.so"
 
 #define CHECK(expr) if((expr) != 0) { fprintf(stderr, "%s:%d: ERROR: %s != 0\n", __FILE__, __LINE__, #expr); exit(EXIT_FAILURE); }
 

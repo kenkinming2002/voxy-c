@@ -1,9 +1,10 @@
 #include "renderer_world.h"
 
+#include "window.h"
 #include "camera.h"
+#include "check.h"
 #include "resource_pack.h"
 #include "world.h"
-#include "check.h"
 
 int renderer_world_init(struct renderer_world *renderer_world)
 {

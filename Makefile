@@ -5,6 +5,7 @@ CFLAGS += -D_GNU_SOURCE
 VOXY_SRCS += voxy/src/application.c
 VOXY_SRCS += voxy/src/application_main_game.c
 VOXY_SRCS += voxy/src/application_main_game_ui.c
+VOXY_SRCS += voxy/src/application_main_game_world.c
 VOXY_SRCS += voxy/src/camera.c
 VOXY_SRCS += voxy/src/font_set.c
 VOXY_SRCS += voxy/src/gl.c

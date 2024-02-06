@@ -4,7 +4,6 @@
 #include <voxy/math/vector.h>
 
 #include "gl.h"
-#include "font_set.h"
 
 struct renderer_ui
 {
@@ -17,6 +16,8 @@ struct renderer_ui
 
   fvec2_t window_size;
 };
+
+struct font_set;
 
 int renderer_ui_init(struct renderer_ui *renderer_ui);
 void renderer_ui_fini(struct renderer_ui *renderer_ui);

@@ -1,5 +1,7 @@
 #include "world.h"
 
+#include "world_generator.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 

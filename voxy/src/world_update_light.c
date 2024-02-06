@@ -1,6 +1,7 @@
 #include "world.h"
 
-#include <string.h>
+#include "resource_pack.h"
+
 #include <stdio.h>
 #include <time.h>
 
@@ -20,10 +21,6 @@
 ///    subtract 1.
 ///  - If the computed light level is below 0, it will be set to 0.
 ///
-
-//static inline bool    tile_is_opaque  (struct tile tile) { return tile.id != TILE_ID_EMPTY && tile.id != TILE_ID_ETHER; }
-//static inline bool    tile_is_ether   (struct tile tile) { return tile.id == TILE_ID_ETHER; }
-//static inline uint8_t tile_light_level(struct tile tile) { (void)tile; return 0; }
 
 struct light_info
 {

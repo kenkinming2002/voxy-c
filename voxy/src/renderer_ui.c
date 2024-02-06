@@ -1,11 +1,11 @@
 #include "renderer_ui.h"
 
 #include "check.h"
+#include "font_set.h"
 
 #include <voxy/math/vector.h>
 
 #include <assert.h>
-#include <stdbool.h>
 
 int renderer_ui_init(struct renderer_ui *renderer_ui)
 {

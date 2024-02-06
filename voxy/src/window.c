@@ -1,7 +1,6 @@
 #include "window.h"
 
 #include <stdio.h>
-#include <stdbool.h>
 
 static void glfw_error_callback(int error, const char *description)
 {

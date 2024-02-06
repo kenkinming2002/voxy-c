@@ -43,9 +43,8 @@ void chunk_data_wrapper_dispose(struct chunk_data_wrapper *chunk_data_wrapper)
   free(chunk_data_wrapper);
 }
 
-void world_generator_init(struct world_generator *world_generator, seed_t seed)
+void world_generator_init(struct world_generator *world_generator)
 {
-  world_generator->seed = seed;
   thread_pool_init(&world_generator->thread_pool);
   chunk_data_wrapper_hash_table_init(&world_generator->chunk_data_wrappers);
 }
@@ -90,7 +89,7 @@ static void world_generator_generate_chunk_data_job_destroy(struct thread_pool_j
   free(job);
 }
 
-struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, ivec3_t position, struct resource_pack *resource_pack)
+struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, struct world *world, ivec3_t position, struct resource_pack *resource_pack)
 {
   struct chunk_data_wrapper *chunk_data_wrapper;
   if((chunk_data_wrapper = chunk_data_wrapper_hash_table_lookup(&world_generator->chunk_data_wrappers, position)))
@@ -104,7 +103,7 @@ struct chunk_data *world_generator_generate_chunk_data(struct world_generator *w
   struct chunk_data_generate_job *job = malloc(sizeof *job);
   job->base.invoke        = world_generator_generate_chunk_data_job_invoke;
   job->base.destroy       = world_generator_generate_chunk_data_job_destroy;
-  job->seed               = world_generator->seed;
+  job->seed               = world->seed;
   job->chunk_data_wrapper = chunk_data_wrapper;
   job->resource_pack      = resource_pack;
   thread_pool_enqueue(&world_generator->thread_pool, &job->base);

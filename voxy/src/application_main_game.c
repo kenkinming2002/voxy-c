@@ -11,7 +11,7 @@ int application_main_game_init(struct application_main_game *application_main_ga
 
   seed_t seed = time(NULL);
   world_init(&application_main_game->world, seed);
-  world_generator_init(&application_main_game->world_generator, seed);
+  world_generator_init(&application_main_game->world_generator);
   return 0;
 }
 

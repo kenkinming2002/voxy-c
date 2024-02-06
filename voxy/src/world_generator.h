@@ -7,6 +7,7 @@
 #include "resource_pack.h"
 #include "config.h"
 #include "thread_pool.h"
+#include "world.h"
 
 #define SC_HASH_TABLE_INTERFACE
 #define SC_HASH_TABLE_PREFIX chunk_data_wrapper
@@ -34,18 +35,16 @@ struct chunk_data_wrapper
 
 struct world_generator
 {
-  seed_t seed;
-
   struct thread_pool thread_pool;
   struct chunk_data_wrapper_hash_table chunk_data_wrappers;
 };
 
-void world_generator_init(struct world_generator *world_generator, seed_t seed);
+void world_generator_init(struct world_generator *world_generator);
 void world_generator_fini(struct world_generator *world_generator);
 
 /// On first call, the following functions may submit a job to a internal thread
 /// pool in order to generate the relevant structures, and then return NULL to
 /// indicate that the result is not yet available.
-struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, ivec3_t position, struct resource_pack *resource_pack);
+struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, struct world *world, ivec3_t position, struct resource_pack *resource_pack);
 
 #endif // VOXY_WORLD_GENERATOR_H

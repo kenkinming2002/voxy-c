@@ -15,7 +15,7 @@ void world_update_chunk_generate(struct world *world, struct resource_pack *reso
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
       {
         ivec3_t position = ivec3_add(player_position, ivec3(dx, dy, dz));
-        if(!(chunk = chunk_hash_table_lookup(&world->chunks, position)) && (chunk_data = world_generator_generate_chunk_data(world_generator, position, resource_pack))) // :)
+        if(!(chunk = chunk_hash_table_lookup(&world->chunks, position)) && (chunk_data = world_generator_generate_chunk_data(world_generator, world, position, resource_pack))) // :)
         {
           chunk = malloc(sizeof *chunk);
           chunk->position   = position;

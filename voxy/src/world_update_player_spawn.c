@@ -13,8 +13,11 @@ void world_update_player_spawn(struct world *world, struct resource_pack *resour
   if(!world->player.spawned)
   {
     world->player.spawned = true;
+
     world->player.transform.translation = resource_pack->generate_spawn(world->seed);
     world->player.transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
+
+    world->player.third_person = false;
 
     for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
       for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)

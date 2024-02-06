@@ -97,6 +97,8 @@ struct player
 
   struct transform transform;
 
+  bool third_person;
+
   struct inventory inventory;
   struct hotbar    hotbar;
   struct item     *item_hovered;

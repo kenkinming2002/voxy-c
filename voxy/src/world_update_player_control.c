@@ -37,6 +37,9 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   if(world->player.inventory.opened)
     return;
 
+  if(window->presses & (1ULL << KEY_F))
+    world->player.third_person = !world->player.third_person;
+
   ////////////////
   /// Movement ///
   ////////////////

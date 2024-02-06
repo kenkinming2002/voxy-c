@@ -47,6 +47,5 @@ void world_generator_fini(struct world_generator *world_generator);
 /// pool in order to generate the relevant structures, and then return NULL to
 /// indicate that the result is not yet available.
 struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, ivec3_t position, struct resource_pack *resource_pack);
-fvec3_t            world_generator_generate_spawn     (struct world_generator *world_generator, struct resource_pack *resource_pack);
 
 #endif // VOXY_WORLD_GENERATOR_H

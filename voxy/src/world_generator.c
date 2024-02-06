@@ -111,7 +111,3 @@ struct chunk_data *world_generator_generate_chunk_data(struct world_generator *w
   return NULL;
 }
 
-fvec3_t world_generator_generate_spawn(struct world_generator *world_generator, struct resource_pack *resource_pack)
-{
-  return resource_pack->generate_spawn(world_generator->seed);
-}

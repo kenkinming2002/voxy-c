@@ -25,6 +25,7 @@ VOXY_SRCS += voxy/src/world_update_chunk_generate.c
 VOXY_SRCS += voxy/src/world_update_chunk_mesh.c
 VOXY_SRCS += voxy/src/world_update_light.c
 VOXY_SRCS += voxy/src/world_update_player_control.c
+VOXY_SRCS += voxy/src/world_update_player_spawn.c
 
 RESOURCE_PACK_SRCS += resource_pack/src/resource_pack.c
 

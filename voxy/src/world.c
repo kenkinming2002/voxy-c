@@ -131,11 +131,3 @@ void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
   chunk_hash_table_insert_unchecked(&world->chunks, chunk);
 }
 
-void world_update(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack, struct window *window, float dt)
-{
-  world_update_player_control(world, resource_pack, window, dt);
-  world_update_generate(world, world_generator, resource_pack);
-  world_update_light(world, resource_pack);
-  world_update_mesh(world, resource_pack);
-}
-

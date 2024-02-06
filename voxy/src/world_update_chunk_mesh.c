@@ -108,7 +108,7 @@ static inline struct tile *chunk_tile_lookup(struct chunk *chunk, ivec3_t positi
 }
 
 __attribute__((flatten))
-void world_update_mesh(struct world *world, struct resource_pack *resource_pack)
+void world_update_chunk_mesh(struct world *world, struct resource_pack *resource_pack)
 {
   struct chunk_mesh_info
   {

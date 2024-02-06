@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int mini(int a, int b)
+static int mini(int a, int b)
 {
   return a < b ? a : b;
 }
 
-void world_update_generate(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack)
+void world_update_chunk_generate(struct world *world, struct resource_pack *resource_pack, struct world_generator *world_generator)
 {
   if(!world->player.spawned)
   {

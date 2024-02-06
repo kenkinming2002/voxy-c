@@ -129,15 +129,4 @@ void world_tile_set_id(struct world *world, ivec3_t position, uint8_t id);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 
-struct window;
-struct resource_pack;
-struct world_generator;
-
-void world_update(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack, struct window *window, float dt);
-
-void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct window *window, float dt);
-void world_update_generate(struct world *world, struct world_generator *world_generator, struct resource_pack *resource_pack);
-void world_update_light(struct world *world, struct resource_pack *resource_pack);
-void world_update_mesh(struct world *world, struct resource_pack *resource_pack);
-
 #endif // VOXY_WORLD_H

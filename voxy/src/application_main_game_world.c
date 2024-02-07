@@ -17,7 +17,7 @@ void application_main_game_update_world(struct application_main_game *applicatio
   world_update_player_control(&application_main_game->world, &application_main_game->resource_pack, window, dt);
 
   world_update_light(&application_main_game->world, &application_main_game->resource_pack);
-  world_update_physics(&application_main_game->world, dt);
+  world_update_physics(&application_main_game->world, &application_main_game->resource_pack, dt);
 
   world_update_chunk_mesh(&application_main_game->world, &application_main_game->resource_pack);
 }

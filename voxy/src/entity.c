@@ -22,3 +22,8 @@ struct transform entity_view_transform(const struct entity *entity)
   result.rotation    = entity->local_view_transform.rotation;
   return result;
 }
+
+void entity_apply_impulse(struct entity *entity, fvec3_t impulse)
+{
+  entity->velocity = fvec3_add(entity->velocity, impulse);
+}

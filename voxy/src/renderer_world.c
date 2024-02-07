@@ -33,11 +33,11 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
   struct camera camera;
   camera.transform = entity_view_transform(&world->player.base);
   camera.fovy   = M_PI / 2.0f;
-  camera.near   = 1.0f;
+  camera.near   = 0.1f;
   camera.far    = 1000.0f;
   camera.aspect = (float)window->width / (float)window->height;
   if(world->player.third_person)
-    transform_local_translate(&camera.transform, fvec3(0.0f, -5.0f, 0.0f));
+    transform_local_translate(&camera.transform, fvec3(0.0f, -10.0f, 0.0f));
 
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(&camera),       VP);

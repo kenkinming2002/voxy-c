@@ -293,5 +293,5 @@ fvec3_t generate_spawn(seed_t seed)
   (void)seed_tile;
   (void)seed_tree;
 
-  return fvec3(0.0f, 0.0f, get_height(seed_height, ivec2(0, 0)));
+  return fvec3(0.0f, 0.0f, get_height(seed_height, ivec2(0, 0))+10.0f);
 }

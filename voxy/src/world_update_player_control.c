@@ -49,20 +49,20 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   ////////////////
   /// Movement ///
   ////////////////
-  fvec3_t translation = fvec3_zero();
+  fvec3_t impulse = fvec3_zero();
 
-  if(window->states & (1ULL << KEY_A))     translation.x -= 1.0f;
-  if(window->states & (1ULL << KEY_D))     translation.x += 1.0f;
-  if(window->states & (1ULL << KEY_S))     translation.y -= 1.0f;
-  if(window->states & (1ULL << KEY_W))     translation.y += 1.0f;
-  if(window->states & (1ULL << KEY_SHIFT)) translation.z -= 1.0f;
-  if(window->states & (1ULL << KEY_SPACE)) translation.z += 1.0f;
+  if(window->states & (1ULL << KEY_A))     impulse.x -= 1.0f;
+  if(window->states & (1ULL << KEY_D))     impulse.x += 1.0f;
+  if(window->states & (1ULL << KEY_S))     impulse.y -= 1.0f;
+  if(window->states & (1ULL << KEY_W))     impulse.y += 1.0f;
+  if(window->states & (1ULL << KEY_SHIFT)) impulse.z -= 1.0f;
+  if(window->states & (1ULL << KEY_SPACE)) impulse.z += 1.0f;
 
-  translation = fvec3_normalize(translation);
-  translation = fvec3_mul_scalar(translation, PLAYER_MOVE_SPEED * dt);
-  translation = transform_local(&world->player.base.local_view_transform, translation);
+  impulse = fvec3_normalize(impulse);
+  impulse = fvec3_mul_scalar(impulse, PLAYER_MOVE_SPEED * dt);
+  impulse = transform_local(&world->player.base.local_view_transform, impulse);
 
-  world->player.base.position = fvec3_add(world->player.base.position, translation);
+  entity_apply_impulse(&world->player.base, impulse);
 
   ///////////////////////////////////
   /// Block placement/destruction ///

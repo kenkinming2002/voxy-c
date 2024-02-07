@@ -49,20 +49,29 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   ////////////////
   /// Movement ///
   ////////////////
-  fvec3_t impulse = fvec3_zero();
+  fvec3_t axis = fvec3_zero();
+  if(window->states & (1ULL << KEY_A)) axis.x -= 1.0f;
+  if(window->states & (1ULL << KEY_D)) axis.x += 1.0f;
+  if(window->states & (1ULL << KEY_S)) axis.y -= 1.0f;
+  if(window->states & (1ULL << KEY_W)) axis.y += 1.0f;
 
-  if(window->states & (1ULL << KEY_A))     impulse.x -= 1.0f;
-  if(window->states & (1ULL << KEY_D))     impulse.x += 1.0f;
-  if(window->states & (1ULL << KEY_S))     impulse.y -= 1.0f;
-  if(window->states & (1ULL << KEY_W))     impulse.y += 1.0f;
-  if(window->states & (1ULL << KEY_SHIFT)) impulse.z -= 1.0f;
-  if(window->states & (1ULL << KEY_SPACE)) impulse.z += 1.0f;
+  fvec3_t impulse = transform_local(&world->player.base.local_view_transform, axis);
 
+  impulse.z = 0.0f;
   impulse = fvec3_normalize(impulse);
-  impulse = fvec3_mul_scalar(impulse, PLAYER_MOVE_SPEED * dt);
-  impulse = transform_local(&world->player.base.local_view_transform, impulse);
+  impulse = fvec3_mul_scalar(impulse, PLAYER_MOVE_SPEED);
+  impulse = fvec3_mul_scalar(impulse, dt);
 
   entity_apply_impulse(&world->player.base, impulse);
+
+  ////////////
+  /// Jump ///
+  ////////////
+  if(window->states & (1ULL << KEY_SPACE) && world->player.base.grounded)
+  {
+    world->player.base.grounded = false;
+    entity_apply_impulse(&world->player.base, fvec3(0.0f, 0.0f, PLAYER_JUMP_STRENGTH));
+  }
 
   ///////////////////////////////////
   /// Block placement/destruction ///

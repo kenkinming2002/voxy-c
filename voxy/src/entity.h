@@ -6,6 +6,8 @@
 #include "transform.h"
 #include "config.h"
 
+#include <stdbool.h>
+
 struct entity
 {
   fvec3_t position;
@@ -13,6 +15,8 @@ struct entity
   fvec3_t velocity;
 
   struct transform local_view_transform;
+
+  bool grounded;
 };
 
 fvec3_t entity_view_position(const struct entity *entity);

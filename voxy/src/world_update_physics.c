@@ -84,7 +84,7 @@ static inline bool box_swept(const struct box *box1, const struct box *box2, fve
     {
       *t = t_near;
       *normal = fvec3_zero();
-      normal->values[i] = signbit(offset.values[i]) ? -1 : 1;
+      normal->values[i] = signbit(offset.values[i]) ? 1.0f : -1.0f;
       return true;
     }
 
@@ -129,6 +129,9 @@ static void entity_physics_update(struct entity *entity, struct world *world, st
 
     if(isinff(min_t))
       return;
+
+    if(min_normal.z == 1.0f)
+      entity->grounded = true;
 
     entity->velocity = fvec3_sub(entity->velocity, fvec3_mul_scalar(min_normal, fvec3_dot(min_normal, entity->velocity) * (1-min_t)));
   }

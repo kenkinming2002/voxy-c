@@ -19,6 +19,8 @@ void world_update_player_spawn(struct world *world, struct resource_pack *resour
     world->player.base.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);
     world->player.base.local_view_transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
 
+    world->player.base.grounded = false;
+
     world->player.spawned      = true;
     world->player.third_person = false;
 

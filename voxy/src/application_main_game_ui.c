@@ -21,7 +21,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
     return;
 
   struct world  *world  = &application_main_game->world;
-  struct player *player = &world->player;
+  struct player_entity *player = &world->player;
 
   ///////////////////
   ///  UI Metrics ///
@@ -159,7 +159,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
 
   struct resource_pack *resource_pack = &application_main_game->resource_pack;
   struct world         *world         = &application_main_game->world;
-  struct player        *player        = &world->player;
+  struct player_entity        *player        = &world->player;
 
   renderer_ui_begin(renderer_ui, fvec2(window->width, window->height));
   {

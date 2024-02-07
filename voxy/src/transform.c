@@ -80,19 +80,25 @@ fmat4_t transform_matrix_inverse(struct transform *transform)
   return mat;
 }
 
-fvec3_t transform_right(struct transform *transform)
+fvec3_t transform_local(struct transform *transform, fvec3_t translation)
+{
+  fvec4_t result = fmat4_mul_vec(fmat4_rotate(transform->rotation), fvec4(translation.x, translation.y, translation.z, 1.0f));
+  return fvec3(result.x, result.y, result.z);
+}
+
+fvec3_t transform_right(const struct transform *transform)
 {
   fvec4_t result = fmat4_mul_vec(fmat4_rotate(transform->rotation), fvec4(1.0f, 0.0f, 0.0f, 1.0f));
   return fvec3(result.x, result.y, result.z);
 }
 
-fvec3_t transform_forward(struct transform *transform)
+fvec3_t transform_forward(const struct transform *transform)
 {
   fvec4_t result = fmat4_mul_vec(fmat4_rotate(transform->rotation), fvec4(0.0f, 1.0f, 0.0f, 1.0f));
   return fvec3(result.x, result.y, result.z);
 }
 
-fvec3_t transform_up(struct transform *transform)
+fvec3_t transform_up(const struct transform *transform)
 {
   fvec4_t result = fmat4_mul_vec(fmat4_rotate(transform->rotation), fvec4(0.0f, 0.0f, 1.0f, 1.0f));
   return fvec3(result.x, result.y, result.z);

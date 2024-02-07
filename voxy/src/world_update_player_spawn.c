@@ -12,11 +12,14 @@ void world_update_player_spawn(struct world *world, struct resource_pack *resour
 {
   if(!world->player.spawned)
   {
-    world->player.spawned = true;
+    world->player.base.position  = resource_pack->generate_spawn(world->seed);
+    world->player.base.velocity  = fvec3_zero();
+    world->player.base.dimension = PLAYER_DIMENSION;
 
-    world->player.transform.translation = resource_pack->generate_spawn(world->seed);
-    world->player.transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
+    world->player.base.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);
+    world->player.base.local_view_transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
 
+    world->player.spawned      = true;
     world->player.third_person = false;
 
     for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
@@ -47,9 +50,9 @@ void world_update_player_spawn(struct world *world, struct resource_pack *resour
     world->player.cooldown = 0.0f;
 
     printf("Spawning player at (%f, %f, %f) with %d items\n",
-        world->player.transform.translation.x,
-        world->player.transform.translation.y,
-        world->player.transform.translation.z,
+        world->player.base.position.x,
+        world->player.base.position.y,
+        world->player.base.position.z,
         count);
   }
 }

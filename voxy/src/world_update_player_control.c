@@ -6,8 +6,8 @@
 
 static void world_update_player_ray_cast(struct world *world, struct resource_pack *resource_pack)
 {
-  fvec3_t position  = world->player.transform.translation;
-  fvec3_t direction = fvec3_normalize(transform_forward(&world->player.transform));
+  fvec3_t position  = entity_view_position(&world->player.base);
+  fvec3_t direction = entity_view_direction(&world->player.base);
 
   world->player.has_target_destroy = false;
   world->player.has_target_place   = false;
@@ -40,10 +40,15 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   if(window->presses & (1ULL << KEY_F))
     world->player.third_person = !world->player.third_person;
 
+  //////////////
+  /// Camera ///
+  //////////////
+  fvec3_t rotation = fvec3_mul_scalar(fvec3(window->mouse_motion.x, -window->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
+  transform_rotate(&world->player.base.local_view_transform, rotation);
+
   ////////////////
   /// Movement ///
   ////////////////
-  fvec3_t rotation = fvec3_mul_scalar(fvec3(window->mouse_motion.x, -window->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
   fvec3_t translation = fvec3_zero();
 
   if(window->states & (1ULL << KEY_A))     translation.x -= 1.0f;
@@ -55,9 +60,9 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
 
   translation = fvec3_normalize(translation);
   translation = fvec3_mul_scalar(translation, PLAYER_MOVE_SPEED * dt);
+  translation = transform_local(&world->player.base.local_view_transform, translation);
 
-  transform_rotate(&world->player.transform, rotation);
-  transform_local_translate(&world->player.transform, translation);
+  world->player.base.position = fvec3_add(world->player.base.position, translation);
 
   ///////////////////////////////////
   /// Block placement/destruction ///

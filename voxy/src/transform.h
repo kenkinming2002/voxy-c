@@ -23,9 +23,11 @@ struct transform
 fmat4_t transform_matrix(struct transform *transform);
 fmat4_t transform_matrix_inverse(struct transform *transform);
 
-fvec3_t transform_right  (struct transform *transform);
-fvec3_t transform_forward(struct transform *transform);
-fvec3_t transform_up     (struct transform *transform);
+fvec3_t transform_local(struct transform *transform, fvec3_t translation);
+
+fvec3_t transform_right  (const struct transform *transform);
+fvec3_t transform_forward(const struct transform *transform);
+fvec3_t transform_up     (const struct transform *transform);
 
 void transform_rotate(struct transform *transform, fvec3_t rotation);
 void transform_local_translate(struct transform *transform, fvec3_t translation);

@@ -1,6 +1,7 @@
 #ifndef VOXY_WORLD_H
 #define VOXY_WORLD_H
 
+#include "entity.h"
 #include "config.h"
 #include "glad/glad.h"
 #include "transform.h"
@@ -91,12 +92,11 @@ struct hotbar
   uint8_t selection;
 };
 
-struct player
+struct player_entity
 {
+  struct entity base;
+
   bool spawned;
-
-  struct transform transform;
-
   bool third_person;
 
   struct inventory inventory;
@@ -118,7 +118,7 @@ struct world
 {
   seed_t seed;
 
-  struct player           player;
+  struct player_entity    player;
   struct chunk_hash_table chunks;
 };
 

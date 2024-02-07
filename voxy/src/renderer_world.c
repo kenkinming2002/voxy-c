@@ -31,13 +31,11 @@ void renderer_world_fini(struct renderer_world *renderer_world)
 void renderer_world_render(struct renderer_world *renderer_world, struct window *window, struct world *world, struct resource_pack *resource_pack)
 {
   struct camera camera;
-  camera.transform = world->player.transform;
-  camera.fovy      = M_PI / 2.0f;
-  camera.near      = 1.0f;
-  camera.far       = 1000.0f;
-  camera.aspect    = (float)window->width / (float)window->height;
-
-  camera.transform.translation.z += PLAYER_EYE_HEIGHT;
+  camera.transform = entity_view_transform(&world->player.base);
+  camera.fovy   = M_PI / 2.0f;
+  camera.near   = 1.0f;
+  camera.far    = 1000.0f;
+  camera.aspect = (float)window->width / (float)window->height;
   if(world->player.third_person)
     transform_local_translate(&camera.transform, fvec3(0.0f, -5.0f, 0.0f));
 
@@ -98,8 +96,8 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
 
     if(world->player.third_person)
     {
-      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.transform.translation.x, world->player.transform.translation.y, world->player.transform.translation.z + PLAYER_DIMENSION.z * 0.5f);
-      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "dimension"), PLAYER_DIMENSION.x, PLAYER_DIMENSION.y, PLAYER_DIMENSION.z);
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"),  world->player.base.position.x,  world->player.base.position.y,  world->player.base.position.z);
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "dimension"), world->player.base.dimension.x, world->player.base.dimension.y, world->player.base.dimension.z);
       glUniform4f(glGetUniformLocation(renderer_world->program_outline.id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
       glDrawArrays(GL_LINES, 0, 24);
     }

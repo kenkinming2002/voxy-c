@@ -51,8 +51,6 @@ void world_init(struct world *world, seed_t seed)
   chunk_hash_table_init(&world->chunks);
 
   world->player.spawned = false;
-  world->player.transform.translation = fvec3_zero();
-  world->player.transform.rotation    = fvec3_zero();
 }
 
 void world_fini(struct world *world)

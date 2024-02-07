@@ -9,7 +9,7 @@ void world_update_chunk_generate(struct world *world, struct resource_pack *reso
   struct chunk      *chunk;
   struct chunk_data *chunk_data;
 
-  ivec3_t player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player.transform.translation, CHUNK_WIDTH));
+  ivec3_t player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player.base.position, CHUNK_WIDTH));
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)

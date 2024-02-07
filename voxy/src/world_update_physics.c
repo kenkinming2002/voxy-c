@@ -36,7 +36,7 @@ static inline struct box box_expand(const struct box *box, fvec3_t offset)
 static void entity_physics_apply_law(struct entity *entity, float dt)
 {
   entity->velocity = fvec3_add(entity->velocity, fvec3(0.0f, 0.0f, -PHYSICS_GRAVITY * dt));   // Gravity
-  entity->velocity = fvec3_mul_scalar(entity->velocity, expf(-dt * PHYSICS_DRAG)); // Drag
+  entity->velocity = fvec3_mul_scalar(entity->velocity, expf(-dt * (entity->grounded ? PHYSICS_DRAG_GROUND : PHYSICS_DRAG_AIR))); // Drag
 }
 
 static inline bool box_swept(const struct box *box1, const struct box *box2, fvec3_t offset, float *t, fvec3_t *normal)

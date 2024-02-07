@@ -33,6 +33,8 @@
 #define PLAYER_DIMENSION fvec3(0.9f, 0.9f, 2.0f)
 
 #define PHYSICS_GRAVITY 9.8f
-#define PHYSICS_DRAG 1.0f
+
+#define PHYSICS_DRAG_GROUND 2.0f
+#define PHYSICS_DRAG_AIR    0.5f
 
 #endif // VOXY_CONFIG_H

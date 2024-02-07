@@ -13,7 +13,7 @@ void world_update_player_spawn(struct world *world, struct resource_pack *resour
   if(!world->player.spawned)
   {
     world->player.base.position  = resource_pack->generate_spawn(world->seed);
-    world->player.base.velocity  = fvec3_zero();
+    world->player.base.velocity  = fvec3(0.0f, 0.0f, 10.0f);
     world->player.base.dimension = PLAYER_DIMENSION;
 
     world->player.base.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);

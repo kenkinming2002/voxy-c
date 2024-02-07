@@ -25,6 +25,7 @@ VOXY_SRCS += voxy/src/world_generator.c
 VOXY_SRCS += voxy/src/world_update_chunk_generate.c
 VOXY_SRCS += voxy/src/world_update_chunk_mesh.c
 VOXY_SRCS += voxy/src/world_update_light.c
+VOXY_SRCS += voxy/src/world_update_physics.c
 VOXY_SRCS += voxy/src/world_update_player_control.c
 VOXY_SRCS += voxy/src/world_update_player_spawn.c
 

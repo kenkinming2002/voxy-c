@@ -59,7 +59,7 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
 
   impulse.z = 0.0f;
   impulse = fvec3_normalize(impulse);
-  impulse = fvec3_mul_scalar(impulse, PLAYER_MOVE_SPEED);
+  impulse = fvec3_mul_scalar(impulse, world->player.base.grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR);
   impulse = fvec3_mul_scalar(impulse, dt);
 
   entity_apply_impulse(&world->player.base, impulse);

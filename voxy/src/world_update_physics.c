@@ -39,7 +39,49 @@ static void entity_physics_apply_law(struct entity *entity, float dt)
   entity->velocity = fvec3_mul_scalar(entity->velocity, expf(-dt * (entity->grounded ? PHYSICS_DRAG_GROUND : PHYSICS_DRAG_AIR))); // Drag
 }
 
-static inline bool box_swept(const struct box *box1, const struct box *box2, fvec3_t offset, float *t, fvec3_t *normal)
+// Return true if collision will occurs if box1 were to move by offset. This
+// does not include the case that box1 and box2 are already intersecting.
+//
+// If collision will occurs, *t is set to the time of collision, *s is set to
+// the "smoothness" of collision and normal is set to the normal of the face of
+// box2 that box1 will collide with.
+//
+// The smoothness parameter represent how close are box1 and box2 to be
+// colliding with each other along an edge or even a corner. This is to solve
+// one nasty problem if box1 and box2 are extremely well-aligned. Pictorially,
+//
+//      PPP
+//      P P
+//      PPP
+//   AAABBB
+//   A AB B
+//   AAABBB
+//
+// where P represent collision box for an entity, and A and B represent
+// collision box for 2 tiles.
+//
+// Imagine the entity is move towards bottom-left direction. Then according to
+// swept AABB algorithm, the entity will collide with both tiles at exactly the
+// same time t=0. Since we are resolving collision based on the minimum t,
+// the order of collision resolution depends solely on our traversal order.
+//
+// Since we are hitting tile A at the corner exactly, it dependes on our
+// implementation whether we resolve our collision upwards on to the right, but
+// resolving collision to the right is clearly wrong in our case since that
+// would just stop the entity.
+//
+// Mathematically, if we were to denote t1, t2, t3 as time to entry along the 3
+// axises, smoothness is computed as the sum of pairwise absolute differences,
+// i.e. abs(t1-t2) + abs(t1-t3) + abs(t2-t3)
+// To illustrate, when t1=t2=t3, the two boxes are hitting exactly at the
+// corner, and our smoothness becomes 0.
+//
+// By maximizing smoothness, we penalize if box1 and box2 are hitting each other
+// close to an edge or a corner.
+//
+// Because I am totally original, I call the above problem t-fighting, in spirit
+// of the z-fighting problem in computer graphics.
+static inline bool box_swept(const struct box *box1, const struct box *box2, fvec3_t offset, float *t, float *s, fvec3_t *normal)
 {
   // We are essentially solving:
   //
@@ -83,8 +125,13 @@ static inline bool box_swept(const struct box *box1, const struct box *box2, fve
     if(t_near == ts_near.values[i])
     {
       *t = t_near;
+      *s = fabs(ts_near.values[0]-ts_near.values[1])
+         + fabs(ts_near.values[0]-ts_near.values[2])
+         + fabs(ts_near.values[1]-ts_near.values[2]);
+
       *normal = fvec3_zero();
       normal->values[i] = signbit(offset.values[i]) ? 1.0f : -1.0f;
+
       return true;
     }
 
@@ -103,7 +150,8 @@ static void entity_physics_update(struct entity *entity, struct world *world, st
     struct box entity_box = { .position = entity->position, .dimension = entity->dimension };
     struct box entity_box_expanded = box_expand(&entity_box, offset);
 
-    float   min_t = INFINITY;
+    float min_t =  INFINITY;
+    float max_s = -INFINITY;
     fvec3_t min_normal;
 
     ivec3_t point1 = fvec3_as_ivec3_round(box_point1(&entity_box_expanded));
@@ -117,13 +165,16 @@ static void entity_physics_update(struct entity *entity, struct world *world, st
           struct tile *tile = world_get_tile(world, position);
           if(tile && resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE)
           {
-            float   t;
+            float t;
+            float s;
             fvec3_t normal;
-            if(box_swept(&entity_box, &(struct box){ .position = ivec3_as_fvec3(position), .dimension = fvec3(1.0f, 1.0f, 1.0f), }, offset, &t, &normal) && min_t > t)
-            {
-              min_t      = t;
-              min_normal = normal;
-            }
+            if(box_swept(&entity_box, &(struct box){ .position = ivec3_as_fvec3(position), .dimension = fvec3(1.0f, 1.0f, 1.0f), }, offset, &t, &s, &normal))
+              if(min_t > t || (min_t == t && max_s < s))
+              {
+                min_t = t;
+                max_s = s;
+                min_normal = normal;
+              }
           }
         }
 

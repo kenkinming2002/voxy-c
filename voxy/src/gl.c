@@ -1,6 +1,6 @@
 #include "gl.h"
 
-#include "stb_image.h"
+#include <stb_image.h>
 
 #include <errno.h>
 #include <stdio.h>

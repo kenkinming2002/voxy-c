@@ -255,15 +255,15 @@ void application_main_game_render_ui(struct application_main_game *application_m
     }
 
     ///////////////////
-    /// Target Tile ///
+    /// Target Block ///
     ///////////////////
-    const fvec2_t target_tile_text_position = fvec2(window->width * 0.5f, window->height - margin - UI_TEXT_SIZE);
+    const fvec2_t target_block_text_position = fvec2(window->width * 0.5f, window->height - margin - UI_TEXT_SIZE);
 
-    const struct tile *target_tile      = application_main_game->world.player.has_target_destroy ? world_get_tile(&application_main_game->world, application_main_game->world.player.target_destroy) : NULL;
-    const uint8_t      target_tile_id   = target_tile ? target_tile->id : BLOCK_NONE;
-    const char        *target_tile_name = target_tile_id != BLOCK_NONE ? resource_pack->block_infos[target_tile_id].name : NULL;
-    if(target_tile_name)
-      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, target_tile_text_position, target_tile_name, UI_TEXT_SIZE);
+    const struct block *target_block      = application_main_game->world.player.has_target_destroy ? world_get_block(&application_main_game->world, application_main_game->world.player.target_destroy) : NULL;
+    const uint8_t      target_block_id   = target_block ? target_block->id : BLOCK_NONE;
+    const char        *target_block_name = target_block_id != BLOCK_NONE ? resource_pack->block_infos[target_block_id].name : NULL;
+    if(target_block_name)
+      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, target_block_text_position, target_block_name, UI_TEXT_SIZE);
 
     ////////////
     /// Hold ///

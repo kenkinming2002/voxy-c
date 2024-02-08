@@ -58,14 +58,14 @@ static void entity_physics_apply_law(struct entity *entity, float dt)
 //   AAABBB
 //
 // where P represent collision box for an entity, and A and B represent
-// collision box for 2 tiles.
+// collision box for 2 blocks.
 //
 // Imagine the entity is move towards bottom-left direction. Then according to
-// swept AABB algorithm, the entity will collide with both tiles at exactly the
+// swept AABB algorithm, the entity will collide with both blocks at exactly the
 // same time t=0. Since we are resolving collision based on the minimum t,
 // the order of collision resolution depends solely on our traversal order.
 //
-// Since we are hitting tile A at the corner exactly, it dependes on our
+// Since we are hitting block A at the corner exactly, it dependes on our
 // implementation whether we resolve our collision upwards on to the right, but
 // resolving collision to the right is clearly wrong in our case since that
 // would just stop the entity.
@@ -162,8 +162,8 @@ static void entity_physics_update(struct entity *entity, struct world *world, st
         {
           ivec3_t position = ivec3(x, y, z);
 
-          struct tile *tile = world_get_tile(world, position);
-          if(tile && resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE)
+          struct block *block = world_get_block(world, position);
+          if(block && resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE)
           {
             float t;
             float s;

@@ -90,19 +90,19 @@ static inline void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk
   chunk_mesh_builder_push_vertices(chunk_mesh_builder, sizeof vertices / sizeof vertices[0], vertices);
 }
 
-static inline struct tile *chunk_tile_lookup(struct chunk *chunk, ivec3_t position)
+static inline struct block *chunk_block_lookup(struct chunk *chunk, ivec3_t position)
 {
   if(position.z >= 0 && position.z < CHUNK_WIDTH)
     if(position.y >= 0 && position.y < CHUNK_WIDTH)
       if(position.x >= 0 && position.x < CHUNK_WIDTH)
-        return &chunk->chunk_data->tiles[position.z][position.y][position.x];
+        return &chunk->chunk_data->blocks[position.z][position.y][position.x];
 
-  if(position.z == -1)          return chunk->bottom ? &chunk->bottom->chunk_data->tiles[CHUNK_WIDTH-1][position.y][position.x] : NULL;
-  if(position.z == CHUNK_WIDTH) return chunk->top    ? &chunk->top   ->chunk_data->tiles[0]            [position.y][position.x] : NULL;
-  if(position.y == -1)          return chunk->back   ? &chunk->back  ->chunk_data->tiles[position.z][CHUNK_WIDTH-1][position.x] : NULL;
-  if(position.y == CHUNK_WIDTH) return chunk->front  ? &chunk->front ->chunk_data->tiles[position.z][0]            [position.x] : NULL;
-  if(position.x == -1)          return chunk->left   ? &chunk->left  ->chunk_data->tiles[position.z][position.y][CHUNK_WIDTH-1] : NULL;
-  if(position.x == CHUNK_WIDTH) return chunk->right  ? &chunk->right ->chunk_data->tiles[position.z][position.y][0]             : NULL;
+  if(position.z == -1)          return chunk->bottom ? &chunk->bottom->chunk_data->blocks[CHUNK_WIDTH-1][position.y][position.x] : NULL;
+  if(position.z == CHUNK_WIDTH) return chunk->top    ? &chunk->top   ->chunk_data->blocks[0]            [position.y][position.x] : NULL;
+  if(position.y == -1)          return chunk->back   ? &chunk->back  ->chunk_data->blocks[position.z][CHUNK_WIDTH-1][position.x] : NULL;
+  if(position.y == CHUNK_WIDTH) return chunk->front  ? &chunk->front ->chunk_data->blocks[position.z][0]            [position.x] : NULL;
+  if(position.x == -1)          return chunk->left   ? &chunk->left  ->chunk_data->blocks[position.z][position.y][CHUNK_WIDTH-1] : NULL;
+  if(position.x == CHUNK_WIDTH) return chunk->right  ? &chunk->right ->chunk_data->blocks[position.z][position.y][0]             : NULL;
 
   assert(0 && "Unreachable");
 }
@@ -184,31 +184,31 @@ void world_update_chunk_mesh(struct world *world, struct resource_pack *resource
             ivec3_t position  = ivec3(x, y, z);
             ivec3_t nposition = ivec3_add(position, normals[j]);
 
-            const struct tile *tile  = chunk_tile_lookup(chunk_mesh_infos[i].chunk, position);
-            const struct tile *ntile = chunk_tile_lookup(chunk_mesh_infos[i].chunk, nposition);
+            const struct block *block  = chunk_block_lookup(chunk_mesh_infos[i].chunk, position);
+            const struct block *nblock = chunk_block_lookup(chunk_mesh_infos[i].chunk, nposition);
 
             fvec3_t  emit_position      = ivec3_as_fvec3(ivec3_add(ivec3_mul_scalar(chunk_mesh_infos[i].chunk->position, CHUNK_WIDTH), position));
             fvec3_t  emit_normal        = ivec3_as_fvec3(normals[j]);
             uint32_t emit_texture_index = 0;
-            float    emit_light_level   = ntile ? (float)ntile->light_level / 15.0f : 1.0f;
+            float    emit_light_level   = nblock ? (float)nblock->light_level / 15.0f : 1.0f;
             switch(j)
             {
-              case 0: emit_texture_index = resource_pack->block_infos[tile->id].texture_left;   break;
-              case 1: emit_texture_index = resource_pack->block_infos[tile->id].texture_right;  break;
-              case 2: emit_texture_index = resource_pack->block_infos[tile->id].texture_back;   break;
-              case 3: emit_texture_index = resource_pack->block_infos[tile->id].texture_front;  break;
-              case 4: emit_texture_index = resource_pack->block_infos[tile->id].texture_bottom; break;
-              case 5: emit_texture_index = resource_pack->block_infos[tile->id].texture_top;    break;
+              case 0: emit_texture_index = resource_pack->block_infos[block->id].texture_left;   break;
+              case 1: emit_texture_index = resource_pack->block_infos[block->id].texture_right;  break;
+              case 2: emit_texture_index = resource_pack->block_infos[block->id].texture_back;   break;
+              case 3: emit_texture_index = resource_pack->block_infos[block->id].texture_front;  break;
+              case 4: emit_texture_index = resource_pack->block_infos[block->id].texture_bottom; break;
+              case 5: emit_texture_index = resource_pack->block_infos[block->id].texture_top;    break;
             }
 
-            switch(resource_pack->block_infos[tile->id].type)
+            switch(resource_pack->block_infos[block->id].type)
             {
               case BLOCK_TYPE_OPAQUE:
-                if(!ntile || resource_pack->block_infos[ntile->id].type != BLOCK_TYPE_OPAQUE)
+                if(!nblock || resource_pack->block_infos[nblock->id].type != BLOCK_TYPE_OPAQUE)
                   chunk_mesh_builder_emit_face(&chunk_mesh_infos[i].chunk_mesh_builder_opaque, emit_position, emit_normal, emit_texture_index, emit_light_level);
                 break;
               case BLOCK_TYPE_TRANSPARENT:
-                if(!ntile || (resource_pack->block_infos[ntile->id].type != BLOCK_TYPE_OPAQUE && resource_pack->block_infos[ntile->id].type != BLOCK_TYPE_TRANSPARENT))
+                if(!nblock || (resource_pack->block_infos[nblock->id].type != BLOCK_TYPE_OPAQUE && resource_pack->block_infos[nblock->id].type != BLOCK_TYPE_TRANSPARENT))
                   chunk_mesh_builder_emit_face(&chunk_mesh_infos[i].chunk_mesh_builder_transparent, emit_position, emit_normal, emit_texture_index, emit_light_level);
                 break;
               default:

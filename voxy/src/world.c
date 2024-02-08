@@ -58,31 +58,31 @@ void world_fini(struct world *world)
   chunk_hash_table_dispose(&world->chunks);
 }
 
-struct tile *world_get_tile(struct world *world, ivec3_t position)
+struct block *world_get_block(struct world *world, ivec3_t position)
 {
   ivec3_t chunk_position;
-  ivec3_t tile_position;
+  ivec3_t block_position;
   for(int i=0; i<3; ++i)
   {
-    tile_position.values[i]  = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
-    chunk_position.values[i] = (position.values[i] - tile_position.values[i]) / CHUNK_WIDTH;
+    block_position.values[i]  = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
+    chunk_position.values[i] = (position.values[i] - block_position.values[i]) / CHUNK_WIDTH;
   }
 
   struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
   if(!chunk || !chunk->chunk_data)
     return NULL;
 
-  return &chunk->chunk_data->tiles[tile_position.z][tile_position.y][tile_position.x];
+  return &chunk->chunk_data->blocks[block_position.z][block_position.y][block_position.x];
 }
 
-void world_invalidate_tile(struct world *world, ivec3_t position)
+void world_invalidate_block(struct world *world, ivec3_t position)
 {
   ivec3_t chunk_position;
-  ivec3_t tile_position;
+  ivec3_t block_position;
   for(int i=0; i<3; ++i)
   {
-    tile_position.values[i]  = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
-    chunk_position.values[i] = (position.values[i] - tile_position.values[i]) / CHUNK_WIDTH;
+    block_position.values[i]  = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
+    chunk_position.values[i] = (position.values[i] - block_position.values[i]) / CHUNK_WIDTH;
   }
 
   struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
@@ -93,20 +93,20 @@ void world_invalidate_tile(struct world *world, ivec3_t position)
   }
 }
 
-void world_tile_set_id(struct world *world, ivec3_t position, uint8_t id)
+void world_block_set_id(struct world *world, ivec3_t position, uint8_t id)
 {
-  struct tile *tile = world_get_tile(world, position);
-  if(tile)
+  struct block *block = world_get_block(world, position);
+  if(block)
   {
-    tile->id = id;
+    block->id = id;
 
-    world_invalidate_tile(world, position);
-    world_invalidate_tile(world, ivec3_add(position, ivec3(-1, 0, 0)));
-    world_invalidate_tile(world, ivec3_add(position, ivec3( 1, 0, 0)));
-    world_invalidate_tile(world, ivec3_add(position, ivec3(0, -1, 0)));
-    world_invalidate_tile(world, ivec3_add(position, ivec3(0,  1, 0)));
-    world_invalidate_tile(world, ivec3_add(position, ivec3(0, 0, -1)));
-    world_invalidate_tile(world, ivec3_add(position, ivec3(0, 0,  1)));
+    world_invalidate_block(world, position);
+    world_invalidate_block(world, ivec3_add(position, ivec3(-1, 0, 0)));
+    world_invalidate_block(world, ivec3_add(position, ivec3( 1, 0, 0)));
+    world_invalidate_block(world, ivec3_add(position, ivec3(0, -1, 0)));
+    world_invalidate_block(world, ivec3_add(position, ivec3(0,  1, 0)));
+    world_invalidate_block(world, ivec3_add(position, ivec3(0, 0, -1)));
+    world_invalidate_block(world, ivec3_add(position, ivec3(0, 0,  1)));
   }
 }
 

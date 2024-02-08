@@ -8,15 +8,15 @@
 #define ETHER_HEIGHT 128
 #define WATER_HEIGHT 3
 
-enum tile
+enum block
 {
-  TILE_EMPTY,
-  TILE_ETHER,
-  TILE_STONE,
-  TILE_GRASS,
-  TILE_LOG,
-  TILE_LEAVE,
-  TILE_WATER,
+  BLOCK_EMPTY,
+  BLOCK_ETHER,
+  BLOCK_STONE,
+  BLOCK_GRASS,
+  BLOCK_LOG,
+  BLOCK_LEAVE,
+  BLOCK_WATER,
 };
 
 enum texture
@@ -40,9 +40,9 @@ enum item
 };
 
 const struct block_info block_infos[] = {
-  [TILE_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE, .ether = false, .light_level = 0,  },
-  [TILE_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE, .ether = true,  .light_level = 15, },
-  [TILE_STONE] = {
+  [BLOCK_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE, .ether = false, .light_level = 0,  },
+  [BLOCK_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE, .ether = true,  .light_level = 15, },
+  [BLOCK_STONE] = {
     .name           = "stone",
     .type           = BLOCK_TYPE_OPAQUE,
     .ether          = false,
@@ -54,7 +54,7 @@ const struct block_info block_infos[] = {
     .texture_bottom = TEXTURE_STONE,
     .texture_top    = TEXTURE_STONE
   },
-  [TILE_GRASS] = {
+  [BLOCK_GRASS] = {
     .name           = "grass",
     .type           = BLOCK_TYPE_OPAQUE,
     .ether          = false,
@@ -66,7 +66,7 @@ const struct block_info block_infos[] = {
     .texture_bottom = TEXTURE_GRASS_BOTTOM,
     .texture_top    = TEXTURE_GRASS_TOP,
   },
-  [TILE_LOG] = {
+  [BLOCK_LOG] = {
     .name           = "log",
     .type           = BLOCK_TYPE_OPAQUE,
     .ether          = false,
@@ -78,7 +78,7 @@ const struct block_info block_infos[] = {
     .texture_bottom = TEXTURE_LOG_TOP_BOTTOM,
     .texture_top    = TEXTURE_LOG_TOP_BOTTOM
   },
-  [TILE_LEAVE] = {
+  [BLOCK_LEAVE] = {
     .name           = "leave",
     .type           = BLOCK_TYPE_OPAQUE,
     .ether          = false,
@@ -90,7 +90,7 @@ const struct block_info block_infos[] = {
     .texture_bottom = TEXTURE_LEAVE,
     .texture_top    = TEXTURE_LEAVE
   },
-  [TILE_WATER] = {
+  [BLOCK_WATER] = {
     .name           = "water",
     .type           = BLOCK_TYPE_TRANSPARENT,
     .ether          = false,
@@ -116,10 +116,10 @@ const struct block_texture_info block_texture_infos[] = {
 };
 
 const struct item_info item_infos[] = {
-  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/stone_item.png", .block_id = TILE_STONE, },
-  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/grass_item.png", .block_id = TILE_GRASS, },
-  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/log_item.png",   .block_id = TILE_LOG,   },
-  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/leave_item.png", .block_id = TILE_LEAVE, },
+  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/stone_item.png", .block_id = BLOCK_STONE, },
+  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/grass_item.png", .block_id = BLOCK_GRASS, },
+  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/log_item.png",   .block_id = BLOCK_LOG,   },
+  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/leave_item.png", .block_id = BLOCK_LEAVE, },
 };
 
 const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];
@@ -164,92 +164,92 @@ static inline bool get_cave(seed_t seed, ivec3_t position)
   return true;
 }
 
-static inline uint8_t get_tile(seed_t seed, ivec3_t position, float height)
+static inline uint8_t get_block(seed_t seed, ivec3_t position, float height)
 {
   int height1 = floorf(height);
   int height2 = height1 + 1;
 
   if(position.z < height1)
-    return get_cave(seed, position) ? TILE_EMPTY : TILE_STONE;
+    return get_cave(seed, position) ? BLOCK_EMPTY : BLOCK_STONE;
 
   if(position.z < height2)
-    return TILE_GRASS;
+    return BLOCK_GRASS;
 
   if(position.z < WATER_HEIGHT)
-    return TILE_WATER;
+    return BLOCK_WATER;
 
   if(position.z >= ETHER_HEIGHT)
-    return TILE_ETHER;
+    return BLOCK_ETHER;
 
-  return TILE_EMPTY;
+  return BLOCK_EMPTY;
 }
 
 static uint8_t TREE[6][5][5] = {
   {
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_LOG,   TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_LOG,   BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
   },
   {
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_LOG,   TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_LOG,   BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
   },
   {
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_LOG,   TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_LOG,   BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
   },
   {
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LOG,   TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LOG,   BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
   },
   {
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LOG,   TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
-    {TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LOG,   BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
+    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
   },
   {
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_LEAVE, TILE_LEAVE, TILE_LEAVE, TILE_EMPTY, },
-    {TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, TILE_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_EMPTY, },
+    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
   },
 };
 
-static void place_tile(uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position, uint8_t tile)
+static void place_block(uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position, uint8_t block)
 {
   if(position.x < 0 || position.x >= CHUNK_WIDTH) return;
   if(position.y < 0 || position.y >= CHUNK_WIDTH) return;
   if(position.z < 0 || position.z >= CHUNK_WIDTH) return;
-  tiles[position.z][position.y][position.x] = tile;
+  blocks[position.z][position.y][position.x] = block;
 }
 
-static void place_tree(uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position)
+static void place_tree(uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position)
 {
   for(int z=0; z<6; ++z)
     for(int y=0; y<5; ++y)
       for(int x=0; x<5; ++x)
-        if(TREE[z][y][x] != TILE_EMPTY)
-          place_tile(tiles, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
+        if(TREE[z][y][x] != BLOCK_EMPTY)
+          place_block(blocks, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
 }
 
-void generate_tiles(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
+void generate_blocks(seed_t seed, ivec3_t position, uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
 {
   seed_t seed_height = seed ^ 0b0101010110101010111010110001001011011010111011010101111010101000;
-  seed_t seed_tile   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
+  seed_t seed_block   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
   seed_t seed_tree   = seed ^ 0b1010110101011111010110110101010101010101010101101010000101011101;
 
   float heights[CHUNK_WIDTH+4][CHUNK_WIDTH+4];
@@ -270,7 +270,7 @@ void generate_tiles(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CH
       {
         ivec3_t local_position  = ivec3(x, y, z);
         ivec3_t global_position = ivec3_add(ivec3_mul_scalar(position, CHUNK_WIDTH), local_position);
-        tiles[z][y][x] = get_tile(seed_tile, global_position, heights[y+2][x+2]);
+        blocks[z][y][x] = get_block(seed_block, global_position, heights[y+2][x+2]);
       }
 
   for(int y = -2; y<CHUNK_WIDTH+2; ++y)
@@ -279,18 +279,18 @@ void generate_tiles(seed_t seed, ivec3_t position, uint8_t tiles[CHUNK_WIDTH][CH
       {
         int height = floorf(heights[y+2][x+2]) + 1;
         if(height >= WATER_HEIGHT)
-          place_tree(tiles, ivec3(x, y, height - position.z * CHUNK_WIDTH));
+          place_tree(blocks, ivec3(x, y, height - position.z * CHUNK_WIDTH));
       }
 }
 
 fvec3_t generate_spawn(seed_t seed)
 {
   seed_t seed_height = seed ^ 0b0101010110101010111010110001001011011010111011010101111010101000;
-  seed_t seed_tile   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
+  seed_t seed_block   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
   seed_t seed_tree   = seed ^ 0b1010110101011111010110110101010101010101010101101010000101011101;
 
   (void)seed_height;
-  (void)seed_tile;
+  (void)seed_block;
   (void)seed_tree;
 
   return fvec3(0.0f, 0.0f, get_height(seed_height, ivec2(0, 0))+10.0f);

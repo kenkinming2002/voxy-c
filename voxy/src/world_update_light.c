@@ -11,13 +11,13 @@
 ///  - Opaque block always has light level of 0 regardless of following rules.
 ///
 /// 1: Ether
-///  - Tile with z above or equal ETHER_HEIGHT always has ether set.
-///  - If tile above has ether set, current tile also has ether set.
-///  - Ether tile has light level 15 during day
+///  - Block with z above or equal ETHER_HEIGHT always has ether set.
+///  - If block above has ether set, current block also has ether set.
+///  - Ether block has light level 15 during day
 ///
 /// 2: Neighbour
-///  - If tile does not have ether set or for light level during the night,
-///    tile light level is minimum of light levels of neighbour tiles
+///  - If block does not have ether set or for light level during the night,
+///    block light level is minimum of light levels of neighbour blocks
 ///    subtract 1.
 ///  - If the computed light level is below 0, it will be set to 0.
 ///
@@ -34,7 +34,7 @@ struct light_infos
   struct light_info items[CHUNK_WIDTH+2][CHUNK_WIDTH+2][CHUNK_WIDTH+2];
 };
 
-static inline struct tile       *get_tile      (struct chunk       *chunk,       int x, int y, int z) { return &chunk->chunk_data->tiles[z][y][x]; }
+static inline struct block       *get_block      (struct chunk       *chunk,       int x, int y, int z) { return &chunk->chunk_data->blocks[z][y][x]; }
 static inline struct light_info *get_light_info(struct light_infos *light_infos, int x, int y, int z) { return &light_infos->items[z+1][y+1][x+1]; }
 
 static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk, struct resource_pack *resource_pack)
@@ -52,84 +52,84 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk,       x, y, z);
+        struct block       *block       = get_block      (chunk,       x, y, z);
         struct light_info *light_info = get_light_info(light_infos, x, y, z);
 
-        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = resource_pack->block_infos[tile->id].ether;
-        light_info->light_level = resource_pack->block_infos[tile->id].light_level;
+        light_info->opaque      = resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = resource_pack->block_infos[block->id].ether;
+        light_info->light_level = resource_pack->block_infos[block->id].light_level;
       }
 
   if(chunk->bottom)
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->bottom, x, y, CHUNK_WIDTH-1);
+        struct block       *block       = get_block      (chunk->bottom, x, y, CHUNK_WIDTH-1);
         struct light_info *light_info = get_light_info(light_infos  , x, y, -1           );
 
-        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = tile->ether;
-        light_info->light_level = tile->light_level;
+        light_info->opaque      = resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = block->ether;
+        light_info->light_level = block->light_level;
       }
 
   if(chunk->top)
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->top , x, y, 0          );
+        struct block       *block       = get_block      (chunk->top , x, y, 0          );
         struct light_info *light_info = get_light_info(light_infos, x, y, CHUNK_WIDTH);
 
-        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = tile->ether;
-        light_info->light_level = tile->light_level;
+        light_info->opaque      = resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = block->ether;
+        light_info->light_level = block->light_level;
       }
 
   if(chunk->back)
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->back, x, CHUNK_WIDTH-1, z);
+        struct block       *block       = get_block      (chunk->back, x, CHUNK_WIDTH-1, z);
         struct light_info *light_info = get_light_info(light_infos, x, -1           , z);
 
-        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = tile->ether;
-        light_info->light_level = tile->light_level;
+        light_info->opaque      = resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = block->ether;
+        light_info->light_level = block->light_level;
       }
 
   if(chunk->front)
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->front, x, 0          , z);
+        struct block       *block       = get_block      (chunk->front, x, 0          , z);
         struct light_info *light_info = get_light_info(light_infos , x, CHUNK_WIDTH, z);
 
-        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = tile->ether;
-        light_info->light_level = tile->light_level;
+        light_info->opaque      = resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = block->ether;
+        light_info->light_level = block->light_level;
       }
 
   if(chunk->left)
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int y=0; y<CHUNK_WIDTH; ++y)
       {
-        struct tile       *tile       = get_tile      (chunk->left, CHUNK_WIDTH-1, y, z);
+        struct block       *block       = get_block      (chunk->left, CHUNK_WIDTH-1, y, z);
         struct light_info *light_info = get_light_info(light_infos, -1           , y, z);
 
-        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = tile->ether;
-        light_info->light_level = tile->light_level;
+        light_info->opaque      = resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = block->ether;
+        light_info->light_level = block->light_level;
       }
 
   if(chunk->right)
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int y=0; y<CHUNK_WIDTH; ++y)
       {
-        struct tile       *tile       = get_tile      (chunk->right, 0          , y, z);
+        struct block       *block       = get_block      (chunk->right, 0          , y, z);
         struct light_info *light_info = get_light_info(light_infos , CHUNK_WIDTH, y, z);
 
-        light_info->opaque      = resource_pack->block_infos[tile->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = tile->ether;
-        light_info->light_level = tile->light_level;
+        light_info->opaque      = resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = block->ether;
+        light_info->light_level = block->light_level;
       }
 }
 
@@ -139,11 +139,11 @@ static inline void light_infos_save(struct light_infos *light_infos, struct chun
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk,       x, y, z);
+        struct block       *block       = get_block      (chunk,       x, y, z);
         struct light_info *light_info = get_light_info(light_infos, x, y, z);
 
-        tile->ether       = light_info->ether;
-        tile->light_level = light_info->light_level;
+        block->ether       = light_info->ether;
+        block->light_level = light_info->light_level;
       }
 
   if(chunk->bottom && !chunk->bottom->light_dirty)
@@ -152,9 +152,9 @@ static inline void light_infos_save(struct light_infos *light_infos, struct chun
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->bottom, x, y, CHUNK_WIDTH-1);
+        struct block       *block       = get_block      (chunk->bottom, x, y, CHUNK_WIDTH-1);
         struct light_info *light_info = get_light_info(light_infos  , x, y, -1           );
-        if(tile->ether != light_info->ether || tile->light_level != light_info->light_level)
+        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
         {
           chunk->bottom->light_dirty = true;
           goto done;
@@ -169,9 +169,9 @@ static inline void light_infos_save(struct light_infos *light_infos, struct chun
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->top , x, y, 0          );
+        struct block       *block       = get_block      (chunk->top , x, y, 0          );
         struct light_info *light_info = get_light_info(light_infos, x, y, CHUNK_WIDTH);
-        if(tile->ether != light_info->ether || tile->light_level != light_info->light_level)
+        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
         {
           chunk->top->light_dirty = true;
           goto done;
@@ -186,9 +186,9 @@ static inline void light_infos_save(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->back, x, CHUNK_WIDTH-1, z);
+        struct block       *block       = get_block      (chunk->back, x, CHUNK_WIDTH-1, z);
         struct light_info *light_info = get_light_info(light_infos, x, -1           , z);
-        if(tile->ether != light_info->ether || tile->light_level != light_info->light_level)
+        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
         {
           chunk->back->light_dirty = true;
           goto done;
@@ -203,9 +203,9 @@ static inline void light_infos_save(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct tile       *tile       = get_tile      (chunk->front, x, 0          , z);
+        struct block       *block       = get_block      (chunk->front, x, 0          , z);
         struct light_info *light_info = get_light_info(light_infos , x, CHUNK_WIDTH, z);
-        if(tile->ether != light_info->ether || tile->light_level != light_info->light_level)
+        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
         {
           chunk->front->light_dirty = true;
           goto done;
@@ -220,9 +220,9 @@ static inline void light_infos_save(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int y=0; y<CHUNK_WIDTH; ++y)
       {
-        struct tile       *tile       = get_tile      (chunk->left, CHUNK_WIDTH-1, y, z);
+        struct block       *block       = get_block      (chunk->left, CHUNK_WIDTH-1, y, z);
         struct light_info *light_info = get_light_info(light_infos, -1           , y, z);
-        if(tile->ether != light_info->ether || tile->light_level != light_info->light_level)
+        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
         {
           chunk->left->light_dirty = true;
           goto done;
@@ -237,9 +237,9 @@ static inline void light_infos_save(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int y=0; y<CHUNK_WIDTH; ++y)
       {
-        struct tile       *tile       = get_tile      (chunk->right, 0          , y, z);
+        struct block       *block       = get_block      (chunk->right, 0          , y, z);
         struct light_info *light_info = get_light_info(light_infos , CHUNK_WIDTH, y, z);
-        if(tile->ether != light_info->ether || tile->light_level != light_info->light_level)
+        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
         {
           chunk->right->light_dirty = true;
           goto done;

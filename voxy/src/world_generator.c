@@ -69,15 +69,15 @@ static void world_generator_generate_chunk_data_job_invoke(struct thread_pool_jo
   struct chunk_data_generate_job *job = container_of(_job, struct chunk_data_generate_job, base);
   struct chunk_data *chunk_data = malloc(sizeof *chunk_data);
 
-  uint8_t tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
-  job->resource_pack->generate_tiles(job->seed, job->chunk_data_wrapper->position, tiles);
+  uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+  job->resource_pack->generate_blocks(job->seed, job->chunk_data_wrapper->position, blocks);
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
       {
-        chunk_data->tiles[z][y][x].id          = tiles[z][y][x];
-        chunk_data->tiles[z][y][x].ether       = false;
-        chunk_data->tiles[z][y][x].light_level = 0;
+        chunk_data->blocks[z][y][x].id          = blocks[z][y][x];
+        chunk_data->blocks[z][y][x].ether       = false;
+        chunk_data->blocks[z][y][x].light_level = 0;
       }
 
   atomic_store_explicit(&job->chunk_data_wrapper->chunk_data, chunk_data, memory_order_release);

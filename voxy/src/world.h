@@ -24,7 +24,7 @@
 #define BLOCK_NONE UINT8_MAX
 #define ITEM_NONE  UINT8_MAX
 
-struct tile
+struct block
 {
   uint8_t id;
   uint8_t ether       : 1;
@@ -33,7 +33,7 @@ struct tile
 
 struct chunk_data
 {
-  struct tile tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+  struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 };
 
 struct chunk_mesh
@@ -125,9 +125,9 @@ struct world
 void world_init(struct world *world, seed_t seed);
 void world_fini(struct world *world);
 
-struct tile *world_get_tile(struct world *world, ivec3_t position);
-void world_invalidate_tile(struct world *world, ivec3_t position);
-void world_tile_set_id(struct world *world, ivec3_t position, uint8_t id);
+struct block *world_get_block(struct world *world, ivec3_t position);
+void world_invalidate_block(struct world *world, ivec3_t position);
+void world_block_set_id(struct world *world, ivec3_t position, uint8_t id);
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk);
 

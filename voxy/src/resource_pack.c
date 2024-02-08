@@ -36,7 +36,7 @@ int resource_pack_load(struct resource_pack *resource_pack, const char *filepath
   LOAD_SYMBOL_ADDR(item_infos);
   LOAD_SYMBOL_TYPE(item_info_count, size_t);
 
-  LOAD_SYMBOL_ADDR(generate_tiles);
+  LOAD_SYMBOL_ADDR(generate_blocks);
   LOAD_SYMBOL_ADDR(generate_spawn);
 
   filepath_count = resource_pack->block_texture_info_count;

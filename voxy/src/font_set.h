@@ -29,7 +29,7 @@ struct glyph
 #define SC_HASH_TABLE_PREFIX glyph
 #define SC_HASH_TABLE_NODE_TYPE struct glyph
 #define SC_HASH_TABLE_KEY_TYPE struct glyph_key
-#include "hash_table.h"
+#include <sc/hash_table.h>
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
 #undef SC_HASH_TABLE_KEY_TYPE

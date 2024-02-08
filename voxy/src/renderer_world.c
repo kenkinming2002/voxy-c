@@ -1,10 +1,15 @@
 #include "renderer_world.h"
 
+#include <types/chunk_mesh.h>
+#include <types/chunk.h>
+#include <types/entity.h>
+#include <types/player.h>
+#include <types/world.h>
+
 #include "window.h"
 #include "camera.h"
 #include "check.h"
 #include "resource_pack.h"
-#include "world.h"
 
 int renderer_world_init(struct renderer_world *renderer_world)
 {

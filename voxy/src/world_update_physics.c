@@ -1,8 +1,10 @@
 #include "world_update_physics.h"
 
-#include "world.h"
+#include <types/world.h>
+#include <types/block.h>
+
+#include "config.h"
 #include "resource_pack.h"
-#include "entity.h"
 
 #include <stdio.h>
 #include <stdbool.h>

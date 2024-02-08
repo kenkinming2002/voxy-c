@@ -1,4 +1,6 @@
-#include "world.h"
+#include <types/world.h>
+#include <types/chunk.h>
+#include <types/chunk_data.h>
 
 #include "resource_pack.h"
 

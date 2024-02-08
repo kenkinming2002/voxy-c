@@ -1,48 +1,10 @@
-#include "world.h"
+#include <types/world.h>
+#include <types/chunk.h>
+#include <types/chunk_data.h>
 
-#define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_PREFIX chunk
-#define SC_HASH_TABLE_NODE_TYPE struct chunk
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include "hash_table.h"
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_IMPLEMENTATION
+#include <voxy/config.h>
 
 #include <stdlib.h>
-
-ivec3_t chunk_key(struct chunk *chunk)
-{
-  return chunk->position;
-}
-
-size_t chunk_hash(ivec3_t position)
-{
-  return ivec3_hash(position);
-}
-
-int chunk_compare(ivec3_t position1, ivec3_t position2)
-{
-  if(position1.x != position2.x) return position1.x - position2.x;
-  if(position1.y != position2.y) return position1.y - position2.y;
-  if(position1.z != position2.z) return position1.z - position2.z;
-  return 0;
-}
-
-void chunk_dispose(struct chunk *chunk)
-{
-  if(chunk->chunk_mesh)
-  {
-    glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_opaque);
-    glDeleteBuffers(1, &chunk->chunk_mesh->vbo_opaque);
-    glDeleteBuffers(1, &chunk->chunk_mesh->ibo_opaque);
-  }
-
-  free(chunk->chunk_mesh);
-  free(chunk->chunk_data);
-  free(chunk);
-}
 
 void world_init(struct world *world, seed_t seed)
 {

@@ -1,4 +1,4 @@
-#include "entity.h"
+#include <types/entity.h>
 
 fvec3_t entity_view_position(const struct entity *entity)
 {

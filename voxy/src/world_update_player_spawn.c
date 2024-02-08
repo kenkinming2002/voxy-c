@@ -1,6 +1,8 @@
 #include "world_update_player_spawn.h"
 
-#include "world.h"
+#include <types/world.h>
+
+#include "config.h"
 #include "resource_pack.h"
 
 static int mini(int a, int b)

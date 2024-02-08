@@ -1,4 +1,5 @@
-#include "world.h"
+#include <types/world.h>
+#include <types/chunk.h>
 
 #include "world_generator.h"
 

@@ -2,14 +2,16 @@
 
 #include <voxy/math/noise.h>
 
-#include "world.h"
+#include <types/world.h>
+#include <types/chunk_data.h>
+
 #include "utils.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX chunk_data_wrapper
 #define SC_HASH_TABLE_NODE_TYPE struct chunk_data_wrapper
 #define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include "hash_table.h"
+#include <sc/hash_table.h>
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
 #undef SC_HASH_TABLE_KEY_TYPE

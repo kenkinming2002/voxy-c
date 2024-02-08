@@ -1,5 +1,7 @@
-#include "world.h"
+#include <types/world.h>
+#include <types/block.h>
 
+#include "config.h"
 #include "ray_cast.h"
 #include "resource_pack.h"
 #include "window.h"

@@ -1,8 +1,9 @@
 #ifndef VOXY_APPLICATION_MAIN_GAME_H
 #define VOXY_APPLICATION_MAIN_GAME_H
 
+#include <types/world.h>
+
 #include "resource_pack.h"
-#include "world.h"
 #include "world_generator.h"
 
 struct application_main_game

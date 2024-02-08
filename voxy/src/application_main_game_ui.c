@@ -1,5 +1,7 @@
 #include "application_main_game.h"
 
+#include <types/block.h>
+
 #include "window.h"
 #include "renderer_ui.h"
 

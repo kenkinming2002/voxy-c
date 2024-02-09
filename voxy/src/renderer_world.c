@@ -78,22 +78,26 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
         glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
       }
 
-  if(world->player.has_target_place || world->player.has_target_destroy || world->player.third_person)
+  ivec3_t position;
+  ivec3_t normal;
+  bool hit = entity_ray_cast(&world->player.base, world, resource_pack, 20.0f, &position, &normal);
+
+  if(hit || world->player.third_person)
   {
     glUseProgram(renderer_world->program_outline.id);
     glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_outline.id, "VP"), 1, GL_TRUE, (const float *)&VP);
 
-    if(world->player.has_target_destroy)
+    if(hit)
     {
-      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.target_destroy.x, world->player.target_destroy.y, world->player.target_destroy.z);
+      ivec3_t position_destroy = position;
+      ivec3_t position_place   = ivec3_add(position, normal);
+
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), position_destroy.x, position_destroy.y, position_destroy.z);
       glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "dimension"), 1.0f, 1.0f, 1.0f);
       glUniform4f(glGetUniformLocation(renderer_world->program_outline.id, "color"),     1.0f, 1.0f, 1.0f, 1.0f);
       glDrawArrays(GL_LINES, 0, 24);
-    }
 
-    if(world->player.has_target_destroy &&world->player.has_target_place)
-    {
-      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), world->player.target_place.x, world->player.target_place.y, world->player.target_place.z);
+      glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "position"), position_place.x, position_place.y, position_place.z);
       glUniform3f(glGetUniformLocation(renderer_world->program_outline.id, "dimension"), 1.0f, 1.0f, 1.0f);
       glUniform4f(glGetUniformLocation(renderer_world->program_outline.id, "color"),     1.0f, 1.0f, 1.0f, 1.0f);
       glDrawArrays(GL_LINES, 0, 24);

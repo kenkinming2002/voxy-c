@@ -6,31 +6,6 @@
 #include "resource_pack.h"
 #include "window.h"
 
-static void world_update_player_ray_cast(struct world *world, struct resource_pack *resource_pack)
-{
-  fvec3_t position  = entity_view_position(&world->player.base);
-  fvec3_t direction = entity_view_direction(&world->player.base);
-
-  world->player.has_target_destroy = false;
-  world->player.has_target_place   = false;
-
-  struct ray_cast ray_cast;
-  ray_cast_init(&ray_cast, position);
-  while(ray_cast.distance < 20.0f)
-  {
-    struct block *block = world_get_block(world, ray_cast.iposition);
-    if(block && resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE)
-    {
-      world->player.has_target_destroy = true;
-      world->player.target_destroy     = ray_cast.iposition;
-      break;
-    }
-    world->player.has_target_place = true;
-    world->player.target_place     = ray_cast.iposition;
-    ray_cast_step(&ray_cast, direction);
-  }
-}
-
 void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct window *window, float dt)
 {
   if(!world->player.spawned)
@@ -80,10 +55,10 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   ///////////////////////////////////
   world->player.cooldown += dt;
 
-  struct block *block;
+  ivec3_t position;
+  ivec3_t normal;
 
-  world_update_player_ray_cast(world, resource_pack);
-  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && (window->states & 1ULL << BUTTON_LEFT) && world->player.has_target_destroy && (block = world_get_block(world, world->player.target_destroy)))
+  if((window->states & 1ULL << BUTTON_LEFT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, resource_pack, 20.0f, &position, &normal))
   {
     world->player.cooldown = 0.0f;
 
@@ -94,13 +69,11 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
         {
           ivec3_t offset = ivec3(dx, dy, dz);
           if(ivec3_length_squared(offset) <= radius * radius)
-            world_block_set_id(world, ivec3_add(world->player.target_destroy, offset), 0);
+            world_block_set_id(world, ivec3_add(position, offset), 0);
         }
-
-    world_update_player_ray_cast(world, resource_pack);
   }
 
-  if(world->player.cooldown >= PLAYER_ACTION_COOLDOWN && (window->states & 1ULL << BUTTON_RIGHT) && world->player.has_target_place && (block = world_get_block(world, world->player.target_place)))
+  if((window->states & 1ULL << BUTTON_RIGHT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, resource_pack, 20.0f, &position, &normal))
   {
     const struct item *item = &world->player.hotbar.items[world->player.hotbar.selection];
     if(item->id != ITEM_NONE)
@@ -116,10 +89,8 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
           {
             ivec3_t offset = ivec3(dx, dy, dz);
             if(ivec3_length_squared(offset) <= radius * radius)
-              world_block_set_id(world, ivec3_add(world->player.target_place, offset), block_id);
+              world_block_set_id(world, ivec3_add(ivec3_add(position, normal), offset), block_id);
           }
-
-      world_update_player_ray_cast(world, resource_pack);
     }
   }
 }

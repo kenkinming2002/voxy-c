@@ -1,5 +1,12 @@
 #include <types/entity.h>
 
+#include <types/world.h>
+#include <types/block.h>
+
+#include <resource_pack.h>
+
+#include <ray_cast.h>
+
 fvec3_t entity_view_position(const struct entity *entity)
 {
   return fvec3_add(entity->position, entity->local_view_transform.translation);
@@ -26,4 +33,28 @@ struct transform entity_view_transform(const struct entity *entity)
 void entity_apply_impulse(struct entity *entity, fvec3_t impulse)
 {
   entity->velocity = fvec3_add(entity->velocity, impulse);
+}
+
+bool entity_ray_cast(struct entity *entity, struct world *world, struct resource_pack *resource_pack, float distance, ivec3_t *position, ivec3_t *normal)
+{
+  fvec3_t ray_position  = entity->position;
+  fvec3_t ray_direction = transform_forward(&entity->local_view_transform);
+
+  struct ray_cast ray_cast;
+  ray_cast_init(&ray_cast, ray_position);
+
+  *position = ray_cast.iposition;
+  *normal   = ivec3_zero();
+
+  while(ray_cast.distance < distance)
+  {
+    struct block *block = world_get_block(world, ray_cast.iposition);
+    if(block && resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE)
+      return true;
+
+    ray_cast_step(&ray_cast, ray_direction);
+    *normal   = ivec3_sub(*position, ray_cast.iposition);
+    *position = ray_cast.iposition;
+  }
+  return false;
 }

@@ -23,12 +23,6 @@ struct player_entity
   fvec2_t          item_held_position;
 
   float cooldown;
-
-  bool has_target_destroy;
-  bool has_target_place;
-
-  ivec3_t target_destroy;
-  ivec3_t target_place;
 };
 
 

@@ -1,14 +1,15 @@
 #ifndef VOXY_APPLICATION_MAIN_GAME_H
 #define VOXY_APPLICATION_MAIN_GAME_H
 
-#include <types/world.h>
+#include <types/mod.h>
+#include <types/mod_assets.h>
 
-#include "resource_pack.h"
 #include "world_generator.h"
 
 struct application_main_game
 {
-  struct resource_pack resource_pack;
+  struct mod        mod;
+  struct mod_assets mod_assets;
 
   struct world           world;
   struct world_generator world_generator;

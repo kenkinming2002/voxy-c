@@ -4,6 +4,8 @@
 #include <voxy/math/vector.h>
 #include <transform.h>
 
+#include <types/mod.h>
+
 #include <stdbool.h>
 
 struct world;
@@ -28,6 +30,6 @@ fvec3_t entity_view_direction(const struct entity *entity);
 
 struct transform entity_view_transform(const struct entity *entity);
 
-bool entity_ray_cast(struct entity *entity, struct world *world, struct resource_pack *resource_pack, float distance, ivec3_t *position, ivec3_t *normal);
+bool entity_ray_cast(struct entity *entity, struct world *world, struct mod *mod, float distance, ivec3_t *position, ivec3_t *normal);
 
 #endif // TYPES_ENTITY_H

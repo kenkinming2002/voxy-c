@@ -1,12 +1,14 @@
 #include <types/world.h>
 #include <types/block.h>
+#include <types/mod.h>
+
+#include <voxy/mod_interface.h>
 
 #include "config.h"
 #include "ray_cast.h"
-#include "resource_pack.h"
 #include "window.h"
 
-void world_update_player_control(struct world *world, struct resource_pack *resource_pack, struct window *window, float dt)
+void world_update_player_control(struct world *world, struct mod *mod, struct window *window, float dt)
 {
   if(!world->player.spawned)
     return;
@@ -58,7 +60,7 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
   ivec3_t position;
   ivec3_t normal;
 
-  if((window->states & 1ULL << BUTTON_LEFT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, resource_pack, 20.0f, &position, &normal))
+  if((window->states & 1ULL << BUTTON_LEFT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal))
   {
     world->player.cooldown = 0.0f;
 
@@ -73,14 +75,14 @@ void world_update_player_control(struct world *world, struct resource_pack *reso
         }
   }
 
-  if((window->states & 1ULL << BUTTON_RIGHT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, resource_pack, 20.0f, &position, &normal))
+  if((window->states & 1ULL << BUTTON_RIGHT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal))
   {
     const struct item *item = &world->player.hotbar.items[world->player.hotbar.selection];
     if(item->id != ITEM_NONE)
     {
       world->player.cooldown = 0.0f;
 
-      uint8_t block_id = resource_pack->item_infos[item->id].block_id;
+      uint8_t block_id = mod->item_infos[item->id].block_id;
 
       int radius = window->states & 1ULL << KEY_CTRL ? 2 : 0;
       for(int dz=-radius; dz<=radius; ++dz)

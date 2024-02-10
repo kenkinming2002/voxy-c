@@ -2,9 +2,11 @@
 
 #include <types/world.h>
 #include <types/block.h>
+#include <types/mod.h>
+
+#include <voxy/mod_interface.h>
 
 #include "config.h"
-#include "resource_pack.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -143,7 +145,7 @@ static inline bool box_swept(const struct box *box1, const struct box *box2, fve
   return false;
 }
 
-static void entity_physics_update(struct entity *entity, struct world *world, struct resource_pack *resource_pack, float dt)
+static void entity_physics_update(struct entity *entity, struct world *world, struct mod *mod, float dt)
 {
   for(;;)
   {
@@ -165,7 +167,7 @@ static void entity_physics_update(struct entity *entity, struct world *world, st
           ivec3_t position = ivec3(x, y, z);
 
           struct block *block = world_get_block(world, position);
-          if(block && resource_pack->block_infos[block->id].type == BLOCK_TYPE_OPAQUE)
+          if(block && mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE)
           {
             float t;
             float s;
@@ -195,9 +197,9 @@ static void entity_physics_integrate(struct entity *entity, float dt)
   entity->position = fvec3_add(entity->position, fvec3_mul_scalar(entity->velocity, dt));
 }
 
-void world_update_physics(struct world *world, struct resource_pack *resource_pack, float dt)
+void world_update_physics(struct world *world, struct mod *mod, float dt)
 {
   entity_physics_apply_law(&world->player.base, dt);
-  entity_physics_update(&world->player.base, world, resource_pack, dt);
+  entity_physics_update(&world->player.base, world, mod, dt);
   entity_physics_integrate(&world->player.base, dt);
 }

@@ -2,6 +2,8 @@
 
 #include <types/block.h>
 
+#include <voxy/mod_interface.h>
+
 #include "window.h"
 #include "renderer_ui.h"
 
@@ -159,7 +161,9 @@ void application_main_game_render_ui(struct application_main_game *application_m
   if(!application_main_game->world.player.spawned)
     return;
 
-  struct resource_pack *resource_pack = &application_main_game->resource_pack;
+  struct mod        *mod        = &application_main_game->mod;
+  struct mod_assets *mod_assets = &application_main_game->mod_assets;
+
   struct world         *world         = &application_main_game->world;
   struct player_entity        *player        = &world->player;
 
@@ -198,13 +202,13 @@ void application_main_game_render_ui(struct application_main_game *application_m
       {
         const uint8_t               cell_item_id      = cell_item->id;
         const uint8_t               cell_item_count   = cell_item->count;
-        const struct gl_texture_2d *cell_item_texture = &resource_pack->item_textures[cell_item_id];
+        const struct gl_texture_2d *cell_item_texture = &mod_assets->item_textures[cell_item_id];
 
         char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
         snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
         renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
-        renderer_ui_draw_text(renderer_ui, &resource_pack->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+        renderer_ui_draw_text(renderer_ui, &mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
       }
     }
 
@@ -215,9 +219,9 @@ void application_main_game_render_ui(struct application_main_game *application_m
 
     const struct item *selected_item      = &player->hotbar.items[player->hotbar.selection];
     const uint8_t      selected_item_id   = selected_item->id;
-    const char        *selected_item_name = selected_item_id != ITEM_NONE ? application_main_game->resource_pack.item_infos[selected_item_id].name : NULL;
+    const char        *selected_item_name = selected_item_id != ITEM_NONE ? application_main_game->mod.item_infos[selected_item_id].name : NULL;
     if(selected_item_name)
-      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, selected_item_text_position, selected_item_name, UI_TEXT_SIZE);
+      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->mod_assets.font_set, selected_item_text_position, selected_item_name, UI_TEXT_SIZE);
 
     /////////////////
     /// Inventory ///
@@ -245,13 +249,13 @@ void application_main_game_render_ui(struct application_main_game *application_m
           {
             const uint8_t               cell_item_id      = cell_item->id;
             const uint8_t               cell_item_count   = cell_item->count;
-            const struct gl_texture_2d *cell_item_texture = &resource_pack->item_textures[cell_item_id];
+            const struct gl_texture_2d *cell_item_texture = &mod_assets->item_textures[cell_item_id];
 
             char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
             snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
             renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
-            renderer_ui_draw_text(renderer_ui, &resource_pack->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+            renderer_ui_draw_text(renderer_ui, &mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
           }
         }
     }
@@ -263,13 +267,13 @@ void application_main_game_render_ui(struct application_main_game *application_m
 
     ivec3_t position;
     ivec3_t normal;
-    if(entity_ray_cast(&world->player.base, world, resource_pack, 20.0f, &position, &normal))
+    if(entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal))
     {
       const struct block *target_block     = world_get_block(&application_main_game->world, position);
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
-      const char         *target_block_name = target_block_id != BLOCK_NONE ? resource_pack->block_infos[target_block_id].name : NULL;
+      const char         *target_block_name = target_block_id != BLOCK_NONE ? mod->block_infos[target_block_id].name : NULL;
       if(target_block_name)
-        renderer_ui_draw_text_centered(renderer_ui, &application_main_game->resource_pack.font_set, target_block_text_position, target_block_name, UI_TEXT_SIZE);
+        renderer_ui_draw_text_centered(renderer_ui, &application_main_game->mod_assets.font_set, target_block_text_position, target_block_name, UI_TEXT_SIZE);
     }
 
 
@@ -285,13 +289,13 @@ void application_main_game_render_ui(struct application_main_game *application_m
       {
         const uint8_t               cell_item_id      = cell_item->id;
         const uint8_t               cell_item_count   = cell_item->count;
-        const struct gl_texture_2d *cell_item_texture = &resource_pack->item_textures[cell_item_id];
+        const struct gl_texture_2d *cell_item_texture = &mod_assets->item_textures[cell_item_id];
 
         char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
         snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
         renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
-        renderer_ui_draw_text(renderer_ui, &resource_pack->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+        renderer_ui_draw_text(renderer_ui, &mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
       }
     }
   }

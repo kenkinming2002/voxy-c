@@ -1,4 +1,4 @@
-#include <voxy/resource_pack.h>
+#include <voxy/mod_interface.h>
 
 #include <stdbool.h>
 

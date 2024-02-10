@@ -11,18 +11,18 @@
 
 void application_main_game_update_world(struct application_main_game *application_main_game, struct window *window, float dt)
 {
-  world_update_chunk_generate(&application_main_game->world, &application_main_game->resource_pack, &application_main_game->world_generator);
+  world_update_chunk_generate(&application_main_game->world, &application_main_game->mod, &application_main_game->world_generator);
 
-  world_update_player_spawn  (&application_main_game->world, &application_main_game->resource_pack);
-  world_update_player_control(&application_main_game->world, &application_main_game->resource_pack, window, dt);
+  world_update_player_spawn  (&application_main_game->world, &application_main_game->mod);
+  world_update_player_control(&application_main_game->world, &application_main_game->mod, window, dt);
 
-  world_update_light(&application_main_game->world, &application_main_game->resource_pack);
-  world_update_physics(&application_main_game->world, &application_main_game->resource_pack, dt);
+  world_update_light(&application_main_game->world, &application_main_game->mod);
+  world_update_physics(&application_main_game->world, &application_main_game->mod, dt);
 
-  world_update_chunk_mesh(&application_main_game->world, &application_main_game->resource_pack);
+  world_update_chunk_mesh(&application_main_game->world, &application_main_game->mod);
 }
 
 void application_main_game_render_world(struct application_main_game *application_main_game, struct window *window, struct renderer_world *renderer_world)
 {
-  renderer_world_render(renderer_world, window, &application_main_game->world, &application_main_game->resource_pack);
+  renderer_world_render(renderer_world, window, &application_main_game->world, &application_main_game->mod, &application_main_game->mod_assets);
 }

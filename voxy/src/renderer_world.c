@@ -5,11 +5,13 @@
 #include <types/entity.h>
 #include <types/player.h>
 #include <types/world.h>
+#include <types/mod_assets.h>
+
+#include <voxy/mod_interface.h>
 
 #include "window.h"
 #include "camera.h"
 #include "check.h"
-#include "resource_pack.h"
 
 int renderer_world_init(struct renderer_world *renderer_world)
 {
@@ -33,7 +35,7 @@ void renderer_world_fini(struct renderer_world *renderer_world)
   gl_program_fini(&renderer_world->program_outline);
 }
 
-void renderer_world_render(struct renderer_world *renderer_world, struct window *window, struct world *world, struct resource_pack *resource_pack)
+void renderer_world_render(struct renderer_world *renderer_world, struct window *window, struct world *world, struct mod *mod, struct mod_assets *mod_assets)
 {
   struct camera camera;
   camera.transform = entity_view_transform(&world->player.base);
@@ -60,7 +62,7 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
   glUseProgram(renderer_world->program_chunk.id);
   glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_chunk.id, "VP"), 1, GL_TRUE, (const float *)&VP);
   glUniformMatrix4fv(glGetUniformLocation(renderer_world->program_chunk.id, "V"),  1, GL_TRUE, (const float *)&V);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, resource_pack->block_array_texture.id);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets->block_array_texture.id);
 
   for(size_t i=0; i<world->chunks.bucket_count; ++i)
     for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)
@@ -80,7 +82,7 @@ void renderer_world_render(struct renderer_world *renderer_world, struct window 
 
   ivec3_t position;
   ivec3_t normal;
-  bool hit = entity_ray_cast(&world->player.base, world, resource_pack, 20.0f, &position, &normal);
+  bool hit = entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal);
 
   if(hit || world->player.third_person)
   {

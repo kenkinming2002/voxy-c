@@ -6,8 +6,8 @@
 
 int application_main_game_init(struct application_main_game *application_main_game)
 {
-  if(resource_pack_load(&application_main_game->resource_pack, RESOURCE_PACK_FILEPATH) != 0)
-    return -1;
+  CHECK(mod_load(&application_main_game->mod, MOD_FILEPATH));
+  CHECK(mod_assets_load(&application_main_game->mod_assets, &application_main_game->mod));
 
   seed_t seed = time(NULL);
   world_init(&application_main_game->world, seed);
@@ -19,7 +19,9 @@ void application_main_game_fini(struct application_main_game *application_main_g
 {
   world_generator_fini(&application_main_game->world_generator);
   world_fini(&application_main_game->world);
-  resource_pack_unload(&application_main_game->resource_pack);
+
+  mod_assets_unload(&application_main_game->mod_assets);
+  mod_unload(&application_main_game->mod);
 }
 
 void application_main_game_update(struct application_main_game *application_main_game, struct window *window, float dt)

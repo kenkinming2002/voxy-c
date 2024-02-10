@@ -1,5 +1,5 @@
-#ifndef VOXY_INTERFACE_RESOURCE_PACK_H
-#define VOXY_INTERFACE_RESOURCE_PACK_H
+#ifndef VOXY_MOD_INTERFACE_H
+#define VOXY_MOD_INTERFACE_H
 
 #include <voxy/config.h>
 #include <voxy/math/noise.h>
@@ -55,4 +55,4 @@ extern const size_t item_info_count;
 void generate_blocks(seed_t seed, ivec3_t position, uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]);
 fvec3_t generate_spawn(seed_t seed);
 
-#endif // VOXY_INTERFACE_RESOURCE_PACK_H
+#endif // VOXY_MOD_INTERFACE_H

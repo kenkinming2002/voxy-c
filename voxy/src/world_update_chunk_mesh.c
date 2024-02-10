@@ -3,8 +3,10 @@
 #include <types/chunk_mesh.h>
 #include <types/chunk_data.h>
 #include <types/block.h>
+#include <types/mod.h>
 
-#include "resource_pack.h"
+#include <voxy/mod_interface.h>
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -113,7 +115,7 @@ static inline struct block *chunk_block_lookup(struct chunk *chunk, ivec3_t posi
 }
 
 __attribute__((flatten))
-void world_update_chunk_mesh(struct world *world, struct resource_pack *resource_pack)
+void world_update_chunk_mesh(struct world *world, struct mod *mod)
 {
   struct chunk_mesh_info
   {
@@ -198,22 +200,22 @@ void world_update_chunk_mesh(struct world *world, struct resource_pack *resource
             float    emit_light_level   = nblock ? (float)nblock->light_level / 15.0f : 1.0f;
             switch(j)
             {
-              case 0: emit_texture_index = resource_pack->block_infos[block->id].texture_left;   break;
-              case 1: emit_texture_index = resource_pack->block_infos[block->id].texture_right;  break;
-              case 2: emit_texture_index = resource_pack->block_infos[block->id].texture_back;   break;
-              case 3: emit_texture_index = resource_pack->block_infos[block->id].texture_front;  break;
-              case 4: emit_texture_index = resource_pack->block_infos[block->id].texture_bottom; break;
-              case 5: emit_texture_index = resource_pack->block_infos[block->id].texture_top;    break;
+              case 0: emit_texture_index = mod->block_infos[block->id].texture_left;   break;
+              case 1: emit_texture_index = mod->block_infos[block->id].texture_right;  break;
+              case 2: emit_texture_index = mod->block_infos[block->id].texture_back;   break;
+              case 3: emit_texture_index = mod->block_infos[block->id].texture_front;  break;
+              case 4: emit_texture_index = mod->block_infos[block->id].texture_bottom; break;
+              case 5: emit_texture_index = mod->block_infos[block->id].texture_top;    break;
             }
 
-            switch(resource_pack->block_infos[block->id].type)
+            switch(mod->block_infos[block->id].type)
             {
               case BLOCK_TYPE_OPAQUE:
-                if(!nblock || resource_pack->block_infos[nblock->id].type != BLOCK_TYPE_OPAQUE)
+                if(!nblock || mod->block_infos[nblock->id].type != BLOCK_TYPE_OPAQUE)
                   chunk_mesh_builder_emit_face(&chunk_mesh_infos[i].chunk_mesh_builder_opaque, emit_position, emit_normal, emit_texture_index, emit_light_level);
                 break;
               case BLOCK_TYPE_TRANSPARENT:
-                if(!nblock || (resource_pack->block_infos[nblock->id].type != BLOCK_TYPE_OPAQUE && resource_pack->block_infos[nblock->id].type != BLOCK_TYPE_TRANSPARENT))
+                if(!nblock || (mod->block_infos[nblock->id].type != BLOCK_TYPE_OPAQUE && mod->block_infos[nblock->id].type != BLOCK_TYPE_TRANSPARENT))
                   chunk_mesh_builder_emit_face(&chunk_mesh_infos[i].chunk_mesh_builder_transparent, emit_position, emit_normal, emit_texture_index, emit_light_level);
                 break;
               default:

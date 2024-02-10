@@ -5,8 +5,8 @@
 #include <voxy/math/vector.h>
 
 #include <types/world.h>
+#include <types/mod.h>
 
-#include "resource_pack.h"
 #include "config.h"
 #include "thread_pool.h"
 
@@ -46,6 +46,6 @@ void world_generator_fini(struct world_generator *world_generator);
 /// On first call, the following functions may submit a job to a internal thread
 /// pool in order to generate the relevant structures, and then return NULL to
 /// indicate that the result is not yet available.
-struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, struct world *world, ivec3_t position, struct resource_pack *resource_pack);
+struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, struct world *world, ivec3_t position, struct mod *mod);
 
 #endif // VOXY_WORLD_GENERATOR_H

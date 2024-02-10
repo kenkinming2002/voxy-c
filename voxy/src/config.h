@@ -5,7 +5,7 @@
 #define WINDOW_HEIGHT 720
 #define WINDOW_TITLE "voxy"
 
-#define RESOURCE_PACK_FILEPATH "resource_pack/resource_pack.so"
+#define MOD_FILEPATH "mod/mod.so"
 
 #define UI_HOTBAR_COLOR_BACKGROUND fvec4(0.9f, 0.9f, 0.9f, 0.3f)
 #define UI_HOTBAR_COLOR_SELECTED   fvec4(0.95f, 0.75f, 0.75f, 0.8f)

@@ -18,6 +18,7 @@ VOXY_SRCS += voxy/src/core/delta_time.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
 VOXY_SRCS += voxy/src/graphics/font_set.c
+VOXY_SRCS += voxy/src/graphics/ui.c
 
 VOXY_SRCS += voxy/src/application.c
 VOXY_SRCS += voxy/src/application_main_game.c
@@ -25,7 +26,6 @@ VOXY_SRCS += voxy/src/application_main_game_ui.c
 VOXY_SRCS += voxy/src/application_main_game_world.c
 VOXY_SRCS += voxy/src/camera.c
 VOXY_SRCS += voxy/src/ray_cast.c
-VOXY_SRCS += voxy/src/renderer_ui.c
 VOXY_SRCS += voxy/src/renderer_world.c
 VOXY_SRCS += voxy/src/thread_pool.c
 VOXY_SRCS += voxy/src/voxy.c

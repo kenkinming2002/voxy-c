@@ -3,14 +3,12 @@
 
 #include <core/window.h>
 #include "renderer_world.h"
-#include "renderer_ui.h"
 
 #include "application_main_game.h"
 
 struct application
 {
   struct renderer_world renderer_world;
-  struct renderer_ui    renderer_ui;
 
   struct application_main_game main_game;
 };

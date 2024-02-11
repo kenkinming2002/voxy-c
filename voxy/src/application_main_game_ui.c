@@ -5,7 +5,8 @@
 #include <voxy/mod_interface.h>
 
 #include <core/window.h>
-#include "renderer_ui.h"
+
+#include <graphics/ui.h>
 
 /// To any future reader:
 ///
@@ -156,7 +157,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
   }
 }
 
-void application_main_game_render_ui(struct application_main_game *application_main_game, struct renderer_ui *renderer_ui)
+void application_main_game_render_ui(struct application_main_game *application_main_game)
 {
   if(!application_main_game->world.player.spawned)
     return;
@@ -167,7 +168,6 @@ void application_main_game_render_ui(struct application_main_game *application_m
   struct world         *world         = &application_main_game->world;
   struct player_entity        *player        = &world->player;
 
-  renderer_ui_begin(renderer_ui, fvec2(window_size.x, window_size.y));
   {
     ///////////////
     /// Metrics ///
@@ -186,7 +186,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     const fvec2_t hotbar_position  = fvec2((window_size.x - hotbar_width) * 0.5f, margin);
     const fvec2_t hotbar_dimension = fvec2(hotbar_width, hotbar_height);
 
-    renderer_ui_draw_quad_rounded(renderer_ui, hotbar_position, hotbar_dimension, round, UI_HOTBAR_COLOR_BACKGROUND);
+    ui_draw_quad_rounded(hotbar_position, hotbar_dimension, round, UI_HOTBAR_COLOR_BACKGROUND);
 
     for(int i=0; i<HOTBAR_SIZE; ++i)
     {
@@ -195,7 +195,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
       const fvec4_t cell_color     = &player->hotbar.items[i] == player->item_hovered ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
 
 
-      renderer_ui_draw_quad_rounded(renderer_ui, cell_position, cell_dimension, round, cell_color);
+      ui_draw_quad_rounded(cell_position, cell_dimension, round, cell_color);
 
       const struct item *cell_item = &player->hotbar.items[i];
       if(cell_item->id != ITEM_NONE)
@@ -207,8 +207,8 @@ void application_main_game_render_ui(struct application_main_game *application_m
         char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
         snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
-        renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
-        renderer_ui_draw_text(renderer_ui, &mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+        ui_draw_texture(cell_position, cell_dimension, cell_item_texture->id);
+        ui_draw_text(&mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
       }
     }
 
@@ -221,7 +221,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     const uint8_t      selected_item_id   = selected_item->id;
     const char        *selected_item_name = selected_item_id != ITEM_NONE ? application_main_game->mod.item_infos[selected_item_id].name : NULL;
     if(selected_item_name)
-      renderer_ui_draw_text_centered(renderer_ui, &application_main_game->mod_assets.font_set, selected_item_text_position, selected_item_name, UI_TEXT_SIZE);
+      ui_draw_text_centered(&application_main_game->mod_assets.font_set, selected_item_text_position, selected_item_name, UI_TEXT_SIZE);
 
     /////////////////
     /// Inventory ///
@@ -233,7 +233,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
 
     if(player->inventory.opened)
     {
-      renderer_ui_draw_quad_rounded(renderer_ui, inventory_position, inventory_dimension, round, UI_INVENTORY_COLOR_BACKGROUND);
+      ui_draw_quad_rounded(inventory_position, inventory_dimension, round, UI_INVENTORY_COLOR_BACKGROUND);
 
       for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
         for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
@@ -242,7 +242,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
           const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
           const fvec4_t cell_color     = &player->inventory.items[j][i] == player->item_hovered ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
 
-          renderer_ui_draw_quad_rounded(renderer_ui, cell_position, cell_dimension, round, cell_color);
+          ui_draw_quad_rounded(cell_position, cell_dimension, round, cell_color);
 
           const struct item *cell_item = &player->inventory.items[j][i];
           if(cell_item->id != ITEM_NONE)
@@ -254,8 +254,8 @@ void application_main_game_render_ui(struct application_main_game *application_m
             char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
             snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
-            renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
-            renderer_ui_draw_text(renderer_ui, &mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+            ui_draw_texture(cell_position, cell_dimension, cell_item_texture->id);
+            ui_draw_text(&mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
           }
         }
     }
@@ -273,7 +273,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
       const char         *target_block_name = target_block_id != BLOCK_NONE ? mod->block_infos[target_block_id].name : NULL;
       if(target_block_name)
-        renderer_ui_draw_text_centered(renderer_ui, &application_main_game->mod_assets.font_set, target_block_text_position, target_block_name, UI_TEXT_SIZE);
+        ui_draw_text_centered(&application_main_game->mod_assets.font_set, target_block_text_position, target_block_name, UI_TEXT_SIZE);
     }
 
 
@@ -294,8 +294,8 @@ void application_main_game_render_ui(struct application_main_game *application_m
         char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
         snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
-        renderer_ui_draw_texture(renderer_ui, cell_position, cell_dimension, cell_item_texture->id);
-        renderer_ui_draw_text(renderer_ui, &mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+        ui_draw_texture(cell_position, cell_dimension, cell_item_texture->id);
+        ui_draw_text(&mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
       }
     }
   }

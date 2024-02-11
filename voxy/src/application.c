@@ -10,13 +10,11 @@ int application_init(struct application *application)
 
   CHECK(application_main_game_init(&application->main_game));
   CHECK(renderer_world_init(&application->renderer_world));
-  CHECK(renderer_ui_init(&application->renderer_ui));
   return 0;
 }
 
 void application_fini(struct application *application)
 {
-  renderer_ui_fini(&application->renderer_ui);
   renderer_world_fini(&application->renderer_world);
   application_main_game_fini(&application->main_game);
 }
@@ -28,7 +26,7 @@ void application_update(struct application *application, float dt)
 
 void application_render(struct application *application)
 {
-  application_main_game_render(&application->main_game, &application->renderer_world, &application->renderer_ui);
+  application_main_game_render(&application->main_game, &application->renderer_world);
 }
 
 void application_run(struct application *application)

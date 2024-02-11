@@ -1,7 +1,7 @@
 #include "renderer_ui.h"
 
 #include "check.h"
-#include "font_set.h"
+#include <graphics/font_set.h>
 
 #include <voxy/math/vector.h>
 

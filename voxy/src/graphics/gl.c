@@ -1,4 +1,4 @@
-#include "gl.h"
+#include <graphics/gl.h>
 
 #include <stb_image.h>
 
@@ -219,3 +219,4 @@ void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d)
 {
   glDeleteTextures(1, &array_texture_2d->id);
 }
+

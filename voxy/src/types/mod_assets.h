@@ -3,8 +3,8 @@
 
 #include <types/mod.h>
 
-#include <font_set.h>
-#include <gl.h>
+#include <graphics/gl.h>
+#include <graphics/font_set.h>
 
 struct mod_assets
 {

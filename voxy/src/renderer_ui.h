@@ -3,7 +3,7 @@
 
 #include <voxy/math/vector.h>
 
-#include "gl.h"
+#include <graphics/gl.h>
 
 struct renderer_ui
 {

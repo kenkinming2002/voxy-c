@@ -1,7 +1,7 @@
 #ifndef VOXY_RENDERER_WORLD_H
 #define VOXY_RENDERER_WORLD_H
 
-#include "gl.h"
+#include <graphics/gl.h>
 
 struct world;
 struct mod;

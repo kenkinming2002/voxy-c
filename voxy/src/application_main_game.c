@@ -30,13 +30,13 @@ void application_main_game_update(struct application_main_game *application_main
   application_main_game_update_ui   (application_main_game);
 }
 
-void application_main_game_render(struct application_main_game *application_main_game, struct renderer_world *renderer_world)
+void application_main_game_render(struct application_main_game *application_main_game)
 {
   glViewport(0, 0, window_size.x, window_size.y);
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  application_main_game_render_world(application_main_game, renderer_world);
+  application_main_game_render_world(application_main_game);
   application_main_game_render_ui   (application_main_game);
 }
 

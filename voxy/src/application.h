@@ -2,14 +2,11 @@
 #define VOXY_APPLICATION_H
 
 #include <core/window.h>
-#include "renderer_world.h"
 
 #include "application_main_game.h"
 
 struct application
 {
-  struct renderer_world renderer_world;
-
   struct application_main_game main_game;
 };
 

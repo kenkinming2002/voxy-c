@@ -7,7 +7,7 @@
 #include "world_update_physics.h"
 #include "world_update_chunk_mesh.h"
 
-#include "renderer_world.h"
+#include "world_render.h"
 
 void application_main_game_update_world(struct application_main_game *application_main_game, float dt)
 {
@@ -22,7 +22,7 @@ void application_main_game_update_world(struct application_main_game *applicatio
   world_update_chunk_mesh(&application_main_game->world, &application_main_game->mod);
 }
 
-void application_main_game_render_world(struct application_main_game *application_main_game, struct renderer_world *renderer_world)
+void application_main_game_render_world(struct application_main_game *application_main_game)
 {
-  renderer_world_render(renderer_world, &application_main_game->world, &application_main_game->mod, &application_main_game->mod_assets);
+  world_render(&application_main_game->world, &application_main_game->mod, &application_main_game->mod_assets);
 }

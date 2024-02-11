@@ -9,13 +9,11 @@ int application_init(struct application *application)
   window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 
   CHECK(application_main_game_init(&application->main_game));
-  CHECK(renderer_world_init(&application->renderer_world));
   return 0;
 }
 
 void application_fini(struct application *application)
 {
-  renderer_world_fini(&application->renderer_world);
   application_main_game_fini(&application->main_game);
 }
 
@@ -26,7 +24,7 @@ void application_update(struct application *application, float dt)
 
 void application_render(struct application *application)
 {
-  application_main_game_render(&application->main_game, &application->renderer_world);
+  application_main_game_render(&application->main_game);
 }
 
 void application_run(struct application *application)

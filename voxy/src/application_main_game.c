@@ -1,5 +1,8 @@
 #include "application_main_game.h"
 
+#include <world_update.h>
+#include <world_render.h>
+
 #include <core/window.h>
 
 #define CHECK(expr) if((expr) != 0) { fprintf(stderr, "%s:%d: ERROR: %s != 0\n", __FILE__, __LINE__, #expr); exit(EXIT_FAILURE); }
@@ -26,8 +29,8 @@ void application_main_game_fini(struct application_main_game *application_main_g
 
 void application_main_game_update(struct application_main_game *application_main_game, float dt)
 {
-  application_main_game_update_world(application_main_game, dt);
-  application_main_game_update_ui   (application_main_game);
+  world_update(&application_main_game->world, &application_main_game->world_generator, &application_main_game->mod, dt);
+  application_main_game_update_ui(application_main_game);
 }
 
 void application_main_game_render(struct application_main_game *application_main_game)
@@ -36,7 +39,7 @@ void application_main_game_render(struct application_main_game *application_main
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  application_main_game_render_world(application_main_game);
-  application_main_game_render_ui   (application_main_game);
+  world_render(&application_main_game->world, &application_main_game->mod, &application_main_game->mod_assets);
+  application_main_game_render_ui(application_main_game);
 }
 

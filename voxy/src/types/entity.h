@@ -2,7 +2,7 @@
 #define TYPES_ENTITY_H
 
 #include <voxy/math/vector.h>
-#include <transform.h>
+#include <voxy/math/transform.h>
 
 #include <types/mod.h>
 
@@ -17,7 +17,7 @@ struct entity
   fvec3_t dimension;
   fvec3_t velocity;
 
-  struct transform local_view_transform;
+  transform_t local_view_transform;
 
   bool grounded;
 };
@@ -28,7 +28,7 @@ fvec3_t entity_view_position(const struct entity *entity);
 fvec3_t entity_view_rotation(const struct entity *entity);
 fvec3_t entity_view_direction(const struct entity *entity);
 
-struct transform entity_view_transform(const struct entity *entity);
+transform_t entity_view_transform(const struct entity *entity);
 
 bool entity_ray_cast(struct entity *entity, struct world *world, struct mod *mod, float distance, ivec3_t *position, ivec3_t *normal);
 

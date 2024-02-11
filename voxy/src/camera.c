@@ -15,7 +15,7 @@ fmat4_t camera_rotation_matrix(struct camera *camera)
 fmat4_t camera_view_matrix(struct camera *camera)
 {
   // Who need matrix inverse?
-  return transform_matrix_inverse(&camera->transform);
+  return transform_matrix_inverse(camera->transform);
 }
 
 fmat4_t camera_projection_matrix(struct camera *camera)

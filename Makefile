@@ -24,7 +24,6 @@ VOXY_SRCS += voxy/src/ray_cast.c
 VOXY_SRCS += voxy/src/renderer_ui.c
 VOXY_SRCS += voxy/src/renderer_world.c
 VOXY_SRCS += voxy/src/thread_pool.c
-VOXY_SRCS += voxy/src/transform.c
 VOXY_SRCS += voxy/src/voxy.c
 VOXY_SRCS += voxy/src/window.c
 VOXY_SRCS += voxy/src/world_generator.c

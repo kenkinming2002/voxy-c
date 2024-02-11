@@ -1,11 +1,11 @@
 #ifndef VOXY_CAMERA_H
 #define VOXY_CAMERA_H
 
-#include "transform.h"
+#include <voxy/math/transform.h>
 
 struct camera
 {
-  struct transform transform;
+  transform_t transform;
 
   float fovy;
   float aspect;

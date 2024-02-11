@@ -19,12 +19,12 @@ fvec3_t entity_view_rotation(const struct entity *entity)
 
 fvec3_t entity_view_direction(const struct entity *entity)
 {
-  return transform_forward(&entity->local_view_transform);
+  return transform_forward(entity->local_view_transform);
 }
 
-struct transform entity_view_transform(const struct entity *entity)
+transform_t entity_view_transform(const struct entity *entity)
 {
-  struct transform result;
+  transform_t result;
   result.translation = fvec3_add(entity->position, entity->local_view_transform.translation);
   result.rotation    = entity->local_view_transform.rotation;
   return result;
@@ -38,7 +38,7 @@ void entity_apply_impulse(struct entity *entity, fvec3_t impulse)
 bool entity_ray_cast(struct entity *entity, struct world *world, struct mod *mod, float distance, ivec3_t *position, ivec3_t *normal)
 {
   fvec3_t ray_position  = entity->position;
-  fvec3_t ray_direction = transform_forward(&entity->local_view_transform);
+  fvec3_t ray_direction = transform_forward(entity->local_view_transform);
 
   struct ray_cast ray_cast;
   ray_cast_init(&ray_cast, ray_position);

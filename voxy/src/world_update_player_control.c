@@ -23,7 +23,7 @@ void world_update_player_control(struct world *world, struct mod *mod, struct wi
   /// Camera ///
   //////////////
   fvec3_t rotation = fvec3_mul_scalar(fvec3(window->mouse_motion.x, -window->mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
-  transform_rotate(&world->player.base.local_view_transform, rotation);
+  world->player.base.local_view_transform = transform_rotate(world->player.base.local_view_transform, rotation);
 
   ////////////////
   /// Movement ///
@@ -34,7 +34,7 @@ void world_update_player_control(struct world *world, struct mod *mod, struct wi
   if(window->states & (1ULL << KEY_S)) axis.y -= 1.0f;
   if(window->states & (1ULL << KEY_W)) axis.y += 1.0f;
 
-  fvec3_t impulse = transform_local(&world->player.base.local_view_transform, axis);
+  fvec3_t impulse = transform_local(world->player.base.local_view_transform, axis);
 
   impulse.z = 0.0f;
   impulse = fvec3_normalize(impulse);

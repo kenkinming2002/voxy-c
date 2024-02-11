@@ -3,14 +3,13 @@
 #include <core/window.h>
 
 #include <graphics/gl.h>
+#include <graphics/camera.h>
 
 #include <types/world.h>
 #include <types/chunk.h>
 #include <types/chunk_mesh.h>
 #include <types/mod.h>
 #include <types/mod_assets.h>
-
-#include <camera.h>
 
 #include <stdio.h>
 #include <stdlib.h>

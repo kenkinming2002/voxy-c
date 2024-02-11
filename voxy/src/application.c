@@ -1,7 +1,6 @@
 #include "application.h"
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+#include <core/delta_time.h>
 
 #define CHECK(expr) if((expr) != 0) { fprintf(stderr, "%s:%d: ERROR: %s != 0\n", __FILE__, __LINE__, #expr); exit(EXIT_FAILURE); }
 
@@ -34,16 +33,9 @@ void application_render(struct application *application)
 
 void application_run(struct application *application)
 {
-  double prev_time;
-  double next_time;
-  double dt;
-
-  prev_time = glfwGetTime();
   while(!window_should_close())
   {
-    next_time = glfwGetTime();
-    dt        = next_time - prev_time;
-    prev_time = next_time;
+    float dt = get_delta_time();
 
     window_begin();
     application_update(application, dt);

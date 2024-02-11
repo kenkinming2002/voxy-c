@@ -14,6 +14,7 @@ VOXY_SRCS += voxy/src/types/mod_assets.c
 VOXY_SRCS += voxy/src/types/world.c
 
 VOXY_SRCS += voxy/src/core/window.c
+VOXY_SRCS += voxy/src/core/delta_time.c
 
 VOXY_SRCS += voxy/src/application.c
 VOXY_SRCS += voxy/src/application_main_game.c

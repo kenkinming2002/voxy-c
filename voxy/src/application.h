@@ -1,7 +1,7 @@
 #ifndef VOXY_APPLICATION_H
 #define VOXY_APPLICATION_H
 
-#include "window.h"
+#include <core/window.h>
 #include "renderer_world.h"
 #include "renderer_ui.h"
 
@@ -9,7 +9,6 @@
 
 struct application
 {
-  struct window window;
   struct renderer_world renderer_world;
   struct renderer_ui    renderer_ui;
 

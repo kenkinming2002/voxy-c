@@ -9,7 +9,7 @@
 
 #include <voxy/mod_interface.h>
 
-#include "window.h"
+#include <core/window.h>
 #include "camera.h"
 #include "check.h"
 
@@ -35,14 +35,14 @@ void renderer_world_fini(struct renderer_world *renderer_world)
   gl_program_fini(&renderer_world->program_outline);
 }
 
-void renderer_world_render(struct renderer_world *renderer_world, struct window *window, struct world *world, struct mod *mod, struct mod_assets *mod_assets)
+void renderer_world_render(struct renderer_world *renderer_world, struct world *world, struct mod *mod, struct mod_assets *mod_assets)
 {
   struct camera camera;
   camera.transform = entity_view_transform(&world->player.base);
   camera.fovy   = M_PI / 2.0f;
   camera.near   = 0.1f;
   camera.far    = 1000.0f;
-  camera.aspect = (float)window->width / (float)window->height;
+  camera.aspect = (float)window_size.x / (float)window_size.y;
   if(world->player.third_person)
     camera.transform = transform_local_translate(camera.transform, fvec3(0.0f, -10.0f, 0.0f));
 

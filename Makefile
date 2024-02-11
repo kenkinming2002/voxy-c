@@ -13,6 +13,8 @@ VOXY_SRCS += voxy/src/types/mod.c
 VOXY_SRCS += voxy/src/types/mod_assets.c
 VOXY_SRCS += voxy/src/types/world.c
 
+VOXY_SRCS += voxy/src/core/window.c
+
 VOXY_SRCS += voxy/src/application.c
 VOXY_SRCS += voxy/src/application_main_game.c
 VOXY_SRCS += voxy/src/application_main_game_ui.c
@@ -25,7 +27,6 @@ VOXY_SRCS += voxy/src/renderer_ui.c
 VOXY_SRCS += voxy/src/renderer_world.c
 VOXY_SRCS += voxy/src/thread_pool.c
 VOXY_SRCS += voxy/src/voxy.c
-VOXY_SRCS += voxy/src/window.c
 VOXY_SRCS += voxy/src/world_generator.c
 VOXY_SRCS += voxy/src/world_update_chunk_generate.c
 VOXY_SRCS += voxy/src/world_update_chunk_mesh.c

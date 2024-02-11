@@ -1,6 +1,6 @@
 #include "application_main_game.h"
 
-#include "window.h"
+#include <core/window.h>
 
 #define CHECK(expr) if((expr) != 0) { fprintf(stderr, "%s:%d: ERROR: %s != 0\n", __FILE__, __LINE__, #expr); exit(EXIT_FAILURE); }
 
@@ -24,19 +24,19 @@ void application_main_game_fini(struct application_main_game *application_main_g
   mod_unload(&application_main_game->mod);
 }
 
-void application_main_game_update(struct application_main_game *application_main_game, struct window *window, float dt)
+void application_main_game_update(struct application_main_game *application_main_game, float dt)
 {
-  application_main_game_update_world(application_main_game, window, dt);
-  application_main_game_update_ui   (application_main_game, window);
+  application_main_game_update_world(application_main_game, dt);
+  application_main_game_update_ui   (application_main_game);
 }
 
-void application_main_game_render(struct application_main_game *application_main_game, struct window *window, struct renderer_world *renderer_world, struct renderer_ui *renderer_ui)
+void application_main_game_render(struct application_main_game *application_main_game, struct renderer_world *renderer_world, struct renderer_ui *renderer_ui)
 {
-  glViewport(0, 0, window->width, window->height);
+  glViewport(0, 0, window_size.x, window_size.y);
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  application_main_game_render_world(application_main_game, window, renderer_world);
-  application_main_game_render_ui   (application_main_game, window, renderer_ui);
+  application_main_game_render_world(application_main_game, renderer_world);
+  application_main_game_render_ui   (application_main_game, renderer_ui);
 }
 

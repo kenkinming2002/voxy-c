@@ -1,6 +1,6 @@
-#include <types/world.h>
-#include <types/chunk.h>
-#include <types/chunk_data.h>
+#include <voxy/types/world.h>
+#include <voxy/types/chunk.h>
+#include <voxy/types/chunk_data.h>
 
 #include <voxy/config.h>
 

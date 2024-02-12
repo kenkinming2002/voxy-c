@@ -3,8 +3,8 @@
 
 #include <voxy/math/random.h>
 
-#include <types/player.h>
-#include <types/chunk_hash_table.h>
+#include <voxy/types/player.h>
+#include <voxy/types/chunk_hash_table.h>
 
 struct world
 {

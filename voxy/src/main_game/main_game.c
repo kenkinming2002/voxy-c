@@ -1,17 +1,17 @@
-#include <main_game/main_game.h>
+#include <voxy/main_game/main_game.h>
 
-#include <main_game/chunk_generate.h>
-#include <main_game/player_spawn.h>
-#include <main_game/player_camera.h>
-#include <main_game/player_movement.h>
-#include <main_game/player_action.h>
-#include <main_game/light.h>
-#include <main_game/physics.h>
-#include <main_game/chunk_remesh.h>
-#include <main_game/ui.h>
-#include <main_game/world_render.h>
+#include <voxy/main_game/chunk_generate.h>
+#include <voxy/main_game/player_spawn.h>
+#include <voxy/main_game/player_camera.h>
+#include <voxy/main_game/player_movement.h>
+#include <voxy/main_game/player_action.h>
+#include <voxy/main_game/light.h>
+#include <voxy/main_game/physics.h>
+#include <voxy/main_game/chunk_remesh.h>
+#include <voxy/main_game/ui.h>
+#include <voxy/main_game/world_render.h>
 
-#include <core/window.h>
+#include <voxy/core/window.h>
 
 #include <glad/glad.h>
 

@@ -1,4 +1,4 @@
-#include <core/window.h>
+#include <voxy/core/window.h>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>

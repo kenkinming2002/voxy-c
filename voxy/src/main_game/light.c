@@ -1,10 +1,10 @@
-#include <main_game/light.h>
-#include <main_game/world.h>
-#include <main_game/mod.h>
+#include <voxy/main_game/light.h>
+#include <voxy/main_game/world.h>
+#include <voxy/main_game/mod.h>
 
-#include <types/world.h>
-#include <types/chunk.h>
-#include <types/chunk_data.h>
+#include <voxy/types/world.h>
+#include <voxy/types/chunk.h>
+#include <voxy/types/chunk_data.h>
 
 #include <stdio.h>
 #include <time.h>

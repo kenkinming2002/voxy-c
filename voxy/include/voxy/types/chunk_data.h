@@ -2,7 +2,7 @@
 #define TYPES_CHUNK_DATA_H
 
 #include <voxy/config.h>
-#include <types/block.h>
+#include <voxy/types/block.h>
 
 struct chunk_data
 {

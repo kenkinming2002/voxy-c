@@ -1,9 +1,8 @@
-#include <types/entity.h>
+#include <voxy/types/entity.h>
+#include <voxy/types/world.h>
+#include <voxy/types/block.h>
 
-#include <main_game/mod.h>
-
-#include <types/world.h>
-#include <types/block.h>
+#include <voxy/main_game/mod.h>
 
 #include <voxy/mod_interface.h>
 

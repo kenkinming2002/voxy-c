@@ -1,4 +1,4 @@
-#include <graphics/gl.h>
+#include <voxy/graphics/gl.h>
 
 #include <stb_image.h>
 

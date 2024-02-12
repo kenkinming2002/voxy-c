@@ -1,16 +1,16 @@
-#include <main_game/ui.h>
-#include <main_game/world.h>
-#include <main_game/mod.h>
-#include <main_game/mod_assets.h>
+#include <voxy/main_game/ui.h>
+#include <voxy/main_game/world.h>
+#include <voxy/main_game/mod.h>
+#include <voxy/main_game/mod_assets.h>
 
-#include <types/world.h>
-#include <types/block.h>
+#include <voxy/types/world.h>
+#include <voxy/types/block.h>
 
-#include <graphics/ui.h>
+#include <voxy/graphics/ui.h>
 
-#include <core/window.h>
+#include <voxy/core/window.h>
 
-#include <config.h>
+#include <voxy/config.h>
 
 #include <stdio.h>
 

@@ -1,4 +1,4 @@
-#include <main_game/mod.h>
+#include <voxy/main_game/mod.h>
 
 #include <dlfcn.h>
 #include <stdio.h>

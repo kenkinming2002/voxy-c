@@ -3,8 +3,8 @@
 
 #include <voxy/math/vector.h>
 
-#include <graphics/gl.h>
-#include <graphics/font_set.h>
+#include <voxy/graphics/gl.h>
+#include <voxy/graphics/font_set.h>
 
 void ui_draw_quad(fvec2_t position, fvec2_t dimension, fvec4_t color);
 void ui_draw_quad_rounded(fvec2_t position, fvec2_t dimension, float radius, fvec4_t color);

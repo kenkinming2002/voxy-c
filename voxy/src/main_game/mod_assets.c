@@ -1,8 +1,8 @@
-#include <main_game/mod_assets.h>
-#include <main_game/mod.h>
+#include <voxy/main_game/mod_assets.h>
+#include <voxy/main_game/mod.h>
 
-#include <graphics/font_set.h>
-#include <graphics/gl.h>
+#include <voxy/graphics/font_set.h>
+#include <voxy/graphics/gl.h>
 
 #include <stdlib.h>
 

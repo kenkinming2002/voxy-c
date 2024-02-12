@@ -1,7 +1,7 @@
 #ifndef TYPES_HOTBAR_H
 #define TYPES_HOTBAR_H
 
-#include <types/item.h>
+#include <voxy/types/item.h>
 #include <stdint.h>
 
 #define HOTBAR_SIZE 9

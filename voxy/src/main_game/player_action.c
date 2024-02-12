@@ -1,15 +1,15 @@
-#include <main_game/player_action.h>
-#include <main_game/world.h>
-#include <main_game/mod.h>
+#include <voxy/main_game/player_action.h>
+#include <voxy/main_game/world.h>
+#include <voxy/main_game/mod.h>
 
-#include <types/player.h>
-#include <types/world.h>
+#include <voxy/types/player.h>
+#include <voxy/types/world.h>
 
 #include <voxy/mod_interface.h>
 
-#include <core/window.h>
+#include <voxy/core/window.h>
 
-#include <config.h>
+#include <voxy/config.h>
 
 void update_player_action(float dt)
 {

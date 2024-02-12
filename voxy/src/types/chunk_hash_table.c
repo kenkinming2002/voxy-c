@@ -1,7 +1,7 @@
-#include <types/chunk_hash_table.h>
-#include <types/chunk.h>
-#include <types/chunk_data.h>
-#include <types/chunk_mesh.h>
+#include <voxy/types/chunk_hash_table.h>
+#include <voxy/types/chunk.h>
+#include <voxy/types/chunk_data.h>
+#include <voxy/types/chunk_mesh.h>
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX chunk

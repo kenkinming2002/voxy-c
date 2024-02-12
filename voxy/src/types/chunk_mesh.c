@@ -1,4 +1,4 @@
-#include <types/chunk_mesh.h>
+#include <voxy/types/chunk_mesh.h>
 #include <stdlib.h>
 
 void chunk_mesh_dispose(struct chunk_mesh *chunk_mesh)

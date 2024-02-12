@@ -1,7 +1,7 @@
-#include <graphics/ui.h>
-#include <graphics/gl_programs.h>
+#include <voxy/graphics/ui.h>
+#include <voxy/graphics/gl_programs.h>
 
-#include <core/window.h>
+#include <voxy/core/window.h>
 
 static GLuint vao_instance;
 

@@ -1,10 +1,11 @@
-#include <main_game/main_game.h>
-#include <main_game/mod.h>
+#include <voxy/main_game/main_game.h>
+#include <voxy/main_game/mod.h>
 
-#include <core/window.h>
-#include <core/delta_time.h>
+#include <voxy/core/window.h>
+#include <voxy/core/delta_time.h>
 
-#include <config.h>
+#include <voxy/config.h>
+
 #include <stdlib.h>
 
 int main()

@@ -1,16 +1,16 @@
-#include <main_game/world_render.h>
-#include <main_game/world.h>
-#include <main_game/mod_assets.h>
+#include <voxy/main_game/world_render.h>
+#include <voxy/main_game/world.h>
+#include <voxy/main_game/mod_assets.h>
 
-#include <core/window.h>
+#include <voxy/core/window.h>
 
-#include <graphics/gl.h>
-#include <graphics/gl_programs.h>
-#include <graphics/camera.h>
+#include <voxy/graphics/gl.h>
+#include <voxy/graphics/gl_programs.h>
+#include <voxy/graphics/camera.h>
 
-#include <types/world.h>
-#include <types/chunk.h>
-#include <types/chunk_mesh.h>
+#include <voxy/types/world.h>
+#include <voxy/types/chunk.h>
+#include <voxy/types/chunk_mesh.h>
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,15 +1,15 @@
-#include <main_game/physics.h>
-#include <main_game/world.h>
-#include <main_game/mod.h>
+#include <voxy/main_game/physics.h>
+#include <voxy/main_game/world.h>
+#include <voxy/main_game/mod.h>
 
-#include <types/world.h>
-#include <types/block.h>
+#include <voxy/types/world.h>
+#include <voxy/types/block.h>
 
 #include <voxy/mod_interface.h>
 
-#include <main_game/mod.h>
+#include <voxy/main_game/mod.h>
 
-#include "config.h"
+#include <voxy/config.h>
 
 #include <stdio.h>
 #include <stdbool.h>

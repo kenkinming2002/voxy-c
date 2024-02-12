@@ -1,5 +1,5 @@
-#include <graphics/gl_programs.h>
-#include <graphics/gl.h>
+#include <voxy/graphics/gl_programs.h>
+#include <voxy/graphics/gl.h>
 
 #include <stdlib.h>
 

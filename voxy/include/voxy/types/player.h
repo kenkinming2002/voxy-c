@@ -1,9 +1,9 @@
 #ifndef VOXY_PLAYER_H
 #define VOXY_PLAYER_H
 
-#include <types/entity.h>
-#include <types/inventory.h>
-#include <types/hotbar.h>
+#include <voxy/types/entity.h>
+#include <voxy/types/inventory.h>
+#include <voxy/types/hotbar.h>
 
 #include <voxy/math/vector.h>
 

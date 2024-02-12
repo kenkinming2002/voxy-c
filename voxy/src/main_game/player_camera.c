@@ -1,12 +1,12 @@
-#include <main_game/player_camera.h>
-#include <main_game/world.h>
+#include <voxy/main_game/player_camera.h>
+#include <voxy/main_game/world.h>
 
-#include <types/world.h>
-#include <types/player.h>
+#include <voxy/types/world.h>
+#include <voxy/types/player.h>
 
-#include <core/window.h>
+#include <voxy/core/window.h>
 
-#include <config.h>
+#include <voxy/config.h>
 
 void update_player_camera(void)
 {

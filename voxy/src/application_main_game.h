@@ -11,7 +11,6 @@ struct application_main_game
   struct mod        mod;
   struct mod_assets mod_assets;
 
-  struct world           world;
   struct world_generator world_generator;
 };
 

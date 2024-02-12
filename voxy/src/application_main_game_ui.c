@@ -8,6 +8,8 @@
 
 #include <graphics/ui.h>
 
+#include <main_game/world.h>
+
 /// To any future reader:
 ///
 /// The following code may look messy and full of code duplication. However, the
@@ -22,10 +24,10 @@ static inline float minf(float a, float b)
 
 void application_main_game_update_ui(struct application_main_game *application_main_game)
 {
-  if(!application_main_game->world.player.spawned)
+  struct world *world = main_game_world_get();
+  if(!world->player.spawned)
     return;
 
-  struct world  *world  = &application_main_game->world;
   struct player_entity *player = &world->player;
 
   ///////////////////
@@ -159,13 +161,13 @@ void application_main_game_update_ui(struct application_main_game *application_m
 
 void application_main_game_render_ui(struct application_main_game *application_main_game)
 {
-  if(!application_main_game->world.player.spawned)
+  struct world *world = main_game_world_get();
+  if(!world->player.spawned)
     return;
 
   struct mod        *mod        = &application_main_game->mod;
   struct mod_assets *mod_assets = &application_main_game->mod_assets;
 
-  struct world         *world         = &application_main_game->world;
   struct player_entity        *player        = &world->player;
 
   {
@@ -269,7 +271,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     ivec3_t normal;
     if(entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal))
     {
-      const struct block *target_block     = world_get_block(&application_main_game->world, position);
+      const struct block *target_block     = world_get_block(world, position);
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
       const char         *target_block_name = target_block_id != BLOCK_NONE ? mod->block_infos[target_block_id].name : NULL;
       if(target_block_name)

@@ -20,6 +20,7 @@ VOXY_SRCS += voxy/src/main_game/mod_assets.c
 VOXY_SRCS += voxy/src/main_game/chunk_generate.c
 VOXY_SRCS += voxy/src/main_game/player_spawn.c
 VOXY_SRCS += voxy/src/main_game/player_camera.c
+VOXY_SRCS += voxy/src/main_game/player_movement.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
 VOXY_SRCS += voxy/src/graphics/gl_programs.c

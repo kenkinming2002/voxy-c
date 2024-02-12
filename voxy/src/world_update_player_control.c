@@ -17,33 +17,6 @@ void world_update_player_control(struct world *world, float dt)
   if(world->player.inventory.opened)
     return;
 
-  ////////////////
-  /// Movement ///
-  ////////////////
-  fvec3_t axis = fvec3_zero();
-  if(input_state(KEY_A)) axis.x -= 1.0f;
-  if(input_state(KEY_D)) axis.x += 1.0f;
-  if(input_state(KEY_S)) axis.y -= 1.0f;
-  if(input_state(KEY_W)) axis.y += 1.0f;
-
-  fvec3_t impulse = transform_local(world->player.base.local_view_transform, axis);
-
-  impulse.z = 0.0f;
-  impulse = fvec3_normalize(impulse);
-  impulse = fvec3_mul_scalar(impulse, world->player.base.grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR);
-  impulse = fvec3_mul_scalar(impulse, dt);
-
-  entity_apply_impulse(&world->player.base, impulse);
-
-  ////////////
-  /// Jump ///
-  ////////////
-  if(input_state(KEY_SPACE) && world->player.base.grounded)
-  {
-    world->player.base.grounded = false;
-    entity_apply_impulse(&world->player.base, fvec3(0.0f, 0.0f, PLAYER_JUMP_STRENGTH));
-  }
-
   ///////////////////////////////////
   /// Block placement/destruction ///
   ///////////////////////////////////

@@ -17,15 +17,6 @@ void world_update_player_control(struct world *world, float dt)
   if(world->player.inventory.opened)
     return;
 
-  if(input_press(KEY_F))
-    world->player.third_person = !world->player.third_person;
-
-  //////////////
-  /// Camera ///
-  //////////////
-  fvec3_t rotation = fvec3_mul_scalar(fvec3(mouse_motion.x, -mouse_motion.y, 0.0f), PLAYER_PAN_SPEED);
-  world->player.base.local_view_transform = transform_rotate(world->player.base.local_view_transform, rotation);
-
   ////////////////
   /// Movement ///
   ////////////////

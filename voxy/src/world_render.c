@@ -1,5 +1,7 @@
 #include <world_render.h>
 
+#include <main_game/mod_assets.h>
+
 #include <core/window.h>
 
 #include <graphics/gl.h>
@@ -9,12 +11,11 @@
 #include <types/world.h>
 #include <types/chunk.h>
 #include <types/chunk_mesh.h>
-#include <types/mod_assets.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
-void world_render(struct world *world, struct mod_assets *mod_assets)
+void world_render(struct world *world)
 {
   struct gl_program *program_chunk   = gl_program_chunk_get();
   struct gl_program *program_outline = gl_program_outline_get();
@@ -44,7 +45,7 @@ void world_render(struct world *world, struct mod_assets *mod_assets)
   glUseProgram(program_chunk->id);
   glUniformMatrix4fv(glGetUniformLocation(program_chunk->id, "VP"), 1, GL_TRUE, (const float *)&VP);
   glUniformMatrix4fv(glGetUniformLocation(program_chunk->id, "V"),  1, GL_TRUE, (const float *)&V);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets->block_array_texture.id);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets_block_array_texture_get()->id);
 
   for(size_t i=0; i<world->chunks.bucket_count; ++i)
     for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)

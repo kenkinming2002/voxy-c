@@ -11,6 +11,7 @@
 
 #include <main_game/world.h>
 #include <main_game/mod.h>
+#include <main_game/mod_assets.h>
 
 #include <config.h>
 
@@ -167,8 +168,6 @@ void application_main_game_render_ui(struct application_main_game *application_m
   if(!world.player.spawned)
     return;
 
-  struct mod_assets *mod_assets = &application_main_game->mod_assets;
-
   struct player_entity        *player        = &world.player;
 
   {
@@ -205,13 +204,13 @@ void application_main_game_render_ui(struct application_main_game *application_m
       {
         const uint8_t               cell_item_id      = cell_item->id;
         const uint8_t               cell_item_count   = cell_item->count;
-        const struct gl_texture_2d *cell_item_texture = &mod_assets->item_textures[cell_item_id];
+        const struct gl_texture_2d *cell_item_texture = mod_assets_item_texture_get(cell_item_id);
 
         char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
         snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
         ui_draw_texture(cell_position, cell_dimension, cell_item_texture->id);
-        ui_draw_text(&mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+        ui_draw_text(mod_assets_font_set_get(), cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
       }
     }
 
@@ -224,7 +223,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
     const uint8_t      selected_item_id   = selected_item->id;
     const char        *selected_item_name = selected_item_id != ITEM_NONE ? mod_item_info_get(selected_item_id)->name : NULL;
     if(selected_item_name)
-      ui_draw_text_centered(&application_main_game->mod_assets.font_set, selected_item_text_position, selected_item_name, UI_TEXT_SIZE);
+      ui_draw_text_centered(mod_assets_font_set_get(), selected_item_text_position, selected_item_name, UI_TEXT_SIZE);
 
     /////////////////
     /// Inventory ///
@@ -252,13 +251,13 @@ void application_main_game_render_ui(struct application_main_game *application_m
           {
             const uint8_t               cell_item_id      = cell_item->id;
             const uint8_t               cell_item_count   = cell_item->count;
-            const struct gl_texture_2d *cell_item_texture = &mod_assets->item_textures[cell_item_id];
+            const struct gl_texture_2d *cell_item_texture = mod_assets_item_texture_get(cell_item_id);
 
             char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
             snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
             ui_draw_texture(cell_position, cell_dimension, cell_item_texture->id);
-            ui_draw_text(&mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+            ui_draw_text(mod_assets_font_set_get(), cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
           }
         }
     }
@@ -276,7 +275,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
       const char         *target_block_name = target_block_id != BLOCK_NONE ? mod_block_info_get(target_block_id)->name : NULL;
       if(target_block_name)
-        ui_draw_text_centered(&application_main_game->mod_assets.font_set, target_block_text_position, target_block_name, UI_TEXT_SIZE);
+        ui_draw_text_centered(mod_assets_font_set_get(), target_block_text_position, target_block_name, UI_TEXT_SIZE);
     }
 
 
@@ -292,13 +291,13 @@ void application_main_game_render_ui(struct application_main_game *application_m
       {
         const uint8_t               cell_item_id      = cell_item->id;
         const uint8_t               cell_item_count   = cell_item->count;
-        const struct gl_texture_2d *cell_item_texture = &mod_assets->item_textures[cell_item_id];
+        const struct gl_texture_2d *cell_item_texture = mod_assets_item_texture_get(cell_item_id);
 
         char buffer[4]; // Max item count is UINT8_MAX == 255. Hence 3 digits is sufficient
         snprintf(buffer, sizeof buffer, "%u", cell_item_count);
 
         ui_draw_texture(cell_position, cell_dimension, cell_item_texture->id);
-        ui_draw_text(&mod_assets->font_set, cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
+        ui_draw_text(mod_assets_font_set_get(), cell_position, buffer, UI_TEXT_SIZE_ITEM_COUNT);
       }
     }
   }

@@ -3,6 +3,8 @@
 #include <core/delta_time.h>
 #include <main_game/mod.h>
 #include <config.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define CHECK(expr) if((expr) != 0) { fprintf(stderr, "%s:%d: ERROR: %s != 0\n", __FILE__, __LINE__, #expr); exit(EXIT_FAILURE); }
 

@@ -1,11 +1,8 @@
 #ifndef VOXY_APPLICATION_MAIN_GAME_H
 #define VOXY_APPLICATION_MAIN_GAME_H
 
-#include <types/mod_assets.h>
-
 struct application_main_game
 {
-  struct mod_assets mod_assets;
 };
 
 struct window;

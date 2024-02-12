@@ -1,5 +1,7 @@
 #include "application.h"
 
+#include <stdlib.h>
+
 int main()
 {
   struct application application;

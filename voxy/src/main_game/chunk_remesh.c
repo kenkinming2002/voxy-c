@@ -1,16 +1,19 @@
-#include <types/world.h>
-#include <types/chunk.h>
-#include <types/chunk_mesh.h>
-#include <types/chunk_data.h>
-#include <types/block.h>
-
-#include <voxy/mod_interface.h>
-
+#include <main_game/chunk_remesh.h>
+#include <main_game/world.h>
 #include <main_game/mod.h>
 
-#include "config.h"
+#include <types/world.h>
+#include <types/chunk.h>
+#include <types/chunk_data.h>
+#include <types/chunk_mesh.h>
+
+#include <voxy/math/vector.h>
+
+#include <config.h>
 
 #include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 
 struct chunk_mesh_vertex
 {
@@ -115,8 +118,7 @@ static inline struct block *chunk_block_lookup(struct chunk *chunk, ivec3_t posi
   assert(0 && "Unreachable");
 }
 
-__attribute__((flatten))
-void world_update_chunk_mesh(struct world *world)
+void update_chunk_remesh(void)
 {
   struct chunk_mesh_info
   {
@@ -129,7 +131,7 @@ void world_update_chunk_mesh(struct world *world)
   size_t                  chunk_mesh_info_count    = 0;
   size_t                  chunk_mesh_info_capacity = 0;
 
-  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world->player.base.position, CHUNK_WIDTH));
+  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world.player.base.position, CHUNK_WIDTH));
 
   ////////////////////////////////////////////////////
   /// 1: Collect all chunks that need to be meshed ///
@@ -139,7 +141,7 @@ void world_update_chunk_mesh(struct world *world)
       for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
       {
         ivec3_t chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
-        struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
+        struct chunk *chunk = chunk_hash_table_lookup(&world.chunks, chunk_position);
         if(chunk && chunk->mesh_dirty)
         {
           if(chunk_mesh_info_capacity == chunk_mesh_info_count)
@@ -295,8 +297,8 @@ void world_update_chunk_mesh(struct world *world)
   //////////////////////////////
   /// 4: Unload chunk meshes ///
   //////////////////////////////
-  for(size_t i=0; i<world->chunks.bucket_count; ++i)
-    for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)
+  for(size_t i=0; i<world.chunks.bucket_count; ++i)
+    for(struct chunk *chunk = world.chunks.buckets[i].head; chunk; chunk = chunk->next)
       if(chunk->chunk_mesh)
         if(chunk->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || chunk->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
            chunk->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || chunk->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||

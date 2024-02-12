@@ -5,10 +5,10 @@
 #include <main_game/player_camera.h>
 #include <main_game/player_movement.h>
 #include <main_game/player_action.h>
+#include <main_game/chunk_remesh.h>
 
 #include <world_update_light.h>
 #include <world_update_physics.h>
-#include <world_update_chunk_mesh.h>
 
 void world_update(struct world *world, float dt)
 {
@@ -21,5 +21,5 @@ void world_update(struct world *world, float dt)
   world_update_light(world);
   world_update_physics(world, dt);
 
-  world_update_chunk_mesh(world);
+  update_chunk_remesh();
 }

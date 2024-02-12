@@ -3,9 +3,9 @@
 #include <main_game/world.h>
 #include <main_game/chunk_generate.h>
 #include <main_game/ui.h>
+#include <main_game/world_render.h>
 
 #include <world_update.h>
-#include <world_render.h>
 
 #include <core/window.h>
 
@@ -34,7 +34,7 @@ void application_main_game_render(struct application_main_game *application_main
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  world_render(&world);
+  world_render();
   main_game_render_ui();
 }
 

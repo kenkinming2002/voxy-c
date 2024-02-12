@@ -5,7 +5,7 @@
 #include <voxy/mod_interface.h>
 
 #include "config.h"
-#include "ray_cast.h"
+#include <voxy/math/ray_cast.h>
 #include <core/window.h>
 
 void world_update_player_control(struct world *world, struct mod *mod, float dt)

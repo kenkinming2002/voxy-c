@@ -5,7 +5,7 @@
 
 #include <voxy/mod_interface.h>
 
-#include <ray_cast.h>
+#include <voxy/math/ray_cast.h>
 
 fvec3_t entity_view_position(const struct entity *entity)
 {

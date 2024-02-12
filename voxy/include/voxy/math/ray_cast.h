@@ -1,13 +1,24 @@
-#include "ray_cast.h"
+#ifndef VOXY_MATH_RAY_CAST_H
+#define VOXY_MATH_RAY_CAST_H
 
-void ray_cast_init(struct ray_cast *ray_cast, fvec3_t position)
+#include <voxy/math/vector.h>
+
+struct ray_cast
+{
+  ivec3_t iposition;
+  fvec3_t fposition;
+
+  float distance;
+};
+
+static inline void ray_cast_init(struct ray_cast *ray_cast, fvec3_t position)
 {
   ray_cast->fposition = position;
   ray_cast->iposition = fvec3_as_ivec3_round(ray_cast->fposition);
   ray_cast->distance  = 0.0f;
 }
 
-void ray_cast_step(struct ray_cast *ray_cast, fvec3_t direction)
+static inline void ray_cast_step(struct ray_cast *ray_cast, fvec3_t direction)
 {
   fvec3_t target = fvec3_add(ivec3_as_fvec3(ray_cast->iposition), fvec3_copysign(fvec3(0.5, 0.5f, 0.5f), direction));
   fvec3_t time   = fvec3_div(fvec3_sub(target, ray_cast->fposition), direction);
@@ -25,3 +36,5 @@ void ray_cast_step(struct ray_cast *ray_cast, fvec3_t direction)
   ray_cast->fposition = fvec3_add(ray_cast->fposition, fvec3_mul_scalar(direction, min_value));
   ray_cast->distance += min_value;
 }
+
+#endif // VOXY_MATH_RAY_CAST_H

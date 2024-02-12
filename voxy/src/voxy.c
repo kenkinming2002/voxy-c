@@ -7,17 +7,33 @@
 #include <voxy/config.h>
 
 #include <stdlib.h>
+#include <stdio.h>
+
+#define FIXED_DT (1.0f/30.0f)
 
 int main()
 {
+  float accumulated_dt = 0.0f;
+
   window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
   mod_load(MOD_FILEPATH);
   while(!window_should_close())
   {
-    float dt = get_delta_time();
+    accumulated_dt += get_delta_time();
+
+    if(accumulated_dt >= FIXED_DT)
+    {
+      main_game_update(FIXED_DT);
+      accumulated_dt -= FIXED_DT;
+    }
+
+    if(accumulated_dt >= FIXED_DT)
+    {
+      fprintf(stderr, "WARNING: Skipping %d fixed update\n", (int)floorf(accumulated_dt / FIXED_DT));
+      accumulated_dt = fmodf(accumulated_dt, FIXED_DT);
+    }
 
     window_begin();
-    main_game_update(dt);
     main_game_render();
     window_end();
   }

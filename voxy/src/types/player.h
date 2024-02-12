@@ -11,16 +11,16 @@
 
 struct player_entity
 {
-  struct entity base;
-
   bool spawned;
   bool third_person;
 
+  struct entity base;
+
   struct inventory inventory;
   struct hotbar    hotbar;
-  struct item     *item_hovered;
   struct item      item_held;
   fvec2_t          item_held_position;
+  struct item     *item_hovered;
 
   float cooldown;
 };

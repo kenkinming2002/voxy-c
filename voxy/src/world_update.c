@@ -1,8 +1,8 @@
 #include <world_update.h>
 
 #include <main_game/chunk_generate.h>
+#include <main_game/player_spawn.h>
 
-#include <world_update_player_spawn.h>
 #include <world_update_player_control.h>
 #include <world_update_light.h>
 #include <world_update_physics.h>
@@ -11,8 +11,8 @@
 void world_update(struct world *world, float dt)
 {
   update_chunk_generate();
+  update_player_spawn();
 
-  world_update_player_spawn  (world);
   world_update_player_control(world, dt);
 
   world_update_light(world);

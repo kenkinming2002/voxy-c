@@ -2,9 +2,10 @@
 
 #include <types/world.h>
 #include <types/block.h>
-#include <types/mod.h>
 
 #include <voxy/mod_interface.h>
+
+#include <main_game/mod.h>
 
 #include "config.h"
 
@@ -145,7 +146,7 @@ static inline bool box_swept(const struct box *box1, const struct box *box2, fve
   return false;
 }
 
-static void entity_physics_update(struct entity *entity, struct world *world, struct mod *mod, float dt)
+static void entity_physics_update(struct entity *entity, struct world *world, float dt)
 {
   for(;;)
   {
@@ -166,19 +167,23 @@ static void entity_physics_update(struct entity *entity, struct world *world, st
         {
           ivec3_t position = ivec3(x, y, z);
 
-          struct block *block = world_get_block(world, position);
-          if(block && mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE)
+          const struct block *block = world_get_block(world, position);
+          if((block))
           {
-            float t;
-            float s;
-            fvec3_t normal;
-            if(box_swept(&entity_box, &(struct box){ .position = ivec3_as_fvec3(position), .dimension = fvec3(1.0f, 1.0f, 1.0f), }, offset, &t, &s, &normal))
-              if(min_t > t || (min_t == t && max_s < s))
-              {
-                min_t = t;
-                max_s = s;
-                min_normal = normal;
-              }
+            const struct block_info *block_info = mod_block_info_get(block->id);
+            if(block_info->type == BLOCK_TYPE_OPAQUE)
+            {
+              float t;
+              float s;
+              fvec3_t normal;
+              if(box_swept(&entity_box, &(struct box){ .position = ivec3_as_fvec3(position), .dimension = fvec3(1.0f, 1.0f, 1.0f), }, offset, &t, &s, &normal))
+                if(min_t > t || (min_t == t && max_s < s))
+                {
+                  min_t = t;
+                  max_s = s;
+                  min_normal = normal;
+                }
+            }
           }
         }
 
@@ -197,9 +202,9 @@ static void entity_physics_integrate(struct entity *entity, float dt)
   entity->position = fvec3_add(entity->position, fvec3_mul_scalar(entity->velocity, dt));
 }
 
-void world_update_physics(struct world *world, struct mod *mod, float dt)
+void world_update_physics(struct world *world, float dt)
 {
   entity_physics_apply_law(&world->player.base, dt);
-  entity_physics_update(&world->player.base, world, mod, dt);
+  entity_physics_update(&world->player.base, world, dt);
   entity_physics_integrate(&world->player.base, dt);
 }

@@ -1,9 +1,10 @@
 #include <types/world.h>
 #include <types/chunk.h>
 #include <types/chunk_data.h>
-#include <types/mod.h>
 
 #include <voxy/mod_interface.h>
+
+#include <main_game/mod.h>
 
 #include <stdio.h>
 #include <time.h>
@@ -40,7 +41,7 @@ struct light_infos
 static inline struct block       *get_block      (struct chunk       *chunk,       int x, int y, int z) { return &chunk->chunk_data->blocks[z][y][x]; }
 static inline struct light_info *get_light_info(struct light_infos *light_infos, int x, int y, int z) { return &light_infos->items[z+1][y+1][x+1]; }
 
-static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk, struct mod *mod)
+static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk)
 {
   for(int z=0; z<CHUNK_WIDTH+2; ++z)
     for(int y=0; y<CHUNK_WIDTH+2; ++y)
@@ -55,22 +56,24 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct block       *block       = get_block      (chunk,       x, y, z);
-        struct light_info *light_info = get_light_info(light_infos, x, y, z);
+        const struct block      *block      = get_block(chunk, x, y, z);
+        const struct block_info *block_info = mod_block_info_get(block->id);
+        struct light_info       *light_info = get_light_info(light_infos, x, y, z);
 
-        light_info->opaque      = mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = mod->block_infos[block->id].ether;
-        light_info->light_level = mod->block_infos[block->id].light_level;
+        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
+        light_info->ether       = block_info->ether;
+        light_info->light_level = block_info->light_level;
       }
 
   if(chunk->bottom)
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct block       *block       = get_block      (chunk->bottom, x, y, CHUNK_WIDTH-1);
-        struct light_info *light_info = get_light_info(light_infos  , x, y, -1           );
+        const struct block      *block      = get_block(chunk->bottom, x, y, CHUNK_WIDTH-1);
+        const struct block_info *block_info = mod_block_info_get(block->id);
+        struct light_info       *light_info = get_light_info(light_infos, x, y, -1);
 
-        light_info->opaque      = mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = block->ether;
         light_info->light_level = block->light_level;
       }
@@ -79,10 +82,11 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
     for(int y=0; y<CHUNK_WIDTH; ++y)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct block       *block       = get_block      (chunk->top , x, y, 0          );
-        struct light_info *light_info = get_light_info(light_infos, x, y, CHUNK_WIDTH);
+        const struct block      *block      = get_block(chunk->top, x, y, 0);
+        const struct block_info *block_info = mod_block_info_get(block->id);
+        struct light_info       *light_info = get_light_info(light_infos, x, y, CHUNK_WIDTH);
 
-        light_info->opaque      = mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = block->ether;
         light_info->light_level = block->light_level;
       }
@@ -91,10 +95,11 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct block       *block       = get_block      (chunk->back, x, CHUNK_WIDTH-1, z);
-        struct light_info *light_info = get_light_info(light_infos, x, -1           , z);
+        const struct block      *block      = get_block(chunk->back, x, CHUNK_WIDTH-1, z);
+        const struct block_info *block_info = mod_block_info_get(block->id);
+        struct light_info       *light_info = get_light_info(light_infos, x, -1, z);
 
-        light_info->opaque      = mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = block->ether;
         light_info->light_level = block->light_level;
       }
@@ -103,10 +108,11 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int x=0; x<CHUNK_WIDTH; ++x)
       {
-        struct block       *block       = get_block      (chunk->front, x, 0          , z);
-        struct light_info *light_info = get_light_info(light_infos , x, CHUNK_WIDTH, z);
+        const struct block      *block      = get_block(chunk->front, x, 0, z);
+        const struct block_info *block_info = mod_block_info_get(block->id);
+        struct light_info       *light_info = get_light_info(light_infos, x, CHUNK_WIDTH, z);
 
-        light_info->opaque      = mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = block->ether;
         light_info->light_level = block->light_level;
       }
@@ -115,10 +121,11 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int y=0; y<CHUNK_WIDTH; ++y)
       {
-        struct block       *block       = get_block      (chunk->left, CHUNK_WIDTH-1, y, z);
-        struct light_info *light_info = get_light_info(light_infos, -1           , y, z);
+        const struct block      *block      = get_block(chunk->left, CHUNK_WIDTH-1, y, z);
+        const struct block_info *block_info = mod_block_info_get(block->id);
+        struct light_info       *light_info = get_light_info(light_infos, -1, y, z);
 
-        light_info->opaque      = mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = block->ether;
         light_info->light_level = block->light_level;
       }
@@ -127,10 +134,11 @@ static inline void light_infos_load(struct light_infos *light_infos, struct chun
     for(int z=0; z<CHUNK_WIDTH; ++z)
       for(int y=0; y<CHUNK_WIDTH; ++y)
       {
-        struct block       *block       = get_block      (chunk->right, 0          , y, z);
-        struct light_info *light_info = get_light_info(light_infos , CHUNK_WIDTH, y, z);
+        const struct block      *block      = get_block(chunk->right, 0, y, z);
+        const struct block_info *block_info = mod_block_info_get(block->id);
+        struct light_info       *light_info = get_light_info(light_infos, CHUNK_WIDTH, y, z);
 
-        light_info->opaque      = mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE;
+        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
         light_info->ether       = block->ether;
         light_info->light_level = block->light_level;
       }
@@ -349,7 +357,7 @@ static inline void light_infos_propagate_light(struct light_infos *light_infos)
   }
 }
 
-void world_update_light(struct world *world, struct mod *mod)
+void world_update_light(struct world *world)
 {
   size_t count = 0;
 
@@ -363,7 +371,7 @@ void world_update_light(struct world *world, struct mod *mod)
         {
           struct light_infos light_infos;
 
-          light_infos_load(&light_infos, chunk, mod);
+          light_infos_load(&light_infos, chunk);
           light_infos_propagate_ether(&light_infos);
           light_infos_apply_ether(&light_infos);
           light_infos_propagate_light(&light_infos);

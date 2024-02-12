@@ -1,5 +1,7 @@
 #include <types/entity.h>
 
+#include <main_game/mod.h>
+
 #include <types/world.h>
 #include <types/block.h>
 
@@ -35,7 +37,7 @@ void entity_apply_impulse(struct entity *entity, fvec3_t impulse)
   entity->velocity = fvec3_add(entity->velocity, impulse);
 }
 
-bool entity_ray_cast(struct entity *entity, struct world *world, struct mod *mod, float distance, ivec3_t *position, ivec3_t *normal)
+bool entity_ray_cast(struct entity *entity, struct world *world, float distance, ivec3_t *position, ivec3_t *normal)
 {
   fvec3_t ray_position  = entity->position;
   fvec3_t ray_direction = transform_forward(entity->local_view_transform);
@@ -49,7 +51,7 @@ bool entity_ray_cast(struct entity *entity, struct world *world, struct mod *mod
   while(ray_cast.distance < distance)
   {
     struct block *block = world_get_block(world, ray_cast.iposition);
-    if(block && mod->block_infos[block->id].type == BLOCK_TYPE_OPAQUE)
+    if(block && mod_block_info_get(block->id)->type == BLOCK_TYPE_OPAQUE)
       return true;
 
     ray_cast_step(&ray_cast, ray_direction);

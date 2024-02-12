@@ -1,8 +1,9 @@
 #include <types/mod_assets.h>
 
 #include <voxy/mod_interface.h>
+#include <main_game/mod.h>
 
-int mod_assets_load(struct mod_assets *mod_assets, struct mod *mod)
+int mod_assets_load(struct mod_assets *mod_assets)
 {
   ////////////////
   /// Font Set ///
@@ -15,10 +16,10 @@ int mod_assets_load(struct mod_assets *mod_assets, struct mod *mod)
   ///////////////////////////
   /// Block Array Texture ///
   ///////////////////////////
-  size_t       filepath_count = mod->block_texture_info_count;
+  size_t       filepath_count = mod_block_texture_info_count_get();
   const char **filepaths      = malloc(filepath_count * sizeof *filepaths);
   for(size_t i=0; i<filepath_count; ++i)
-    filepaths[i] = mod->block_texture_infos[i].filepath;
+    filepaths[i] = mod_block_texture_info_get(i)->filepath;
 
   if(gl_array_texture_2d_load(&mod_assets->block_array_texture, filepath_count, filepaths) != 0)
     goto error_block_array_texture;
@@ -26,10 +27,10 @@ int mod_assets_load(struct mod_assets *mod_assets, struct mod *mod)
   /////////////////////
   /// Item Textures ///
   /////////////////////
-  mod_assets->item_texture_count = mod->item_info_count;
-  mod_assets->item_textures      = malloc(mod->item_info_count * sizeof *mod_assets->item_textures);
+  mod_assets->item_texture_count = mod_item_info_count_get();
+  mod_assets->item_textures      = malloc(mod_assets->item_texture_count * sizeof *mod_assets->item_textures);
   for(size_t i=0; i<mod_assets->item_texture_count; ++i)
-    if(gl_texture_2d_load(&mod_assets->item_textures[i], mod->item_infos[i].texture_filepath) != 0)
+    if(gl_texture_2d_load(&mod_assets->item_textures[i], mod_item_info_get(i)->texture_filepath) != 0)
     {
       mod_assets->item_texture_count = i;
       goto error_item_textures;

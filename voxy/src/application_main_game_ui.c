@@ -9,6 +9,7 @@
 #include <graphics/ui.h>
 
 #include <main_game/world.h>
+#include <main_game/mod.h>
 
 /// To any future reader:
 ///
@@ -165,7 +166,6 @@ void application_main_game_render_ui(struct application_main_game *application_m
   if(!world->player.spawned)
     return;
 
-  struct mod        *mod        = &application_main_game->mod;
   struct mod_assets *mod_assets = &application_main_game->mod_assets;
 
   struct player_entity        *player        = &world->player;
@@ -221,7 +221,7 @@ void application_main_game_render_ui(struct application_main_game *application_m
 
     const struct item *selected_item      = &player->hotbar.items[player->hotbar.selection];
     const uint8_t      selected_item_id   = selected_item->id;
-    const char        *selected_item_name = selected_item_id != ITEM_NONE ? application_main_game->mod.item_infos[selected_item_id].name : NULL;
+    const char        *selected_item_name = selected_item_id != ITEM_NONE ? mod_item_info_get(selected_item_id)->name : NULL;
     if(selected_item_name)
       ui_draw_text_centered(&application_main_game->mod_assets.font_set, selected_item_text_position, selected_item_name, UI_TEXT_SIZE);
 
@@ -269,11 +269,11 @@ void application_main_game_render_ui(struct application_main_game *application_m
 
     ivec3_t position;
     ivec3_t normal;
-    if(entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal))
+    if(entity_ray_cast(&world->player.base, world, 20.0f, &position, &normal))
     {
       const struct block *target_block     = world_get_block(world, position);
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
-      const char         *target_block_name = target_block_id != BLOCK_NONE ? mod->block_infos[target_block_id].name : NULL;
+      const char         *target_block_name = target_block_id != BLOCK_NONE ? mod_block_info_get(target_block_id)->name : NULL;
       if(target_block_name)
         ui_draw_text_centered(&application_main_game->mod_assets.font_set, target_block_text_position, target_block_name, UI_TEXT_SIZE);
     }

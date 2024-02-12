@@ -2,8 +2,7 @@
 #define VOXY_WORLD_UPDATE_PLAYER_CONTROL_H
 
 struct world;
-struct mod;
 
-void world_update_player_control(struct world *world, struct mod *mod, float dt);
+void world_update_player_control(struct world *world, float dt);
 
 #endif // VOXY_WORLD_UPDATE_PLAYER_CONTROL_H

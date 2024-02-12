@@ -1,7 +1,8 @@
 #include "world_update_player_spawn.h"
 
 #include <types/world.h>
-#include <types/mod.h>
+
+#include <main_game/mod.h>
 
 #include <stdio.h>
 
@@ -12,11 +13,11 @@ static int mini(int a, int b)
   return a < b ? a : b;
 }
 
-void world_update_player_spawn(struct world *world, struct mod *mod)
+void world_update_player_spawn(struct world *world)
 {
   if(!world->player.spawned)
   {
-    world->player.base.position  = mod->generate_spawn(world->seed);
+    world->player.base.position  = mod_generate_spawn(world->seed);
     world->player.base.velocity  = fvec3_zero();
     world->player.base.dimension = PLAYER_DIMENSION;
 
@@ -46,10 +47,10 @@ void world_update_player_spawn(struct world *world, struct mod *mod)
     world->player.item_hovered = NULL;
     world->player.item_held.id = ITEM_NONE;
 
-    int count = mini(mod->item_info_count * 2, HOTBAR_SIZE);
+    int count = mini(mod_item_info_count_get() * 2, HOTBAR_SIZE);
     for(int i=0; i<count; ++i)
     {
-      world->player.hotbar.items[i].id = i % mod->item_info_count;
+      world->player.hotbar.items[i].id = i % mod_item_info_count_get();
       world->player.hotbar.items[i].count = 8 * (i + 1);
     }
 

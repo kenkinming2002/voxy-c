@@ -11,9 +11,7 @@
 
 int application_main_game_init(struct application_main_game *application_main_game)
 {
-  CHECK(mod_load(&application_main_game->mod, MOD_FILEPATH));
-  CHECK(mod_assets_load(&application_main_game->mod_assets, &application_main_game->mod));
-
+  CHECK(mod_assets_load(&application_main_game->mod_assets));
   world_generator_init(&application_main_game->world_generator);
   return 0;
 }
@@ -21,15 +19,13 @@ int application_main_game_init(struct application_main_game *application_main_ga
 void application_main_game_fini(struct application_main_game *application_main_game)
 {
   world_generator_fini(&application_main_game->world_generator);
-
   mod_assets_unload(&application_main_game->mod_assets);
-  mod_unload(&application_main_game->mod);
 }
 
 void application_main_game_update(struct application_main_game *application_main_game, float dt)
 {
   struct world *world = main_game_world_get();
-  world_update(world, &application_main_game->world_generator, &application_main_game->mod, dt);
+  world_update(world, &application_main_game->world_generator, dt);
   application_main_game_update_ui(application_main_game);
 }
 
@@ -40,7 +36,7 @@ void application_main_game_render(struct application_main_game *application_main
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   struct world *world = main_game_world_get();
-  world_render(world, &application_main_game->mod, &application_main_game->mod_assets);
+  world_render(world, &application_main_game->mod_assets);
   application_main_game_render_ui(application_main_game);
 }
 

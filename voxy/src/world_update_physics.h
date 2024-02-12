@@ -2,8 +2,7 @@
 #define VOXY_WORLD_UPDATE_PHYSICS_H
 
 struct world;
-struct mod;
 
-void world_update_physics(struct world *world, struct mod *mod, float dt);
+void world_update_physics(struct world *world, float dt);
 
 #endif // VOXY_WORLD_UPDATE_PHYSICS_H

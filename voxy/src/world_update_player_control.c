@@ -1,14 +1,15 @@
 #include <types/world.h>
 #include <types/block.h>
-#include <types/mod.h>
 
 #include <voxy/mod_interface.h>
+
+#include <main_game/mod.h>
 
 #include "config.h"
 #include <voxy/math/ray_cast.h>
 #include <core/window.h>
 
-void world_update_player_control(struct world *world, struct mod *mod, float dt)
+void world_update_player_control(struct world *world, float dt)
 {
   if(!world->player.spawned)
     return;
@@ -60,7 +61,7 @@ void world_update_player_control(struct world *world, struct mod *mod, float dt)
   ivec3_t position;
   ivec3_t normal;
 
-  if(input_state(BUTTON_LEFT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal))
+  if(input_state(BUTTON_LEFT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, 20.0f, &position, &normal))
   {
     world->player.cooldown = 0.0f;
 
@@ -75,14 +76,14 @@ void world_update_player_control(struct world *world, struct mod *mod, float dt)
         }
   }
 
-  if(input_state(BUTTON_RIGHT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal))
+  if(input_state(BUTTON_RIGHT) && world->player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world->player.base, world, 20.0f, &position, &normal))
   {
     const struct item *item = &world->player.hotbar.items[world->player.hotbar.selection];
     if(item->id != ITEM_NONE)
     {
       world->player.cooldown = 0.0f;
 
-      uint8_t block_id = mod->item_infos[item->id].block_id;
+      const struct item_info *item_info = mod_item_info_get(item->id);
 
       int radius = input_state(KEY_CTRL) ? 2 : 0;
       for(int dz=-radius; dz<=radius; ++dz)
@@ -91,7 +92,7 @@ void world_update_player_control(struct world *world, struct mod *mod, float dt)
           {
             ivec3_t offset = ivec3(dx, dy, dz);
             if(ivec3_length_squared(offset) <= radius * radius)
-              world_block_set_id(world, ivec3_add(ivec3_add(position, normal), offset), block_id);
+              world_block_set_id(world, ivec3_add(ivec3_add(position, normal), offset), item_info->block_id);
           }
     }
   }

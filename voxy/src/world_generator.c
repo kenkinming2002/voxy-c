@@ -5,6 +5,8 @@
 #include <types/world.h>
 #include <types/chunk_data.h>
 
+#include <main_game/mod.h>
+
 #include "utils.h"
 
 #define SC_HASH_TABLE_IMPLEMENTATION
@@ -63,7 +65,6 @@ struct chunk_data_generate_job
 
   seed_t                     seed;
   struct chunk_data_wrapper *chunk_data_wrapper;
-  struct mod      *mod;
 };
 
 static void world_generator_generate_chunk_data_job_invoke(struct thread_pool_job *_job)
@@ -72,7 +73,7 @@ static void world_generator_generate_chunk_data_job_invoke(struct thread_pool_jo
   struct chunk_data *chunk_data = malloc(sizeof *chunk_data);
 
   uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
-  job->mod->generate_blocks(job->seed, job->chunk_data_wrapper->position, blocks);
+  mod_generate_blocks(job->seed, job->chunk_data_wrapper->position, blocks);
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
@@ -91,7 +92,7 @@ static void world_generator_generate_chunk_data_job_destroy(struct thread_pool_j
   free(job);
 }
 
-struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, struct world *world, ivec3_t position, struct mod *mod)
+struct chunk_data *world_generator_generate_chunk_data(struct world_generator *world_generator, struct world *world, ivec3_t position)
 {
   struct chunk_data_wrapper *chunk_data_wrapper;
   if((chunk_data_wrapper = chunk_data_wrapper_hash_table_lookup(&world_generator->chunk_data_wrappers, position)))
@@ -107,7 +108,6 @@ struct chunk_data *world_generator_generate_chunk_data(struct world_generator *w
   job->base.destroy       = world_generator_generate_chunk_data_job_destroy;
   job->seed               = world->seed;
   job->chunk_data_wrapper = chunk_data_wrapper;
-  job->mod      = mod;
   thread_pool_enqueue(&world_generator->thread_pool, &job->base);
   return NULL;
 }

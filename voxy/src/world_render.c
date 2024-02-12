@@ -8,7 +8,6 @@
 #include <types/world.h>
 #include <types/chunk.h>
 #include <types/chunk_mesh.h>
-#include <types/mod.h>
 #include <types/mod_assets.h>
 
 #include <stdio.h>
@@ -39,7 +38,7 @@
 PROGRAM(chunk,   "assets/chunk.vert",   "assets/chunk.frag");
 PROGRAM(outline, "assets/outline.vert", "assets/outline.frag");
 
-void world_render(struct world *world, struct mod *mod, struct mod_assets *mod_assets)
+void world_render(struct world *world, struct mod_assets *mod_assets)
 {
   struct gl_program *program_chunk   = program_chunk_get();
   struct gl_program *program_outline = program_outline_get();
@@ -89,7 +88,7 @@ void world_render(struct world *world, struct mod *mod, struct mod_assets *mod_a
 
   ivec3_t position;
   ivec3_t normal;
-  bool hit = entity_ray_cast(&world->player.base, world, mod, 20.0f, &position, &normal);
+  bool hit = entity_ray_cast(&world->player.base, world, 20.0f, &position, &normal);
 
   if(hit || world->player.third_person)
   {

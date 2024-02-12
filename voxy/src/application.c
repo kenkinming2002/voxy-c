@@ -1,12 +1,14 @@
 #include "application.h"
 
 #include <core/delta_time.h>
+#include <main_game/mod.h>
 
 #define CHECK(expr) if((expr) != 0) { fprintf(stderr, "%s:%d: ERROR: %s != 0\n", __FILE__, __LINE__, #expr); exit(EXIT_FAILURE); }
 
 int application_init(struct application *application)
 {
   window_init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+  mod_load(MOD_FILEPATH);
 
   CHECK(application_main_game_init(&application->main_game));
   return 0;

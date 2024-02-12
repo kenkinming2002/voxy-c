@@ -1,8 +1,6 @@
 #ifndef TYPES_MOD_ASSETS_H
 #define TYPES_MOD_ASSETS_H
 
-#include <types/mod.h>
-
 #include <graphics/gl.h>
 #include <graphics/font_set.h>
 
@@ -15,7 +13,7 @@ struct mod_assets
   struct gl_texture_2d *item_textures;
 };
 
-int mod_assets_load(struct mod_assets *mod_assets, struct mod *mod);
+int mod_assets_load(struct mod_assets *mod_assets);
 void mod_assets_unload(struct mod_assets *mod_assets);
 
 #endif // TYPES_MOD_ASSETS_H

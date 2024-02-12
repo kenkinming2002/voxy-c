@@ -1,10 +1,10 @@
+#include <main_game/light.h>
+#include <main_game/world.h>
+#include <main_game/mod.h>
+
 #include <types/world.h>
 #include <types/chunk.h>
 #include <types/chunk_data.h>
-
-#include <voxy/mod_interface.h>
-
-#include <main_game/mod.h>
 
 #include <stdio.h>
 #include <time.h>
@@ -357,7 +357,7 @@ static inline void light_infos_propagate_light(struct light_infos *light_infos)
   }
 }
 
-void world_update_light(struct world *world)
+void update_light(void)
 {
   size_t count = 0;
 
@@ -365,8 +365,8 @@ void world_update_light(struct world *world)
   for(;;)
   {
     bool updated = false;
-    for(size_t i=0; i<world->chunks.bucket_count; ++i)
-      for(struct chunk *chunk = world->chunks.buckets[i].head; chunk; chunk = chunk->next)
+    for(size_t i=0; i<world.chunks.bucket_count; ++i)
+      for(struct chunk *chunk = world.chunks.buckets[i].head; chunk; chunk = chunk->next)
         if(chunk->light_dirty)
         {
           struct light_infos light_infos;

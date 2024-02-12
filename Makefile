@@ -22,6 +22,7 @@ VOXY_SRCS += voxy/src/main_game/player_spawn.c
 VOXY_SRCS += voxy/src/main_game/player_camera.c
 VOXY_SRCS += voxy/src/main_game/player_movement.c
 VOXY_SRCS += voxy/src/main_game/player_action.c
+VOXY_SRCS += voxy/src/main_game/light.c
 VOXY_SRCS += voxy/src/main_game/chunk_remesh.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
@@ -35,7 +36,6 @@ VOXY_SRCS += voxy/src/application_main_game.c
 VOXY_SRCS += voxy/src/application_main_game_ui.c
 VOXY_SRCS += voxy/src/thread_pool.c
 VOXY_SRCS += voxy/src/voxy.c
-VOXY_SRCS += voxy/src/world_update_light.c
 VOXY_SRCS += voxy/src/world_update_physics.c
 VOXY_SRCS += voxy/src/world_update.c
 VOXY_SRCS += voxy/src/world_render.c

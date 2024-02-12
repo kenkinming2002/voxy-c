@@ -39,24 +39,10 @@ void update_player_action(float dt)
         }
   }
 
-  if(input_state(BUTTON_RIGHT) && world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
+  if(input_state(BUTTON_RIGHT))
   {
     const struct item *item = &world.player.hotbar.items[world.player.hotbar.selection];
     if(item->id != ITEM_NONE)
-    {
-      world.player.cooldown = 0.0f;
-
-      const struct item_info *item_info = mod_item_info_get(item->id);
-
-      int radius = input_state(KEY_CTRL) ? 2 : 0;
-      for(int dz=-radius; dz<=radius; ++dz)
-        for(int dy=-radius; dy<=radius; ++dy)
-          for(int dx=-radius; dx<=radius; ++dx)
-          {
-            ivec3_t offset = ivec3(dx, dy, dz);
-            if(ivec3_length_squared(offset) <= radius * radius)
-              world_block_set_id(&world, ivec3_add(ivec3_add(position, normal), offset), item_info->block_id);
-          }
-    }
+      mod_item_info_get(item->id)->on_use(item->id);
   }
 }

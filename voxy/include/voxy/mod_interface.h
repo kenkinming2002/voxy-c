@@ -39,9 +39,8 @@ struct block_texture_info
 struct item_info
 {
   const char *name;
-
   const char *texture_filepath;
-  uint8_t     block_id;
+  void(*on_use)(uint8_t item_id);
 };
 
 extern const struct block_info         block_infos[];

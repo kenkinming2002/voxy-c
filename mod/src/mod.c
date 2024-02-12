@@ -1,5 +1,10 @@
 #include <voxy/mod_interface.h>
+#include <voxy/main_game/world.h>
 
+#include <voxy/types/world.h>
+#include <voxy/types/entity.h>
+
+#include <assert.h>
 #include <stdbool.h>
 
 /// Who need json or whatever formats for your configuration language when you
@@ -8,7 +13,9 @@
 #define ETHER_HEIGHT 128
 #define WATER_HEIGHT 3
 
-enum block
+static void on_block_item_use(uint8_t item_id);
+
+enum block_id
 {
   BLOCK_EMPTY,
   BLOCK_ETHER,
@@ -19,7 +26,7 @@ enum block
   BLOCK_WATER,
 };
 
-enum texture
+enum texture_id
 {
   TEXTURE_STONE,
   TEXTURE_GRASS_BOTTOM,
@@ -31,7 +38,7 @@ enum texture
   TEXTURE_WATER,
 };
 
-enum item
+enum item_id
 {
   ITEM_STONE,
   ITEM_GRASS,
@@ -116,10 +123,10 @@ const struct block_texture_info block_texture_infos[] = {
 };
 
 const struct item_info item_infos[] = {
-  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/stone_item.png", .block_id = BLOCK_STONE, },
-  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/grass_item.png", .block_id = BLOCK_GRASS, },
-  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/log_item.png",   .block_id = BLOCK_LOG,   },
-  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/leave_item.png", .block_id = BLOCK_LEAVE, },
+  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/stone_item.png", .on_use = on_block_item_use, },
+  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/grass_item.png", .on_use = on_block_item_use, },
+  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/log_item.png",   .on_use = on_block_item_use, },
+  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/leave_item.png", .on_use = on_block_item_use, },
 };
 
 const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];
@@ -295,3 +302,29 @@ fvec3_t generate_spawn(seed_t seed)
 
   return fvec3(0.0f, 0.0f, get_height(seed_height, ivec2(0, 0))+10.0f);
 }
+
+static uint8_t item_id_to_block_id(uint8_t item_id)
+{
+  switch(item_id)
+  {
+  case ITEM_STONE: return BLOCK_STONE;
+  case ITEM_GRASS: return BLOCK_GRASS;
+  case ITEM_LOG:   return BLOCK_LOG;
+  case ITEM_LEAVE: return BLOCK_LEAVE;
+  }
+  assert(0);
+}
+
+static void on_block_item_use(uint8_t item_id)
+{
+  ivec3_t position;
+  ivec3_t normal;
+  if(world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
+  {
+    world.player.cooldown = 0.0f;
+
+    uint8_t block_id = item_id_to_block_id(item_id);
+    world_block_set_id(&world, ivec3_add(position, normal), block_id);
+  }
+}
+

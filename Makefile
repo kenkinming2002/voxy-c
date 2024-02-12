@@ -42,11 +42,12 @@ MOD_SRCS += mod/src/mod.c
 
 voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src
 voxy/voxy: LIBS   += -lm
+voxy/voxy: LDFLAGS += -rdynamic
 
 voxy/voxy: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
 voxy/voxy: LIBS   += $(shell pkg-config --libs   glfw3 fontconfig freetype2)
 
-mod/mod.so: CFLAGS  += -Ivoxy/include
+mod/mod.so: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src
 mod/mod.so: CFLAGS  += -fPIC
 mod/mod.so: LDFLAGS += -shared
 

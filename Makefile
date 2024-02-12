@@ -12,6 +12,7 @@ VOXY_SRCS += voxy/src/types/entity.c
 VOXY_SRCS += voxy/src/types/world.c
 
 VOXY_SRCS += voxy/src/core/window.c
+VOXY_SRCS += voxy/src/core/thread_pool.c
 VOXY_SRCS += voxy/src/core/delta_time.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
@@ -35,7 +36,6 @@ VOXY_SRCS += voxy/src/main_game/ui.c
 VOXY_SRCS += voxy/src/main_game/world_render.c
 VOXY_SRCS += voxy/src/main_game/main_game.c
 
-VOXY_SRCS += voxy/src/thread_pool.c
 VOXY_SRCS += voxy/src/voxy.c
 
 MOD_SRCS += mod/src/mod.c

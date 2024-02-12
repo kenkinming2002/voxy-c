@@ -6,9 +6,10 @@
 #include <types/chunk.h>
 #include <types/chunk_data.h>
 
+#include <core/thread_pool.h>
+
 #include <sc/hash_table.h>
 
-#include <thread_pool.h>
 #include <utils.h>
 #include <config.h>
 
@@ -84,17 +85,9 @@ void chunk_generate_wrapper_destroy(struct thread_pool_job *job)
 }
 
 static struct chunk_generate_wrapper_hash_table chunk_generate_wrappers;
-static int                                      chunk_generate_thread_pool_initialized;
-static struct thread_pool                       chunk_generate_thread_pool;
 
 void update_chunk_generate(void)
 {
-  if(!chunk_generate_thread_pool_initialized)
-  {
-    chunk_generate_thread_pool_initialized = 1;
-    thread_pool_init(&chunk_generate_thread_pool);
-  }
-
   ivec3_t player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world.player.base.position, CHUNK_WIDTH));
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
@@ -116,7 +109,7 @@ void update_chunk_generate(void)
           wrapper->chunk_data = NULL;
 
           chunk_generate_wrapper_hash_table_insert_unchecked(&chunk_generate_wrappers, wrapper);
-          thread_pool_enqueue(&chunk_generate_thread_pool, &wrapper->job);
+          thread_pool_enqueue(&wrapper->job);
           continue;
         }
 

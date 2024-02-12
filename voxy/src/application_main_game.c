@@ -2,6 +2,7 @@
 
 #include <main_game/world.h>
 #include <main_game/chunk_generate.h>
+#include <main_game/ui.h>
 
 #include <world_update.h>
 #include <world_render.h>
@@ -24,7 +25,7 @@ void application_main_game_fini(struct application_main_game *application_main_g
 void application_main_game_update(struct application_main_game *application_main_game, float dt)
 {
   world_update(&world, dt);
-  application_main_game_update_ui(application_main_game);
+  main_game_update_ui();
 }
 
 void application_main_game_render(struct application_main_game *application_main_game)
@@ -34,6 +35,6 @@ void application_main_game_render(struct application_main_game *application_main
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   world_render(&world);
-  application_main_game_render_ui(application_main_game);
+  main_game_render_ui();
 }
 

@@ -1,19 +1,18 @@
-#include "application_main_game.h"
-
-#include <types/world.h>
-#include <types/block.h>
-
-#include <voxy/mod_interface.h>
-
-#include <core/window.h>
-
-#include <graphics/ui.h>
-
+#include <main_game/ui.h>
 #include <main_game/world.h>
 #include <main_game/mod.h>
 #include <main_game/mod_assets.h>
 
+#include <types/world.h>
+#include <types/block.h>
+
+#include <graphics/ui.h>
+
+#include <core/window.h>
+
 #include <config.h>
+
+#include <stdio.h>
 
 /// To any future reader:
 ///
@@ -27,7 +26,7 @@ static inline float minf(float a, float b)
   return a < b ? a : b;
 }
 
-void application_main_game_update_ui(struct application_main_game *application_main_game)
+void main_game_update_ui()
 {
   if(!world.player.spawned)
     return;
@@ -163,7 +162,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
   }
 }
 
-void application_main_game_render_ui(struct application_main_game *application_main_game)
+void main_game_render_ui()
 {
   if(!world.player.spawned)
     return;
@@ -302,4 +301,3 @@ void application_main_game_render_ui(struct application_main_game *application_m
     }
   }
 }
-

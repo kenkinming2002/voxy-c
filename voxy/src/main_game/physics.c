@@ -1,4 +1,6 @@
-#include "world_update_physics.h"
+#include <main_game/physics.h>
+#include <main_game/world.h>
+#include <main_game/mod.h>
 
 #include <types/world.h>
 #include <types/block.h>
@@ -146,7 +148,7 @@ static inline bool box_swept(const struct box *box1, const struct box *box2, fve
   return false;
 }
 
-static void entity_physics_update(struct entity *entity, struct world *world, float dt)
+static void entity_physics_update(struct entity *entity, float dt)
 {
   for(;;)
   {
@@ -167,7 +169,7 @@ static void entity_physics_update(struct entity *entity, struct world *world, fl
         {
           ivec3_t position = ivec3(x, y, z);
 
-          const struct block *block = world_get_block(world, position);
+          const struct block *block = world_get_block(&world, position);
           if((block))
           {
             const struct block_info *block_info = mod_block_info_get(block->id);
@@ -202,9 +204,9 @@ static void entity_physics_integrate(struct entity *entity, float dt)
   entity->position = fvec3_add(entity->position, fvec3_mul_scalar(entity->velocity, dt));
 }
 
-void world_update_physics(struct world *world, float dt)
+void update_physics(float dt)
 {
-  entity_physics_apply_law(&world->player.base, dt);
-  entity_physics_update(&world->player.base, world, dt);
-  entity_physics_integrate(&world->player.base, dt);
+  entity_physics_apply_law(&world.player.base, dt);
+  entity_physics_update(&world.player.base, dt);
+  entity_physics_integrate(&world.player.base, dt);
 }

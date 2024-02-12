@@ -8,10 +8,9 @@
 #include <main_game/player_action.h>
 
 #include <main_game/light.h>
+#include <main_game/physics.h>
 
 #include <main_game/chunk_remesh.h>
-
-#include <world_update_physics.h>
 
 void world_update(struct world *world, float dt)
 {
@@ -23,7 +22,7 @@ void world_update(struct world *world, float dt)
   update_player_action(dt);
 
   update_light();
-  world_update_physics(world, dt);
+  update_physics(dt);
 
   update_chunk_remesh();
 }

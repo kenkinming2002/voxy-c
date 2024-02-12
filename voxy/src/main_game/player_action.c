@@ -35,7 +35,7 @@ void update_player_action(float dt)
         {
           ivec3_t offset = ivec3(dx, dy, dz);
           if(ivec3_length_squared(offset) <= radius * radius)
-            world_block_set_id(&world, ivec3_add(position, offset), 0);
+            world_destroy_block(&world, ivec3_add(position, offset));
         }
   }
 

@@ -30,9 +30,7 @@ void on_block_item_use(uint8_t item_id)
   if(world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
   {
     world.player.cooldown = 0.0f;
-
-    uint8_t block_id = item_id_to_block_id(item_id);
-    world_block_set_id(&world, ivec3_add(position, normal), block_id);
+    world_place_block(&world, ivec3_add(position, normal), item_id_to_block_id(item_id));
   }
 }
 

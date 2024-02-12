@@ -6,56 +6,9 @@
 
 #include <stdlib.h>
 
-struct block *world_get_block(struct world *world, ivec3_t position)
+struct chunk *world_chunk_lookup(struct world *world, ivec3_t position)
 {
-  ivec3_t chunk_position;
-  ivec3_t block_position;
-  for(int i=0; i<3; ++i)
-  {
-    block_position.values[i]  = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
-    chunk_position.values[i] = (position.values[i] - block_position.values[i]) / CHUNK_WIDTH;
-  }
-
-  struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
-  if(!chunk || !chunk->chunk_data)
-    return NULL;
-
-  return &chunk->chunk_data->blocks[block_position.z][block_position.y][block_position.x];
-}
-
-void world_invalidate_block(struct world *world, ivec3_t position)
-{
-  ivec3_t chunk_position;
-  ivec3_t block_position;
-  for(int i=0; i<3; ++i)
-  {
-    block_position.values[i]  = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
-    chunk_position.values[i] = (position.values[i] - block_position.values[i]) / CHUNK_WIDTH;
-  }
-
-  struct chunk *chunk = chunk_hash_table_lookup(&world->chunks, chunk_position);
-  if(chunk)
-  {
-    chunk->light_dirty = true;
-    chunk->mesh_dirty = true;
-  }
-}
-
-void world_block_set_id(struct world *world, ivec3_t position, uint8_t id)
-{
-  struct block *block = world_get_block(world, position);
-  if(block)
-  {
-    block->id = id;
-
-    world_invalidate_block(world, position);
-    world_invalidate_block(world, ivec3_add(position, ivec3(-1, 0, 0)));
-    world_invalidate_block(world, ivec3_add(position, ivec3( 1, 0, 0)));
-    world_invalidate_block(world, ivec3_add(position, ivec3(0, -1, 0)));
-    world_invalidate_block(world, ivec3_add(position, ivec3(0,  1, 0)));
-    world_invalidate_block(world, ivec3_add(position, ivec3(0, 0, -1)));
-    world_invalidate_block(world, ivec3_add(position, ivec3(0, 0,  1)));
-  }
+  return chunk_hash_table_lookup(&world->chunks, position);
 }
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
@@ -75,5 +28,86 @@ void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
   if(chunk->top)    chunk->top->bottom = chunk;
 
   chunk_hash_table_insert_unchecked(&world->chunks, chunk);
+}
+
+static inline void split_position(ivec3_t position, ivec3_t *chunk_position, ivec3_t *block_position)
+{
+  for(int i=0; i<3; ++i)
+  {
+    (*block_position).values[i] = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
+    (*chunk_position).values[i] = (position.values[i] - (*block_position).values[i]) / CHUNK_WIDTH;
+  }
+}
+
+struct block *world_get_block(struct world *world, ivec3_t position)
+{
+  ivec3_t chunk_position;
+  ivec3_t block_position;
+  split_position(position, &chunk_position, &block_position);
+
+  struct chunk *chunk = world_chunk_lookup(world, chunk_position);
+  if(chunk && chunk->chunk_data)
+    return &chunk->chunk_data->blocks[block_position.z][block_position.y][block_position.x];
+  else
+    return NULL;
+}
+
+void world_set_block(struct world *world, ivec3_t position, uint8_t block_id)
+{
+  struct block *block = world_get_block(world, position);
+  if(block)
+    block->id = block_id;
+}
+
+void world_invalidate_light(struct world *world, ivec3_t position)
+{
+  ivec3_t chunk_position;
+  ivec3_t block_position;
+  split_position(position, &chunk_position, &block_position);
+
+  struct chunk *chunk = world_chunk_lookup(world, chunk_position);
+  if(chunk)
+    chunk->light_dirty = true;
+}
+
+void world_invalidate_mesh(struct world *world, ivec3_t position)
+{
+  ivec3_t chunk_position;
+  ivec3_t block_position;
+  split_position(position, &chunk_position, &block_position);
+
+  struct chunk *chunk = world_chunk_lookup(world, chunk_position);
+  if(chunk)
+    chunk->mesh_dirty = true;
+}
+
+void world_destroy_block(struct world *world, ivec3_t position)
+{
+  world_set_block(world, position, 0);
+
+  world_invalidate_light(world, position);
+
+  world_invalidate_mesh(world, position);
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(-1, 0, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3( 1, 0, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0, -1, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0,  1, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0, 0, -1)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0, 0,  1)));
+}
+
+void world_place_block(struct world *world, ivec3_t position, uint8_t block_id)
+{
+  world_set_block(world, position, block_id);
+
+  world_invalidate_light(world, position);
+
+  world_invalidate_mesh(world, position);
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(-1, 0, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3( 1, 0, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0, -1, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0,  1, 0)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0, 0, -1)));
+  world_invalidate_mesh(world, ivec3_add(position, ivec3(0, 0,  1)));
 }
 

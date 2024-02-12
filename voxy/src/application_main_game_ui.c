@@ -1,5 +1,6 @@
 #include "application_main_game.h"
 
+#include <types/world.h>
 #include <types/block.h>
 
 #include <voxy/mod_interface.h>
@@ -10,6 +11,8 @@
 
 #include <main_game/world.h>
 #include <main_game/mod.h>
+
+#include <config.h>
 
 /// To any future reader:
 ///
@@ -25,11 +28,10 @@ static inline float minf(float a, float b)
 
 void application_main_game_update_ui(struct application_main_game *application_main_game)
 {
-  struct world *world = main_game_world_get();
-  if(!world->player.spawned)
+  if(!world.player.spawned)
     return;
 
-  struct player_entity *player = &world->player;
+  struct player_entity *player = &world.player;
 
   ///////////////////
   ///  UI Metrics ///
@@ -44,7 +46,7 @@ void application_main_game_update_ui(struct application_main_game *application_m
   ////////////////////////////
   if(input_press(KEY_I))
   {
-    world->player.inventory.opened = !world->player.inventory.opened;
+    world.player.inventory.opened = !world.player.inventory.opened;
     window_show_cursor(player->inventory.opened);
   }
 
@@ -143,32 +145,31 @@ void application_main_game_update_ui(struct application_main_game *application_m
     /// Hotbar item selection ///
     /////////////////////////////
     {
-      if(input_press(KEY_1)) world->player.hotbar.selection = 0;
-      if(input_press(KEY_2)) world->player.hotbar.selection = 1;
-      if(input_press(KEY_3)) world->player.hotbar.selection = 2;
-      if(input_press(KEY_4)) world->player.hotbar.selection = 3;
-      if(input_press(KEY_5)) world->player.hotbar.selection = 4;
-      if(input_press(KEY_6)) world->player.hotbar.selection = 5;
-      if(input_press(KEY_7)) world->player.hotbar.selection = 6;
-      if(input_press(KEY_8)) world->player.hotbar.selection = 7;
-      if(input_press(KEY_9)) world->player.hotbar.selection = 8;
+      if(input_press(KEY_1)) world.player.hotbar.selection = 0;
+      if(input_press(KEY_2)) world.player.hotbar.selection = 1;
+      if(input_press(KEY_3)) world.player.hotbar.selection = 2;
+      if(input_press(KEY_4)) world.player.hotbar.selection = 3;
+      if(input_press(KEY_5)) world.player.hotbar.selection = 4;
+      if(input_press(KEY_6)) world.player.hotbar.selection = 5;
+      if(input_press(KEY_7)) world.player.hotbar.selection = 6;
+      if(input_press(KEY_8)) world.player.hotbar.selection = 7;
+      if(input_press(KEY_9)) world.player.hotbar.selection = 8;
 
-      world->player.hotbar.selection += mouse_scroll.x;
-      world->player.hotbar.selection += 9;
-      world->player.hotbar.selection %= 9;
+      world.player.hotbar.selection += mouse_scroll.x;
+      world.player.hotbar.selection += 9;
+      world.player.hotbar.selection %= 9;
     }
   }
 }
 
 void application_main_game_render_ui(struct application_main_game *application_main_game)
 {
-  struct world *world = main_game_world_get();
-  if(!world->player.spawned)
+  if(!world.player.spawned)
     return;
 
   struct mod_assets *mod_assets = &application_main_game->mod_assets;
 
-  struct player_entity        *player        = &world->player;
+  struct player_entity        *player        = &world.player;
 
   {
     ///////////////
@@ -269,9 +270,9 @@ void application_main_game_render_ui(struct application_main_game *application_m
 
     ivec3_t position;
     ivec3_t normal;
-    if(entity_ray_cast(&world->player.base, world, 20.0f, &position, &normal))
+    if(entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
     {
-      const struct block *target_block     = world_get_block(world, position);
+      const struct block *target_block     = world_get_block(&world, position);
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
       const char         *target_block_name = target_block_id != BLOCK_NONE ? mod_block_info_get(target_block_id)->name : NULL;
       if(target_block_name)

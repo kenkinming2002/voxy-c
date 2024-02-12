@@ -14,9 +14,6 @@ struct world
   struct chunk_hash_table chunks;
 };
 
-void world_init(struct world *world, seed_t seed);
-void world_fini(struct world *world);
-
 struct block *world_get_block(struct world *world, ivec3_t position);
 void world_invalidate_block(struct world *world, ivec3_t position);
 void world_block_set_id(struct world *world, ivec3_t position, uint8_t id);

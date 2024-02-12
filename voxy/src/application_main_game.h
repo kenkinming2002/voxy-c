@@ -3,12 +3,9 @@
 
 #include <types/mod_assets.h>
 
-#include "world_generator.h"
-
 struct application_main_game
 {
   struct mod_assets mod_assets;
-  struct world_generator world_generator;
 };
 
 struct window;

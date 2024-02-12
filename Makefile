@@ -17,6 +17,7 @@ VOXY_SRCS += voxy/src/core/delta_time.c
 
 VOXY_SRCS += voxy/src/main_game/world.c
 VOXY_SRCS += voxy/src/main_game/mod.c
+VOXY_SRCS += voxy/src/main_game/chunk_generate.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
 VOXY_SRCS += voxy/src/graphics/font_set.c
@@ -28,8 +29,6 @@ VOXY_SRCS += voxy/src/application_main_game.c
 VOXY_SRCS += voxy/src/application_main_game_ui.c
 VOXY_SRCS += voxy/src/thread_pool.c
 VOXY_SRCS += voxy/src/voxy.c
-VOXY_SRCS += voxy/src/world_generator.c
-VOXY_SRCS += voxy/src/world_update_chunk_generate.c
 VOXY_SRCS += voxy/src/world_update_chunk_mesh.c
 VOXY_SRCS += voxy/src/world_update_light.c
 VOXY_SRCS += voxy/src/world_update_physics.c

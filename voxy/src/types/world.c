@@ -6,20 +6,6 @@
 
 #include <stdlib.h>
 
-void world_init(struct world *world, seed_t seed)
-{
-  world->seed = seed;
-
-  chunk_hash_table_init(&world->chunks);
-
-  world->player.spawned = false;
-}
-
-void world_fini(struct world *world)
-{
-  chunk_hash_table_dispose(&world->chunks);
-}
-
 struct block *world_get_block(struct world *world, ivec3_t position)
 {
   ivec3_t chunk_position;

@@ -38,7 +38,9 @@ VOXY_SRCS += voxy/src/main_game/main_game.c
 
 VOXY_SRCS += voxy/src/voxy.c
 
-MOD_SRCS += mod/src/mod.c
+MOD_SRCS += mod/src/infos.c
+MOD_SRCS += mod/src/generate.c
+MOD_SRCS += mod/src/block_item.c
 
 voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src
 voxy/voxy: LIBS   += -lm

@@ -1,137 +1,14 @@
-#include <voxy/mod_interface.h>
-#include <voxy/main_game/world.h>
+#include "ids.h"
 
-#include <voxy/types/world.h>
-#include <voxy/types/entity.h>
+#include <voxy/math/noise.h>
+#include <voxy/math/random.h>
 
-#include <assert.h>
+#include <voxy/config.h>
+
 #include <stdbool.h>
-
-/// Who need json or whatever formats for your configuration language when you
-/// got a turing complete language at your disposal?
 
 #define ETHER_HEIGHT 128
 #define WATER_HEIGHT 3
-
-static void on_block_item_use(uint8_t item_id);
-
-enum block_id
-{
-  BLOCK_EMPTY,
-  BLOCK_ETHER,
-  BLOCK_STONE,
-  BLOCK_GRASS,
-  BLOCK_LOG,
-  BLOCK_LEAVE,
-  BLOCK_WATER,
-};
-
-enum texture_id
-{
-  TEXTURE_STONE,
-  TEXTURE_GRASS_BOTTOM,
-  TEXTURE_GRASS_TOP,
-  TEXTURE_GRASS_SIDE,
-  TEXTURE_LOG_TOP_BOTTOM,
-  TEXTURE_LOG_SIDE,
-  TEXTURE_LEAVE,
-  TEXTURE_WATER,
-};
-
-enum item_id
-{
-  ITEM_STONE,
-  ITEM_GRASS,
-  ITEM_LOG,
-  ITEM_LEAVE,
-};
-
-const struct block_info block_infos[] = {
-  [BLOCK_EMPTY] = { .name = "empty", .type = BLOCK_TYPE_INVISIBLE, .ether = false, .light_level = 0,  },
-  [BLOCK_ETHER] = { .name = "ether", .type = BLOCK_TYPE_INVISIBLE, .ether = true,  .light_level = 15, },
-  [BLOCK_STONE] = {
-    .name           = "stone",
-    .type           = BLOCK_TYPE_OPAQUE,
-    .ether          = false,
-    .light_level    = 0,
-    .texture_left   = TEXTURE_STONE,
-    .texture_right  = TEXTURE_STONE,
-    .texture_back   = TEXTURE_STONE,
-    .texture_front  = TEXTURE_STONE,
-    .texture_bottom = TEXTURE_STONE,
-    .texture_top    = TEXTURE_STONE
-  },
-  [BLOCK_GRASS] = {
-    .name           = "grass",
-    .type           = BLOCK_TYPE_OPAQUE,
-    .ether          = false,
-    .light_level    = 0,
-    .texture_left   = TEXTURE_GRASS_SIDE,
-    .texture_right  = TEXTURE_GRASS_SIDE,
-    .texture_back   = TEXTURE_GRASS_SIDE,
-    .texture_front  = TEXTURE_GRASS_SIDE,
-    .texture_bottom = TEXTURE_GRASS_BOTTOM,
-    .texture_top    = TEXTURE_GRASS_TOP,
-  },
-  [BLOCK_LOG] = {
-    .name           = "log",
-    .type           = BLOCK_TYPE_OPAQUE,
-    .ether          = false,
-    .light_level    = 0,
-    .texture_left   = TEXTURE_LOG_SIDE,
-    .texture_right  = TEXTURE_LOG_SIDE,
-    .texture_back   = TEXTURE_LOG_SIDE,
-    .texture_front  = TEXTURE_LOG_SIDE,
-    .texture_bottom = TEXTURE_LOG_TOP_BOTTOM,
-    .texture_top    = TEXTURE_LOG_TOP_BOTTOM
-  },
-  [BLOCK_LEAVE] = {
-    .name           = "leave",
-    .type           = BLOCK_TYPE_OPAQUE,
-    .ether          = false,
-    .light_level    = 0,
-    .texture_left   = TEXTURE_LEAVE,
-    .texture_right  = TEXTURE_LEAVE,
-    .texture_back   = TEXTURE_LEAVE,
-    .texture_front  = TEXTURE_LEAVE,
-    .texture_bottom = TEXTURE_LEAVE,
-    .texture_top    = TEXTURE_LEAVE
-  },
-  [BLOCK_WATER] = {
-    .name           = "water",
-    .type           = BLOCK_TYPE_TRANSPARENT,
-    .ether          = false,
-    .light_level    = 0,
-    .texture_left   = TEXTURE_WATER,
-    .texture_right  = TEXTURE_WATER,
-    .texture_back   = TEXTURE_WATER,
-    .texture_front  = TEXTURE_WATER,
-    .texture_bottom = TEXTURE_WATER,
-    .texture_top    = TEXTURE_WATER
-  },
-};
-
-const struct block_texture_info block_texture_infos[] = {
-  [TEXTURE_STONE]          = { .filepath = "assets/stone.png"          },
-  [TEXTURE_GRASS_BOTTOM]   = { .filepath = "assets/grass_bottom.png"   },
-  [TEXTURE_GRASS_TOP]      = { .filepath = "assets/grass_top.png"      },
-  [TEXTURE_GRASS_SIDE]     = { .filepath = "assets/grass_side.png"     },
-  [TEXTURE_LOG_TOP_BOTTOM] = { .filepath = "assets/log_top_bottom.png" },
-  [TEXTURE_LOG_SIDE]       = { .filepath = "assets/log_side.png"       },
-  [TEXTURE_LEAVE]          = { .filepath = "assets/leave.png"          },
-  [TEXTURE_WATER]          = { .filepath = "assets/water.png"          },
-};
-
-const struct item_info item_infos[] = {
-  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/stone_item.png", .on_use = on_block_item_use, },
-  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/grass_item.png", .on_use = on_block_item_use, },
-  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/log_item.png",   .on_use = on_block_item_use, },
-  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/leave_item.png", .on_use = on_block_item_use, },
-};
-
-const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];
-const size_t block_texture_info_count = sizeof block_texture_infos / sizeof block_texture_infos[0];
-const size_t item_info_count          = sizeof item_infos / sizeof item_infos[0];
 
 static inline float lerpf(float a, float b, float t)
 {
@@ -301,30 +178,5 @@ fvec3_t generate_spawn(seed_t seed)
   (void)seed_tree;
 
   return fvec3(0.0f, 0.0f, get_height(seed_height, ivec2(0, 0))+10.0f);
-}
-
-static uint8_t item_id_to_block_id(uint8_t item_id)
-{
-  switch(item_id)
-  {
-  case ITEM_STONE: return BLOCK_STONE;
-  case ITEM_GRASS: return BLOCK_GRASS;
-  case ITEM_LOG:   return BLOCK_LOG;
-  case ITEM_LEAVE: return BLOCK_LEAVE;
-  }
-  assert(0);
-}
-
-static void on_block_item_use(uint8_t item_id)
-{
-  ivec3_t position;
-  ivec3_t normal;
-  if(world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
-  {
-    world.player.cooldown = 0.0f;
-
-    uint8_t block_id = item_id_to_block_id(item_id);
-    world_block_set_id(&world, ivec3_add(position, normal), block_id);
-  }
 }
 

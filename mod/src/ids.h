@@ -1,0 +1,35 @@
+#ifndef MOD_ID_H
+#define MOD_ID_H
+
+enum block_id
+{
+  BLOCK_EMPTY,
+  BLOCK_ETHER,
+  BLOCK_STONE,
+  BLOCK_GRASS,
+  BLOCK_LOG,
+  BLOCK_LEAVE,
+  BLOCK_WATER,
+};
+
+enum texture_id
+{
+  TEXTURE_STONE,
+  TEXTURE_GRASS_BOTTOM,
+  TEXTURE_GRASS_TOP,
+  TEXTURE_GRASS_SIDE,
+  TEXTURE_LOG_TOP_BOTTOM,
+  TEXTURE_LOG_SIDE,
+  TEXTURE_LEAVE,
+  TEXTURE_WATER,
+};
+
+enum item_id
+{
+  ITEM_STONE,
+  ITEM_GRASS,
+  ITEM_LOG,
+  ITEM_LEAVE,
+};
+
+#endif // MOD_ID_H

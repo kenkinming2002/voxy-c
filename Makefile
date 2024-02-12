@@ -42,7 +42,7 @@ MOD_SRCS += mod/src/infos.c
 MOD_SRCS += mod/src/generate.c
 MOD_SRCS += mod/src/block_item.c
 
-voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src
+voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -fno-semantic-interposition
 voxy/voxy: LIBS   += -lm
 voxy/voxy: LDFLAGS += -rdynamic
 

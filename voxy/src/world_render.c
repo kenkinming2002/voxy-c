@@ -3,6 +3,7 @@
 #include <core/window.h>
 
 #include <graphics/gl.h>
+#include <graphics/gl_programs.h>
 #include <graphics/camera.h>
 
 #include <types/world.h>
@@ -13,35 +14,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define PROGRAM(name, vertex_shader_filepath, fragment_shader_filepath)                    \
-  static struct gl_program program_##name##_instance;                                      \
-                                                                                           \
-  static void program_##name##_atexit(void)                                                \
-  {                                                                                        \
-    gl_program_fini(&program_##name##_instance);                                           \
-  }                                                                                        \
-                                                                                           \
-  static inline struct gl_program *program_##name##_get()                                  \
-  {                                                                                        \
-    if(program_##name##_instance.id == 0)                                                  \
-    {                                                                                      \
-      static GLenum      targets[]   = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};             \
-      static const char *filepaths[] = {vertex_shader_filepath, fragment_shader_filepath}; \
-      if(gl_program_load(&program_##name##_instance, 2, targets, filepaths) != 0)          \
-        exit(EXIT_FAILURE);                                                                \
-                                                                                           \
-      atexit(program_##name##_atexit);                                                     \
-    }                                                                                      \
-    return &program_##name##_instance;                                                     \
-  }
-
-PROGRAM(chunk,   "assets/chunk.vert",   "assets/chunk.frag");
-PROGRAM(outline, "assets/outline.vert", "assets/outline.frag");
-
 void world_render(struct world *world, struct mod_assets *mod_assets)
 {
-  struct gl_program *program_chunk   = program_chunk_get();
-  struct gl_program *program_outline = program_outline_get();
+  struct gl_program *program_chunk   = gl_program_chunk_get();
+  struct gl_program *program_outline = gl_program_outline_get();
 
   struct camera camera;
   camera.transform = entity_view_transform(&world->player.base);

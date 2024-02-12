@@ -20,6 +20,7 @@ VOXY_SRCS += voxy/src/main_game/mod.c
 VOXY_SRCS += voxy/src/main_game/chunk_generate.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
+VOXY_SRCS += voxy/src/graphics/gl_programs.c
 VOXY_SRCS += voxy/src/graphics/font_set.c
 VOXY_SRCS += voxy/src/graphics/ui.c
 VOXY_SRCS += voxy/src/graphics/camera.c

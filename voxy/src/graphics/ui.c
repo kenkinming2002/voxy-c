@@ -1,33 +1,7 @@
 #include <graphics/ui.h>
+#include <graphics/gl_programs.h>
 
 #include <core/window.h>
-
-#define PROGRAM(name, vertex_shader_filepath, fragment_shader_filepath)                    \
-  static struct gl_program program_##name##_instance;                                      \
-                                                                                           \
-  static void program_##name##_atexit(void)                                                \
-  {                                                                                        \
-    gl_program_fini(&program_##name##_instance);                                           \
-  }                                                                                        \
-                                                                                           \
-  static inline struct gl_program *program_##name##_get()                                  \
-  {                                                                                        \
-    if(program_##name##_instance.id == 0)                                                  \
-    {                                                                                      \
-      static GLenum      targets[]   = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};             \
-      static const char *filepaths[] = {vertex_shader_filepath, fragment_shader_filepath}; \
-      if(gl_program_load(&program_##name##_instance, 2, targets, filepaths) != 0)          \
-        exit(EXIT_FAILURE);                                                                \
-                                                                                           \
-      atexit(program_##name##_atexit);                                                     \
-    }                                                                                      \
-    return &program_##name##_instance;                                                     \
-  }
-
-PROGRAM(quad,         "assets/ui_quad.vert",         "assets/ui_quad.frag");
-PROGRAM(quad_rounded, "assets/ui_quad_rounded.vert", "assets/ui_quad_rounded.frag");
-PROGRAM(texture,      "assets/ui_texture.vert",      "assets/ui_texture.frag");
-PROGRAM(texture_mono, "assets/ui_texture_mono.vert", "assets/ui_texture_mono.frag");
 
 static GLuint vao_instance;
 
@@ -63,7 +37,7 @@ static void ui_draw(void)
 
 void ui_draw_quad(fvec2_t position, fvec2_t dimension, fvec4_t color)
 {
-  struct gl_program *program = program_quad_get();
+  struct gl_program *program = gl_program_ui_quad_get();
   ui_setup();
   {
     glUseProgram(program->id);
@@ -77,7 +51,7 @@ void ui_draw_quad(fvec2_t position, fvec2_t dimension, fvec4_t color)
 
 void ui_draw_quad_rounded(fvec2_t position, fvec2_t dimension, float radius, fvec4_t color)
 {
-  struct gl_program *program = program_quad_rounded_get();
+  struct gl_program *program = gl_program_ui_quad_rounded_get();
   ui_setup();
   {
     glUseProgram(program->id);
@@ -92,7 +66,7 @@ void ui_draw_quad_rounded(fvec2_t position, fvec2_t dimension, float radius, fve
 
 void ui_draw_texture(fvec2_t position, fvec2_t dimension, GLuint texture)
 {
-  struct gl_program *program = program_texture_get();
+  struct gl_program *program = gl_program_ui_texture_get();
   ui_setup();
   {
     glUseProgram(program->id);
@@ -107,7 +81,7 @@ void ui_draw_texture(fvec2_t position, fvec2_t dimension, GLuint texture)
 
 void ui_draw_texture_mono(fvec2_t position, fvec2_t dimension, GLuint texture)
 {
-  struct gl_program *program = program_texture_mono_get();
+  struct gl_program *program = gl_program_ui_texture_mono_get();
   ui_setup();
   {
     glUseProgram(program->id);

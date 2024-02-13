@@ -25,6 +25,7 @@
 ///    subtract 1.
 ///  - If the computed light level is below 0, it will be set to 0.
 ///
+/// The rules are simple. The implementation, not so much.
 
 struct light_info
 {
@@ -38,239 +39,112 @@ struct light_infos
   struct light_info items[CHUNK_WIDTH+2][CHUNK_WIDTH+2][CHUNK_WIDTH+2];
 };
 
-static inline struct block       *get_block      (struct chunk       *chunk,       int x, int y, int z) { return &chunk->chunk_data->blocks[z][y][x]; }
-static inline struct light_info *get_light_info(struct light_infos *light_infos, int x, int y, int z) { return &light_infos->items[z+1][y+1][x+1]; }
+//////////////////////////////
+/// 1: Loading Light Level ///
+//////////////////////////////
+
+static inline struct light_info light_info_load_default()
+{
+  return (struct light_info){
+    .opaque      = true,
+    .ether       = 0,
+    .light_level = 0,
+  };
+}
+
+static inline struct light_info light_info_load_from_block(const struct block *block)
+{
+  const struct block_info *block_info = mod_block_info_get(block->id);
+  return (struct light_info){
+    .opaque      = block_info->type == BLOCK_TYPE_OPAQUE,
+    .ether       = block_info->ether,
+    .light_level = block_info->light_level,
+  };
+}
+
+static inline struct light_info light_info_load_from_block_neighbour(const struct block *block)
+{
+  const struct block_info *block_info = mod_block_info_get(block->id);
+  return (struct light_info){
+    .opaque      = block_info->type == BLOCK_TYPE_OPAQUE,
+    .ether       = block->ether,
+    .light_level = block->light_level,
+  };
+}
+
+static inline struct light_info light_info_load(struct chunk *chunk, ivec3_t position)
+{
+  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->left   ? light_info_load_from_block_neighbour(&chunk->left  ->chunk_data->blocks[position.z][position.y][CHUNK_WIDTH-1]) : light_info_load_default();
+  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->right  ? light_info_load_from_block_neighbour(&chunk->right ->chunk_data->blocks[position.z][position.y][0]            ) : light_info_load_default();
+  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->back   ? light_info_load_from_block_neighbour(&chunk->back  ->chunk_data->blocks[position.z][CHUNK_WIDTH-1][position.x]) : light_info_load_default();
+  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->front  ? light_info_load_from_block_neighbour(&chunk->front ->chunk_data->blocks[position.z][0]            [position.x]) : light_info_load_default();
+  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->bottom ? light_info_load_from_block_neighbour(&chunk->bottom->chunk_data->blocks[CHUNK_WIDTH-1][position.y][position.x]) : light_info_load_default();
+  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->top    ? light_info_load_from_block_neighbour(&chunk->top   ->chunk_data->blocks[0]            [position.y][position.x]) : light_info_load_default();
+
+  if((position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH))
+    return light_info_load_from_block(&chunk->chunk_data->blocks[position.z][position.y][position.x]);
+
+  return light_info_load_default();
+}
 
 static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk)
 {
   for(int z=0; z<CHUNK_WIDTH+2; ++z)
     for(int y=0; y<CHUNK_WIDTH+2; ++y)
       for(int x=0; x<CHUNK_WIDTH+2; ++x)
-      {
-        light_infos->items[z][y][x].opaque      = true;
-        light_infos->items[z][y][x].ether       = false;
-        light_infos->items[z][y][x].light_level = 0;
-      }
+        light_infos->items[z][y][x] = light_info_load(chunk, ivec3(x-1, y-1, z-1));
+}
 
-  for(int z=0; z<CHUNK_WIDTH; ++z)
-    for(int y=0; y<CHUNK_WIDTH; ++y)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        const struct block      *block      = get_block(chunk, x, y, z);
-        const struct block_info *block_info = mod_block_info_get(block->id);
-        struct light_info       *light_info = get_light_info(light_infos, x, y, z);
+/////////////////////////////
+/// 2: Saving Light Level ///
+/////////////////////////////
 
-        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = block_info->ether;
-        light_info->light_level = block_info->light_level;
-      }
+static inline void light_info_save_to_block(struct block *block, struct light_info light_info)
+{
+  block->light_level = light_info.light_level;
+  block->ether       = light_info.ether;
+}
 
-  if(chunk->bottom)
-    for(int y=0; y<CHUNK_WIDTH; ++y)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        const struct block      *block      = get_block(chunk->bottom, x, y, CHUNK_WIDTH-1);
-        const struct block_info *block_info = mod_block_info_get(block->id);
-        struct light_info       *light_info = get_light_info(light_infos, x, y, -1);
+static inline bool light_info_save_to_block_neighbour(struct block *block, struct light_info light_info)
+{
+  return block->light_level != light_info.light_level || block->ether != light_info.ether;
+}
 
-        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = block->ether;
-        light_info->light_level = block->light_level;
-      }
+static inline void light_info_save(struct chunk *chunk, ivec3_t position, struct light_info light_info)
+{
+  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->left)   { chunk->left  ->light_dirty |= light_info_save_to_block_neighbour(&chunk->left  ->chunk_data->blocks[position.z][position.y][CHUNK_WIDTH-1], light_info); };
+  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->right)  { chunk->right ->light_dirty |= light_info_save_to_block_neighbour(&chunk->right ->chunk_data->blocks[position.z][position.y][0]            , light_info); };
+  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->back)   { chunk->back  ->light_dirty |= light_info_save_to_block_neighbour(&chunk->back  ->chunk_data->blocks[position.z][CHUNK_WIDTH-1][position.x], light_info); };
+  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->front)  { chunk->front ->light_dirty |= light_info_save_to_block_neighbour(&chunk->front ->chunk_data->blocks[position.z][0]            [position.x], light_info); };
+  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->bottom) { chunk->bottom->light_dirty |= light_info_save_to_block_neighbour(&chunk->bottom->chunk_data->blocks[CHUNK_WIDTH-1][position.y][position.x], light_info); };
+  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->top)    { chunk->top   ->light_dirty |= light_info_save_to_block_neighbour(&chunk->top   ->chunk_data->blocks[0]            [position.y][position.x], light_info); };
 
-  if(chunk->top)
-    for(int y=0; y<CHUNK_WIDTH; ++y)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        const struct block      *block      = get_block(chunk->top, x, y, 0);
-        const struct block_info *block_info = mod_block_info_get(block->id);
-        struct light_info       *light_info = get_light_info(light_infos, x, y, CHUNK_WIDTH);
-
-        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = block->ether;
-        light_info->light_level = block->light_level;
-      }
-
-  if(chunk->back)
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        const struct block      *block      = get_block(chunk->back, x, CHUNK_WIDTH-1, z);
-        const struct block_info *block_info = mod_block_info_get(block->id);
-        struct light_info       *light_info = get_light_info(light_infos, x, -1, z);
-
-        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = block->ether;
-        light_info->light_level = block->light_level;
-      }
-
-  if(chunk->front)
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        const struct block      *block      = get_block(chunk->front, x, 0, z);
-        const struct block_info *block_info = mod_block_info_get(block->id);
-        struct light_info       *light_info = get_light_info(light_infos, x, CHUNK_WIDTH, z);
-
-        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = block->ether;
-        light_info->light_level = block->light_level;
-      }
-
-  if(chunk->left)
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int y=0; y<CHUNK_WIDTH; ++y)
-      {
-        const struct block      *block      = get_block(chunk->left, CHUNK_WIDTH-1, y, z);
-        const struct block_info *block_info = mod_block_info_get(block->id);
-        struct light_info       *light_info = get_light_info(light_infos, -1, y, z);
-
-        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = block->ether;
-        light_info->light_level = block->light_level;
-      }
-
-  if(chunk->right)
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int y=0; y<CHUNK_WIDTH; ++y)
-      {
-        const struct block      *block      = get_block(chunk->right, 0, y, z);
-        const struct block_info *block_info = mod_block_info_get(block->id);
-        struct light_info       *light_info = get_light_info(light_infos, CHUNK_WIDTH, y, z);
-
-        light_info->opaque      = block_info->type == BLOCK_TYPE_OPAQUE;
-        light_info->ether       = block->ether;
-        light_info->light_level = block->light_level;
-      }
+  if((position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH))
+    light_info_save_to_block(&chunk->chunk_data->blocks[position.z][position.y][position.x], light_info);
 }
 
 static inline void light_infos_save(struct light_infos *light_infos, struct chunk *chunk)
 {
-  for(int z=0; z<CHUNK_WIDTH; ++z)
-    for(int y=0; y<CHUNK_WIDTH; ++y)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        struct block       *block       = get_block      (chunk,       x, y, z);
-        struct light_info *light_info = get_light_info(light_infos, x, y, z);
-
-        block->ether       = light_info->ether;
-        block->light_level = light_info->light_level;
-      }
-
-  if(chunk->bottom && !chunk->bottom->light_dirty)
-  {
-    __label__ done;
-    for(int y=0; y<CHUNK_WIDTH; ++y)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        struct block       *block       = get_block      (chunk->bottom, x, y, CHUNK_WIDTH-1);
-        struct light_info *light_info = get_light_info(light_infos  , x, y, -1           );
-        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
-        {
-          chunk->bottom->light_dirty = true;
-          goto done;
-        }
-      }
-    done:;
-  }
-
-  if(chunk->top && !chunk->top->light_dirty)
-  {
-    __label__ done;
-    for(int y=0; y<CHUNK_WIDTH; ++y)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        struct block       *block       = get_block      (chunk->top , x, y, 0          );
-        struct light_info *light_info = get_light_info(light_infos, x, y, CHUNK_WIDTH);
-        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
-        {
-          chunk->top->light_dirty = true;
-          goto done;
-        }
-      }
-    done:;
-  }
-
-  if(chunk->back && !chunk->back->light_dirty)
-  {
-    __label__ done;
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        struct block       *block       = get_block      (chunk->back, x, CHUNK_WIDTH-1, z);
-        struct light_info *light_info = get_light_info(light_infos, x, -1           , z);
-        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
-        {
-          chunk->back->light_dirty = true;
-          goto done;
-        }
-      }
-    done:;
-  }
-
-  if(chunk->front && !chunk->front->light_dirty)
-  {
-    __label__ done;
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
-      {
-        struct block       *block       = get_block      (chunk->front, x, 0          , z);
-        struct light_info *light_info = get_light_info(light_infos , x, CHUNK_WIDTH, z);
-        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
-        {
-          chunk->front->light_dirty = true;
-          goto done;
-        }
-      }
-    done:;
-  }
-
-  if(chunk->left && !chunk->left->light_dirty)
-  {
-    __label__ done;
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int y=0; y<CHUNK_WIDTH; ++y)
-      {
-        struct block       *block       = get_block      (chunk->left, CHUNK_WIDTH-1, y, z);
-        struct light_info *light_info = get_light_info(light_infos, -1           , y, z);
-        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
-        {
-          chunk->left->light_dirty = true;
-          goto done;
-        }
-      }
-    done:;
-  }
-
-  if(chunk->right && !chunk->right->light_dirty)
-  {
-    __label__ done;
-    for(int z=0; z<CHUNK_WIDTH; ++z)
-      for(int y=0; y<CHUNK_WIDTH; ++y)
-      {
-        struct block       *block       = get_block      (chunk->right, 0          , y, z);
-        struct light_info *light_info = get_light_info(light_infos , CHUNK_WIDTH, y, z);
-        if(block->ether != light_info->ether || block->light_level != light_info->light_level)
-        {
-          chunk->right->light_dirty = true;
-          goto done;
-        }
-      }
-    done:;
-  }
+  for(int z=0; z<CHUNK_WIDTH+2; ++z)
+    for(int y=0; y<CHUNK_WIDTH+2; ++y)
+      for(int x=0; x<CHUNK_WIDTH+2; ++x)
+        light_info_save(chunk, ivec3(x-1, y-1, z-1), light_infos->items[z][y][x]);
 }
+
+/////////////////////////
+/// 3: Ether Handling ///
+/////////////////////////
 
 static inline void light_infos_propagate_ether(struct light_infos *light_infos)
 {
-  for(int z=CHUNK_WIDTH; z>=0; --z)
-    for(int y=0; y<CHUNK_WIDTH; ++y)
-      for(int x=0; x<CHUNK_WIDTH; ++x)
+  for(int z=CHUNK_WIDTH+1; z>0; --z)
+    for(int y=1; y<CHUNK_WIDTH+1; ++y)
+      for(int x=1; x<CHUNK_WIDTH+1; ++x)
       {
-        struct light_info *light_info        = get_light_info(light_infos, x, y, z);
-        struct light_info *light_info_bottom = get_light_info(light_infos, x, y, z-1);
-        if(light_info->ether)
-          if(!light_info_bottom->opaque)
-            light_info_bottom->ether = true;
+        struct light_info *light_info        = &light_infos->items[z]  [y][x];
+        struct light_info *light_info_bottom = &light_infos->items[z-1][y][x];
+        if(light_info->ether && !light_info_bottom->opaque)
+          light_info_bottom->ether = true;
       }
 }
 
@@ -283,16 +157,20 @@ static inline void light_infos_apply_ether(struct light_infos *light_infos)
           light_infos->items[z][y][x].light_level = 15;
 }
 
+//////////////////////
+/// 4: Propagation ///
+//////////////////////
+
 struct light_update
 {
-  int8_t x;
-  int8_t y;
-  int8_t z;
+  uint16_t x : 5;
+  uint16_t y : 5;
+  uint16_t z : 5;
 };
 
 struct light_update_layer
 {
-  struct light_update items[(CHUNK_WIDTH+2) * (CHUNK_WIDTH+2) * (CHUNK_WIDTH+2)];
+  struct light_update items[CHUNK_WIDTH*CHUNK_WIDTH*CHUNK_WIDTH+6*CHUNK_WIDTH*CHUNK_WIDTH];
   size_t              count;
 };
 
@@ -301,7 +179,7 @@ struct light_update_stack
   struct light_update_layer layers[15];
 };
 
-static inline void light_update_stack_enqueue(struct light_update_stack *light_update_stack, int x, int y, int z, uint8_t light_level)
+static inline void light_update_stack_enqueue(struct light_update_stack *light_update_stack, int x, int y, int z, unsigned light_level)
 {
   struct light_update_layer *light_update_layer = &light_update_stack->layers[light_level-1];
   struct light_update       *light_update       = &light_update_layer->items[light_update_layer->count++];
@@ -311,7 +189,7 @@ static inline void light_update_stack_enqueue(struct light_update_stack *light_u
   light_update->z = z;
 }
 
-static inline void light_update_stack_propagate_set(struct light_update_stack *light_update_stack, int x, int y, int z, uint8_t light_level, struct light_infos *light_infos)
+static inline void light_update_stack_propagate_set(struct light_update_stack *light_update_stack, int x, int y, int z, unsigned light_level, struct light_infos *light_infos)
 {
   if(x < 0 || x >= CHUNK_WIDTH+2) return;
   if(y < 0 || y >= CHUNK_WIDTH+2) return;
@@ -337,7 +215,7 @@ static inline void light_infos_propagate_light(struct light_infos *light_infos)
         if(light_infos->items[z][y][x].light_level != 0)
           light_update_stack_enqueue(&light_update_stack, x, y, z, light_infos->items[z][y][x].light_level);
 
-  for(uint8_t light_level = 15; light_level > 0; --light_level)
+  for(unsigned light_level = 15; light_level > 0; --light_level)
   {
     struct light_update_layer *light_update_layer = &light_update_stack.layers[light_level-1];
     for(size_t i=0; i<light_update_layer->count; ++i)
@@ -356,6 +234,10 @@ static inline void light_infos_propagate_light(struct light_infos *light_infos)
     }
   }
 }
+
+//////////////
+/// 5: ??? ///
+//////////////
 
 void update_light(void)
 {
@@ -396,5 +278,5 @@ void update_light(void)
   clock_t end = clock();
 
   if(count != 0)
-    fprintf(stderr, "DEBUG: Light System: Processed %zu chunks in %f s\n", count, (float)(end - begin) / (float)CLOCKS_PER_SEC);
+    fprintf(stderr, "DEBUG: Light System: Processed %zu chunks in %fs - Average %fs\n", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
 }

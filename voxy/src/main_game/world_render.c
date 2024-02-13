@@ -17,6 +17,9 @@
 
 void world_render()
 {
+  glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   struct gl_program *program_chunk   = gl_program_chunk_get();
   struct gl_program *program_outline = gl_program_outline_get();
 

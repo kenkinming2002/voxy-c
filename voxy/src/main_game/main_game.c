@@ -33,13 +33,9 @@ void main_game_update(float dt)
 
 void main_game_render()
 {
-  // 1: Render World
   glViewport(0, 0, window_size.x, window_size.y);
-  glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  world_render();
 
-  // 2: Render UI
-  main_game_render_ui();
+  world_render();        // 1: Render World
+  main_game_render_ui(); // 2: Render UI
 }
 

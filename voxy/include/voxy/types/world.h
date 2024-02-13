@@ -11,7 +11,9 @@ struct world
 {
   seed_t seed;
 
+  bool                    player_spawned;
   struct player_entity    player;
+
   struct chunk_hash_table chunks;
 };
 

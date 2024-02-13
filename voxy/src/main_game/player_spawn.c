@@ -18,9 +18,10 @@ static int mini(int a, int b)
 
 void update_player_spawn(void)
 {
-  if(!world.player.spawned)
+  if(!world.player_spawned)
   {
-    world.player.spawned      = true;
+    world.player_spawned = true;
+
     world.player.third_person = false;
 
     world.player.base.position                         = mod_generate_spawn(world.seed);

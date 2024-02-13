@@ -10,7 +10,7 @@
 
 void update_player_camera(void)
 {
-  if(!world.player.spawned)
+  if(!world.player_spawned)
     return;
 
   if(world.player.inventory.opened)

@@ -28,7 +28,7 @@ static inline float minf(float a, float b)
 
 void main_game_update_ui()
 {
-  if(!world.player.spawned)
+  if(!world.player_spawned)
     return;
 
   struct player_entity *player = &world.player;
@@ -164,7 +164,7 @@ void main_game_update_ui()
 
 void main_game_render_ui()
 {
-  if(!world.player.spawned)
+  if(!world.player_spawned)
     return;
 
   struct player_entity        *player        = &world.player;

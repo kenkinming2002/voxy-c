@@ -11,7 +11,6 @@
 
 struct player_entity
 {
-  bool spawned;
   bool third_person;
 
   struct entity base;

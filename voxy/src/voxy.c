@@ -23,6 +23,7 @@ int main()
 
     if(accumulated_dt >= FIXED_DT)
     {
+      window_update();
       main_game_update(FIXED_DT);
       accumulated_dt -= FIXED_DT;
     }
@@ -33,9 +34,8 @@ int main()
       accumulated_dt = fmodf(accumulated_dt, FIXED_DT);
     }
 
-    window_begin();
     main_game_render();
-    window_end();
+    window_present();
   }
 }
 

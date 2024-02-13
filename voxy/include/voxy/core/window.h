@@ -86,8 +86,8 @@ void window_init(const char *title, unsigned width, unsigned height);
 
 bool window_should_close();
 
-void window_begin();
-void window_end();
+void window_update();
+void window_present();
 
 void window_show_cursor(bool cursor);
 

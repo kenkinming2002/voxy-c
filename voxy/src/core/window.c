@@ -196,7 +196,7 @@ bool window_should_close()
   return glfwWindowShouldClose(window);
 }
 
-void window_begin()
+void window_update()
 {
   size_t  old_input_states;
   bool    old_mouse_position_initialized;
@@ -217,7 +217,7 @@ void window_begin()
     mouse_motion = fvec2_zero();
 }
 
-void window_end()
+void window_present()
 {
   glfwSwapBuffers(window);
 }

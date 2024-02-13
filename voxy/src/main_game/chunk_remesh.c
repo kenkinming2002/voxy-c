@@ -141,7 +141,7 @@ void update_chunk_remesh(void)
       for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
       {
         ivec3_t chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
-        struct chunk *chunk = chunk_hash_table_lookup(&world.chunks, chunk_position);
+        struct chunk *chunk = world_chunk_lookup(&world, chunk_position);
         if(chunk && chunk->mesh_dirty)
         {
           if(chunk_mesh_info_capacity == chunk_mesh_info_count)

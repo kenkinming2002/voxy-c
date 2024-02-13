@@ -96,7 +96,7 @@ void update_chunk_generate(void)
       {
         ivec3_t position = ivec3_add(player_position, ivec3(dx, dy, dz));
 
-        struct chunk *chunk = chunk_hash_table_lookup(&world.chunks, position);
+        struct chunk *chunk = world_chunk_lookup(&world, position);
         if(chunk)
           continue;
 

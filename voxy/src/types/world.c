@@ -13,12 +13,12 @@ struct chunk *world_chunk_lookup(struct world *world, ivec3_t position)
 
 void world_chunk_insert_unchecked(struct world *world, struct chunk *chunk)
 {
-  chunk->left   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
-  chunk->right  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0)));
-  chunk->back   = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0)));
-  chunk->front  = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0)));
-  chunk->bottom = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1)));
-  chunk->top    = chunk_hash_table_lookup(&world->chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1)));
+  chunk->left   = world_chunk_lookup(world, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
+  chunk->right  = world_chunk_lookup(world, ivec3_add(chunk->position, ivec3( 1,  0,  0)));
+  chunk->back   = world_chunk_lookup(world, ivec3_add(chunk->position, ivec3( 0, -1,  0)));
+  chunk->front  = world_chunk_lookup(world, ivec3_add(chunk->position, ivec3( 0,  1,  0)));
+  chunk->bottom = world_chunk_lookup(world, ivec3_add(chunk->position, ivec3( 0,  0, -1)));
+  chunk->top    = world_chunk_lookup(world, ivec3_add(chunk->position, ivec3( 0,  0,  1)));
 
   if(chunk->left)   chunk->left->right = chunk;
   if(chunk->right)  chunk->right->left = chunk;

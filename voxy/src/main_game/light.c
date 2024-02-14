@@ -111,13 +111,12 @@ static inline bool light_info_save_to_block_neighbour(struct block *block, struc
 
 static inline void light_info_save(struct chunk *chunk, ivec3_t position, struct light_info light_info)
 {
-  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->left)   { chunk->left  ->light_dirty |= light_info_save_to_block_neighbour(&chunk->left  ->chunk_data->blocks[position.z][position.y][CHUNK_WIDTH-1], light_info); };
-  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->right)  { chunk->right ->light_dirty |= light_info_save_to_block_neighbour(&chunk->right ->chunk_data->blocks[position.z][position.y][0]            , light_info); };
-  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->back)   { chunk->back  ->light_dirty |= light_info_save_to_block_neighbour(&chunk->back  ->chunk_data->blocks[position.z][CHUNK_WIDTH-1][position.x], light_info); };
-  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->front)  { chunk->front ->light_dirty |= light_info_save_to_block_neighbour(&chunk->front ->chunk_data->blocks[position.z][0]            [position.x], light_info); };
-  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->bottom) { chunk->bottom->light_dirty |= light_info_save_to_block_neighbour(&chunk->bottom->chunk_data->blocks[CHUNK_WIDTH-1][position.y][position.x], light_info); };
-  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->top)    { chunk->top   ->light_dirty |= light_info_save_to_block_neighbour(&chunk->top   ->chunk_data->blocks[0]            [position.y][position.x], light_info); };
-
+  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->left   && light_info_save_to_block_neighbour(&chunk->left  ->chunk_data->blocks[position.z][position.y][CHUNK_WIDTH-1], light_info)) { world_chunk_invalidate_light(chunk->left);   };
+  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->right  && light_info_save_to_block_neighbour(&chunk->right ->chunk_data->blocks[position.z][position.y][0]            , light_info)) { world_chunk_invalidate_light(chunk->right);  };
+  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->back   && light_info_save_to_block_neighbour(&chunk->back  ->chunk_data->blocks[position.z][CHUNK_WIDTH-1][position.x], light_info)) { world_chunk_invalidate_light(chunk->back);   };
+  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->front  && light_info_save_to_block_neighbour(&chunk->front ->chunk_data->blocks[position.z][0]            [position.x], light_info)) { world_chunk_invalidate_light(chunk->front);  };
+  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->bottom && light_info_save_to_block_neighbour(&chunk->bottom->chunk_data->blocks[CHUNK_WIDTH-1][position.y][position.x], light_info)) { world_chunk_invalidate_light(chunk->bottom); };
+  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->top    && light_info_save_to_block_neighbour(&chunk->top   ->chunk_data->blocks[0]            [position.y][position.x], light_info)) { world_chunk_invalidate_light(chunk->top);    };
   if((position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH))
     light_info_save_to_block(&chunk->chunk_data->blocks[position.z][position.y][position.x], light_info);
 }
@@ -237,42 +236,45 @@ static inline void light_infos_propagate_light(struct light_infos *light_infos)
 //////////////
 /// 5: ??? ///
 //////////////
+static struct chunk *chunk_invalidated_light_pop(void)
+{
+  struct chunk *chunk = chunks_invalidated_light_head;
+  if(chunk)
+  {
+    chunk->light_invalidated = false;
+    if(!(chunks_invalidated_light_head = chunks_invalidated_light_head->light_next))
+      chunks_invalidated_light_tail = NULL;
+  }
+  return chunk;
+}
+
 void update_light(void)
 {
+  size_t count = 0;
   clock_t begin = clock();
 
-  size_t count = 0;
-  for(;;)
+  struct chunk *chunk;
+  while((chunk = chunk_invalidated_light_pop()))
   {
-    bool updated = false;
-    world_chunk_for_each(chunk)
-    {
-      if(chunk->light_dirty)
-      {
-        struct light_infos light_infos;
+    // 1: Perform the light update
+    struct light_infos light_infos;
+    light_infos_load(&light_infos, chunk);
+    light_infos_propagate_ether(&light_infos);
+    light_infos_apply_ether(&light_infos);
+    light_infos_propagate_light(&light_infos);
+    light_infos_save(&light_infos, chunk);
 
-        light_infos_load(&light_infos, chunk);
-        light_infos_propagate_ether(&light_infos);
-        light_infos_apply_ether(&light_infos);
-        light_infos_propagate_light(&light_infos);
-        light_infos_save(&light_infos, chunk);
+    // 2: Propagate invalidation
+    world_chunk_invalidate_mesh(chunk);
+    world_chunk_invalidate_mesh(chunk->left);
+    world_chunk_invalidate_mesh(chunk->right);
+    world_chunk_invalidate_mesh(chunk->back);
+    world_chunk_invalidate_mesh(chunk->front);
+    world_chunk_invalidate_mesh(chunk->bottom);
+    world_chunk_invalidate_mesh(chunk->top);
 
-        chunk->light_dirty = false;
-        chunk->mesh_dirty = true;
-
-        if(chunk->left)   chunk->left  ->mesh_dirty = true;
-        if(chunk->right)  chunk->right ->mesh_dirty = true;
-        if(chunk->back)   chunk->back  ->mesh_dirty = true;
-        if(chunk->front)  chunk->front ->mesh_dirty = true;
-        if(chunk->bottom) chunk->bottom->mesh_dirty = true;
-        if(chunk->top)    chunk->top   ->mesh_dirty = true;
-
-        updated = true;
-        count += 1;
-      }
-    }
-    if(!updated)
-      break;
+    // 3: Record
+    count += 1;
   }
 
   clock_t end = clock();

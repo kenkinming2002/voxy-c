@@ -49,7 +49,7 @@ bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, i
 
   while(ray_cast.distance < distance)
   {
-    struct block *block = world_get_block(ray_cast.iposition);
+    struct block *block = world_block_get(ray_cast.iposition);
     if(block && mod_block_info_get(block->id)->type == BLOCK_TYPE_OPAQUE)
       return true;
 

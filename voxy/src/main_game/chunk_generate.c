@@ -126,15 +126,13 @@ void update_chunk_generate(void)
         chunk->chunk_mesh = NULL;
 
         world_chunk_insert_unchecked(chunk);
-
-        chunk->mesh_dirty  = true;
-        chunk->light_dirty = true;
-
-        if(chunk->left)   chunk->left  ->mesh_dirty = true;
-        if(chunk->right)  chunk->right ->mesh_dirty = true;
-        if(chunk->back)   chunk->back  ->mesh_dirty = true;
-        if(chunk->front)  chunk->front ->mesh_dirty = true;
-        if(chunk->bottom) chunk->bottom->mesh_dirty = true;
-        if(chunk->top)    chunk->top   ->mesh_dirty = true;
+        world_chunk_invalidate_mesh(chunk);
+        world_chunk_invalidate_mesh(chunk->left);
+        world_chunk_invalidate_mesh(chunk->right);
+        world_chunk_invalidate_mesh(chunk->back);
+        world_chunk_invalidate_mesh(chunk->front);
+        world_chunk_invalidate_mesh(chunk->bottom);
+        world_chunk_invalidate_mesh(chunk->top);
+        world_chunk_invalidate_light(chunk);
       }
 }

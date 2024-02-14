@@ -137,46 +137,40 @@ void update_chunk_remesh(void)
   ////////////////////////////////////////////////////
   /// 1: Collect all chunks that need to be meshed ///
   ////////////////////////////////////////////////////
-  for(int dz = -RENDERER_LOAD_DISTANCE; dz<=RENDERER_LOAD_DISTANCE; ++dz)
-    for(int dy = -RENDERER_LOAD_DISTANCE; dy<=RENDERER_LOAD_DISTANCE; ++dy)
-      for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
-      {
-        ivec3_t chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
-        struct chunk *chunk = world_chunk_lookup(chunk_position);
-        if(chunk && chunk->mesh_dirty)
-        {
-          if(chunk_mesh_info_capacity == chunk_mesh_info_count)
-          {
-            chunk_mesh_info_capacity = chunk_mesh_info_capacity != 0 ? chunk_mesh_info_capacity * 2 : 1;
-            chunk_mesh_infos         = realloc(chunk_mesh_infos, chunk_mesh_info_capacity * sizeof *chunk_mesh_infos);
-          }
+  for(struct chunk *chunk = chunks_invalidated_mesh_head; chunk; chunk = chunk->mesh_next)
+  {
+    chunk->mesh_invalidated = false;
+    if(chunk_mesh_info_capacity == chunk_mesh_info_count)
+    {
+      chunk_mesh_info_capacity = chunk_mesh_info_capacity != 0 ? chunk_mesh_info_capacity * 2 : 1;
+      chunk_mesh_infos         = realloc(chunk_mesh_infos, chunk_mesh_info_capacity * sizeof *chunk_mesh_infos);
+    }
 
-          struct chunk_mesh_info *chunk_mesh_info = &chunk_mesh_infos[chunk_mesh_info_count++];
-          chunk_mesh_info->chunk = chunk;
+    struct chunk_mesh_info *chunk_mesh_info = &chunk_mesh_infos[chunk_mesh_info_count++];
+    chunk_mesh_info->chunk = chunk;
 
-          chunk_mesh_info->chunk_mesh_builder_opaque.vertices        = NULL;
-          chunk_mesh_info->chunk_mesh_builder_opaque.vertex_count    = 0;
-          chunk_mesh_info->chunk_mesh_builder_opaque.vertex_capacity = 0;
-          chunk_mesh_info->chunk_mesh_builder_opaque.indices         = NULL;
-          chunk_mesh_info->chunk_mesh_builder_opaque.index_count     = 0;
-          chunk_mesh_info->chunk_mesh_builder_opaque.index_capacity  = 0;
+    chunk_mesh_info->chunk_mesh_builder_opaque.vertices        = NULL;
+    chunk_mesh_info->chunk_mesh_builder_opaque.vertex_count    = 0;
+    chunk_mesh_info->chunk_mesh_builder_opaque.vertex_capacity = 0;
+    chunk_mesh_info->chunk_mesh_builder_opaque.indices         = NULL;
+    chunk_mesh_info->chunk_mesh_builder_opaque.index_count     = 0;
+    chunk_mesh_info->chunk_mesh_builder_opaque.index_capacity  = 0;
 
-          chunk_mesh_info->chunk_mesh_builder_transparent.vertices        = NULL;
-          chunk_mesh_info->chunk_mesh_builder_transparent.vertex_count    = 0;
-          chunk_mesh_info->chunk_mesh_builder_transparent.vertex_capacity = 0;
-          chunk_mesh_info->chunk_mesh_builder_transparent.indices         = NULL;
-          chunk_mesh_info->chunk_mesh_builder_transparent.index_count     = 0;
-          chunk_mesh_info->chunk_mesh_builder_transparent.index_capacity  = 0;
-        }
-      }
+    chunk_mesh_info->chunk_mesh_builder_transparent.vertices        = NULL;
+    chunk_mesh_info->chunk_mesh_builder_transparent.vertex_count    = 0;
+    chunk_mesh_info->chunk_mesh_builder_transparent.vertex_capacity = 0;
+    chunk_mesh_info->chunk_mesh_builder_transparent.indices         = NULL;
+    chunk_mesh_info->chunk_mesh_builder_transparent.index_count     = 0;
+    chunk_mesh_info->chunk_mesh_builder_transparent.index_capacity  = 0;
+  }
+  chunks_invalidated_mesh_head = NULL;
+  chunks_invalidated_mesh_tail = NULL;
 
   //////////////////////////////////////
   /// 2: Mesh all chunks in parallel ///
   //////////////////////////////////////
   #pragma omp parallel for
   for(size_t i=0; i<chunk_mesh_info_count; ++i)
-  {
-    chunk_mesh_infos[i].chunk->mesh_dirty = false;
     for(int z = 0; z<CHUNK_WIDTH; ++z)
       for(int y = 0; y<CHUNK_WIDTH; ++y)
         for(int x = 0; x<CHUNK_WIDTH; ++x)
@@ -231,7 +225,6 @@ void update_chunk_remesh(void)
 
           }
         }
-  }
 
   //////////////////////////////
   /// 3: Upload chunk meshes ///

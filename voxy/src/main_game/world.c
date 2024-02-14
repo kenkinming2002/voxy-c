@@ -5,6 +5,12 @@
 
 struct chunk_hash_table chunks;
 
+struct chunk *chunks_invalidated_light_head;
+struct chunk *chunks_invalidated_light_tail;
+
+struct chunk *chunks_invalidated_mesh_head;
+struct chunk *chunks_invalidated_mesh_tail;
+
 struct chunk *world_chunk_lookup(ivec3_t position)
 {
   return chunk_hash_table_lookup(&chunks, position);
@@ -12,6 +18,8 @@ struct chunk *world_chunk_lookup(ivec3_t position)
 
 void world_chunk_insert_unchecked(struct chunk *chunk)
 {
+  chunk_hash_table_insert_unchecked(&chunks, chunk);
+
   chunk->left   = world_chunk_lookup(ivec3_add(chunk->position, ivec3(-1,  0,  0)));
   chunk->right  = world_chunk_lookup(ivec3_add(chunk->position, ivec3( 1,  0,  0)));
   chunk->back   = world_chunk_lookup(ivec3_add(chunk->position, ivec3( 0, -1,  0)));
@@ -26,7 +34,49 @@ void world_chunk_insert_unchecked(struct chunk *chunk)
   if(chunk->bottom) chunk->bottom->top = chunk;
   if(chunk->top)    chunk->top->bottom = chunk;
 
-  chunk_hash_table_insert_unchecked(&chunks, chunk);
+  chunk->mesh_invalidated = false;
+  chunk->mesh_next        = NULL;
+
+  chunk->light_invalidated = false;
+  chunk->light_next        = NULL;
+}
+
+void world_chunk_invalidate_light(struct chunk *chunk)
+{
+  if(chunk && !chunk->light_invalidated)
+  {
+    chunk->light_invalidated = true;
+    chunk->light_next = NULL;
+    if(chunks_invalidated_light_tail)
+    {
+      chunks_invalidated_light_tail->light_next = chunk;
+      chunks_invalidated_light_tail = chunk;
+    }
+    else
+    {
+      chunks_invalidated_light_head = chunk;
+      chunks_invalidated_light_tail = chunk;
+    }
+  }
+}
+
+void world_chunk_invalidate_mesh(struct chunk *chunk)
+{
+  if(chunk && !chunk->mesh_invalidated)
+  {
+    chunk->mesh_invalidated = true;
+    chunk->mesh_next = NULL;
+    if(chunks_invalidated_mesh_tail)
+    {
+      chunks_invalidated_mesh_tail->mesh_next = chunk;
+      chunks_invalidated_mesh_tail = chunk;
+    }
+    else
+    {
+      chunks_invalidated_mesh_head = chunk;
+      chunks_invalidated_mesh_tail = chunk;
+    }
+  }
 }
 
 static inline void split_position(ivec3_t position, ivec3_t *chunk_position, ivec3_t *block_position)
@@ -38,7 +88,7 @@ static inline void split_position(ivec3_t position, ivec3_t *chunk_position, ive
   }
 }
 
-struct block *world_get_block(ivec3_t position)
+struct block *world_block_get(ivec3_t position)
 {
   ivec3_t chunk_position;
   ivec3_t block_position;
@@ -51,48 +101,37 @@ struct block *world_get_block(ivec3_t position)
   return &chunk->chunk_data->blocks[block_position.z][block_position.y][block_position.x];
 }
 
-void world_set_block(ivec3_t position, uint8_t block_id)
+void world_block_set(ivec3_t position, uint8_t block_id)
 {
-  struct block *block = world_get_block(position);
+  struct block *block = world_block_get(position);
   if(!block)
     return;
 
   block->id = block_id;
 
-  world_invalidate_light_at(position);
-  world_invalidate_mesh_at(position);
-
-  world_invalidate_mesh_at(ivec3_add(position, ivec3(-1, 0, 0)));
-  world_invalidate_mesh_at(ivec3_add(position, ivec3( 1, 0, 0)));
-  world_invalidate_mesh_at(ivec3_add(position, ivec3(0, -1, 0)));
-  world_invalidate_mesh_at(ivec3_add(position, ivec3(0,  1, 0)));
-  world_invalidate_mesh_at(ivec3_add(position, ivec3(0, 0, -1)));
-  world_invalidate_mesh_at(ivec3_add(position, ivec3(0, 0,  1)));
+  world_block_invalidate_light(position);
+  world_block_invalidate_mesh(position);
+  world_block_invalidate_mesh(ivec3_add(position, ivec3(-1, 0, 0)));
+  world_block_invalidate_mesh(ivec3_add(position, ivec3( 1, 0, 0)));
+  world_block_invalidate_mesh(ivec3_add(position, ivec3(0, -1, 0)));
+  world_block_invalidate_mesh(ivec3_add(position, ivec3(0,  1, 0)));
+  world_block_invalidate_mesh(ivec3_add(position, ivec3(0, 0, -1)));
+  world_block_invalidate_mesh(ivec3_add(position, ivec3(0, 0,  1)));
 }
 
-void world_invalidate_light_at(ivec3_t position)
+void world_block_invalidate_light(ivec3_t position)
 {
   ivec3_t chunk_position;
   ivec3_t block_position;
   split_position(position, &chunk_position, &block_position);
-
-  struct chunk *chunk = world_chunk_lookup(chunk_position);
-  if(!chunk)
-    return;
-
-  chunk->light_dirty = true;
+  world_chunk_invalidate_light(world_chunk_lookup(chunk_position));
 }
 
-void world_invalidate_mesh_at(ivec3_t position)
+void world_block_invalidate_mesh(ivec3_t position)
 {
   ivec3_t chunk_position;
   ivec3_t block_position;
   split_position(position, &chunk_position, &block_position);
-
-  struct chunk *chunk = world_chunk_lookup(chunk_position);
-  if(!chunk)
-    return;
-
-  chunk->mesh_dirty = true;
+  world_chunk_invalidate_mesh(world_chunk_lookup(chunk_position));
 }
 

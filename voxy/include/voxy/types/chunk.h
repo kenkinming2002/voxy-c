@@ -21,11 +21,14 @@ struct chunk
   struct chunk *left;
   struct chunk *right;
 
+  bool          mesh_invalidated;
+  struct chunk *mesh_next;
+
+  bool          light_invalidated;
+  struct chunk *light_next;
+
   struct chunk_data *chunk_data;
   struct chunk_mesh *chunk_mesh;
-
-  bool mesh_dirty;
-  bool light_dirty;
 };
 
 #endif // TYPES_CHUNK_H

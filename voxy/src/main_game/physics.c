@@ -171,7 +171,7 @@ static void entity_physics_update(struct entity *entity, float dt)
         {
           ivec3_t position = ivec3(x, y, z);
 
-          const struct block *block = world_get_block(position);
+          const struct block *block = world_block_get(position);
           if((block))
           {
             const struct block_info *block_info = mod_block_info_get(block->id);

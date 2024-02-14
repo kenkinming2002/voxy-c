@@ -1,10 +1,9 @@
 #include <voxy/main_game/chunk_generate.h>
-#include <voxy/main_game/world.h>
+#include <voxy/main_game/world_seed.h>
 #include <voxy/main_game/chunks.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
-#include <voxy/types/world.h>
 #include <voxy/types/chunk.h>
 #include <voxy/types/chunk_data.h>
 #include <voxy/types/player.h>
@@ -70,7 +69,7 @@ void chunk_generate_wrapper_invoke(struct thread_pool_job *job)
   struct chunk_data *chunk_data = malloc(sizeof *chunk_data);
 
   uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
-  mod_generate_blocks(world.seed, wrapper->position, blocks);
+  mod_generate_blocks(world_seed_get(), wrapper->position, blocks);
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)

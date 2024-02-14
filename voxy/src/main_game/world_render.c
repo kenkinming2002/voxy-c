@@ -1,5 +1,4 @@
 #include <voxy/main_game/world_render.h>
-#include <voxy/main_game/world.h>
 #include <voxy/main_game/chunks.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod_assets.h>
@@ -10,7 +9,6 @@
 #include <voxy/graphics/gl_programs.h>
 #include <voxy/graphics/camera.h>
 
-#include <voxy/types/world.h>
 #include <voxy/types/chunk.h>
 #include <voxy/types/chunk_mesh.h>
 #include <voxy/types/player.h>

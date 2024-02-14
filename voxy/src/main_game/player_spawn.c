@@ -1,11 +1,10 @@
 #include <voxy/main_game/player_spawn.h>
-#include <voxy/main_game/world.h>
+#include <voxy/main_game/world_seed.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/core/window.h>
 
-#include <voxy/types/world.h>
 #include <voxy/types/player.h>
 
 #include <voxy/config.h>
@@ -25,7 +24,7 @@ void update_player_spawn(void)
 
     player.third_person = false;
 
-    player.base.position                         = mod_generate_spawn(world.seed);
+    player.base.position                         = mod_generate_spawn(world_seed_get());
     player.base.velocity                         = fvec3_zero();
     player.base.dimension                        = PLAYER_DIMENSION;
     player.base.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);

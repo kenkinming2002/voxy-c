@@ -2,7 +2,6 @@
 #include <voxy/main_game/chunks.h>
 #include <voxy/main_game/mod.h>
 
-#include <voxy/types/world.h>
 #include <voxy/types/chunk.h>
 #include <voxy/types/chunk_data.h>
 

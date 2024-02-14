@@ -1,11 +1,9 @@
 #include <voxy/main_game/player_action.h>
-#include <voxy/main_game/world.h>
 #include <voxy/main_game/chunks.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/player.h>
-#include <voxy/types/world.h>
 
 #include <voxy/mod_interface.h>
 

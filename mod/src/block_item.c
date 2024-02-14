@@ -1,11 +1,9 @@
 #include "ids.h"
 
 #include <voxy/mod_interface.h>
-#include <voxy/main_game/world.h>
 #include <voxy/main_game/chunks.h>
 #include <voxy/main_game/player.h>
 
-#include <voxy/types/world.h>
 #include <voxy/types/entity.h>
 #include <voxy/types/player.h>
 

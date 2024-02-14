@@ -1,5 +1,4 @@
 #include <voxy/types/entity.h>
-#include <voxy/types/world.h>
 #include <voxy/types/block.h>
 
 #include <voxy/main_game/mod.h>

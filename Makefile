@@ -9,7 +9,6 @@ VOXY_SRCS += voxy/src/types/chunk_data.c
 VOXY_SRCS += voxy/src/types/chunk_mesh.c
 VOXY_SRCS += voxy/src/types/chunk_hash_table.c
 VOXY_SRCS += voxy/src/types/entity.c
-VOXY_SRCS += voxy/src/types/world.c
 
 VOXY_SRCS += voxy/src/core/window.c
 VOXY_SRCS += voxy/src/core/thread_pool.c
@@ -21,7 +20,7 @@ VOXY_SRCS += voxy/src/graphics/font_set.c
 VOXY_SRCS += voxy/src/graphics/ui.c
 VOXY_SRCS += voxy/src/graphics/camera.c
 
-VOXY_SRCS += voxy/src/main_game/world.c
+VOXY_SRCS += voxy/src/main_game/world_seed.c
 VOXY_SRCS += voxy/src/main_game/chunks.c
 VOXY_SRCS += voxy/src/main_game/player.c
 VOXY_SRCS += voxy/src/main_game/mod.c

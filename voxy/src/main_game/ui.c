@@ -1,11 +1,13 @@
 #include <voxy/main_game/ui.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/chunks.h>
+#include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/mod_assets.h>
 
 #include <voxy/types/world.h>
 #include <voxy/types/block.h>
+#include <voxy/types/player.h>
 
 #include <voxy/graphics/ui.h>
 
@@ -29,10 +31,8 @@ static inline float minf(float a, float b)
 
 void main_game_update_ui()
 {
-  if(!world.player_spawned)
+  if(!player_spawned)
     return;
-
-  struct player_entity *player = &world.player;
 
   ///////////////////
   ///  UI Metrics ///
@@ -47,13 +47,13 @@ void main_game_update_ui()
   ////////////////////////////
   if(input_press(KEY_I))
   {
-    world.player.inventory.opened = !world.player.inventory.opened;
-    window_show_cursor(player->inventory.opened);
+    player.inventory.opened = !player.inventory.opened;
+    window_show_cursor(player.inventory.opened);
   }
 
-  if(player->inventory.opened)
+  if(player.inventory.opened)
   {
-    player->item_hovered = NULL;
+    player.item_hovered = NULL;
 
     ///////////////
     ///  Hotbar ///
@@ -69,7 +69,7 @@ void main_game_update_ui()
       const int i = floorf((mouse_position.x - hotbar_position.x - cell_sep) / (cell_sep + cell_width));
       const int j = floorf((mouse_position.y - hotbar_position.y - cell_sep) / (cell_sep + cell_width));
       if(0 <= i && i < HOTBAR_SIZE && j == 0)
-        player->item_hovered = &player->hotbar.items[i];
+        player.item_hovered = &player.hotbar.items[i];
     }
 
     /////////////////
@@ -86,58 +86,58 @@ void main_game_update_ui()
       const int i = floorf((mouse_position.x - inventory_position.x - cell_sep) / (cell_sep + cell_width));
       const int j = floorf((mouse_position.y - inventory_position.y - cell_sep) / (cell_sep + cell_width));
       if(0 <= i && i < INVENTORY_SIZE_HORIZONTAL && 0 <= j && j < INVENTORY_SIZE_VERTICAL)
-        player->item_hovered = &player->inventory.items[j][i];
+        player.item_hovered = &player.inventory.items[j][i];
     }
 
     /////////////////////
     /// Item Movement ///
     /////////////////////
     {
-      if(player->item_hovered)
+      if(player.item_hovered)
       {
         if(input_press(BUTTON_LEFT))
         {
-          if(player->item_held.id == player->item_hovered->id)
+          if(player.item_held.id == player.item_hovered->id)
           {
-            unsigned count    = player->item_held.count;
-            unsigned capacity = ITEM_MAX_STACK - player->item_hovered->count;
+            unsigned count    = player.item_held.count;
+            unsigned capacity = ITEM_MAX_STACK - player.item_hovered->count;
             if(count > capacity)
               count = capacity;
 
-            player->item_held.count     -= count;
-            player->item_hovered->count += count;
+            player.item_held.count     -= count;
+            player.item_hovered->count += count;
           }
           else
           {
-            struct item tmp = player->item_held;
-            player->item_held = *player->item_hovered;
-            *player->item_hovered = tmp;
+            struct item tmp = player.item_held;
+            player.item_held = *player.item_hovered;
+            *player.item_hovered = tmp;
           }
         }
         else if(input_press(BUTTON_RIGHT))
         {
-          if(player->item_held.id == player->item_hovered->id)
+          if(player.item_held.id == player.item_hovered->id)
           {
-            unsigned count    = player->item_hovered->count / 2;
-            unsigned capacity = ITEM_MAX_STACK - player->item_held.count;
+            unsigned count    = player.item_hovered->count / 2;
+            unsigned capacity = ITEM_MAX_STACK - player.item_held.count;
             if(count > capacity)
               count = capacity;
 
-            player->item_hovered->count -= count;
-            player->item_held.count     += count;
+            player.item_hovered->count -= count;
+            player.item_held.count     += count;
           }
-          else if(player->item_held.id == ITEM_NONE)
+          else if(player.item_held.id == ITEM_NONE)
           {
-            player->item_held.id    = player->item_hovered->id;
-            player->item_held.count = player->item_hovered->count / 2;
-            player->item_hovered->count -= player->item_held.count;
+            player.item_held.id    = player.item_hovered->id;
+            player.item_held.count = player.item_hovered->count / 2;
+            player.item_hovered->count -= player.item_held.count;
           }
         }
 
-        if(player->item_hovered->count == 0) player->item_hovered->id = ITEM_NONE;
-        if(player->item_held.count     == 0) player->item_held.id     = ITEM_NONE;
+        if(player.item_hovered->count == 0) player.item_hovered->id = ITEM_NONE;
+        if(player.item_held.count     == 0) player.item_held.id     = ITEM_NONE;
       }
-      player->item_held_position = mouse_position;
+      player.item_held_position = mouse_position;
     }
   }
   else
@@ -146,29 +146,27 @@ void main_game_update_ui()
     /// Hotbar item selection ///
     /////////////////////////////
     {
-      if(input_press(KEY_1)) world.player.hotbar.selection = 0;
-      if(input_press(KEY_2)) world.player.hotbar.selection = 1;
-      if(input_press(KEY_3)) world.player.hotbar.selection = 2;
-      if(input_press(KEY_4)) world.player.hotbar.selection = 3;
-      if(input_press(KEY_5)) world.player.hotbar.selection = 4;
-      if(input_press(KEY_6)) world.player.hotbar.selection = 5;
-      if(input_press(KEY_7)) world.player.hotbar.selection = 6;
-      if(input_press(KEY_8)) world.player.hotbar.selection = 7;
-      if(input_press(KEY_9)) world.player.hotbar.selection = 8;
+      if(input_press(KEY_1)) player.hotbar.selection = 0;
+      if(input_press(KEY_2)) player.hotbar.selection = 1;
+      if(input_press(KEY_3)) player.hotbar.selection = 2;
+      if(input_press(KEY_4)) player.hotbar.selection = 3;
+      if(input_press(KEY_5)) player.hotbar.selection = 4;
+      if(input_press(KEY_6)) player.hotbar.selection = 5;
+      if(input_press(KEY_7)) player.hotbar.selection = 6;
+      if(input_press(KEY_8)) player.hotbar.selection = 7;
+      if(input_press(KEY_9)) player.hotbar.selection = 8;
 
-      world.player.hotbar.selection += mouse_scroll.x;
-      world.player.hotbar.selection += 9;
-      world.player.hotbar.selection %= 9;
+      player.hotbar.selection += mouse_scroll.x;
+      player.hotbar.selection += 9;
+      player.hotbar.selection %= 9;
     }
   }
 }
 
 void main_game_render_ui()
 {
-  if(!world.player_spawned)
+  if(!player_spawned)
     return;
-
-  struct player_entity        *player        = &world.player;
 
   {
     ///////////////
@@ -194,12 +192,12 @@ void main_game_render_ui()
     {
       const fvec2_t cell_position  = fvec2_add(hotbar_position, fvec2(cell_sep + i * (cell_sep + cell_width), cell_sep));
       const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
-      const fvec4_t cell_color     = &player->hotbar.items[i] == player->item_hovered ? UI_HOTBAR_COLOR_HOVER : i == player->hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
+      const fvec4_t cell_color     = &player.hotbar.items[i] == player.item_hovered ? UI_HOTBAR_COLOR_HOVER : i == player.hotbar.selection ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
 
 
       ui_draw_quad_rounded(cell_position, cell_dimension, round, cell_color);
 
-      const struct item *cell_item = &player->hotbar.items[i];
+      const struct item *cell_item = &player.hotbar.items[i];
       if(cell_item->id != ITEM_NONE)
       {
         const uint8_t               cell_item_id      = cell_item->id;
@@ -219,7 +217,7 @@ void main_game_render_ui()
     /////////////////////
     const fvec2_t selected_item_text_position = fvec2(window_size.x * 0.5f, hotbar_position.y + hotbar_dimension.y + margin);
 
-    const struct item *selected_item      = &player->hotbar.items[player->hotbar.selection];
+    const struct item *selected_item      = &player.hotbar.items[player.hotbar.selection];
     const uint8_t      selected_item_id   = selected_item->id;
     const char        *selected_item_name = selected_item_id != ITEM_NONE ? mod_item_info_get(selected_item_id)->name : NULL;
     if(selected_item_name)
@@ -233,7 +231,7 @@ void main_game_render_ui()
     const fvec2_t inventory_position  = fvec2((window_size.x - inventory_width) * 0.5f, (window_size.y - inventory_height) * 0.5f);
     const fvec2_t inventory_dimension = fvec2(inventory_width, inventory_height);
 
-    if(player->inventory.opened)
+    if(player.inventory.opened)
     {
       ui_draw_quad_rounded(inventory_position, inventory_dimension, round, UI_INVENTORY_COLOR_BACKGROUND);
 
@@ -242,11 +240,11 @@ void main_game_render_ui()
         {
           const fvec2_t cell_position  = fvec2_add(inventory_position, fvec2(cell_sep + i * (cell_sep + cell_width), cell_sep + j * (cell_sep + cell_width)));
           const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
-          const fvec4_t cell_color     = &player->inventory.items[j][i] == player->item_hovered ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
+          const fvec4_t cell_color     = &player.inventory.items[j][i] == player.item_hovered ? UI_INVENTORY_COLOR_HOVER : UI_INVENTORY_COLOR_DEFAULT;
 
           ui_draw_quad_rounded(cell_position, cell_dimension, round, cell_color);
 
-          const struct item *cell_item = &player->inventory.items[j][i];
+          const struct item *cell_item = &player.inventory.items[j][i];
           if(cell_item->id != ITEM_NONE)
           {
             const uint8_t               cell_item_id      = cell_item->id;
@@ -269,7 +267,7 @@ void main_game_render_ui()
 
     ivec3_t position;
     ivec3_t normal;
-    if(entity_ray_cast(&world.player.base, 20.0f, &position, &normal))
+    if(entity_ray_cast(&player.base, 20.0f, &position, &normal))
     {
       const struct block *target_block      = block_get(position);
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
@@ -283,10 +281,10 @@ void main_game_render_ui()
     /// Hold ///
     ////////////
     {
-      const fvec2_t cell_position  = fvec2_sub(player->item_held_position, fvec2_mul_scalar(fvec2(cell_width, cell_width), 0.5f));
+      const fvec2_t cell_position  = fvec2_sub(player.item_held_position, fvec2_mul_scalar(fvec2(cell_width, cell_width), 0.5f));
       const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
 
-      const struct item *cell_item = &player->item_held;
+      const struct item *cell_item = &player.item_held;
       if(cell_item->id != ITEM_NONE)
       {
         const uint8_t               cell_item_id      = cell_item->id;

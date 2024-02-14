@@ -1,5 +1,6 @@
 #include <voxy/main_game/player_spawn.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/core/window.h>
@@ -18,50 +19,50 @@ static int mini(int a, int b)
 
 void update_player_spawn(void)
 {
-  if(!world.player_spawned)
+  if(!player_spawned)
   {
-    world.player_spawned = true;
+    player_spawned = true;
 
-    world.player.third_person = false;
+    player.third_person = false;
 
-    world.player.base.position                         = mod_generate_spawn(world.seed);
-    world.player.base.velocity                         = fvec3_zero();
-    world.player.base.dimension                        = PLAYER_DIMENSION;
-    world.player.base.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);
-    world.player.base.local_view_transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
-    world.player.base.grounded                         = false;
+    player.base.position                         = mod_generate_spawn(world.seed);
+    player.base.velocity                         = fvec3_zero();
+    player.base.dimension                        = PLAYER_DIMENSION;
+    player.base.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);
+    player.base.local_view_transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
+    player.base.grounded                         = false;
 
     for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
       for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
       {
-        world.player.inventory.items[j][i].id    = ITEM_NONE;
-        world.player.inventory.items[j][i].count = 0;
+        player.inventory.items[j][i].id    = ITEM_NONE;
+        player.inventory.items[j][i].count = 0;
       }
 
     for(int i=0; i<HOTBAR_SIZE; ++i)
     {
-      world.player.hotbar.items[i].id    = ITEM_NONE;
-      world.player.hotbar.items[i].count = 0;
+      player.hotbar.items[i].id    = ITEM_NONE;
+      player.hotbar.items[i].count = 0;
     }
 
-    world.player.item_held.id    = ITEM_NONE;
-    world.player.item_held.count = 0;
+    player.item_held.id    = ITEM_NONE;
+    player.item_held.count = 0;
 
-    world.player.item_hovered = NULL;
+    player.item_hovered = NULL;
 
     int count = mini(mod_item_info_count_get() * 2, HOTBAR_SIZE);
     for(int i=0; i<count; ++i)
     {
-      world.player.hotbar.items[i].id = i % mod_item_info_count_get();
-      world.player.hotbar.items[i].count = 8 * (i + 1);
+      player.hotbar.items[i].id = i % mod_item_info_count_get();
+      player.hotbar.items[i].count = 8 * (i + 1);
     }
 
-    world.player.cooldown = 0.0f;
+    player.cooldown = 0.0f;
 
     fprintf(stderr, "INFO: Spawning player at (%f, %f, %f) with %d items\n",
-        world.player.base.position.x,
-        world.player.base.position.y,
-        world.player.base.position.z,
+        player.base.position.x,
+        player.base.position.y,
+        player.base.position.z,
         count);
   }
 }

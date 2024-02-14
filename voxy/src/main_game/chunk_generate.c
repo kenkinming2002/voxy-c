@@ -1,11 +1,13 @@
 #include <voxy/main_game/chunk_generate.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/chunks.h>
+#include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/world.h>
 #include <voxy/types/chunk.h>
 #include <voxy/types/chunk_data.h>
+#include <voxy/types/player.h>
 
 #include <voxy/core/thread_pool.h>
 
@@ -90,7 +92,7 @@ static struct chunk_generate_wrapper_hash_table chunk_generate_wrappers;
 
 void update_chunk_generate(void)
 {
-  ivec3_t player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world.player.base.position, CHUNK_WIDTH));
+  ivec3_t player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player.base.position, CHUNK_WIDTH));
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)

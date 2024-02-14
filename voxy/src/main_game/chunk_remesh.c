@@ -1,12 +1,14 @@
 #include <voxy/main_game/chunk_remesh.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/chunks.h>
+#include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/world.h>
 #include <voxy/types/chunk.h>
 #include <voxy/types/chunk_data.h>
 #include <voxy/types/chunk_mesh.h>
+#include <voxy/types/player.h>
 
 #include <voxy/math/vector.h>
 
@@ -132,7 +134,7 @@ void update_chunk_remesh(void)
   size_t                  chunk_mesh_info_count    = 0;
   size_t                  chunk_mesh_info_capacity = 0;
 
-  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(world.player.base.position, CHUNK_WIDTH));
+  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player.base.position, CHUNK_WIDTH));
 
   ////////////////////////////////////////////////////
   /// 1: Collect all chunks that need to be meshed ///

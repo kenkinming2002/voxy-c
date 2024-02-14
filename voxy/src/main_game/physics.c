@@ -1,10 +1,13 @@
 #include <voxy/main_game/physics.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/chunks.h>
+#include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/world.h>
 #include <voxy/types/block.h>
+#include <voxy/types/player.h>
+#include <voxy/types/entity.h>
 
 #include <voxy/mod_interface.h>
 
@@ -207,7 +210,7 @@ static void entity_physics_integrate(struct entity *entity, float dt)
 
 void update_physics(float dt)
 {
-  entity_physics_apply_law(&world.player.base, dt);
-  entity_physics_update(&world.player.base, dt);
-  entity_physics_integrate(&world.player.base, dt);
+  entity_physics_apply_law(&player.base, dt);
+  entity_physics_update(&player.base, dt);
+  entity_physics_integrate(&player.base, dt);
 }

@@ -107,14 +107,14 @@ static inline struct block *chunk_block_lookup(struct chunk *chunk, ivec3_t posi
   if(position.z >= 0 && position.z < CHUNK_WIDTH)
     if(position.y >= 0 && position.y < CHUNK_WIDTH)
       if(position.x >= 0 && position.x < CHUNK_WIDTH)
-        return &chunk->chunk_data->blocks[position.z][position.y][position.x];
+        return &chunk->data->blocks[position.z][position.y][position.x];
 
-  if(position.z == -1)          return chunk->bottom ? &chunk->bottom->chunk_data->blocks[CHUNK_WIDTH-1][position.y][position.x] : NULL;
-  if(position.z == CHUNK_WIDTH) return chunk->top    ? &chunk->top   ->chunk_data->blocks[0]            [position.y][position.x] : NULL;
-  if(position.y == -1)          return chunk->back   ? &chunk->back  ->chunk_data->blocks[position.z][CHUNK_WIDTH-1][position.x] : NULL;
-  if(position.y == CHUNK_WIDTH) return chunk->front  ? &chunk->front ->chunk_data->blocks[position.z][0]            [position.x] : NULL;
-  if(position.x == -1)          return chunk->left   ? &chunk->left  ->chunk_data->blocks[position.z][position.y][CHUNK_WIDTH-1] : NULL;
-  if(position.x == CHUNK_WIDTH) return chunk->right  ? &chunk->right ->chunk_data->blocks[position.z][position.y][0]             : NULL;
+  if(position.z == -1)          return chunk->bottom ? &chunk->bottom->data->blocks[CHUNK_WIDTH-1][position.y][position.x] : NULL;
+  if(position.z == CHUNK_WIDTH) return chunk->top    ? &chunk->top   ->data->blocks[0]            [position.y][position.x] : NULL;
+  if(position.y == -1)          return chunk->back   ? &chunk->back  ->data->blocks[position.z][CHUNK_WIDTH-1][position.x] : NULL;
+  if(position.y == CHUNK_WIDTH) return chunk->front  ? &chunk->front ->data->blocks[position.z][0]            [position.x] : NULL;
+  if(position.x == -1)          return chunk->left   ? &chunk->left  ->data->blocks[position.z][position.y][CHUNK_WIDTH-1] : NULL;
+  if(position.x == CHUNK_WIDTH) return chunk->right  ? &chunk->right ->data->blocks[position.z][position.y][0]             : NULL;
 
   assert(0 && "Unreachable");
 }
@@ -231,7 +231,7 @@ void update_chunk_remesh(void)
   //////////////////////////////
   for(size_t i=0; i<chunk_mesh_info_count; ++i)
   {
-    struct chunk_mesh *chunk_mesh = chunk_mesh_infos[i].chunk->chunk_mesh;
+    struct chunk_mesh *chunk_mesh = chunk_mesh_infos[i].chunk->mesh;
     if(!chunk_mesh)
     {
       chunk_mesh = malloc(sizeof *chunk_mesh);
@@ -244,7 +244,7 @@ void update_chunk_remesh(void)
       glGenBuffers(1, &chunk_mesh->vbo_transparent);
       glGenBuffers(1, &chunk_mesh->ibo_transparent);
 
-      chunk_mesh_infos[i].chunk->chunk_mesh = chunk_mesh;
+      chunk_mesh_infos[i].chunk->mesh = chunk_mesh;
     }
 
     glBindVertexArray(chunk_mesh->vao_opaque);
@@ -292,22 +292,22 @@ void update_chunk_remesh(void)
   /// 4: Unload chunk meshes ///
   //////////////////////////////
   world_chunk_for_each(chunk)
-    if(chunk->chunk_mesh)
+    if(chunk->mesh)
       if(chunk->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || chunk->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
           chunk->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || chunk->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||
           chunk->position.z < player_chunk_position.z - RENDERER_UNLOAD_DISTANCE || chunk->position.z > player_chunk_position.z + RENDERER_UNLOAD_DISTANCE)
       {
-        glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_opaque);
-        glDeleteBuffers(1, &chunk->chunk_mesh->vbo_opaque);
-        glDeleteBuffers(1, &chunk->chunk_mesh->ibo_opaque);
+        glDeleteVertexArrays(1, &chunk->mesh->vao_opaque);
+        glDeleteBuffers(1, &chunk->mesh->vbo_opaque);
+        glDeleteBuffers(1, &chunk->mesh->ibo_opaque);
 
-        glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_transparent);
-        glDeleteBuffers(1, &chunk->chunk_mesh->vbo_transparent);
-        glDeleteBuffers(1, &chunk->chunk_mesh->ibo_transparent);
+        glDeleteVertexArrays(1, &chunk->mesh->vao_transparent);
+        glDeleteBuffers(1, &chunk->mesh->vbo_transparent);
+        glDeleteBuffers(1, &chunk->mesh->ibo_transparent);
 
-        free(chunk->chunk_mesh);
+        free(chunk->mesh);
 
-        chunk->chunk_mesh = NULL;
+        chunk->mesh = NULL;
       }
 
   //////////////////

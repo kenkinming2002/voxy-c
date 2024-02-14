@@ -95,10 +95,10 @@ struct block *world_block_get(ivec3_t position)
   split_position(position, &chunk_position, &block_position);
 
   struct chunk *chunk = world_chunk_lookup(chunk_position);
-  if(!chunk || !chunk->chunk_data)
+  if(!chunk || !chunk->data)
     return NULL;
 
-  return &chunk->chunk_data->blocks[block_position.z][block_position.y][block_position.x];
+  return &chunk->data->blocks[block_position.z][block_position.y][block_position.x];
 }
 
 void world_block_set(ivec3_t position, uint8_t block_id)

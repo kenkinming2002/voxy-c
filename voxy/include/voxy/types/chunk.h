@@ -27,8 +27,8 @@ struct chunk
   bool          light_invalidated;
   struct chunk *light_next;
 
-  struct chunk_data *chunk_data;
-  struct chunk_mesh *chunk_mesh;
+  struct chunk_data *data;
+  struct chunk_mesh *mesh;
 };
 
 #endif // TYPES_CHUNK_H

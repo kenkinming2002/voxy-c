@@ -33,8 +33,8 @@ int chunk_compare(ivec3_t position1, ivec3_t position2)
 
 void chunk_dispose(struct chunk *chunk)
 {
-  chunk_data_dispose(chunk->chunk_data);
-  chunk_mesh_dispose(chunk->chunk_mesh);
+  chunk_data_dispose(chunk->data);
+  chunk_mesh_dispose(chunk->mesh);
   free(chunk);
 }
 

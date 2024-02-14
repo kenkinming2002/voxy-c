@@ -122,8 +122,8 @@ void update_chunk_generate(void)
 
         chunk = malloc(sizeof *chunk);
         chunk->position = position;
-        chunk->chunk_data = chunk_data;
-        chunk->chunk_mesh = NULL;
+        chunk->data = chunk_data;
+        chunk->mesh = NULL;
 
         world_chunk_insert_unchecked(chunk);
         world_chunk_invalidate_mesh(chunk);

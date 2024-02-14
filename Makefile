@@ -54,7 +54,7 @@ mod/mod.so: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src
 mod/mod.so: CFLAGS  += -fPIC
 mod/mod.so: LDFLAGS += -shared
 
-.PHONY: clean
+.PHONY: clean depclean
 
 all: voxy/voxy mod/mod.so
 
@@ -64,12 +64,14 @@ voxy/voxy: $(VOXY_SRCS:.c=.o)
 mod/mod.so: $(MOD_SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(MOD_SRCS:.c=.o) $(LIBS)
 
-clean:
+clean: depclean
 	- rm -f voxy/voxy
 	- rm -f mod/mod.so
 	- rm -f $(VOXY_SRCS:.c=.o)
-	- rm -f $(VOXY_SRCS:.c=.d)
 	- rm -f $(MOD_SRCS:.c=.o)
+
+depclean:
+	- rm -f $(VOXY_SRCS:.c=.d)
 	- rm -f $(MOD_SRCS:.c=.d)
 
 -include $(VOXY_SRCS:.c=.d)

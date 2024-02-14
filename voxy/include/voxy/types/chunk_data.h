@@ -6,7 +6,6 @@
 
 struct chunk_data
 {
-  struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 };
 
 void chunk_data_dispose(struct chunk_data *chunk_data);

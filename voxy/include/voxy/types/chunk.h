@@ -2,12 +2,14 @@
 #define TYPES_CHUNK_H
 
 #include <voxy/math/vector.h>
+#include <voxy/types/block.h>
+#include <voxy/config.h>
+
+#include <glad/glad.h>
 
 #include <stddef.h>
 #include <stdbool.h>
 
-struct chunk_data;
-struct chunk_mesh;
 struct chunk
 {
   struct chunk *next;
@@ -27,8 +29,17 @@ struct chunk
   bool          light_invalidated;
   struct chunk *light_next;
 
-  struct chunk_data *data;
-  struct chunk_mesh *mesh;
+  struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+
+  GLuint vao_opaque;
+  GLuint vbo_opaque;
+  GLuint ibo_opaque;
+  GLsizei count_opaque;
+
+  GLuint vao_transparent;
+  GLuint vbo_transparent;
+  GLuint ibo_transparent;
+  GLsizei count_transparent;
 };
 
 #endif // TYPES_CHUNK_H

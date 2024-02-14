@@ -1,7 +1,10 @@
 #include <voxy/main_game/world.h>
 
-#include <voxy/config.h>
 #include <voxy/types/chunk_data.h>
+
+#include <voxy/config.h>
+
+#include <stdlib.h>
 
 struct chunk_hash_table chunks;
 
@@ -16,8 +19,11 @@ struct chunk *world_chunk_lookup(ivec3_t position)
   return chunk_hash_table_lookup(&chunks, position);
 }
 
-void world_chunk_insert_unchecked(struct chunk *chunk)
+struct chunk *world_chunk_create(ivec3_t position)
 {
+  struct chunk *chunk = malloc(sizeof *chunk);
+
+  chunk->position = position;
   chunk_hash_table_insert_unchecked(&chunks, chunk);
 
   chunk->left   = world_chunk_lookup(ivec3_add(chunk->position, ivec3(-1,  0,  0)));
@@ -39,6 +45,18 @@ void world_chunk_insert_unchecked(struct chunk *chunk)
 
   chunk->light_invalidated = false;
   chunk->light_next        = NULL;
+
+  glGenVertexArrays(1, &chunk->vao_opaque);
+  glGenBuffers(1, &chunk->vbo_opaque);
+  glGenBuffers(1, &chunk->ibo_opaque);
+  chunk->count_opaque = 0;
+
+  glGenVertexArrays(1, &chunk->vao_transparent);
+  glGenBuffers(1, &chunk->vbo_transparent);
+  glGenBuffers(1, &chunk->ibo_transparent);
+  chunk->count_transparent = 0;
+
+  return chunk;
 }
 
 void world_chunk_invalidate_light(struct chunk *chunk)
@@ -95,10 +113,10 @@ struct block *world_block_get(ivec3_t position)
   split_position(position, &chunk_position, &block_position);
 
   struct chunk *chunk = world_chunk_lookup(chunk_position);
-  if(!chunk || !chunk->data)
+  if(!chunk)
     return NULL;
 
-  return &chunk->data->blocks[block_position.z][block_position.y][block_position.x];
+  return &chunk->blocks[block_position.z][block_position.y][block_position.x];
 }
 
 void world_block_set(ivec3_t position, uint8_t block_id)

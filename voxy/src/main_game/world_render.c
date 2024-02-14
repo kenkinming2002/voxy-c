@@ -52,18 +52,16 @@ void world_render()
   glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets_block_array_texture_get()->id);
 
   world_chunk_for_each(chunk)
-    if(chunk->mesh)
-    {
-      glBindVertexArray(chunk->mesh->vao_opaque);
-      glDrawElements(GL_TRIANGLES, chunk->mesh->count_opaque, GL_UNSIGNED_INT, 0);
-    }
+  {
+    glBindVertexArray(chunk->vao_opaque);
+    glDrawElements(GL_TRIANGLES, chunk->count_opaque, GL_UNSIGNED_INT, 0);
+  }
 
   world_chunk_for_each(chunk)
-    if(chunk->mesh)
-    {
-      glBindVertexArray(chunk->mesh->vao_transparent);
-      glDrawElements(GL_TRIANGLES, chunk->mesh->count_transparent, GL_UNSIGNED_INT, 0);
-    }
+  {
+    glBindVertexArray(chunk->vao_transparent);
+    glDrawElements(GL_TRIANGLES, chunk->count_transparent, GL_UNSIGNED_INT, 0);
+  }
 
   ivec3_t position;
   ivec3_t normal;

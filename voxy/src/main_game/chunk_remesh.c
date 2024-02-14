@@ -107,14 +107,14 @@ static inline struct block *chunk_block_lookup(struct chunk *chunk, ivec3_t posi
   if(position.z >= 0 && position.z < CHUNK_WIDTH)
     if(position.y >= 0 && position.y < CHUNK_WIDTH)
       if(position.x >= 0 && position.x < CHUNK_WIDTH)
-        return &chunk->data->blocks[position.z][position.y][position.x];
+        return &chunk->blocks[position.z][position.y][position.x];
 
-  if(position.z == -1)          return chunk->bottom ? &chunk->bottom->data->blocks[CHUNK_WIDTH-1][position.y][position.x] : NULL;
-  if(position.z == CHUNK_WIDTH) return chunk->top    ? &chunk->top   ->data->blocks[0]            [position.y][position.x] : NULL;
-  if(position.y == -1)          return chunk->back   ? &chunk->back  ->data->blocks[position.z][CHUNK_WIDTH-1][position.x] : NULL;
-  if(position.y == CHUNK_WIDTH) return chunk->front  ? &chunk->front ->data->blocks[position.z][0]            [position.x] : NULL;
-  if(position.x == -1)          return chunk->left   ? &chunk->left  ->data->blocks[position.z][position.y][CHUNK_WIDTH-1] : NULL;
-  if(position.x == CHUNK_WIDTH) return chunk->right  ? &chunk->right ->data->blocks[position.z][position.y][0]             : NULL;
+  if(position.z == -1)          return chunk->bottom ? &chunk->bottom->blocks[CHUNK_WIDTH-1][position.y][position.x] : NULL;
+  if(position.z == CHUNK_WIDTH) return chunk->top    ? &chunk->top   ->blocks[0]            [position.y][position.x] : NULL;
+  if(position.y == -1)          return chunk->back   ? &chunk->back  ->blocks[position.z][CHUNK_WIDTH-1][position.x] : NULL;
+  if(position.y == CHUNK_WIDTH) return chunk->front  ? &chunk->front ->blocks[position.z][0]            [position.x] : NULL;
+  if(position.x == -1)          return chunk->left   ? &chunk->left  ->blocks[position.z][position.y][CHUNK_WIDTH-1] : NULL;
+  if(position.x == CHUNK_WIDTH) return chunk->right  ? &chunk->right ->blocks[position.z][position.y][0]             : NULL;
 
   assert(0 && "Unreachable");
 }
@@ -131,8 +131,6 @@ void update_chunk_remesh(void)
   struct chunk_mesh_info *chunk_mesh_infos         = NULL;
   size_t                  chunk_mesh_info_count    = 0;
   size_t                  chunk_mesh_info_capacity = 0;
-
-  ivec3_t player_chunk_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player.base.position, CHUNK_WIDTH));
 
   ////////////////////////////////////////////////////
   /// 1: Collect all chunks that need to be meshed ///
@@ -231,28 +229,14 @@ void update_chunk_remesh(void)
   //////////////////////////////
   for(size_t i=0; i<chunk_mesh_info_count; ++i)
   {
-    struct chunk_mesh *chunk_mesh = chunk_mesh_infos[i].chunk->mesh;
-    if(!chunk_mesh)
-    {
-      chunk_mesh = malloc(sizeof *chunk_mesh);
+    struct chunk *chunk = chunk_mesh_infos[i].chunk;
 
-      glGenVertexArrays(1, &chunk_mesh->vao_opaque);
-      glGenBuffers(1, &chunk_mesh->vbo_opaque);
-      glGenBuffers(1, &chunk_mesh->ibo_opaque);
+    glBindVertexArray(chunk->vao_opaque);
 
-      glGenVertexArrays(1, &chunk_mesh->vao_transparent);
-      glGenBuffers(1, &chunk_mesh->vbo_transparent);
-      glGenBuffers(1, &chunk_mesh->ibo_transparent);
-
-      chunk_mesh_infos[i].chunk->mesh = chunk_mesh;
-    }
-
-    glBindVertexArray(chunk_mesh->vao_opaque);
-
-    glBindBuffer(GL_ARRAY_BUFFER, chunk_mesh->vbo_opaque);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_opaque);
     glBufferData(GL_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_opaque.vertex_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_opaque.vertices, chunk_mesh_infos[i].chunk_mesh_builder_opaque.vertices, GL_DYNAMIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh->ibo_opaque);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->ibo_opaque);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_opaque.index_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_opaque.indices, chunk_mesh_infos[i].chunk_mesh_builder_opaque.indices, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -265,14 +249,14 @@ void update_chunk_remesh(void)
     glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_index));
     glVertexAttribPointer (3, 1, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, light_level));
 
-    chunk_mesh->count_opaque = chunk_mesh_infos[i].chunk_mesh_builder_opaque.index_count;
+    chunk->count_opaque = chunk_mesh_infos[i].chunk_mesh_builder_opaque.index_count;
 
-    glBindVertexArray(chunk_mesh->vao_transparent);
+    glBindVertexArray(chunk->vao_transparent);
 
-    glBindBuffer(GL_ARRAY_BUFFER, chunk_mesh->vbo_transparent);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_transparent);
     glBufferData(GL_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_transparent.vertex_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_transparent.vertices, chunk_mesh_infos[i].chunk_mesh_builder_transparent.vertices, GL_DYNAMIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh->ibo_transparent);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->ibo_transparent);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_transparent.index_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_transparent.indices, chunk_mesh_infos[i].chunk_mesh_builder_transparent.indices, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -285,30 +269,8 @@ void update_chunk_remesh(void)
     glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_index));
     glVertexAttribPointer (3, 1, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, light_level));
 
-    chunk_mesh->count_transparent = chunk_mesh_infos[i].chunk_mesh_builder_transparent.index_count;
+    chunk->count_transparent = chunk_mesh_infos[i].chunk_mesh_builder_transparent.index_count;
   }
-
-  //////////////////////////////
-  /// 4: Unload chunk meshes ///
-  //////////////////////////////
-  world_chunk_for_each(chunk)
-    if(chunk->mesh)
-      if(chunk->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || chunk->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
-          chunk->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || chunk->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||
-          chunk->position.z < player_chunk_position.z - RENDERER_UNLOAD_DISTANCE || chunk->position.z > player_chunk_position.z + RENDERER_UNLOAD_DISTANCE)
-      {
-        glDeleteVertexArrays(1, &chunk->mesh->vao_opaque);
-        glDeleteBuffers(1, &chunk->mesh->vbo_opaque);
-        glDeleteBuffers(1, &chunk->mesh->ibo_opaque);
-
-        glDeleteVertexArrays(1, &chunk->mesh->vao_transparent);
-        glDeleteBuffers(1, &chunk->mesh->vbo_transparent);
-        glDeleteBuffers(1, &chunk->mesh->ibo_transparent);
-
-        free(chunk->mesh);
-
-        chunk->mesh = NULL;
-      }
 
   //////////////////
   /// 5: Cleanup ///

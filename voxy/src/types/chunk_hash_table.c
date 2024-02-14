@@ -33,8 +33,14 @@ int chunk_compare(ivec3_t position1, ivec3_t position2)
 
 void chunk_dispose(struct chunk *chunk)
 {
-  chunk_data_dispose(chunk->data);
-  chunk_mesh_dispose(chunk->mesh);
+  glDeleteVertexArrays(1, &chunk->vao_opaque);
+  glDeleteBuffers(1, &chunk->vbo_opaque);
+  glDeleteBuffers(1, &chunk->ibo_opaque);
+
+  glDeleteVertexArrays(1, &chunk->vao_transparent);
+  glDeleteBuffers(1, &chunk->vbo_transparent);
+  glDeleteBuffers(1, &chunk->ibo_transparent);
+
   free(chunk);
 }
 

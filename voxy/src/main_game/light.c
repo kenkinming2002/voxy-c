@@ -73,15 +73,15 @@ static inline struct light_info light_info_load_from_block_neighbour(const struc
 
 static inline struct light_info light_info_load(struct chunk *chunk, ivec3_t position)
 {
-  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->left   ? light_info_load_from_block_neighbour(&chunk->left  ->data->blocks[position.z][position.y][CHUNK_WIDTH-1]) : light_info_load_default();
-  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->right  ? light_info_load_from_block_neighbour(&chunk->right ->data->blocks[position.z][position.y][0]            ) : light_info_load_default();
-  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->back   ? light_info_load_from_block_neighbour(&chunk->back  ->data->blocks[position.z][CHUNK_WIDTH-1][position.x]) : light_info_load_default();
-  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->front  ? light_info_load_from_block_neighbour(&chunk->front ->data->blocks[position.z][0]            [position.x]) : light_info_load_default();
-  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->bottom ? light_info_load_from_block_neighbour(&chunk->bottom->data->blocks[CHUNK_WIDTH-1][position.y][position.x]) : light_info_load_default();
-  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->top    ? light_info_load_from_block_neighbour(&chunk->top   ->data->blocks[0]            [position.y][position.x]) : light_info_load_default();
+  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->left   ? light_info_load_from_block_neighbour(&chunk->left  ->blocks[position.z][position.y][CHUNK_WIDTH-1]) : light_info_load_default();
+  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->right  ? light_info_load_from_block_neighbour(&chunk->right ->blocks[position.z][position.y][0]            ) : light_info_load_default();
+  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->back   ? light_info_load_from_block_neighbour(&chunk->back  ->blocks[position.z][CHUNK_WIDTH-1][position.x]) : light_info_load_default();
+  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->front  ? light_info_load_from_block_neighbour(&chunk->front ->blocks[position.z][0]            [position.x]) : light_info_load_default();
+  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->bottom ? light_info_load_from_block_neighbour(&chunk->bottom->blocks[CHUNK_WIDTH-1][position.y][position.x]) : light_info_load_default();
+  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->top    ? light_info_load_from_block_neighbour(&chunk->top   ->blocks[0]            [position.y][position.x]) : light_info_load_default();
 
   if((position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH))
-    return light_info_load_from_block(&chunk->data->blocks[position.z][position.y][position.x]);
+    return light_info_load_from_block(&chunk->blocks[position.z][position.y][position.x]);
 
   return light_info_load_default();
 }
@@ -111,14 +111,14 @@ static inline bool light_info_save_to_block_neighbour(struct block *block, struc
 
 static inline void light_info_save(struct chunk *chunk, ivec3_t position, struct light_info light_info)
 {
-  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->left   && light_info_save_to_block_neighbour(&chunk->left  ->data->blocks[position.z][position.y][CHUNK_WIDTH-1], light_info)) { world_chunk_invalidate_light(chunk->left);   };
-  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->right  && light_info_save_to_block_neighbour(&chunk->right ->data->blocks[position.z][position.y][0]            , light_info)) { world_chunk_invalidate_light(chunk->right);  };
-  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->back   && light_info_save_to_block_neighbour(&chunk->back  ->data->blocks[position.z][CHUNK_WIDTH-1][position.x], light_info)) { world_chunk_invalidate_light(chunk->back);   };
-  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->front  && light_info_save_to_block_neighbour(&chunk->front ->data->blocks[position.z][0]            [position.x], light_info)) { world_chunk_invalidate_light(chunk->front);  };
-  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->bottom && light_info_save_to_block_neighbour(&chunk->bottom->data->blocks[CHUNK_WIDTH-1][position.y][position.x], light_info)) { world_chunk_invalidate_light(chunk->bottom); };
-  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->top    && light_info_save_to_block_neighbour(&chunk->top   ->data->blocks[0]            [position.y][position.x], light_info)) { world_chunk_invalidate_light(chunk->top);    };
+  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->left   && light_info_save_to_block_neighbour(&chunk->left  ->blocks[position.z][position.y][CHUNK_WIDTH-1], light_info)) { world_chunk_invalidate_light(chunk->left);   };
+  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->right  && light_info_save_to_block_neighbour(&chunk->right ->blocks[position.z][position.y][0]            , light_info)) { world_chunk_invalidate_light(chunk->right);  };
+  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->back   && light_info_save_to_block_neighbour(&chunk->back  ->blocks[position.z][CHUNK_WIDTH-1][position.x], light_info)) { world_chunk_invalidate_light(chunk->back);   };
+  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->front  && light_info_save_to_block_neighbour(&chunk->front ->blocks[position.z][0]            [position.x], light_info)) { world_chunk_invalidate_light(chunk->front);  };
+  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->bottom && light_info_save_to_block_neighbour(&chunk->bottom->blocks[CHUNK_WIDTH-1][position.y][position.x], light_info)) { world_chunk_invalidate_light(chunk->bottom); };
+  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->top    && light_info_save_to_block_neighbour(&chunk->top   ->blocks[0]            [position.y][position.x], light_info)) { world_chunk_invalidate_light(chunk->top);    };
   if((position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH))
-    light_info_save_to_block(&chunk->data->blocks[position.z][position.y][position.x], light_info);
+    light_info_save_to_block(&chunk->blocks[position.z][position.y][position.x], light_info);
 }
 
 static inline void light_infos_save(struct light_infos *light_infos, struct chunk *chunk)

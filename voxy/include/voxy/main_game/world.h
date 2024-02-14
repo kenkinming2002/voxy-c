@@ -19,7 +19,7 @@ extern struct chunk *chunks_invalidated_mesh_tail;
     for(struct chunk *it = chunks.buckets[i].head; it; it = it->next)
 
 struct chunk *world_chunk_lookup(ivec3_t position);
-void world_chunk_insert_unchecked(struct chunk *chunk);
+struct chunk *world_chunk_create(ivec3_t position);
 void world_chunk_invalidate_light(struct chunk *chunk);
 void world_chunk_invalidate_mesh(struct chunk *chunk);
 

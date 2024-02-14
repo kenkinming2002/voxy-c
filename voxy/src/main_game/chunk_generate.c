@@ -15,6 +15,7 @@
 
 #include <sc/hash_table.h>
 
+#include <stdio.h>
 
 struct chunk_generate_wrapper
 {
@@ -24,7 +25,8 @@ struct chunk_generate_wrapper
 
   struct thread_pool_job job;
 
-  struct chunk_data * _Atomic chunk_data;
+  atomic_bool done;
+  uint8_t     blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 };
 
 #define SC_HASH_TABLE_INTERFACE
@@ -59,27 +61,14 @@ int chunk_generate_wrapper_compare(ivec3_t position1, ivec3_t position2)
 
 void chunk_generate_wrapper_dispose(struct chunk_generate_wrapper *chunk_generate_wrapper)
 {
-  free(chunk_generate_wrapper->chunk_data);
   free(chunk_generate_wrapper);
 }
 
 void chunk_generate_wrapper_invoke(struct thread_pool_job *job)
 {
   struct chunk_generate_wrapper *wrapper = container_of(job, struct chunk_generate_wrapper, job);
-  struct chunk_data *chunk_data = malloc(sizeof *chunk_data);
-
-  uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
-  mod_generate_blocks(world_seed_get(), wrapper->position, blocks);
-  for(int z = 0; z<CHUNK_WIDTH; ++z)
-    for(int y = 0; y<CHUNK_WIDTH; ++y)
-      for(int x = 0; x<CHUNK_WIDTH; ++x)
-      {
-        chunk_data->blocks[z][y][x].id          = blocks[z][y][x];
-        chunk_data->blocks[z][y][x].ether       = false;
-        chunk_data->blocks[z][y][x].light_level = 0;
-      }
-
-  atomic_store_explicit(&wrapper->chunk_data, chunk_data, memory_order_release);
+  mod_generate_blocks(world_seed_get(), wrapper->position, wrapper->blocks);
+  atomic_store_explicit(&wrapper->done, true, memory_order_release);
 }
 
 void chunk_generate_wrapper_destroy(struct thread_pool_job *job)
@@ -91,41 +80,44 @@ static struct chunk_generate_wrapper_hash_table chunk_generate_wrappers;
 
 void update_chunk_generate(void)
 {
+  size_t count = 0;
+
   ivec3_t player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player.base.position, CHUNK_WIDTH));
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
       {
         ivec3_t position = ivec3_add(player_position, ivec3(dx, dy, dz));
-
-        struct chunk *chunk = world_chunk_lookup(position);
-        if(chunk)
+        if(world_chunk_lookup(position))
           continue;
 
         struct chunk_generate_wrapper *wrapper = chunk_generate_wrapper_hash_table_lookup(&chunk_generate_wrappers, position);
         if(!wrapper)
         {
-          struct chunk_generate_wrapper *wrapper = malloc(sizeof *wrapper);
-          wrapper->position = ivec3_add(player_position, ivec3(dx, dy, dz));
-          wrapper->job.invoke = chunk_generate_wrapper_invoke;
+          wrapper = malloc(sizeof *wrapper);
+          wrapper->job.invoke  = chunk_generate_wrapper_invoke;
           wrapper->job.destroy = chunk_generate_wrapper_destroy;
-          wrapper->chunk_data = NULL;
+          wrapper->position = position;
+          wrapper->done = false;
 
-          chunk_generate_wrapper_hash_table_insert_unchecked(&chunk_generate_wrappers, wrapper);
           thread_pool_enqueue(&wrapper->job);
+          chunk_generate_wrapper_hash_table_insert(&chunk_generate_wrappers, wrapper);
           continue;
         }
 
-        struct chunk_data *chunk_data = atomic_load_explicit(&wrapper->chunk_data, memory_order_consume);
-        if(!chunk_data)
+        if(!atomic_load_explicit(&wrapper->done, memory_order_acquire))
           continue;
 
-        chunk = malloc(sizeof *chunk);
-        chunk->position = position;
-        chunk->data = chunk_data;
-        chunk->mesh = NULL;
+        struct chunk *chunk = world_chunk_create(wrapper->position);
+        for(int z = 0; z<CHUNK_WIDTH; ++z)
+          for(int y = 0; y<CHUNK_WIDTH; ++y)
+            for(int x = 0; x<CHUNK_WIDTH; ++x)
+            {
+              chunk->blocks[z][y][x].id          = wrapper->blocks[z][y][x];
+              chunk->blocks[z][y][x].ether       = false;
+              chunk->blocks[z][y][x].light_level = 0;
+            }
 
-        world_chunk_insert_unchecked(chunk);
         world_chunk_invalidate_mesh(chunk);
         world_chunk_invalidate_mesh(chunk->left);
         world_chunk_invalidate_mesh(chunk->right);
@@ -134,5 +126,12 @@ void update_chunk_generate(void)
         world_chunk_invalidate_mesh(chunk->bottom);
         world_chunk_invalidate_mesh(chunk->top);
         world_chunk_invalidate_light(chunk);
+
+        free(chunk_generate_wrapper_hash_table_remove(&chunk_generate_wrappers, position));
+
+        count += 1;
       }
+
+  if(count != 0)
+    fprintf(stderr, "DEBUG: Chunk Generator: Generarted %zu chunks in background\n", count);
 }

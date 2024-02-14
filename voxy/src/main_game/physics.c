@@ -1,5 +1,6 @@
 #include <voxy/main_game/physics.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/chunks.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/world.h>
@@ -169,7 +170,7 @@ static void entity_physics_update(struct entity *entity, float dt)
         {
           ivec3_t position = ivec3(x, y, z);
 
-          const struct block *block = world_get_block(&world, position);
+          const struct block *block = block_get(position);
           if((block))
           {
             const struct block_info *block_info = mod_block_info_get(block->id);

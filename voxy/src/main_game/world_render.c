@@ -1,5 +1,6 @@
 #include <voxy/main_game/world_render.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/chunks.h>
 #include <voxy/main_game/mod_assets.h>
 
 #include <voxy/core/window.h>
@@ -50,25 +51,23 @@ void world_render()
   glUniformMatrix4fv(glGetUniformLocation(program_chunk->id, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets_block_array_texture_get()->id);
 
-  for(size_t i=0; i<world.chunks.bucket_count; ++i)
-    for(struct chunk *chunk = world.chunks.buckets[i].head; chunk; chunk = chunk->next)
-      if(chunk->chunk_mesh)
-      {
-        glBindVertexArray(chunk->chunk_mesh->vao_opaque);
-        glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_opaque, GL_UNSIGNED_INT, 0);
-      }
+  chunk_for_each(chunk)
+    if(chunk->chunk_mesh)
+    {
+      glBindVertexArray(chunk->chunk_mesh->vao_opaque);
+      glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_opaque, GL_UNSIGNED_INT, 0);
+    }
 
-  for(size_t i=0; i<world.chunks.bucket_count; ++i)
-    for(struct chunk *chunk = world.chunks.buckets[i].head; chunk; chunk = chunk->next)
-      if(chunk->chunk_mesh)
-      {
-        glBindVertexArray(chunk->chunk_mesh->vao_transparent);
-        glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
-      }
+  chunk_for_each(chunk)
+    if(chunk->chunk_mesh)
+    {
+      glBindVertexArray(chunk->chunk_mesh->vao_transparent);
+      glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_transparent, GL_UNSIGNED_INT, 0);
+    }
 
   ivec3_t position;
   ivec3_t normal;
-  bool hit = entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal);
+  bool hit = entity_ray_cast(&world.player.base, 20.0f, &position, &normal);
 
   if(hit || world.player.third_person)
   {

@@ -3,6 +3,7 @@
 #include <voxy/types/block.h>
 
 #include <voxy/main_game/mod.h>
+#include <voxy/main_game/chunks.h>
 
 #include <voxy/mod_interface.h>
 
@@ -36,7 +37,7 @@ void entity_apply_impulse(struct entity *entity, fvec3_t impulse)
   entity->velocity = fvec3_add(entity->velocity, impulse);
 }
 
-bool entity_ray_cast(struct entity *entity, struct world *world, float distance, ivec3_t *position, ivec3_t *normal)
+bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal)
 {
   fvec3_t ray_position  = entity->position;
   fvec3_t ray_direction = transform_forward(entity->local_view_transform);
@@ -49,7 +50,7 @@ bool entity_ray_cast(struct entity *entity, struct world *world, float distance,
 
   while(ray_cast.distance < distance)
   {
-    struct block *block = world_get_block(world, ray_cast.iposition);
+    struct block *block = block_get(ray_cast.iposition);
     if(block && mod_block_info_get(block->id)->type == BLOCK_TYPE_OPAQUE)
       return true;
 

@@ -2,6 +2,7 @@
 
 #include <voxy/mod_interface.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/chunks.h>
 
 #include <voxy/types/world.h>
 #include <voxy/types/entity.h>
@@ -27,10 +28,10 @@ void on_block_item_use(uint8_t item_id)
 {
   ivec3_t position;
   ivec3_t normal;
-  if(world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
+  if(world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, 20.0f, &position, &normal))
   {
     world.player.cooldown = 0.0f;
-    world_place_block(&world, ivec3_add(position, normal), item_id_to_block_id(item_id));
+    block_set(ivec3_add(position, normal), item_id_to_block_id(item_id));
   }
 }
 

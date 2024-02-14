@@ -1,5 +1,6 @@
 #include <voxy/main_game/player_action.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/chunks.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/player.h>
@@ -24,7 +25,7 @@ void update_player_action(float dt)
   ivec3_t position;
   ivec3_t normal;
 
-  if(input_state(BUTTON_LEFT) && world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
+  if(input_state(BUTTON_LEFT) && world.player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&world.player.base, 20.0f, &position, &normal))
   {
     world.player.cooldown = 0.0f;
 
@@ -35,7 +36,7 @@ void update_player_action(float dt)
         {
           ivec3_t offset = ivec3(dx, dy, dz);
           if(ivec3_length_squared(offset) <= radius * radius)
-            world_destroy_block(&world, ivec3_add(position, offset));
+            block_set(ivec3_add(position, offset), 0);
         }
   }
 

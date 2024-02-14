@@ -1,5 +1,6 @@
 #include <voxy/main_game/ui.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/chunks.h>
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/mod_assets.h>
 
@@ -268,9 +269,9 @@ void main_game_render_ui()
 
     ivec3_t position;
     ivec3_t normal;
-    if(entity_ray_cast(&world.player.base, &world, 20.0f, &position, &normal))
+    if(entity_ray_cast(&world.player.base, 20.0f, &position, &normal))
     {
-      const struct block *target_block     = world_get_block(&world, position);
+      const struct block *target_block      = block_get(position);
       const uint8_t       target_block_id   = target_block ? target_block->id : BLOCK_NONE;
       const char         *target_block_name = target_block_id != BLOCK_NONE ? mod_block_info_get(target_block_id)->name : NULL;
       if(target_block_name)

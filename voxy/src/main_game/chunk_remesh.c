@@ -1,5 +1,6 @@
 #include <voxy/main_game/chunk_remesh.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/chunks.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/world.h>
@@ -141,7 +142,7 @@ void update_chunk_remesh(void)
       for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
       {
         ivec3_t chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
-        struct chunk *chunk = world_chunk_lookup(&world, chunk_position);
+        struct chunk *chunk = chunk_lookup(chunk_position);
         if(chunk && chunk->mesh_dirty)
         {
           if(chunk_mesh_info_capacity == chunk_mesh_info_count)
@@ -297,25 +298,24 @@ void update_chunk_remesh(void)
   //////////////////////////////
   /// 4: Unload chunk meshes ///
   //////////////////////////////
-  for(size_t i=0; i<world.chunks.bucket_count; ++i)
-    for(struct chunk *chunk = world.chunks.buckets[i].head; chunk; chunk = chunk->next)
-      if(chunk->chunk_mesh)
-        if(chunk->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || chunk->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
-           chunk->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || chunk->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||
-           chunk->position.z < player_chunk_position.z - RENDERER_UNLOAD_DISTANCE || chunk->position.z > player_chunk_position.z + RENDERER_UNLOAD_DISTANCE)
-        {
-          glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_opaque);
-          glDeleteBuffers(1, &chunk->chunk_mesh->vbo_opaque);
-          glDeleteBuffers(1, &chunk->chunk_mesh->ibo_opaque);
+  chunk_for_each(chunk)
+    if(chunk->chunk_mesh)
+      if(chunk->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || chunk->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
+          chunk->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || chunk->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||
+          chunk->position.z < player_chunk_position.z - RENDERER_UNLOAD_DISTANCE || chunk->position.z > player_chunk_position.z + RENDERER_UNLOAD_DISTANCE)
+      {
+        glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_opaque);
+        glDeleteBuffers(1, &chunk->chunk_mesh->vbo_opaque);
+        glDeleteBuffers(1, &chunk->chunk_mesh->ibo_opaque);
 
-          glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_transparent);
-          glDeleteBuffers(1, &chunk->chunk_mesh->vbo_transparent);
-          glDeleteBuffers(1, &chunk->chunk_mesh->ibo_transparent);
+        glDeleteVertexArrays(1, &chunk->chunk_mesh->vao_transparent);
+        glDeleteBuffers(1, &chunk->chunk_mesh->vbo_transparent);
+        glDeleteBuffers(1, &chunk->chunk_mesh->ibo_transparent);
 
-          free(chunk->chunk_mesh);
+        free(chunk->chunk_mesh);
 
-          chunk->chunk_mesh = NULL;
-        }
+        chunk->chunk_mesh = NULL;
+      }
 
   //////////////////
   /// 5: Cleanup ///

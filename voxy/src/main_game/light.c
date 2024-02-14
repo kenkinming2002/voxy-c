@@ -1,5 +1,5 @@
 #include <voxy/main_game/light.h>
-#include <voxy/main_game/world.h>
+#include <voxy/main_game/chunks.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/world.h>
@@ -238,45 +238,45 @@ static inline void light_infos_propagate_light(struct light_infos *light_infos)
 //////////////
 /// 5: ??? ///
 //////////////
-
 void update_light(void)
 {
-  size_t count = 0;
-
   clock_t begin = clock();
+
+  size_t count = 0;
   for(;;)
   {
     bool updated = false;
-    for(size_t i=0; i<world.chunks.bucket_count; ++i)
-      for(struct chunk *chunk = world.chunks.buckets[i].head; chunk; chunk = chunk->next)
-        if(chunk->light_dirty)
-        {
-          struct light_infos light_infos;
+    chunk_for_each(chunk)
+    {
+      if(chunk->light_dirty)
+      {
+        struct light_infos light_infos;
 
-          light_infos_load(&light_infos, chunk);
-          light_infos_propagate_ether(&light_infos);
-          light_infos_apply_ether(&light_infos);
-          light_infos_propagate_light(&light_infos);
-          light_infos_save(&light_infos, chunk);
+        light_infos_load(&light_infos, chunk);
+        light_infos_propagate_ether(&light_infos);
+        light_infos_apply_ether(&light_infos);
+        light_infos_propagate_light(&light_infos);
+        light_infos_save(&light_infos, chunk);
 
-          chunk->light_dirty = false;
-          chunk->mesh_dirty = true;
-          if(chunk->left)   chunk->left  ->mesh_dirty = true;
-          if(chunk->right)  chunk->right ->mesh_dirty = true;
-          if(chunk->back)   chunk->back  ->mesh_dirty = true;
-          if(chunk->front)  chunk->front ->mesh_dirty = true;
-          if(chunk->bottom) chunk->bottom->mesh_dirty = true;
-          if(chunk->top)    chunk->top   ->mesh_dirty = true;
+        chunk->light_dirty = false;
+        chunk->mesh_dirty = true;
 
-          updated = true;
-          ++count;
-        }
+        if(chunk->left)   chunk->left  ->mesh_dirty = true;
+        if(chunk->right)  chunk->right ->mesh_dirty = true;
+        if(chunk->back)   chunk->back  ->mesh_dirty = true;
+        if(chunk->front)  chunk->front ->mesh_dirty = true;
+        if(chunk->bottom) chunk->bottom->mesh_dirty = true;
+        if(chunk->top)    chunk->top   ->mesh_dirty = true;
 
+        updated = true;
+        count += 1;
+      }
+    }
     if(!updated)
       break;
   }
-  clock_t end = clock();
 
+  clock_t end = clock();
   if(count != 0)
     fprintf(stderr, "DEBUG: Light System: Processed %zu chunks in %fs - Average %fs\n", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
 }

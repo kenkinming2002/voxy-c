@@ -28,6 +28,6 @@ fvec3_t entity_view_direction(const struct entity *entity);
 
 transform_t entity_view_transform(const struct entity *entity);
 
-bool entity_ray_cast(struct entity *entity, struct world *world, float distance, ivec3_t *position, ivec3_t *normal);
+bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal);
 
 #endif // TYPES_ENTITY_H

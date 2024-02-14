@@ -1,5 +1,5 @@
 #include <voxy/main_game/world_render.h>
-#include <voxy/main_game/chunks.h>
+#include <voxy/main_game/world.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod_assets.h>
 
@@ -51,14 +51,14 @@ void world_render()
   glUniformMatrix4fv(glGetUniformLocation(program_chunk->id, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets_block_array_texture_get()->id);
 
-  chunk_for_each(chunk)
+  world_chunk_for_each(chunk)
     if(chunk->chunk_mesh)
     {
       glBindVertexArray(chunk->chunk_mesh->vao_opaque);
       glDrawElements(GL_TRIANGLES, chunk->chunk_mesh->count_opaque, GL_UNSIGNED_INT, 0);
     }
 
-  chunk_for_each(chunk)
+  world_chunk_for_each(chunk)
     if(chunk->chunk_mesh)
     {
       glBindVertexArray(chunk->chunk_mesh->vao_transparent);

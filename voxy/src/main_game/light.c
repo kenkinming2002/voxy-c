@@ -1,5 +1,5 @@
 #include <voxy/main_game/light.h>
-#include <voxy/main_game/chunks.h>
+#include <voxy/main_game/world.h>
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/chunk.h>
@@ -245,7 +245,7 @@ void update_light(void)
   for(;;)
   {
     bool updated = false;
-    chunk_for_each(chunk)
+    world_chunk_for_each(chunk)
     {
       if(chunk->light_dirty)
       {

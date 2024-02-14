@@ -21,7 +21,7 @@ VOXY_SRCS += voxy/src/graphics/ui.c
 VOXY_SRCS += voxy/src/graphics/camera.c
 
 VOXY_SRCS += voxy/src/main_game/world_seed.c
-VOXY_SRCS += voxy/src/main_game/chunks.c
+VOXY_SRCS += voxy/src/main_game/world.c
 VOXY_SRCS += voxy/src/main_game/player.c
 VOXY_SRCS += voxy/src/main_game/mod.c
 VOXY_SRCS += voxy/src/main_game/mod_assets.c

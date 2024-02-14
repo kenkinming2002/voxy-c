@@ -1,5 +1,5 @@
 #include <voxy/main_game/chunk_remesh.h>
-#include <voxy/main_game/chunks.h>
+#include <voxy/main_game/world.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
@@ -142,7 +142,7 @@ void update_chunk_remesh(void)
       for(int dx = -RENDERER_LOAD_DISTANCE; dx<=RENDERER_LOAD_DISTANCE; ++dx)
       {
         ivec3_t chunk_position = ivec3_add(player_chunk_position, ivec3(dx, dy, dz));
-        struct chunk *chunk = chunk_lookup(chunk_position);
+        struct chunk *chunk = world_chunk_lookup(chunk_position);
         if(chunk && chunk->mesh_dirty)
         {
           if(chunk_mesh_info_capacity == chunk_mesh_info_count)
@@ -298,7 +298,7 @@ void update_chunk_remesh(void)
   //////////////////////////////
   /// 4: Unload chunk meshes ///
   //////////////////////////////
-  chunk_for_each(chunk)
+  world_chunk_for_each(chunk)
     if(chunk->chunk_mesh)
       if(chunk->position.x < player_chunk_position.x - RENDERER_UNLOAD_DISTANCE || chunk->position.x > player_chunk_position.x + RENDERER_UNLOAD_DISTANCE ||
           chunk->position.y < player_chunk_position.y - RENDERER_UNLOAD_DISTANCE || chunk->position.y > player_chunk_position.y + RENDERER_UNLOAD_DISTANCE ||

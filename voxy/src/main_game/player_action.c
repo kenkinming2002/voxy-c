@@ -1,5 +1,5 @@
 #include <voxy/main_game/player_action.h>
-#include <voxy/main_game/chunks.h>
+#include <voxy/main_game/world.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
@@ -35,7 +35,7 @@ void update_player_action(float dt)
         {
           ivec3_t offset = ivec3(dx, dy, dz);
           if(ivec3_length_squared(offset) <= radius * radius)
-            block_set(ivec3_add(position, offset), 0);
+            world_set_block(ivec3_add(position, offset), 0);
         }
   }
 

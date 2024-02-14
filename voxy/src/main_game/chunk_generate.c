@@ -1,6 +1,6 @@
 #include <voxy/main_game/chunk_generate.h>
+#include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
-#include <voxy/main_game/chunks.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
 
@@ -98,7 +98,7 @@ void update_chunk_generate(void)
       {
         ivec3_t position = ivec3_add(player_position, ivec3(dx, dy, dz));
 
-        struct chunk *chunk = chunk_lookup(position);
+        struct chunk *chunk = world_chunk_lookup(position);
         if(chunk)
           continue;
 
@@ -125,7 +125,7 @@ void update_chunk_generate(void)
         chunk->chunk_data = chunk_data;
         chunk->chunk_mesh = NULL;
 
-        chunk_insert_unchecked(chunk);
+        world_chunk_insert_unchecked(chunk);
 
         chunk->mesh_dirty  = true;
         chunk->light_dirty = true;

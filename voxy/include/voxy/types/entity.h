@@ -6,9 +6,6 @@
 
 #include <stdbool.h>
 
-struct world;
-struct resource_pack;
-
 struct entity
 {
   fvec3_t position;

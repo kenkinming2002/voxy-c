@@ -206,9 +206,16 @@ static void entity_physics_integrate(struct entity *entity, float dt)
   entity->position = fvec3_add(entity->position, fvec3_mul_scalar(entity->velocity, dt));
 }
 
+static void entity_update_physics(struct entity *entity, float dt)
+{
+  entity_physics_apply_law(entity, dt);
+  entity_physics_update(entity, dt);
+  entity_physics_integrate(entity, dt);
+}
+
 void update_physics(float dt)
 {
-  entity_physics_apply_law(&player.base, dt);
-  entity_physics_update(&player.base, dt);
-  entity_physics_integrate(&player.base, dt);
+  entity_update_physics(&player.base, dt);
+  for(size_t i=0; i<entity_count; ++i)
+    entity_update_physics(&entities[i], dt);
 }

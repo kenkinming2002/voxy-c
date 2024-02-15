@@ -153,3 +153,16 @@ void world_block_invalidate_mesh(ivec3_t position)
   world_chunk_invalidate_mesh(world_chunk_lookup(chunk_position));
 }
 
+struct entity *entities;
+size_t         entity_count;
+size_t         entity_capacity;
+
+struct entity *world_entity_create(void)
+{
+  if(entity_capacity == entity_count)
+  {
+    entity_capacity = entity_capacity != 0 ? entity_capacity * 2 : 1;
+    entities        = realloc(entities, entity_capacity * sizeof *entities);
+  }
+  return &entities[entity_count++];
+}

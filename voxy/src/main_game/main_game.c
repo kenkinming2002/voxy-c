@@ -11,12 +11,31 @@
 #include <voxy/main_game/ui.h>
 #include <voxy/main_game/world_render.h>
 
+#include <voxy/main_game/world.h>
+#include <voxy/main_game/player.h>
+
+#include <voxy/types/player.h>
+
 #include <voxy/core/window.h>
 
 #include <glad/glad.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 void main_game_update(float dt)
 {
+  // 0: Entity Generation? This should be temporary!??
+  static float cooldown;
+  cooldown += dt;
+  if(cooldown >= 2.0f)
+  {
+    cooldown -= 2.0f;
+
+    struct entity *entity = world_entity_create();
+    *entity = player.base;
+  }
+
   // 1: Update World
   update_chunk_generate();
   update_player_spawn();

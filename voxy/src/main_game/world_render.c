@@ -67,7 +67,7 @@ void world_render()
   ivec3_t normal;
   bool hit = entity_ray_cast(&player.base, 20.0f, &position, &normal);
 
-  if(hit || player.third_person)
+  if(hit || player.third_person || entity_count != 0)
   {
     glUseProgram(program_outline->id);
     glUniformMatrix4fv(glGetUniformLocation(program_outline->id, "VP"), 1, GL_TRUE, (const float *)&VP);
@@ -92,6 +92,14 @@ void world_render()
     {
       glUniform3f(glGetUniformLocation(program_outline->id, "position"),  player.base.position.x,  player.base.position.y,  player.base.position.z);
       glUniform3f(glGetUniformLocation(program_outline->id, "dimension"), player.base.dimension.x, player.base.dimension.y, player.base.dimension.z);
+      glUniform4f(glGetUniformLocation(program_outline->id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
+      glDrawArrays(GL_LINES, 0, 24);
+    }
+
+    for(size_t i=0; i<entity_count; ++i)
+    {
+      glUniform3f(glGetUniformLocation(program_outline->id, "position"),  entities[i].position.x,  entities[i].position.y,  entities[i].position.z);
+      glUniform3f(glGetUniformLocation(program_outline->id, "dimension"), entities[i].dimension.x, entities[i].dimension.y, entities[i].dimension.z);
       glUniform4f(glGetUniformLocation(program_outline->id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
       glDrawArrays(GL_LINES, 0, 24);
     }

@@ -15,6 +15,8 @@ struct entity
   transform_t local_view_transform;
 
   bool grounded;
+
+  void(*update)(struct entity *entity, float dt);
 };
 
 fvec3_t entity_view_position(const struct entity *entity);

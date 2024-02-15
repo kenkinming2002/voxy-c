@@ -30,6 +30,7 @@ void update_player_spawn(void)
     player.base.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);
     player.base.local_view_transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
     player.base.grounded                         = false;
+    player.base.update                           = NULL;
 
     for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
       for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)

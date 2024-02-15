@@ -23,6 +23,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static float randf(float low, float high)
+{
+  return low + (float)rand() / (float)RAND_MAX * (high - low);
+}
+
+static void weird_entity_update(struct entity *entity, float dt)
+{
+  entity_jump(entity, 20.0f);
+  entity_move(entity, fvec2(randf(-1.0f, 1.0f), randf(-1.0f, 1.0f)), 30.0f, dt);
+}
+
 void main_game_update(float dt)
 {
   // 0: Entity Generation? This should be temporary!??
@@ -34,14 +45,21 @@ void main_game_update(float dt)
 
     struct entity *entity = world_entity_create();
     *entity = player.base;
+    entity->update = &weird_entity_update;
   }
 
   // 1: Update World
   update_chunk_generate();
+
+  for(size_t i=0; i<entity_count; ++i)
+    if(entities[i].update)
+      entities[i].update(&entities[i], dt);
+
   update_player_spawn();
   update_player_camera();
   update_player_movement(dt);
   update_player_action(dt);
+
   update_light();
   update_physics(dt);
   update_chunk_remesh();

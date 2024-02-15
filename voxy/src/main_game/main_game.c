@@ -14,6 +14,8 @@
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/player.h>
 
+#include <voxy/graphics/ui.h>
+
 #include <voxy/types/player.h>
 
 #include <voxy/core/window.h>
@@ -36,6 +38,8 @@ static void weird_entity_update(struct entity *entity, float dt)
 
 void main_game_update(float dt)
 {
+  ui_reset();
+
   // 0: Entity Generation? This should be temporary!??
   static float cooldown;
   cooldown += dt;
@@ -74,5 +78,6 @@ void main_game_render()
 
   world_render();        // 1: Render World
   main_game_render_ui(); // 2: Render UI
+  ui_render();
 }
 

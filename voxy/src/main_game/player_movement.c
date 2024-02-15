@@ -10,6 +10,18 @@
 
 #include <voxy/config.h>
 
+static fvec2_t player_move_direction(void)
+{
+  fvec2_t direction = fvec2_zero();
+
+  if(input_state(KEY_A)) direction.x -= 1.0f;
+  if(input_state(KEY_D)) direction.x += 1.0f;
+  if(input_state(KEY_S)) direction.y -= 1.0f;
+  if(input_state(KEY_W)) direction.y += 1.0f;
+
+  return direction;
+}
+
 void update_player_movement(float dt)
 {
   if(!player_spawned)
@@ -18,24 +30,7 @@ void update_player_movement(float dt)
   if(player.inventory.opened)
     return;
 
-  fvec3_t impulse = fvec3_zero();
-
-  if(input_state(KEY_A)) impulse.x -= 1.0f;
-  if(input_state(KEY_D)) impulse.x += 1.0f;
-  if(input_state(KEY_S)) impulse.y -= 1.0f;
-  if(input_state(KEY_W)) impulse.y += 1.0f;
-
-  impulse = transform_local(player.base.local_view_transform, impulse);
-  impulse.z = 0.0f;
-  impulse = fvec3_normalize(impulse);
-  impulse = fvec3_mul_scalar(impulse, player.base.grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR);
-  impulse = fvec3_mul_scalar(impulse, dt);
-
-  entity_apply_impulse(&player.base, impulse);
-
-  if(input_state(KEY_SPACE) && player.base.grounded)
-  {
-    player.base.grounded = false;
-    entity_apply_impulse(&player.base, fvec3(0.0f, 0.0f, PLAYER_JUMP_STRENGTH));
-  }
+  entity_move(&player.base, player_move_direction(), player.base.grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR, dt);
+  if(input_state(KEY_SPACE))
+    entity_jump(&player.base, PLAYER_JUMP_STRENGTH);
 }

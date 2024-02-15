@@ -36,6 +36,30 @@ void entity_apply_impulse(struct entity *entity, fvec3_t impulse)
   entity->velocity = fvec3_add(entity->velocity, impulse);
 }
 
+void entity_move(struct entity *entity, fvec2_t direction, float speed, float dt)
+{
+  fvec3_t impulse = fvec3_add(
+    fvec3_mul_scalar(transform_right  (entity->local_view_transform), direction.x),
+    fvec3_mul_scalar(transform_forward(entity->local_view_transform), direction.y)
+  );
+
+  impulse.z = 0.0f;
+  impulse   = fvec3_normalize(impulse);
+  impulse   = fvec3_mul_scalar(impulse, speed);
+  impulse   = fvec3_mul_scalar(impulse, dt);
+
+  entity_apply_impulse(entity, impulse);
+}
+
+void entity_jump(struct entity *entity, float strength)
+{
+  if(entity->grounded)
+  {
+    entity->grounded = false;
+    entity_apply_impulse(entity, fvec3(0.0f, 0.0f, strength));
+  }
+}
+
 bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal)
 {
   fvec3_t ray_position  = entity->position;

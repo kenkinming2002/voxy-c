@@ -3,7 +3,14 @@
 
 #include <stdbool.h>
 
-extern bool                 player_spawned;
-extern struct player_entity player;
+struct player;
+struct entity;
+
+struct player *player_get(void);
+
+struct entity *player_as_entity(struct player *player);
+bool player_third_person(struct player *player);
+
+void update_spawn_player(void);
 
 #endif // MAIN_GAME_PLAYER_H

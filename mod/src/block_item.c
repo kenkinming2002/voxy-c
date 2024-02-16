@@ -26,12 +26,12 @@ static uint8_t item_id_to_block_id(uint8_t item_id)
 
 void on_block_item_use(uint8_t item_id)
 {
+  struct player *player        = player_get();
+  struct entity *player_entity = player_as_entity(player);
+
   ivec3_t position;
   ivec3_t normal;
-  if(player.cooldown >= PLAYER_ACTION_COOLDOWN && entity_ray_cast(&player.base, 20.0f, &position, &normal))
-  {
-    player.cooldown = 0.0f;
+  if(entity_ray_cast(player_entity, 20.0f, &position, &normal))
     world_block_set(ivec3_add(position, normal), item_id_to_block_id(item_id));
-  }
 }
 

@@ -215,7 +215,6 @@ static void entity_update_physics(struct entity *entity, float dt)
 
 void update_physics(float dt)
 {
-  entity_update_physics(&player.base, dt);
   for(size_t i=0; i<entity_count; ++i)
-    entity_update_physics(&entities[i], dt);
+    entity_update_physics(entities[i], dt);
 }

@@ -82,7 +82,13 @@ void update_chunk_generate(void)
 {
   size_t count = 0;
 
-  ivec3_t player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player.base.position, CHUNK_WIDTH));
+  struct player *player = player_get();
+  if(!player)
+    return;
+
+  struct entity *player_entity   = player_as_entity(player);
+  ivec3_t        player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player_entity->position, CHUNK_WIDTH));
+
   for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
     for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
       for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)

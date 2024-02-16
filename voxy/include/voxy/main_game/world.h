@@ -29,10 +29,10 @@ void world_block_set(ivec3_t position, uint8_t block_id);
 void world_block_invalidate_light(ivec3_t position);
 void world_block_invalidate_mesh(ivec3_t position);
 
-extern struct entity *entities;
-extern size_t         entity_count;
-extern size_t         entity_capacity;
+extern struct entity **entities;
+extern size_t          entity_count;
+extern size_t          entity_capacity;
 
-struct entity *world_entity_create(void);
+void world_entity_add(struct entity *entity);
 
 #endif // MAIN_GAME_WORLD_H

@@ -10,7 +10,6 @@
 struct inventory
 {
   struct item items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
-  bool opened;
 };
 
 #endif // TYPES_INVENTORY_H

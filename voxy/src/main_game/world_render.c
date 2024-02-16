@@ -24,13 +24,19 @@ void world_render()
   struct gl_program *program_chunk   = gl_program_chunk_get();
   struct gl_program *program_outline = gl_program_outline_get();
 
+  struct player *player = player_get();
+  if(!player)
+    return;
+
+  struct entity *player_entity = player_as_entity(player);
+
   struct camera camera;
-  camera.transform = entity_view_transform(&player.base);
+  camera.transform = entity_view_transform(player_entity);
   camera.fovy   = M_PI / 2.0f;
   camera.near   = 0.1f;
   camera.far    = 1000.0f;
   camera.aspect = (float)window_size.x / (float)window_size.y;
-  if(player.third_person)
+  if(player_third_person(player))
     camera.transform = transform_local_translate(camera.transform, fvec3(0.0f, -10.0f, 0.0f));
 
   fmat4_t VP = fmat4_identity();
@@ -65,9 +71,9 @@ void world_render()
 
   ivec3_t position;
   ivec3_t normal;
-  bool hit = entity_ray_cast(&player.base, 20.0f, &position, &normal);
+  bool hit = entity_ray_cast(player_entity, 20.0f, &position, &normal);
 
-  if(hit || player.third_person || entity_count != 0)
+  if(hit || player_third_person(player) || entity_count != 0)
   {
     glUseProgram(program_outline->id);
     glUniformMatrix4fv(glGetUniformLocation(program_outline->id, "VP"), 1, GL_TRUE, (const float *)&VP);
@@ -88,18 +94,13 @@ void world_render()
       glDrawArrays(GL_LINES, 0, 24);
     }
 
-    if(player.third_person)
-    {
-      glUniform3f(glGetUniformLocation(program_outline->id, "position"),  player.base.position.x,  player.base.position.y,  player.base.position.z);
-      glUniform3f(glGetUniformLocation(program_outline->id, "dimension"), player.base.dimension.x, player.base.dimension.y, player.base.dimension.z);
-      glUniform4f(glGetUniformLocation(program_outline->id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
-      glDrawArrays(GL_LINES, 0, 24);
-    }
-
     for(size_t i=0; i<entity_count; ++i)
     {
-      glUniform3f(glGetUniformLocation(program_outline->id, "position"),  entities[i].position.x,  entities[i].position.y,  entities[i].position.z);
-      glUniform3f(glGetUniformLocation(program_outline->id, "dimension"), entities[i].dimension.x, entities[i].dimension.y, entities[i].dimension.z);
+      if(entities[i] == player_entity && !player_third_person(player))
+        continue;
+
+      glUniform3f(glGetUniformLocation(program_outline->id, "position"),  entities[i]->position.x,  entities[i]->position.y,  entities[i]->position.z);
+      glUniform3f(glGetUniformLocation(program_outline->id, "dimension"), entities[i]->dimension.x, entities[i]->dimension.y, entities[i]->dimension.z);
       glUniform4f(glGetUniformLocation(program_outline->id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
       glDrawArrays(GL_LINES, 0, 24);
     }

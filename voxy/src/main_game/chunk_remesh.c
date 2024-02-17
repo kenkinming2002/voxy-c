@@ -16,6 +16,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+static inline int absi(int a)
+{
+  return a > 0 ? a : -a;
+}
+
 struct chunk_mesh_vertex
 {
   fvec3_t  position;
@@ -35,86 +40,54 @@ struct chunk_mesh_builder
   size_t    index_capacity;
 };
 
-static inline void chunk_mesh_builder_push_vertices(struct chunk_mesh_builder *chunk_mesh_builder, size_t count, struct chunk_mesh_vertex vertices[count])
+static inline void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_mesh_vertex vertex)
 {
-  if(chunk_mesh_builder->vertex_capacity < chunk_mesh_builder->vertex_count + count)
+  if(chunk_mesh_builder->vertex_capacity == chunk_mesh_builder->vertex_count)
   {
-    while(chunk_mesh_builder->vertex_capacity < chunk_mesh_builder->vertex_count + count)
-      chunk_mesh_builder->vertex_capacity = chunk_mesh_builder->vertex_capacity != 0 ? chunk_mesh_builder->vertex_capacity * 2 : 1;
-
-    chunk_mesh_builder->vertices = realloc(chunk_mesh_builder->vertices, chunk_mesh_builder->vertex_capacity * sizeof *chunk_mesh_builder->vertices);
+    chunk_mesh_builder->vertex_capacity = chunk_mesh_builder->vertex_capacity != 0 ? chunk_mesh_builder->vertex_capacity * 2 : 1;
+    chunk_mesh_builder->vertices        = realloc(chunk_mesh_builder->vertices, chunk_mesh_builder->vertex_capacity * sizeof *chunk_mesh_builder->vertices);
   }
-
-  for(size_t i=0; i<count; ++i)
-    chunk_mesh_builder->vertices[chunk_mesh_builder->vertex_count++] = vertices[i];
+  chunk_mesh_builder->vertices[chunk_mesh_builder->vertex_count++] = vertex;
 }
 
-static inline void chunk_mesh_builder_push_indices(struct chunk_mesh_builder *chunk_mesh_builder, size_t count, uint32_t indices[count])
+static inline void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder, uint32_t index)
 {
-  if(chunk_mesh_builder->index_capacity < chunk_mesh_builder->index_count + count)
+  if(chunk_mesh_builder->index_capacity == chunk_mesh_builder->index_count)
   {
-    while(chunk_mesh_builder->index_capacity < chunk_mesh_builder->index_count + count)
-      chunk_mesh_builder->index_capacity = chunk_mesh_builder->index_capacity != 0 ? chunk_mesh_builder->index_capacity * 2 : 1;
-
-    chunk_mesh_builder->indices = realloc(chunk_mesh_builder->indices, chunk_mesh_builder->index_capacity * sizeof *chunk_mesh_builder->indices);
+    chunk_mesh_builder->index_capacity = chunk_mesh_builder->index_capacity != 0 ? chunk_mesh_builder->index_capacity * 2 : 1;
+    chunk_mesh_builder->indices        = realloc(chunk_mesh_builder->indices, chunk_mesh_builder->index_capacity * sizeof *chunk_mesh_builder->indices);
   }
-
-  for(size_t i=0; i<count; ++i)
-    chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = indices[i];
+  chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = index;
 }
 
-static inline void chunk_mesh_builder_emit_face(struct chunk_mesh_builder *chunk_mesh_builder, fvec3_t position, fvec3_t normal, uint32_t texture_index, float light_level)
+static inline struct block chunk_block_lookup(struct chunk *chunk, ivec3_t position)
 {
-  uint32_t                 indices[6];
-  struct chunk_mesh_vertex vertices[4];
+  if(!chunk)
+    return (struct block) { .id = BLOCK_NONE, .ether = false, .light_level = 0, };
 
-  indices[0] = chunk_mesh_builder->vertex_count + 0;
-  indices[1] = chunk_mesh_builder->vertex_count + 1;
-  indices[2] = chunk_mesh_builder->vertex_count + 2;
-  indices[3] = chunk_mesh_builder->vertex_count + 2;
-  indices[4] = chunk_mesh_builder->vertex_count + 1;
-  indices[5] = chunk_mesh_builder->vertex_count + 3;
-
-  fvec3_t axis2 = fvec3_dot(normal, fvec3(0.0f, 0.0f, 1.0f)) == 0.0f ? fvec3(0.0f, 0.0f, 1.0f) : fvec3(1.0f, 0.0f, 0.0f);
-  fvec3_t axis1 = fvec3_cross(normal, axis2);
-
-  vertices[0].position = fvec3_add(position, fvec3_add(fvec3_mul_scalar(normal, 0.5f), fvec3_add(fvec3_mul_scalar(axis1, -0.5f), fvec3_mul_scalar(axis2, -0.5f))));
-  vertices[1].position = fvec3_add(position, fvec3_add(fvec3_mul_scalar(normal, 0.5f), fvec3_add(fvec3_mul_scalar(axis1, -0.5f), fvec3_mul_scalar(axis2,  0.5f))));
-  vertices[2].position = fvec3_add(position, fvec3_add(fvec3_mul_scalar(normal, 0.5f), fvec3_add(fvec3_mul_scalar(axis1,  0.5f), fvec3_mul_scalar(axis2, -0.5f))));
-  vertices[3].position = fvec3_add(position, fvec3_add(fvec3_mul_scalar(normal, 0.5f), fvec3_add(fvec3_mul_scalar(axis1,  0.5f), fvec3_mul_scalar(axis2,  0.5f))));
-
-  vertices[0].texture_coords = fvec2(0.0f, 0.0f);
-  vertices[1].texture_coords = fvec2(0.0f, 1.0f);
-  vertices[2].texture_coords = fvec2(1.0f, 0.0f);
-  vertices[3].texture_coords = fvec2(1.0f, 1.0f);
-
-  vertices[0].texture_index = texture_index;
-  vertices[1].texture_index = texture_index;
-  vertices[2].texture_index = texture_index;
-  vertices[3].texture_index = texture_index;
-
-  vertices[0].light_level = light_level;
-  vertices[1].light_level = light_level;
-  vertices[2].light_level = light_level;
-  vertices[3].light_level = light_level;
-
-  chunk_mesh_builder_push_indices(chunk_mesh_builder, sizeof indices / sizeof indices[0], indices);
-  chunk_mesh_builder_push_vertices(chunk_mesh_builder, sizeof vertices / sizeof vertices[0], vertices);
-}
-
-static inline struct block *chunk_block_lookup(struct chunk *chunk, ivec3_t position)
-{
   if(position.z >= 0 && position.z < CHUNK_WIDTH)
     if(position.y >= 0 && position.y < CHUNK_WIDTH)
       if(position.x >= 0 && position.x < CHUNK_WIDTH)
-        return &chunk->blocks[position.z][position.y][position.x];
+        return chunk->blocks[position.z][position.y][position.x];
 
-  if(position.z == -1)          return chunk->bottom ? &chunk->bottom->blocks[CHUNK_WIDTH-1][position.y][position.x] : NULL;
-  if(position.z == CHUNK_WIDTH) return chunk->top    ? &chunk->top   ->blocks[0]            [position.y][position.x] : NULL;
-  if(position.y == -1)          return chunk->back   ? &chunk->back  ->blocks[position.z][CHUNK_WIDTH-1][position.x] : NULL;
-  if(position.y == CHUNK_WIDTH) return chunk->front  ? &chunk->front ->blocks[position.z][0]            [position.x] : NULL;
-  if(position.x == -1)          return chunk->left   ? &chunk->left  ->blocks[position.z][position.y][CHUNK_WIDTH-1] : NULL;
-  if(position.x == CHUNK_WIDTH) return chunk->right  ? &chunk->right ->blocks[position.z][position.y][0]             : NULL;
+  if(position.x == -1)          return chunk_block_lookup(chunk->left,   ivec3_add(position, ivec3(CHUNK_WIDTH, 0, 0)));
+  if(position.x == CHUNK_WIDTH) return chunk_block_lookup(chunk->right,  ivec3_sub(position, ivec3(CHUNK_WIDTH, 0, 0)));
+  if(position.y == -1)          return chunk_block_lookup(chunk->back,   ivec3_add(position, ivec3(0, CHUNK_WIDTH, 0)));
+  if(position.y == CHUNK_WIDTH) return chunk_block_lookup(chunk->front,  ivec3_sub(position, ivec3(0, CHUNK_WIDTH, 0)));
+  if(position.z == -1)          return chunk_block_lookup(chunk->bottom, ivec3_add(position, ivec3(0, 0, CHUNK_WIDTH)));
+  if(position.z == CHUNK_WIDTH) return chunk_block_lookup(chunk->top,    ivec3_sub(position, ivec3(0, 0, CHUNK_WIDTH)));
+
+  assert(0 && "Unreachable");
+}
+
+static inline size_t block_texture_index(const struct block_info *block_info, ivec3_t normal)
+{
+  if(normal.x == -1) return block_info->texture_left;
+  if(normal.x ==  1) return block_info->texture_right;
+  if(normal.y == -1) return block_info->texture_back;
+  if(normal.y ==  1) return block_info->texture_front;
+  if(normal.z == -1) return block_info->texture_bottom;
+  if(normal.z ==  1) return block_info->texture_top;
 
   assert(0 && "Unreachable");
 }
@@ -173,55 +146,94 @@ void update_chunk_remesh(void)
       for(int y = 0; y<CHUNK_WIDTH; ++y)
         for(int x = 0; x<CHUNK_WIDTH; ++x)
         {
-          ivec3_t normals[] = {
-            ivec3(-1,  0,  0),
-            ivec3( 1,  0,  0),
-            ivec3( 0, -1,  0),
-            ivec3( 0,  1,  0),
-            ivec3( 0,  0, -1),
-            ivec3( 0,  0,  1),
+          // Compiler plz ;)
+          // Compiler plz ;)
+          // Compiler plz ;)
+
+          const struct block_info BLOCK_INFO_NONE = {
+            .name = "invalid",
+            .type = BLOCK_TYPE_OPAQUE,
           };
 
-          for(size_t j=0; j<6; ++j)
-          {
-            ivec3_t position  = ivec3(x, y, z);
-            ivec3_t nposition = ivec3_add(position, normals[j]);
+          struct block             blocks     [3][3][3];
+          const struct block_info *block_infos[3][3][3];
+          for(int dz = -1; dz<=1; ++dz)
+            for(int dy = -1; dy<=1; ++dy)
+              for(int dx = -1; dx<=1; ++dx)
+              {
+                blocks[1+dz][1+dy][1+dx] = chunk_block_lookup(chunk_mesh_infos[i].chunk, ivec3(x+dx, y+dy, z+dz));
+                block_infos[1+dz][1+dy][1+dx] = blocks[1+dz][1+dy][1+dx].id  != BLOCK_NONE ? mod_block_info_get(blocks[1+dz][1+dy][1+dx].id)  : &BLOCK_INFO_NONE;
+              }
 
-            const struct block *block  = chunk_block_lookup(chunk_mesh_infos[i].chunk, position);
-            const struct block *nblock = chunk_block_lookup(chunk_mesh_infos[i].chunk, nposition);
+          for(int dz = -1; dz<=1; ++dz)
+            for(int dy = -1; dy<=1; ++dy)
+              for(int dx = -1; dx<=1; ++dx)
+                if(absi(dx) + absi(dy) + absi(dz) == 1)
+                {
+                  const struct block nblock = blocks[1+dz][1+dy][1+dx];
 
-            const struct block_info *block_info  = mod_block_info_get(block->id);
-            const struct block_info *nblock_info = nblock ? mod_block_info_get(nblock->id) : NULL;
+                  const struct block_info *block_info  = block_infos[1][1][1];
+                  const struct block_info *nblock_info = block_infos[1+dz][1+dy][1+dx];
 
-            fvec3_t  emit_position      = ivec3_as_fvec3(ivec3_add(ivec3_mul_scalar(chunk_mesh_infos[i].chunk->position, CHUNK_WIDTH), position));
-            fvec3_t  emit_normal        = ivec3_as_fvec3(normals[j]);
-            uint32_t emit_texture_index = 0;
-            float    emit_light_level   = nblock ? (float)nblock->light_level / 15.0f : 1.0f;
-            switch(j)
-            {
-              case 0: emit_texture_index = block_info->texture_left;   break;
-              case 1: emit_texture_index = block_info->texture_right;  break;
-              case 2: emit_texture_index = block_info->texture_back;   break;
-              case 3: emit_texture_index = block_info->texture_front;  break;
-              case 4: emit_texture_index = block_info->texture_bottom; break;
-              case 5: emit_texture_index = block_info->texture_top;    break;
-            }
+                  if(block_info->type == BLOCK_TYPE_OPAQUE      && nblock_info->type == BLOCK_TYPE_OPAQUE)      continue;
+                  if(block_info->type == BLOCK_TYPE_TRANSPARENT && nblock_info->type == BLOCK_TYPE_OPAQUE)      continue;
+                  if(block_info->type == BLOCK_TYPE_TRANSPARENT && nblock_info->type == BLOCK_TYPE_TRANSPARENT) continue;
 
-            switch(block_info->type)
-            {
-              case BLOCK_TYPE_OPAQUE:
-                if(!nblock_info || nblock_info->type != BLOCK_TYPE_OPAQUE)
-                  chunk_mesh_builder_emit_face(&chunk_mesh_infos[i].chunk_mesh_builder_opaque, emit_position, emit_normal, emit_texture_index, emit_light_level);
-                break;
-              case BLOCK_TYPE_TRANSPARENT:
-                if(!nblock_info || (nblock_info->type != BLOCK_TYPE_OPAQUE && nblock_info->type != BLOCK_TYPE_TRANSPARENT))
-                  chunk_mesh_builder_emit_face(&chunk_mesh_infos[i].chunk_mesh_builder_transparent, emit_position, emit_normal, emit_texture_index, emit_light_level);
-                break;
-              default:
-                break;
-            }
+                  struct chunk_mesh_builder *chunk_mesh_builder;
+                  switch(block_info->type)
+                  {
+                  case BLOCK_TYPE_OPAQUE:      chunk_mesh_builder = &chunk_mesh_infos[i].chunk_mesh_builder_opaque;      break;
+                  case BLOCK_TYPE_TRANSPARENT: chunk_mesh_builder = &chunk_mesh_infos[i].chunk_mesh_builder_transparent; break;
+                  default:                     chunk_mesh_builder = NULL;                                                break;
+                  }
+                  if(!chunk_mesh_builder)
+                    continue;
 
-          }
+                  uint32_t index_base = chunk_mesh_builder->vertex_count;
+                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 0);
+                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 2);
+                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 1);
+                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 2);
+                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 3);
+                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 1);
+
+                  fvec3_t  center            = ivec3_as_fvec3(ivec3_add(ivec3_mul_scalar(chunk_mesh_infos[i].chunk->position, CHUNK_WIDTH), ivec3(x, y, z)));
+                  ivec3_t  normal            = ivec3(dx, dy, dz);
+                  uint32_t texture_index     = block_texture_index(block_info, ivec3(dx, dy, dz));
+                  float    block_light_level = nblock.light_level / 15.0f;
+
+                  ivec3_t axis2 = normal.z == 0 ? ivec3(0, 0, 1) : ivec3(1, 0, 0);
+                  ivec3_t axis1 = ivec3_cross(normal, axis2);
+                  for(int v = 0; v < 2; ++v)
+                    for(int u = 0; u < 2; ++u)
+                    {
+                      ivec3_t dir1 = ivec3_mul_scalar(axis1, u * 2 - 1);
+                      ivec3_t dir2 = ivec3_mul_scalar(axis2, v * 2 - 1);
+
+                      struct chunk_mesh_vertex vertex;
+                      vertex.position = fvec3_add(center, fvec3_mul_scalar(ivec3_as_fvec3(ivec3_add(normal, ivec3_add( dir1, dir2))), 0.5f));
+                      vertex.texture_coords = fvec2(u, v);
+                      vertex.texture_index = texture_index;
+
+                      int occluded_count = 0;
+                      for(int factor3 = 0; factor3 < 2; ++factor3)
+                        for(int factor2 = 0; factor2 < 2; ++factor2)
+                          for(int factor1 = 0; factor1 < 2; ++factor1)
+                          {
+                            ivec3_t offset = ivec3(1, 1, 1);
+                            offset = ivec3_add(offset, ivec3_mul_scalar(dir1, factor1));
+                            offset = ivec3_add(offset, ivec3_mul_scalar(dir2, factor2));
+                            offset = ivec3_add(offset, ivec3_mul_scalar(normal, factor3));
+                            if(block_infos[offset.z][offset.y][offset.x]->type == BLOCK_TYPE_OPAQUE)
+                              occluded_count += 1;
+                          }
+
+                      float occlusion_factor = (float)occluded_count / (float)(2 * 2 * 2);
+                      vertex.light_level = (block_light_level * 0.9f + 0.1f) * (1.0f - occlusion_factor);
+
+                      chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertex);
+                    }
+                }
         }
 
   //////////////////////////////

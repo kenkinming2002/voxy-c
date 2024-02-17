@@ -98,6 +98,16 @@ VECTOR_DEFINE_OPS(i, int, 2)
 VECTOR_DEFINE_OPS(i, int, 3)
 VECTOR_DEFINE_OPS(i, int, 4)
 
+static inline ivec3_t ivec3_cross(ivec3_t lhs, ivec3_t rhs)
+{
+  return ivec3(
+    lhs.y * rhs.z - rhs.y * lhs.z,
+    lhs.z * rhs.x - rhs.z * lhs.x,
+    lhs.x * rhs.y - rhs.x * lhs.y
+  );
+}
+
+
 static inline fvec3_t fvec3_cross(fvec3_t lhs, fvec3_t rhs)
 {
   return fvec3(

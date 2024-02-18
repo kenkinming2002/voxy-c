@@ -5,7 +5,6 @@
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/chunk.h>
-#include <voxy/types/chunk_data.h>
 #include <voxy/types/player.h>
 
 #include <voxy/core/thread_pool.h>

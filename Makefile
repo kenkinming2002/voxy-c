@@ -5,8 +5,6 @@ CFLAGS += -D_GNU_SOURCE
 VOXY_SRCS += voxy/bundled/src/glad.c
 VOXY_SRCS += voxy/bundled/src/stb_image.c
 
-VOXY_SRCS += voxy/src/types/chunk_data.c
-VOXY_SRCS += voxy/src/types/chunk_mesh.c
 VOXY_SRCS += voxy/src/types/chunk_hash_table.c
 VOXY_SRCS += voxy/src/types/entity.c
 

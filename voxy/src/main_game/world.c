@@ -1,7 +1,4 @@
 #include <voxy/main_game/world.h>
-
-#include <voxy/types/chunk_data.h>
-
 #include <voxy/config.h>
 
 #include <stdlib.h>

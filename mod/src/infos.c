@@ -72,21 +72,21 @@ const struct block_info block_infos[] = {
 };
 
 const struct block_texture_info block_texture_infos[] = {
-  [TEXTURE_STONE]          = { .filepath = "assets/stone.png"          },
-  [TEXTURE_GRASS_BOTTOM]   = { .filepath = "assets/grass_bottom.png"   },
-  [TEXTURE_GRASS_TOP]      = { .filepath = "assets/grass_top.png"      },
-  [TEXTURE_GRASS_SIDE]     = { .filepath = "assets/grass_side.png"     },
-  [TEXTURE_LOG_TOP_BOTTOM] = { .filepath = "assets/log_top_bottom.png" },
-  [TEXTURE_LOG_SIDE]       = { .filepath = "assets/log_side.png"       },
-  [TEXTURE_LEAVE]          = { .filepath = "assets/leave.png"          },
-  [TEXTURE_WATER]          = { .filepath = "assets/water.png"          },
+  [TEXTURE_STONE]          = { .filepath = "assets/textures/stone.png"          },
+  [TEXTURE_GRASS_BOTTOM]   = { .filepath = "assets/textures/grass_bottom.png"   },
+  [TEXTURE_GRASS_TOP]      = { .filepath = "assets/textures/grass_top.png"      },
+  [TEXTURE_GRASS_SIDE]     = { .filepath = "assets/textures/grass_side.png"     },
+  [TEXTURE_LOG_TOP_BOTTOM] = { .filepath = "assets/textures/log_top_bottom.png" },
+  [TEXTURE_LOG_SIDE]       = { .filepath = "assets/textures/log_side.png"       },
+  [TEXTURE_LEAVE]          = { .filepath = "assets/textures/leave.png"          },
+  [TEXTURE_WATER]          = { .filepath = "assets/textures/water.png"          },
 };
 
 const struct item_info item_infos[] = {
-  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/stone_item.png", .on_use = on_block_item_use, },
-  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/grass_item.png", .on_use = on_block_item_use, },
-  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/log_item.png",   .on_use = on_block_item_use, },
-  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/leave_item.png", .on_use = on_block_item_use, },
+  [ITEM_STONE] = { .name = "stone", .texture_filepath = "assets/textures/stone_item.png", .on_use = on_block_item_use, },
+  [ITEM_GRASS] = { .name = "grass", .texture_filepath = "assets/textures/grass_item.png", .on_use = on_block_item_use, },
+  [ITEM_LOG]   = { .name = "log",   .texture_filepath = "assets/textures/log_item.png",   .on_use = on_block_item_use, },
+  [ITEM_LEAVE] = { .name = "leave", .texture_filepath = "assets/textures/leave_item.png", .on_use = on_block_item_use, },
 };
 
 const size_t block_info_count         = sizeof block_infos         / sizeof block_infos        [0];

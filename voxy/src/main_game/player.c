@@ -234,7 +234,7 @@ static void player_update_ui(struct player *player)
     static struct gl_texture_2d cursor;
     if(!cursor_loaded)
     {
-      gl_texture_2d_load(&cursor, "assets/cursor.png");
+      gl_texture_2d_load(&cursor, "assets/textures/cursor.png");
       cursor_loaded = true;
     }
 

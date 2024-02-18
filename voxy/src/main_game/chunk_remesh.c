@@ -7,7 +7,9 @@
 #include <voxy/main_game/config.h>
 
 #include <voxy/math/vector.h>
+#include <voxy/dynamic_array.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -17,44 +19,24 @@ static inline int absi(int a)
   return a > 0 ? a : -a;
 }
 
-struct chunk_mesh_vertex
+struct chunk_quad
 {
-  fvec3_t  position;
-  fvec2_t  texture_coords;
-  uint32_t texture_index;
-  float    light_level;
+  ivec3_t  center;
+  uint32_t normal_index_and_texture_index;
+  float    light_levels[2][2]; // FIXME: Occlusion
 };
 
-struct chunk_mesh_builder
-{
-  struct chunk_mesh_vertex *vertices;
-  size_t                    vertex_count;
-  size_t                    vertex_capacity;
+DYNAMIC_ARRAY_DEFINE(chunk_quads, struct chunk_quad);
 
-  uint32_t *indices;
-  size_t    index_count;
-  size_t    index_capacity;
+struct chunk_mesh_info
+{
+  struct chunk *chunk;
+
+  struct chunk_quads opaque_quads;
+  struct chunk_quads transparent_quads;
 };
 
-static inline void chunk_mesh_builder_push_vertex(struct chunk_mesh_builder *chunk_mesh_builder, struct chunk_mesh_vertex vertex)
-{
-  if(chunk_mesh_builder->vertex_capacity == chunk_mesh_builder->vertex_count)
-  {
-    chunk_mesh_builder->vertex_capacity = chunk_mesh_builder->vertex_capacity != 0 ? chunk_mesh_builder->vertex_capacity * 2 : 1;
-    chunk_mesh_builder->vertices        = realloc(chunk_mesh_builder->vertices, chunk_mesh_builder->vertex_capacity * sizeof *chunk_mesh_builder->vertices);
-  }
-  chunk_mesh_builder->vertices[chunk_mesh_builder->vertex_count++] = vertex;
-}
-
-static inline void chunk_mesh_builder_push_index(struct chunk_mesh_builder *chunk_mesh_builder, uint32_t index)
-{
-  if(chunk_mesh_builder->index_capacity == chunk_mesh_builder->index_count)
-  {
-    chunk_mesh_builder->index_capacity = chunk_mesh_builder->index_capacity != 0 ? chunk_mesh_builder->index_capacity * 2 : 1;
-    chunk_mesh_builder->indices        = realloc(chunk_mesh_builder->indices, chunk_mesh_builder->index_capacity * sizeof *chunk_mesh_builder->indices);
-  }
-  chunk_mesh_builder->indices[chunk_mesh_builder->index_count++] = index;
-}
+DYNAMIC_ARRAY_DEFINE(chunk_mesh_infos, struct chunk_mesh_info);
 
 static inline struct block chunk_block_lookup(struct chunk *chunk, ivec3_t position)
 {
@@ -76,7 +58,19 @@ static inline struct block chunk_block_lookup(struct chunk *chunk, ivec3_t posit
   assert(0 && "Unreachable");
 }
 
-static inline size_t block_texture_index(const struct block_info *block_info, ivec3_t normal)
+static inline uint32_t get_normal_index(ivec3_t normal)
+{
+  if(normal.x == -1) return 0;
+  if(normal.x ==  1) return 1;
+  if(normal.y == -1) return 2;
+  if(normal.y ==  1) return 3;
+  if(normal.z == -1) return 4;
+  if(normal.z ==  1) return 5;
+
+  assert(0 && "Unreachable");
+}
+
+static inline uint32_t get_texture_index(ivec3_t normal, const struct block_info *block_info)
 {
   if(normal.x == -1) return block_info->texture_left;
   if(normal.x ==  1) return block_info->texture_right;
@@ -90,54 +84,27 @@ static inline size_t block_texture_index(const struct block_info *block_info, iv
 
 void update_chunk_remesh(void)
 {
-  struct chunk_mesh_info
-  {
-    struct chunk              *chunk;
-    struct chunk_mesh_builder  chunk_mesh_builder_opaque;
-    struct chunk_mesh_builder  chunk_mesh_builder_transparent;
-  };
-
-  struct chunk_mesh_info *chunk_mesh_infos         = NULL;
-  size_t                  chunk_mesh_info_count    = 0;
-  size_t                  chunk_mesh_info_capacity = 0;
-
-  ////////////////////////////////////////////////////
-  /// 1: Collect all chunks that need to be meshed ///
-  ////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+  ///// 1: Collect all chunks that need to be meshed ///
+  //////////////////////////////////////////////////////
+  struct chunk_mesh_infos chunk_mesh_infos = {0};
   for(struct chunk *chunk = chunks_invalidated_mesh_head; chunk; chunk = chunk->mesh_next)
   {
+    DYNAMIC_ARRAY_APPEND(chunk_mesh_infos, ((struct chunk_mesh_info){
+        .chunk = chunk,
+        .opaque_quads = {0},
+        .transparent_quads = {0},
+    }));
     chunk->mesh_invalidated = false;
-    if(chunk_mesh_info_capacity == chunk_mesh_info_count)
-    {
-      chunk_mesh_info_capacity = chunk_mesh_info_capacity != 0 ? chunk_mesh_info_capacity * 2 : 1;
-      chunk_mesh_infos         = realloc(chunk_mesh_infos, chunk_mesh_info_capacity * sizeof *chunk_mesh_infos);
-    }
-
-    struct chunk_mesh_info *chunk_mesh_info = &chunk_mesh_infos[chunk_mesh_info_count++];
-    chunk_mesh_info->chunk = chunk;
-
-    chunk_mesh_info->chunk_mesh_builder_opaque.vertices        = NULL;
-    chunk_mesh_info->chunk_mesh_builder_opaque.vertex_count    = 0;
-    chunk_mesh_info->chunk_mesh_builder_opaque.vertex_capacity = 0;
-    chunk_mesh_info->chunk_mesh_builder_opaque.indices         = NULL;
-    chunk_mesh_info->chunk_mesh_builder_opaque.index_count     = 0;
-    chunk_mesh_info->chunk_mesh_builder_opaque.index_capacity  = 0;
-
-    chunk_mesh_info->chunk_mesh_builder_transparent.vertices        = NULL;
-    chunk_mesh_info->chunk_mesh_builder_transparent.vertex_count    = 0;
-    chunk_mesh_info->chunk_mesh_builder_transparent.vertex_capacity = 0;
-    chunk_mesh_info->chunk_mesh_builder_transparent.indices         = NULL;
-    chunk_mesh_info->chunk_mesh_builder_transparent.index_count     = 0;
-    chunk_mesh_info->chunk_mesh_builder_transparent.index_capacity  = 0;
   }
   chunks_invalidated_mesh_head = NULL;
   chunks_invalidated_mesh_tail = NULL;
 
-  //////////////////////////////////////
-  /// 2: Mesh all chunks in parallel ///
-  //////////////////////////////////////
+  ////////////////////////////////////////
+  ///// 2: Mesh all chunks in parallel ///
+  ////////////////////////////////////////
   #pragma omp parallel for
-  for(size_t i=0; i<chunk_mesh_info_count; ++i)
+  for(size_t i=0; i<chunk_mesh_infos.item_count; ++i)
     for(int z = 0; z<CHUNK_WIDTH; ++z)
       for(int y = 0; y<CHUNK_WIDTH; ++y)
         for(int x = 0; x<CHUNK_WIDTH; ++x)
@@ -157,7 +124,7 @@ void update_chunk_remesh(void)
             for(int dy = -1; dy<=1; ++dy)
               for(int dx = -1; dx<=1; ++dx)
               {
-                blocks[1+dz][1+dy][1+dx] = chunk_block_lookup(chunk_mesh_infos[i].chunk, ivec3(x+dx, y+dy, z+dz));
+                blocks[1+dz][1+dy][1+dx] = chunk_block_lookup(chunk_mesh_infos.items[i].chunk, ivec3(x+dx, y+dy, z+dz));
                 block_infos[1+dz][1+dy][1+dx] = blocks[1+dz][1+dy][1+dx].id  != BLOCK_NONE ? mod_block_info_get(blocks[1+dz][1+dy][1+dx].id)  : &BLOCK_INFO_NONE;
               }
 
@@ -166,6 +133,8 @@ void update_chunk_remesh(void)
               for(int dx = -1; dx<=1; ++dx)
                 if(absi(dx) + absi(dy) + absi(dz) == 1)
                 {
+                  const ivec3_t normal = ivec3(dx, dy, dz);
+
                   const struct block nblock = blocks[1+dz][1+dy][1+dx];
 
                   const struct block_info *block_info  = block_infos[1][1][1];
@@ -175,41 +144,25 @@ void update_chunk_remesh(void)
                   if(block_info->type == BLOCK_TYPE_TRANSPARENT && nblock_info->type == BLOCK_TYPE_OPAQUE)      continue;
                   if(block_info->type == BLOCK_TYPE_TRANSPARENT && nblock_info->type == BLOCK_TYPE_TRANSPARENT) continue;
 
-                  struct chunk_mesh_builder *chunk_mesh_builder;
+                  struct chunk_quads *chunk_quads;
                   switch(block_info->type)
                   {
-                  case BLOCK_TYPE_OPAQUE:      chunk_mesh_builder = &chunk_mesh_infos[i].chunk_mesh_builder_opaque;      break;
-                  case BLOCK_TYPE_TRANSPARENT: chunk_mesh_builder = &chunk_mesh_infos[i].chunk_mesh_builder_transparent; break;
-                  default:                     chunk_mesh_builder = NULL;                                                break;
+                  case BLOCK_TYPE_OPAQUE:      chunk_quads = &chunk_mesh_infos.items[i].opaque_quads;      break;
+                  case BLOCK_TYPE_TRANSPARENT: chunk_quads = &chunk_mesh_infos.items[i].transparent_quads; break;
+                  default:
+                    continue; // Nice
                   }
-                  if(!chunk_mesh_builder)
-                    continue;
 
-                  uint32_t index_base = chunk_mesh_builder->vertex_count;
-                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 0);
-                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 2);
-                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 1);
-                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 2);
-                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 3);
-                  chunk_mesh_builder_push_index(chunk_mesh_builder, index_base + 1);
-
-                  fvec3_t  center            = ivec3_as_fvec3(ivec3_add(ivec3_mul_scalar(chunk_mesh_infos[i].chunk->position, CHUNK_WIDTH), ivec3(x, y, z)));
-                  ivec3_t  normal            = ivec3(dx, dy, dz);
-                  uint32_t texture_index     = block_texture_index(block_info, ivec3(dx, dy, dz));
-                  float    block_light_level = nblock.light_level / 15.0f;
-
-                  ivec3_t axis2 = normal.z == 0 ? ivec3(0, 0, 1) : ivec3(1, 0, 0);
+                  ivec3_t axis2 = normal.z != 0 ? ivec3(1, 0, 0) : ivec3(0, 0, 1);
                   ivec3_t axis1 = ivec3_cross(normal, axis2);
+
+                  float block_light_level = nblock.light_level / 15.0f;
+                  float light_levels[2][2];
                   for(int v = 0; v < 2; ++v)
                     for(int u = 0; u < 2; ++u)
                     {
                       ivec3_t dir1 = ivec3_mul_scalar(axis1, u * 2 - 1);
                       ivec3_t dir2 = ivec3_mul_scalar(axis2, v * 2 - 1);
-
-                      struct chunk_mesh_vertex vertex;
-                      vertex.position = fvec3_add(center, fvec3_mul_scalar(ivec3_as_fvec3(ivec3_add(normal, ivec3_add( dir1, dir2))), 0.5f));
-                      vertex.texture_coords = fvec2(u, v);
-                      vertex.texture_index = texture_index;
 
                       int occluded_count = 0;
                       for(int factor3 = 0; factor3 < 2; ++factor3)
@@ -225,71 +178,80 @@ void update_chunk_remesh(void)
                           }
 
                       float occlusion_factor = (float)occluded_count / (float)(2 * 2 * 2);
-                      vertex.light_level = (block_light_level * 0.9f + 0.1f) * (1.0f - occlusion_factor);
-
-                      chunk_mesh_builder_push_vertex(chunk_mesh_builder, vertex);
+                      light_levels[v][u] = (block_light_level * 0.9f + 0.1f) * (1.0f - occlusion_factor);
                     }
+
+                  struct chunk_quad chunk_quad;
+                  chunk_quad.center = ivec3_add(ivec3_mul_scalar(chunk_mesh_infos.items[i].chunk->position, CHUNK_WIDTH), ivec3(x, y, z));
+                  chunk_quad.normal_index_and_texture_index = get_normal_index(normal) | get_texture_index(normal, block_info) << 3;
+                  for(int v = 0; v < 2; ++v)
+                    for(int u = 0; u < 2; ++u)
+                      chunk_quad.light_levels[v][u] = light_levels[v][u];
+
+                  DYNAMIC_ARRAY_APPEND(*chunk_quads, chunk_quad);
+
                 }
         }
 
-  //////////////////////////////
-  /// 3: Upload chunk meshes ///
-  //////////////////////////////
-  for(size_t i=0; i<chunk_mesh_info_count; ++i)
+  ////////////////////////////////
+  ///// 3: Upload chunk meshes ///
+  ////////////////////////////////
+  for(size_t i=0; i<chunk_mesh_infos.item_count; ++i)
   {
-    struct chunk *chunk = chunk_mesh_infos[i].chunk;
+    struct chunk       *chunk                   = chunk_mesh_infos.items[i].chunk;
+    struct chunk_quads *chunk_opaque_quads      = &chunk_mesh_infos.items[i].opaque_quads;
+    struct chunk_quads *chunk_transparent_quads = &chunk_mesh_infos.items[i].transparent_quads;
 
-    glBindVertexArray(chunk->vao_opaque);
+    // Opaque
+    {
+      glBindVertexArray(chunk->vao_opaque);
+      glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_opaque);
+      glBufferData(GL_ARRAY_BUFFER, chunk_opaque_quads->item_count * sizeof *chunk_opaque_quads->items, chunk_opaque_quads->items, GL_DYNAMIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_opaque);
-    glBufferData(GL_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_opaque.vertex_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_opaque.vertices, chunk_mesh_infos[i].chunk_mesh_builder_opaque.vertices, GL_DYNAMIC_DRAW);
+      glEnableVertexAttribArray(0);
+      glEnableVertexAttribArray(1);
+      glEnableVertexAttribArray(2);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->ibo_opaque);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_opaque.index_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_opaque.indices, chunk_mesh_infos[i].chunk_mesh_builder_opaque.indices, GL_DYNAMIC_DRAW);
+      glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, center));
+      glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, normal_index_and_texture_index));
+      glVertexAttribPointer (2, 4, GL_FLOAT, GL_FALSE, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, light_levels));
 
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-    glEnableVertexAttribArray(3);
+      glVertexAttribDivisor(0, 1);
+      glVertexAttribDivisor(1, 1);
+      glVertexAttribDivisor(2, 1);
 
-    glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, position));
-    glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_coords));
-    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_index));
-    glVertexAttribPointer (3, 1, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, light_level));
+      chunk->count_opaque = chunk_opaque_quads->item_count;
+    }
 
-    chunk->count_opaque = chunk_mesh_infos[i].chunk_mesh_builder_opaque.index_count;
+    // Transparent
+    {
+      glBindVertexArray(chunk->vao_transparent);
+      glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_transparent);
+      glBufferData(GL_ARRAY_BUFFER, chunk_transparent_quads->item_count * sizeof *chunk_transparent_quads->items, chunk_transparent_quads->items, GL_DYNAMIC_DRAW);
 
-    glBindVertexArray(chunk->vao_transparent);
+      glEnableVertexAttribArray(0);
+      glEnableVertexAttribArray(1);
+      glEnableVertexAttribArray(2);
 
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_transparent);
-    glBufferData(GL_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_transparent.vertex_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_transparent.vertices, chunk_mesh_infos[i].chunk_mesh_builder_transparent.vertices, GL_DYNAMIC_DRAW);
+      glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, center));
+      glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, normal_index_and_texture_index));
+      glVertexAttribPointer (2, 4, GL_FLOAT, GL_FALSE, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, light_levels));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->ibo_transparent);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk_mesh_infos[i].chunk_mesh_builder_transparent.index_count * sizeof *chunk_mesh_infos[i].chunk_mesh_builder_transparent.indices, chunk_mesh_infos[i].chunk_mesh_builder_transparent.indices, GL_DYNAMIC_DRAW);
+      glVertexAttribDivisor(0, 1);
+      glVertexAttribDivisor(1, 1);
+      glVertexAttribDivisor(2, 1);
 
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-    glEnableVertexAttribArray(3);
-
-    glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, position));
-    glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_coords));
-    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, texture_index));
-    glVertexAttribPointer (3, 1, GL_FLOAT, GL_FALSE, sizeof(struct chunk_mesh_vertex), (void *)offsetof(struct chunk_mesh_vertex, light_level));
-
-    chunk->count_transparent = chunk_mesh_infos[i].chunk_mesh_builder_transparent.index_count;
+      chunk->count_transparent = chunk_transparent_quads->item_count;
+    }
   }
 
-  //////////////////
-  /// 5: Cleanup ///
-  //////////////////
-  for(size_t i=0; i<chunk_mesh_info_count; ++i)
+  ////////////////////
+  ///// 5: Cleanup ///
+  ////////////////////
+  for(size_t i=0; i<chunk_mesh_infos.item_count; ++i)
   {
-    free(chunk_mesh_infos[i].chunk_mesh_builder_opaque.vertices);
-    free(chunk_mesh_infos[i].chunk_mesh_builder_opaque.indices);
-
-    free(chunk_mesh_infos[i].chunk_mesh_builder_transparent.vertices);
-    free(chunk_mesh_infos[i].chunk_mesh_builder_transparent.indices);
+    free(chunk_mesh_infos.items[i].transparent_quads.items);
+    free(chunk_mesh_infos.items[i].opaque_quads.items);
   }
-  free(chunk_mesh_infos);
+  free(chunk_mesh_infos.items);
 }

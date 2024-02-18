@@ -46,12 +46,10 @@ struct chunk *world_chunk_create(ivec3_t position)
 
   glGenVertexArrays(1, &chunk->vao_opaque);
   glGenBuffers(1, &chunk->vbo_opaque);
-  glGenBuffers(1, &chunk->ibo_opaque);
   chunk->count_opaque = 0;
 
   glGenVertexArrays(1, &chunk->vao_transparent);
   glGenBuffers(1, &chunk->vbo_transparent);
-  glGenBuffers(1, &chunk->ibo_transparent);
   chunk->count_transparent = 0;
 
   return chunk;

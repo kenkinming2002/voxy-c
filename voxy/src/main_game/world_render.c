@@ -45,7 +45,7 @@ void world_render()
   V = fmat4_mul(camera_view_matrix(&camera), V);
 
   glEnable(GL_BLEND);
-  glEnable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glLineWidth(3.0f);
@@ -58,13 +58,13 @@ void world_render()
   world_chunk_for_each(chunk)
   {
     glBindVertexArray(chunk->vao_opaque);
-    glDrawElements(GL_TRIANGLES, chunk->count_opaque, GL_UNSIGNED_INT, 0);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, chunk->count_opaque);
   }
 
   world_chunk_for_each(chunk)
   {
     glBindVertexArray(chunk->vao_transparent);
-    glDrawElements(GL_TRIANGLES, chunk->count_transparent, GL_UNSIGNED_INT, 0);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, chunk->count_transparent);
   }
 
   ivec3_t position;

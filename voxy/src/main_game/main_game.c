@@ -11,8 +11,6 @@
 
 #include <voxy/graphics/ui.h>
 
-#include <voxy/types/player.h>
-
 #include <voxy/core/window.h>
 
 #include <glad/glad.h>

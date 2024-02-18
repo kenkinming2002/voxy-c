@@ -10,7 +10,6 @@
 #include <voxy/graphics/camera.h>
 
 #include <voxy/types/chunk.h>
-#include <voxy/types/player.h>
 
 #include <stdio.h>
 #include <stdlib.h>

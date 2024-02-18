@@ -5,7 +5,6 @@
 #include <voxy/main_game/player.h>
 
 #include <voxy/types/entity.h>
-#include <voxy/types/player.h>
 
 #include <voxy/math/vector.h>
 

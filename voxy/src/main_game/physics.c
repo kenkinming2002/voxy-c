@@ -4,7 +4,6 @@
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/block.h>
-#include <voxy/types/player.h>
 #include <voxy/types/entity.h>
 
 #include <voxy/mod_interface.h>

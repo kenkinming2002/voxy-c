@@ -4,7 +4,6 @@
 #include <voxy/main_game/mod.h>
 
 #include <voxy/types/chunk.h>
-#include <voxy/types/player.h>
 
 #include <voxy/math/vector.h>
 

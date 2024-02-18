@@ -2,10 +2,8 @@
 #define GRAPHICS_GL_PROGRAMS_H
 
 #define GL_PROGRAMS \
-  X(ui_quad) \
   X(ui_quad_rounded) \
   X(ui_texture) \
-  X(ui_texture_mono) \
   X(chunk) \
   X(outline)
 

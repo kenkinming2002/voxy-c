@@ -1,10 +1,9 @@
-#include <voxy/types/entity.h>
-#include <voxy/types/block.h>
+#include <voxy/main_game/entity.h>
 
+#include <voxy/main_game/block.h>
 #include <voxy/main_game/mod.h>
+#include <voxy/main_game/mod_interface.h>
 #include <voxy/main_game/world.h>
-
-#include <voxy/mod_interface.h>
 
 #include <voxy/math/ray_cast.h>
 

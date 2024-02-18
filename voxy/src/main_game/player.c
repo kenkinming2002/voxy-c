@@ -1,12 +1,13 @@
 #include <voxy/main_game/player.h>
+
+#include <voxy/main_game/config.h>
+#include <voxy/main_game/entity.h>
+#include <voxy/main_game/hotbar.h>
+#include <voxy/main_game/inventory.h>
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/mod_assets.h>
-#include <voxy/main_game/world_seed.h>
 #include <voxy/main_game/world.h>
-
-#include <voxy/types/entity.h>
-#include <voxy/types/inventory.h>
-#include <voxy/types/hotbar.h>
+#include <voxy/main_game/world_seed.h>
 
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/ui.h>
@@ -14,7 +15,6 @@
 #include <voxy/core/window.h>
 
 #include <voxy/utils.h>
-#include <voxy/config.h>
 
 #include <stdio.h>
 #include <stdlib.h>

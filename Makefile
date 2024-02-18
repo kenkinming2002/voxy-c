@@ -5,9 +5,6 @@ CFLAGS += -D_GNU_SOURCE
 VOXY_SRCS += voxy/bundled/src/glad.c
 VOXY_SRCS += voxy/bundled/src/stb_image.c
 
-VOXY_SRCS += voxy/src/types/chunk_hash_table.c
-VOXY_SRCS += voxy/src/types/entity.c
-
 VOXY_SRCS += voxy/src/core/window.c
 VOXY_SRCS += voxy/src/core/thread_pool.c
 VOXY_SRCS += voxy/src/core/delta_time.c
@@ -18,17 +15,19 @@ VOXY_SRCS += voxy/src/graphics/font_set.c
 VOXY_SRCS += voxy/src/graphics/ui.c
 VOXY_SRCS += voxy/src/graphics/camera.c
 
-VOXY_SRCS += voxy/src/main_game/world_seed.c
-VOXY_SRCS += voxy/src/main_game/world.c
-VOXY_SRCS += voxy/src/main_game/player.c
+VOXY_SRCS += voxy/src/main_game/chunk_generate.c
+VOXY_SRCS += voxy/src/main_game/chunk_hash_table.c
+VOXY_SRCS += voxy/src/main_game/chunk_remesh.c
+VOXY_SRCS += voxy/src/main_game/entity.c
+VOXY_SRCS += voxy/src/main_game/light.c
+VOXY_SRCS += voxy/src/main_game/main_game.c
 VOXY_SRCS += voxy/src/main_game/mod.c
 VOXY_SRCS += voxy/src/main_game/mod_assets.c
-VOXY_SRCS += voxy/src/main_game/chunk_generate.c
-VOXY_SRCS += voxy/src/main_game/light.c
 VOXY_SRCS += voxy/src/main_game/physics.c
-VOXY_SRCS += voxy/src/main_game/chunk_remesh.c
+VOXY_SRCS += voxy/src/main_game/player.c
+VOXY_SRCS += voxy/src/main_game/world.c
 VOXY_SRCS += voxy/src/main_game/world_render.c
-VOXY_SRCS += voxy/src/main_game/main_game.c
+VOXY_SRCS += voxy/src/main_game/world_seed.c
 
 VOXY_SRCS += voxy/src/voxy.c
 

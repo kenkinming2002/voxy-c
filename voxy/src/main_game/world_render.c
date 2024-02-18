@@ -1,15 +1,15 @@
 #include <voxy/main_game/world_render.h>
+
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod_assets.h>
+#include <voxy/main_game/chunk.h>
 
 #include <voxy/core/window.h>
 
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/gl_programs.h>
 #include <voxy/graphics/camera.h>
-
-#include <voxy/types/chunk.h>
 
 #include <stdio.h>
 #include <stdlib.h>

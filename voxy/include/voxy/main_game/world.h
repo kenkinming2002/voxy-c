@@ -3,9 +3,9 @@
 
 #include <voxy/math/vector.h>
 
-#include <voxy/types/chunk.h>
-#include <voxy/types/chunk_hash_table.h>
-#include <voxy/types/entity.h>
+#include <voxy/main_game/chunk.h>
+#include <voxy/main_game/chunk_hash_table.h>
+#include <voxy/main_game/entity.h>
 
 extern struct chunk_hash_table chunks;
 

@@ -1,9 +1,8 @@
 #include "ids.h"
 
+#include <voxy/main_game/config.h>
 #include <voxy/math/noise.h>
 #include <voxy/math/random.h>
-
-#include <voxy/config.h>
 
 #include <stdbool.h>
 

@@ -1,10 +1,9 @@
 #include <voxy/main_game/main_game.h>
 #include <voxy/main_game/mod.h>
+#include <voxy/main_game/config.h>
 
 #include <voxy/core/window.h>
 #include <voxy/core/delta_time.h>
-
-#include <voxy/config.h>
 
 #include <stdlib.h>
 #include <stdio.h>

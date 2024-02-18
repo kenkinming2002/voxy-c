@@ -1,6 +1,7 @@
 #include "ids.h"
 
-#include <voxy/mod_interface.h>
+#include <voxy/main_game/mod_interface.h>
+
 #include <stdbool.h>
 
 void on_block_item_use(uint8_t item_id);

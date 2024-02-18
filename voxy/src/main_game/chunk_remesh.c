@@ -1,13 +1,12 @@
 #include <voxy/main_game/chunk_remesh.h>
+
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/mod.h>
-
-#include <voxy/types/chunk.h>
+#include <voxy/main_game/chunk.h>
+#include <voxy/main_game/config.h>
 
 #include <voxy/math/vector.h>
-
-#include <voxy/config.h>
 
 #include <stdlib.h>
 #include <stddef.h>

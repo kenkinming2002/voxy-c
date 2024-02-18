@@ -1,8 +1,8 @@
 #include <voxy/main_game/light.h>
-#include <voxy/main_game/world.h>
-#include <voxy/main_game/mod.h>
 
-#include <voxy/types/chunk.h>
+#include <voxy/main_game/chunk.h>
+#include <voxy/main_game/mod.h>
+#include <voxy/main_game/world.h>
 
 #include <stdio.h>
 #include <time.h>

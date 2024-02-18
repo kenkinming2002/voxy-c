@@ -1,7 +1,7 @@
 #ifndef TYPES_INVENTORY_H
 #define TYPES_INVENTORY_H
 
-#include <voxy/types/item.h>
+#include <voxy/main_game/item.h>
 #include <stdbool.h>
 
 #define INVENTORY_SIZE_HORIZONTAL 9

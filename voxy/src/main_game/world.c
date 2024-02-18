@@ -1,5 +1,6 @@
 #include <voxy/main_game/world.h>
-#include <voxy/config.h>
+
+#include <voxy/main_game/config.h>
 
 #include <stdlib.h>
 

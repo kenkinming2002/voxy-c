@@ -1,7 +1,7 @@
 #ifndef VOXY_MOD_INTERFACE_H
 #define VOXY_MOD_INTERFACE_H
 
-#include <voxy/config.h>
+#include <voxy/main_game/config.h>
 #include <voxy/math/noise.h>
 
 #include <stddef.h>

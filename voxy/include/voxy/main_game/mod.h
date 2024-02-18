@@ -1,7 +1,7 @@
 #ifndef MAIN_GAME_MOD_H
 #define MAIN_GAME_MOD_H
 
-#include <voxy/mod_interface.h>
+#include <voxy/main_game/mod_interface.h>
 #include <voxy/math/random.h>
 #include <voxy/math/vector.h>
 

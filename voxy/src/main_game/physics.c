@@ -1,16 +1,12 @@
 #include <voxy/main_game/physics.h>
-#include <voxy/main_game/world.h>
+
+#include <voxy/main_game/block.h>
+#include <voxy/main_game/config.h>
+#include <voxy/main_game/entity.h>
+#include <voxy/main_game/mod.h>
+#include <voxy/main_game/mod_interface.h>
 #include <voxy/main_game/player.h>
-#include <voxy/main_game/mod.h>
-
-#include <voxy/types/block.h>
-#include <voxy/types/entity.h>
-
-#include <voxy/mod_interface.h>
-
-#include <voxy/main_game/mod.h>
-
-#include <voxy/config.h>
+#include <voxy/main_game/world.h>
 
 #include <stdio.h>
 #include <stdbool.h>

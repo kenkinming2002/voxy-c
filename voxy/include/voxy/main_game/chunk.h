@@ -1,9 +1,9 @@
 #ifndef TYPES_CHUNK_H
 #define TYPES_CHUNK_H
 
+#include <voxy/main_game/block.h>
+#include <voxy/main_game/config.h>
 #include <voxy/math/vector.h>
-#include <voxy/types/block.h>
-#include <voxy/config.h>
 
 #include <glad/glad.h>
 

@@ -1,5 +1,6 @@
-#include <voxy/types/chunk_hash_table.h>
-#include <voxy/types/chunk.h>
+#include <voxy/main_game/chunk_hash_table.h>
+
+#include <voxy/main_game/chunk.h>
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX chunk

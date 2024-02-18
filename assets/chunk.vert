@@ -42,27 +42,23 @@ bool is_up(uint normal_index)
 
 vec2 get_texture_coords()
 {
-  switch(gl_VertexID % 6)
+  switch(gl_VertexID)
   {
   case 0: return vec2(0.0, 0.0);
   case 1: return vec2(1.0, 0.0);
   case 2: return vec2(0.0, 1.0);
-  case 3: return vec2(0.0, 1.0);
-  case 4: return vec2(1.0, 0.0);
-  case 5: return vec2(1.0, 1.0);
+  case 3: return vec2(1.0, 1.0);
   }
 }
 
 float get_light_level()
 {
-  switch(gl_VertexID % 6)
+  switch(gl_VertexID)
   {
   case 0: return v_light_levels[0];
   case 1: return v_light_levels[1];
   case 2: return v_light_levels[2];
-  case 3: return v_light_levels[2];
-  case 4: return v_light_levels[1];
-  case 5: return v_light_levels[3];
+  case 3: return v_light_levels[3];
   }
 }
 

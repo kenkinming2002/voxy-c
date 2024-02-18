@@ -82,6 +82,21 @@ static inline uint32_t get_texture_index(ivec3_t normal, const struct block_info
   assert(0 && "Unreachable");
 }
 
+static void bind_quad_ebo()
+{
+  static GLuint ibo = 0;
+  if(ibo == 0)
+  {
+    static uint8_t indices[] = { 0, 1, 2, 2, 1, 3 };
+
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indices, indices, GL_STATIC_DRAW);
+  }
+  else
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+}
+
 void update_chunk_remesh(void)
 {
   //////////////////////////////////////////////////////
@@ -220,6 +235,8 @@ void update_chunk_remesh(void)
       glVertexAttribDivisor(1, 1);
       glVertexAttribDivisor(2, 1);
 
+      bind_quad_ebo();
+
       chunk->count_opaque = chunk_opaque_quads->item_count;
     }
 
@@ -240,6 +257,8 @@ void update_chunk_remesh(void)
       glVertexAttribDivisor(0, 1);
       glVertexAttribDivisor(1, 1);
       glVertexAttribDivisor(2, 1);
+
+      bind_quad_ebo();
 
       chunk->count_transparent = chunk_transparent_quads->item_count;
     }

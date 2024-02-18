@@ -55,16 +55,17 @@ void world_render()
   glUniformMatrix4fv(glGetUniformLocation(program_chunk->id, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets_block_array_texture_get()->id);
 
+
   world_chunk_for_each(chunk)
   {
     glBindVertexArray(chunk->vao_opaque);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, chunk->count_opaque);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_opaque);
   }
 
   world_chunk_for_each(chunk)
   {
     glBindVertexArray(chunk->vao_transparent);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, chunk->count_transparent);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_transparent);
   }
 
   ivec3_t position;

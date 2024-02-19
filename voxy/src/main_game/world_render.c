@@ -76,14 +76,14 @@ void world_render()
   }
 
   world_chunk_for_each(chunk)
-    if(!chunk->culled)
+    if(!chunk->culled && chunk->count_opaque != 0)
     {
       glBindVertexArray(chunk->vao_opaque);
       glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_opaque);
     }
 
   world_chunk_for_each(chunk)
-    if(!chunk->culled)
+    if(!chunk->culled && chunk->count_transparent != 0)
     {
       glBindVertexArray(chunk->vao_transparent);
       glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_transparent);

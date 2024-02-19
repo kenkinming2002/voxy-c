@@ -101,4 +101,28 @@ static inline fmat4_t fmat4_perspecitve_corrected(float fovy, float aspect, floa
   return result;
 }
 
+/*
+ * Apply a transformation matrix on a 3D vector without perspective divide.
+ * Not correct if perspective matrix is used. Use
+ * fmat4_apply_fvec3_perspective_divide instead.
+ */
+static inline fvec3_t fmat4_apply_fvec3(fmat4_t mat, fvec3_t vec)
+{
+  fvec4_t tmp;
+  tmp = fvec4(vec.x, vec.y, vec.z, 1.0);
+  tmp = fmat4_mul_vec(mat, tmp);
+  return fvec3(tmp.x, tmp.y, tmp.z);
+}
+
+/*
+ * Apply a transformation matrix on a 3D vector with perspective divide.
+ */
+static inline fvec3_t fmat4_apply_fvec3_perspective_divide(fmat4_t mat, fvec3_t vec)
+{
+  fvec4_t tmp;
+  tmp = fvec4(vec.x, vec.y, vec.z, 1.0);
+  tmp = fmat4_mul_vec(mat, tmp);
+  return fvec3_div_scalar(fvec3(tmp.x, tmp.y, tmp.z), tmp.w);
+}
+
 #endif // VOXY_MATH_MATRIX_TRANSFORM_H

@@ -55,18 +55,39 @@ void world_render()
   glUniformMatrix4fv(glGetUniformLocation(program_chunk->id, "V"),  1, GL_TRUE, (const float *)&V);
   glBindTexture(GL_TEXTURE_2D_ARRAY, mod_assets_block_array_texture_get()->id);
 
-
   world_chunk_for_each(chunk)
   {
-    glBindVertexArray(chunk->vao_opaque);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_opaque);
+    fvec3_t min = fvec3(+INFINITY, +INFINITY, +INFINITY);
+    fvec3_t max = fvec3(-INFINITY, -INFINITY, -INFINITY);
+    for(int k=0; k<2; ++k)
+      for(int j=0; j<2; ++j)
+        for(int i=0; i<2; ++i)
+        {
+          fvec3_t point_world_space = fvec3_sub(ivec3_as_fvec3(ivec3_mul_scalar(ivec3_add(chunk->position, ivec3(i, j, k)), CHUNK_WIDTH)), fvec3(0.5f, 0.5f, 0.5f));
+          fvec3_t point_clip_space  = fmat4_apply_fvec3_perspective_divide(VP, point_world_space);
+
+          min = fvec3_min(min, point_clip_space);
+          max = fvec3_max(max, point_clip_space);
+        }
+
+    chunk->culled = (min.x >= 1.0f || max.x <= -1.0f)
+                 && (min.y >= 1.0f || max.y <= -1.0f)
+                 && (min.z >= 1.0f || max.z <= -1.0f);
   }
 
   world_chunk_for_each(chunk)
-  {
-    glBindVertexArray(chunk->vao_transparent);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_transparent);
-  }
+    if(!chunk->culled)
+    {
+      glBindVertexArray(chunk->vao_opaque);
+      glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_opaque);
+    }
+
+  world_chunk_for_each(chunk)
+    if(!chunk->culled)
+    {
+      glBindVertexArray(chunk->vao_transparent);
+      glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_transparent);
+    }
 
   ivec3_t position;
   ivec3_t normal;

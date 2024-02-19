@@ -31,6 +31,8 @@ struct chunk
 
   struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 
+  bool culled;
+
   GLuint vao_opaque;
   GLuint vbo_opaque;
   GLsizei count_opaque;

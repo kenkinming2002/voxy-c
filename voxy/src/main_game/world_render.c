@@ -45,7 +45,7 @@ void world_render()
   V = fmat4_mul(camera_view_matrix(&camera), V);
 
   glEnable(GL_BLEND);
-  glDisable(GL_CULL_FACE);
+  glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glLineWidth(3.0f);

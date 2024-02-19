@@ -87,7 +87,7 @@ static void bind_quad_ebo()
   static GLuint ibo = 0;
   if(ibo == 0)
   {
-    static uint8_t indices[] = { 0, 1, 2, 2, 1, 3 };
+    static uint8_t indices[] = { 0, 2, 1, 1, 2, 3 };
 
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);

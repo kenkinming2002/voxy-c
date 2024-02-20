@@ -1,5 +1,5 @@
-#ifndef MAIN_GAME_WORLD_SEED_H
-#define MAIN_GAME_WORLD_SEED_H
+#ifndef VOXY_MAIN_GAME_WORLD_SEED_H
+#define VOXY_MAIN_GAME_WORLD_SEED_H
 
 #include <voxy/math/random.h>
 
@@ -8,4 +8,4 @@ seed_t world_seed_get(void);
 
 void world_seed_generate(void);
 
-#endif // MAIN_GAME_WORLD_SEED_H
+#endif // VOXY_MAIN_GAME_WORLD_SEED_H

@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_FONT_SET_H
-#define GRAPHICS_FONT_SET_H
+#ifndef VOXY_GRAPHICS_FONT_SET_H
+#define VOXY_GRAPHICS_FONT_SET_H
 
 #include "glad/glad.h"
 #include <voxy/math/vector.h>
@@ -60,4 +60,4 @@ int font_set_load_system(struct font_set *font_set);
 
 struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height);
 
-#endif // GRAPHICS_FONT_SET_H
+#endif // VOXY_GRAPHICS_FONT_SET_H

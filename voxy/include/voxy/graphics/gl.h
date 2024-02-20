@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_GL_H
-#define GRAPHICS_GL_H
+#ifndef VOXY_GRAPHICS_GL_H
+#define VOXY_GRAPHICS_GL_H
 
 #include "glad/glad.h"
 
@@ -23,5 +23,4 @@ void gl_texture_2d_fini(struct gl_texture_2d *texture_2d);
 int gl_array_texture_2d_load(struct gl_array_texture_2d *array_texture_2d, size_t count, const char *filepaths[count]);
 void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d);
 
-#endif // GRAPHICS_GL_H
-
+#endif // VOXY_GRAPHICS_GL_H

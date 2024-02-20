@@ -1,5 +1,5 @@
-#ifndef VOXY_NOISE_H
-#define VOXY_NOISE_H
+#ifndef VOXY_MATH_NOISE_H
+#define VOXY_MATH_NOISE_H
 
 #include <voxy/math/vector.h>
 #include <voxy/math/random.h>
@@ -267,4 +267,4 @@ static inline float smoother_step(float x)
        + 10.0f * x * x * x;
 }
 
-#endif // VOXY_NOISE_H
+#endif // VOXY_MATH_NOISE_H

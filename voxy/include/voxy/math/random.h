@@ -1,5 +1,5 @@
-#ifndef VOXY_RANDOM_H
-#define VOXY_RANDOM_H
+#ifndef VOXY_MATH_RANDOM_H
+#define VOXY_MATH_RANDOM_H
 
 #include <assert.h>
 #include <limits.h>
@@ -67,4 +67,4 @@ static inline int seed_randi(seed_t *seed, int low, int high)
 }
 
 
-#endif // VOXY_RANDOM_H
+#endif // VOXY_MATH_RANDOM_H

@@ -1,5 +1,5 @@
-#ifndef TYPES_ENTITY_H
-#define TYPES_ENTITY_H
+#ifndef VOXY_MAIN_GAME_ENTITY_H
+#define VOXY_MAIN_GAME_ENTITY_H
 
 #include <voxy/math/vector.h>
 #include <voxy/math/transform.h>
@@ -31,4 +31,4 @@ void entity_jump(struct entity *entity, float strength);
 
 bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal);
 
-#endif // TYPES_ENTITY_H
+#endif // VOXY_MAIN_GAME_ENTITY_H

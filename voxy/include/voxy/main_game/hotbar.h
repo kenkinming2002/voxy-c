@@ -1,5 +1,5 @@
-#ifndef TYPES_HOTBAR_H
-#define TYPES_HOTBAR_H
+#ifndef VOXY_MAIN_GAME_HOTBAR_H
+#define VOXY_MAIN_GAME_HOTBAR_H
 
 #include <voxy/main_game/item.h>
 #include <stdint.h>
@@ -12,5 +12,4 @@ struct hotbar
   uint8_t selection;
 };
 
-#endif // TYPES_HOTBAR_H
-
+#endif // VOXY_MAIN_GAME_HOTBAR_H

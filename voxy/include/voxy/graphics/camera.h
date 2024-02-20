@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_CAMERA_H
-#define GRAPHICS_CAMERA_H
+#ifndef VOXY_GRAPHICS_CAMERA_H
+#define VOXY_GRAPHICS_CAMERA_H
 
 #include <voxy/math/transform.h>
 
@@ -18,4 +18,4 @@ fmat4_t camera_rotation_matrix(struct camera *camera);
 fmat4_t camera_view_matrix(struct camera *camera);
 fmat4_t camera_projection_matrix(struct camera *camera);
 
-#endif // GRAPHICS_CAMERA_H
+#endif // VOXY_GRAPHICS_CAMERA_H

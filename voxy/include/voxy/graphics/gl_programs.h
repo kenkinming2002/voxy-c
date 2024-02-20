@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_GL_PROGRAMS_H
-#define GRAPHICS_GL_PROGRAMS_H
+#ifndef VOXY_GRAPHICS_GL_PROGRAMS_H
+#define VOXY_GRAPHICS_GL_PROGRAMS_H
 
 #define GL_PROGRAMS \
   X(ui_quad_rounded) \
@@ -13,4 +13,4 @@ struct gl_program;
 GL_PROGRAMS
 #undef X
 
-#endif // GRAPHICS_GL_PROGRAMS_H
+#endif // VOXY_GRAPHICS_GL_PROGRAMS_H

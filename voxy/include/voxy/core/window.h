@@ -1,5 +1,5 @@
-#ifndef CORE_WINDOW_H
-#define CORE_WINDOW_H
+#ifndef VOXY_CORE_WINDOW_H
+#define VOXY_CORE_WINDOW_H
 
 #include <voxy/math/vector.h>
 
@@ -91,4 +91,4 @@ void window_present();
 
 void window_show_cursor(bool cursor);
 
-#endif // CORE_WINDOW_H
+#endif // VOXY_CORE_WINDOW_H

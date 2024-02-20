@@ -1,5 +1,5 @@
-#ifndef TYPES_INVENTORY_H
-#define TYPES_INVENTORY_H
+#ifndef VOXY_MAIN_GAME_INVENTORY_H
+#define VOXY_MAIN_GAME_INVENTORY_H
 
 #include <voxy/main_game/item.h>
 #include <stdbool.h>
@@ -12,4 +12,4 @@ struct inventory
   struct item items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
 };
 
-#endif // TYPES_INVENTORY_H
+#endif // VOXY_MAIN_GAME_INVENTORY_H

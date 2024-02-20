@@ -1,5 +1,5 @@
-#ifndef CORE_THREAD_POOL_H
-#define CORE_THREAD_POOL_H
+#ifndef VOXY_CORE_THREAD_POOL_H
+#define VOXY_CORE_THREAD_POOL_H
 
 #include <pthread.h>
 #include <stdatomic.h>
@@ -14,5 +14,4 @@ struct thread_pool_job
 
 void thread_pool_enqueue(struct thread_pool_job *job);
 
-#endif // CORE_THREAD_POOL_H
-
+#endif // VOXY_CORE_THREAD_POOL_H

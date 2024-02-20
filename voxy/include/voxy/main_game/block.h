@@ -1,5 +1,5 @@
-#ifndef TYPES_BLOCK_H
-#define TYPES_BLOCK_H
+#ifndef VOXY_MAIN_GAME_BLOCK_H
+#define VOXY_MAIN_GAME_BLOCK_H
 
 #include <stdint.h>
 
@@ -12,4 +12,4 @@ struct block
 
 #define BLOCK_NONE UINT8_MAX
 
-#endif // TYPES_BLOCK_H
+#endif // VOXY_MAIN_GAME_BLOCK_H

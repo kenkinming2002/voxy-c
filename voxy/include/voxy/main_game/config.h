@@ -1,5 +1,5 @@
-#ifndef VOXY_CONFIG_H
-#define VOXY_CONFIG_H
+#ifndef VOXY_MAIN_GAME_CONFIG_H
+#define VOXY_MAIN_GAME_CONFIG_H
 
 #define CHUNK_WIDTH 16
 
@@ -41,4 +41,4 @@
 #define PHYSICS_DRAG_GROUND 2.0f
 #define PHYSICS_DRAG_AIR    0.5f
 
-#endif // VOXY_CONFIG_H
+#endif // VOXY_MAIN_GAME_CONFIG_H

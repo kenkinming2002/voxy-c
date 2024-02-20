@@ -1,5 +1,5 @@
-#ifndef MAIN_GAME_WORLD_H
-#define MAIN_GAME_WORLD_H
+#ifndef VOXY_MAIN_GAME_WORLD_H
+#define VOXY_MAIN_GAME_WORLD_H
 
 #include <voxy/math/vector.h>
 
@@ -35,4 +35,4 @@ extern size_t          entity_capacity;
 
 void world_entity_add(struct entity *entity);
 
-#endif // MAIN_GAME_WORLD_H
+#endif // VOXY_MAIN_GAME_WORLD_H

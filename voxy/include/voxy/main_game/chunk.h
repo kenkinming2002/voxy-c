@@ -1,5 +1,5 @@
-#ifndef TYPES_CHUNK_H
-#define TYPES_CHUNK_H
+#ifndef VOXY_MAIN_GAME_CHUNK_H
+#define VOXY_MAIN_GAME_CHUNK_H
 
 #include <voxy/main_game/block.h>
 #include <voxy/main_game/config.h>
@@ -42,5 +42,4 @@ struct chunk
   GLsizei count_transparent;
 };
 
-#endif // TYPES_CHUNK_H
-
+#endif // VOXY_MAIN_GAME_CHUNK_H

@@ -1,6 +1,6 @@
-#ifndef MAIN_GAME_PHYSICS_H
-#define MAIN_GAME_PHYSICS_H
+#ifndef VOXY_MAIN_GAME_PHYSICS_H
+#define VOXY_MAIN_GAME_PHYSICS_H
 
 void update_physics(float dt);
 
-#endif // MAIN_GAME_PHYSICS_H
+#endif // VOXY_MAIN_GAME_PHYSICS_H

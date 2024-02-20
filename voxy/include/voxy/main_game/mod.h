@@ -1,5 +1,5 @@
-#ifndef MAIN_GAME_MOD_H
-#define MAIN_GAME_MOD_H
+#ifndef VOXY_MAIN_GAME_MOD_H
+#define VOXY_MAIN_GAME_MOD_H
 
 #include <voxy/main_game/mod_interface.h>
 #include <voxy/math/random.h>
@@ -28,4 +28,4 @@ MOD_FUNCTIONS
 
 void mod_load(const char *filepath);
 
-#endif // MAIN_GAME_MOD_H
+#endif // VOXY_MAIN_GAME_MOD_H

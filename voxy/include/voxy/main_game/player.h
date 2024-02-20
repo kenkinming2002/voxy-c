@@ -1,5 +1,5 @@
-#ifndef MAIN_GAME_PLAYER_H
-#define MAIN_GAME_PLAYER_H
+#ifndef VOXY_MAIN_GAME_PLAYER_H
+#define VOXY_MAIN_GAME_PLAYER_H
 
 #include <stdbool.h>
 
@@ -13,4 +13,4 @@ bool player_third_person(struct player *player);
 
 void update_spawn_player(void);
 
-#endif // MAIN_GAME_PLAYER_H
+#endif // VOXY_MAIN_GAME_PLAYER_H

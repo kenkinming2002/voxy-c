@@ -1,5 +1,5 @@
-#ifndef TYPES_ITEM_H
-#define TYPES_ITEM_H
+#ifndef VOXY_MAIN_GAME_ITEM_H
+#define VOXY_MAIN_GAME_ITEM_H
 
 #include <stdint.h>
 
@@ -12,4 +12,4 @@ struct item
 #define ITEM_NONE UINT8_MAX
 #define ITEM_MAX_STACK 64
 
-#endif // TYPES_ITEM_H
+#endif // VOXY_MAIN_GAME_ITEM_H

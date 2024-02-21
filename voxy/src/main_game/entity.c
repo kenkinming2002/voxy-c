@@ -61,7 +61,7 @@ void entity_jump(struct entity *entity, float strength)
 
 bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal)
 {
-  fvec3_t ray_position  = entity->position;
+  fvec3_t ray_position  = fvec3_add(entity->position, entity->local_view_transform.translation);
   fvec3_t ray_direction = transform_forward(entity->local_view_transform);
 
   struct ray_cast ray_cast;

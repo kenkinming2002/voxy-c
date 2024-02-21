@@ -89,31 +89,10 @@ void world_render()
       glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0, chunk->count_transparent);
     }
 
-  ivec3_t position;
-  ivec3_t normal;
-  bool hit = entity_ray_cast(player_entity, 20.0f, &position, &normal);
-
-  if(hit || player_third_person(player) || entity_count != 0)
+  if(entity_count != 0)
   {
     glUseProgram(program_outline->id);
     glUniformMatrix4fv(glGetUniformLocation(program_outline->id, "VP"), 1, GL_TRUE, (const float *)&VP);
-
-    if(hit)
-    {
-      ivec3_t position_destroy = position;
-      ivec3_t position_place   = ivec3_add(position, normal);
-
-      glUniform3f(glGetUniformLocation(program_outline->id, "position"), position_destroy.x, position_destroy.y, position_destroy.z);
-      glUniform3f(glGetUniformLocation(program_outline->id, "dimension"), 1.0f, 1.0f, 1.0f);
-      glUniform4f(glGetUniformLocation(program_outline->id, "color"),     1.0f, 1.0f, 1.0f, 1.0f);
-      glDrawArrays(GL_LINES, 0, 24);
-
-      glUniform3f(glGetUniformLocation(program_outline->id, "position"), position_place.x, position_place.y, position_place.z);
-      glUniform3f(glGetUniformLocation(program_outline->id, "dimension"), 1.0f, 1.0f, 1.0f);
-      glUniform4f(glGetUniformLocation(program_outline->id, "color"),     1.0f, 1.0f, 1.0f, 1.0f);
-      glDrawArrays(GL_LINES, 0, 24);
-    }
-
     for(size_t i=0; i<entity_count; ++i)
     {
       if(entities[i] == player_entity && !player_third_person(player))

@@ -230,6 +230,21 @@ static void player_update_ui(struct player *player)
 
   if(!player->inventory_opened)
   {
+    static bool                 cursor_loaded;
+    static struct gl_texture_2d cursor;
+    if(!cursor_loaded)
+    {
+      gl_texture_2d_load(&cursor, "assets/cursor.png");
+      cursor_loaded = true;
+    }
+
+    fvec2_t dimension = fvec2(32.0f, 32.0f);
+    fvec2_t position  = fvec2_mul_scalar(fvec2_sub(ivec2_as_fvec2(window_size), dimension), 0.5f);
+    ui_quad_textured(position, dimension, 0.0f, cursor.id);
+  }
+
+  if(!player->inventory_opened)
+  {
     struct label_widget label_widget;
     label_widget.height = UI_TEXT_SIZE;
 

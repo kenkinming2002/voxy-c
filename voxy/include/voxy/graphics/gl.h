@@ -23,4 +23,17 @@ void gl_texture_2d_fini(struct gl_texture_2d *texture_2d);
 int gl_array_texture_2d_load(struct gl_array_texture_2d *array_texture_2d, size_t count, const char *filepaths[count]);
 void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d);
 
+#define GL_PROGRAM_LOAD(name)                                                       \
+({                                                                                  \
+    static struct gl_program instance;                                              \
+    if(instance.id == 0)                                                            \
+    {                                                                               \
+      GLenum      targets[]   = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};             \
+      const char *filepaths[] = {"assets/" #name ".vert", "assets/" #name ".frag"}; \
+      if(gl_program_load(&instance, 2, targets, filepaths) != 0)                    \
+        exit(EXIT_FAILURE);                                                         \
+    }                                                                               \
+    instance;                                                                       \
+})
+
 #endif // VOXY_GRAPHICS_GL_H

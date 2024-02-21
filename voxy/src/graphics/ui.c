@@ -1,6 +1,5 @@
 #include <voxy/graphics/ui.h>
 
-#include <voxy/graphics/gl_programs.h>
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/font_set.h>
 
@@ -179,33 +178,33 @@ void ui_render(void)
 
   // Colored
   {
-    struct gl_program *program = gl_program_ui_quad_rounded_get();
-    glUseProgram(program->id);
-    glUniform2f(glGetUniformLocation(program->id, "window_size"), window_size.x, window_size.y);
+    struct gl_program program = GL_PROGRAM_LOAD(ui_quad_rounded);
+    glUseProgram(program.id);
+    glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
     for(size_t i=0; i<colored_quad_count; ++i)
     {
       struct colored_quad quad = colored_quads[i];
 
-      glUniform2f(glGetUniformLocation(program->id, "position"), quad.position.x, quad.position.y);
-      glUniform2f(glGetUniformLocation(program->id, "dimension"), quad.dimension.x, quad.dimension.y);
-      glUniform1f(glGetUniformLocation(program->id, "radius"), quad.rounding);
-      glUniform4f(glGetUniformLocation(program->id, "color"), quad.color.r, quad.color.g, quad.color.b, quad.color.a);
+      glUniform2f(glGetUniformLocation(program.id, "position"), quad.position.x, quad.position.y);
+      glUniform2f(glGetUniformLocation(program.id, "dimension"), quad.dimension.x, quad.dimension.y);
+      glUniform1f(glGetUniformLocation(program.id, "radius"), quad.rounding);
+      glUniform4f(glGetUniformLocation(program.id, "color"), quad.color.r, quad.color.g, quad.color.b, quad.color.a);
       glDrawArrays(GL_TRIANGLES, 0, 6);
     }
   }
 
   // Textured
   {
-    struct gl_program *program = gl_program_ui_texture_get();
-    glUseProgram(program->id);
-    glUniform2f(glGetUniformLocation(program->id, "window_size"), window_size.x, window_size.y);
+    struct gl_program program = GL_PROGRAM_LOAD(ui_texture);
+    glUseProgram(program.id);
+    glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
     for(size_t i=0; i<textured_quad_count; ++i)
     {
       struct textured_quad quad = textured_quads[i];
 
-      glUniform2f(glGetUniformLocation(program->id, "position"), quad.position.x, quad.position.y);
-      glUniform2f(glGetUniformLocation(program->id, "dimension"), quad.dimension.x, quad.dimension.y);
-      glUniform1f(glGetUniformLocation(program->id, "radius"), quad.rounding);
+      glUniform2f(glGetUniformLocation(program.id, "position"), quad.position.x, quad.position.y);
+      glUniform2f(glGetUniformLocation(program.id, "dimension"), quad.dimension.x, quad.dimension.y);
+      glUniform1f(glGetUniformLocation(program.id, "radius"), quad.rounding);
       glBindTexture(GL_TEXTURE_2D, quad.texture);
       glDrawArrays(GL_TRIANGLES, 0, 6);
     }

@@ -169,7 +169,7 @@ static void entity_physics_update(struct entity *entity, float dt)
           const struct block *block = world_block_get(position);
           if((block))
           {
-            const struct block_info *block_info = mod_block_info_get(block->id);
+            const struct block_info *block_info = query_block_info(block->id);
             if(block_info->type == BLOCK_TYPE_OPAQUE)
             {
               float t;

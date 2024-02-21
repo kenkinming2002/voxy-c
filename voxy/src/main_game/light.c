@@ -52,7 +52,7 @@ static inline struct light_info light_info_load_default()
 
 static inline struct light_info light_info_load_from_block(const struct block *block)
 {
-  const struct block_info *block_info = mod_block_info_get(block->id);
+  const struct block_info *block_info = query_block_info(block->id);
   return (struct light_info){
     .opaque      = block_info->type == BLOCK_TYPE_OPAQUE,
     .ether       = block_info->ether,
@@ -62,7 +62,7 @@ static inline struct light_info light_info_load_from_block(const struct block *b
 
 static inline struct light_info light_info_load_from_block_neighbour(const struct block *block)
 {
-  const struct block_info *block_info = mod_block_info_get(block->id);
+  const struct block_info *block_info = query_block_info(block->id);
   return (struct light_info){
     .opaque      = block_info->type == BLOCK_TYPE_OPAQUE,
     .ether       = block->ether,

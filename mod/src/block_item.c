@@ -10,19 +10,16 @@
 #include <assert.h>
 #include <stdint.h>
 
-static uint8_t item_id_to_block_id(uint8_t item_id)
+static block_id_t item_id_to_block_id(item_id_t item_id)
 {
-  switch(item_id)
-  {
-  case ITEM_STONE: return BLOCK_STONE;
-  case ITEM_GRASS: return BLOCK_GRASS;
-  case ITEM_LOG:   return BLOCK_LOG;
-  case ITEM_LEAVE: return BLOCK_LEAVE;
-  }
-  assert(0);
+  if(item_id == ITEM_ID_STONE) return BLOCK_ID_STONE;
+  if(item_id == ITEM_ID_GRASS) return BLOCK_ID_GRASS;
+  if(item_id == ITEM_ID_LOG)   return BLOCK_ID_LOG;
+  if(item_id == ITEM_ID_LEAVE) return BLOCK_ID_LEAVE;
+  assert(0 && "Unreachable");
 }
 
-void on_block_item_use(uint8_t item_id)
+void on_block_item_use(item_id_t item_id)
 {
   struct player *player        = player_get();
   struct entity *player_entity = player_as_entity(player);

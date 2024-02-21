@@ -1,35 +1,19 @@
-#ifndef MOD_ID_H
-#define MOD_ID_H
+#ifndef MOD_IDS_H
+#define MOD_IDS_H
 
-enum block_id
-{
-  BLOCK_EMPTY,
-  BLOCK_ETHER,
-  BLOCK_STONE,
-  BLOCK_GRASS,
-  BLOCK_LOG,
-  BLOCK_LEAVE,
-  BLOCK_WATER,
-};
+#include <voxy/main_game/registry.h>
 
-enum texture_id
-{
-  TEXTURE_STONE,
-  TEXTURE_GRASS_BOTTOM,
-  TEXTURE_GRASS_TOP,
-  TEXTURE_GRASS_SIDE,
-  TEXTURE_LOG_TOP_BOTTOM,
-  TEXTURE_LOG_SIDE,
-  TEXTURE_LEAVE,
-  TEXTURE_WATER,
-};
+extern block_id_t BLOCK_ID_EMPTY;
+extern block_id_t BLOCK_ID_ETHER;
+extern block_id_t BLOCK_ID_STONE;
+extern block_id_t BLOCK_ID_GRASS;
+extern block_id_t BLOCK_ID_LOG;
+extern block_id_t BLOCK_ID_LEAVE;
+extern block_id_t BLOCK_ID_WATER;
 
-enum item_id
-{
-  ITEM_STONE,
-  ITEM_GRASS,
-  ITEM_LOG,
-  ITEM_LEAVE,
-};
+extern item_id_t ITEM_ID_STONE;
+extern item_id_t ITEM_ID_GRASS;
+extern item_id_t ITEM_ID_LOG;
+extern item_id_t ITEM_ID_LEAVE;
 
-#endif // MOD_ID_H
+#endif // MOD_IDS_H

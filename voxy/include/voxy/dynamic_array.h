@@ -9,6 +9,14 @@
     size_t item_capacity; \
   }
 
+#define DYNAMIC_ARRAY_DECLARE(array, type) \
+  struct \
+  { \
+    type *items; \
+    size_t item_count; \
+    size_t item_capacity; \
+  } array = {0}
+
 #define DYNAMIC_ARRAY_APPEND(array, value) \
   do \
   { \

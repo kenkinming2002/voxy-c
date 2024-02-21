@@ -21,7 +21,8 @@ VOXY_SRCS += voxy/src/main_game/entity.c
 VOXY_SRCS += voxy/src/main_game/light.c
 VOXY_SRCS += voxy/src/main_game/main_game.c
 VOXY_SRCS += voxy/src/main_game/mod.c
-VOXY_SRCS += voxy/src/main_game/mod_assets.c
+VOXY_SRCS += voxy/src/main_game/assets.c
+VOXY_SRCS += voxy/src/main_game/registry.c
 VOXY_SRCS += voxy/src/main_game/physics.c
 VOXY_SRCS += voxy/src/main_game/player.c
 VOXY_SRCS += voxy/src/main_game/world.c
@@ -30,7 +31,8 @@ VOXY_SRCS += voxy/src/main_game/world_seed.c
 
 VOXY_SRCS += voxy/src/voxy.c
 
-MOD_SRCS += mod/src/infos.c
+MOD_SRCS += mod/src/init.c
+MOD_SRCS += mod/src/ids.c
 MOD_SRCS += mod/src/generate.c
 MOD_SRCS += mod/src/block_item.c
 

@@ -6,14 +6,6 @@
 
 static void *mod_dl;
 
-#define X(name) static const struct name *mod_##name##s;
-MOD_ARRAYS
-#undef X
-
-#define X(name) static uint8_t mod_##name##_count;
-MOD_ARRAYS
-#undef X
-
 #define X(name, ret, ...) static ret (*mod_##name##_ptr)(__VA_ARGS__);
 MOD_FUNCTIONS
 #undef X
@@ -40,20 +32,9 @@ void mod_load(const char *filepath)
   }
   atexit(mod_atexit);
 
-#define X(name) { \
-    void *data  = dlsym(mod_dl, #name "s");                                           \
-    void *count = dlsym(mod_dl, #name "_count");                                      \
-    if(data && count)                                                                 \
-    {                                                                                 \
-      mod_##name##s      = data;                                                      \
-      mod_##name##_count = *(size_t *)count;                                          \
-    }                                                                                 \
-    else                                                                              \
-      fprintf(stderr, "WARNING: Failed to load " #name " array from %s\n", filepath); \
-  }
-
-MOD_ARRAYS
-#undef X
+  void(*mod_init)(void) = dlsym(mod_dl, "mod_init");
+  if(mod_init)
+    mod_init();
 
 #define X(name, ret, ...) {                                                              \
     void *function = dlsym(mod_dl, #name);                                               \
@@ -67,13 +48,5 @@ MOD_FUNCTIONS
 #undef X
 }
 
-#define X(name) const struct name *mod_##name##_get(uint8_t id) { return &mod_##name##s[id]; }
-MOD_ARRAYS
-#undef X
-
-#define X(name) uint8_t mod_##name##_count_get() { return mod_##name##_count; }
-MOD_ARRAYS
-#undef X
-
-void mod_generate_blocks(seed_t seed, ivec3_t position, uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]) { return mod_generate_blocks_ptr(seed, position, blocks); }
+void mod_generate_blocks(seed_t seed, ivec3_t position, block_id_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH]) { return mod_generate_blocks_ptr(seed, position, blocks); }
 fvec3_t mod_generate_spawn(seed_t seed) { return mod_generate_spawn_ptr(seed); }

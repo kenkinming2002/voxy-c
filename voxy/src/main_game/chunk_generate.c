@@ -22,7 +22,7 @@ struct chunk_generate_wrapper
   struct thread_pool_job job;
 
   atomic_bool done;
-  uint8_t     blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+  block_id_t  blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 };
 
 #define SC_HASH_TABLE_INTERFACE

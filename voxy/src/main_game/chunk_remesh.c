@@ -1,12 +1,14 @@
 #include <voxy/main_game/chunk_remesh.h>
 
-#include <voxy/main_game/world.h>
-#include <voxy/main_game/player.h>
-#include <voxy/main_game/mod.h>
+#include <voxy/main_game/assets.h>
 #include <voxy/main_game/chunk.h>
 #include <voxy/main_game/config.h>
+#include <voxy/main_game/mod.h>
+#include <voxy/main_game/player.h>
+#include <voxy/main_game/world.h>
 
 #include <voxy/math/vector.h>
+
 #include <voxy/dynamic_array.h>
 
 #include <stdio.h>
@@ -70,14 +72,14 @@ static inline uint32_t get_normal_index(ivec3_t normal)
   assert(0 && "Unreachable");
 }
 
-static inline uint32_t get_texture_index(ivec3_t normal, const struct block_info *block_info)
+static inline uint32_t get_texture_index(ivec3_t normal, block_id_t block_id)
 {
-  if(normal.x == -1) return block_info->texture_left;
-  if(normal.x ==  1) return block_info->texture_right;
-  if(normal.y == -1) return block_info->texture_back;
-  if(normal.y ==  1) return block_info->texture_front;
-  if(normal.z == -1) return block_info->texture_bottom;
-  if(normal.z ==  1) return block_info->texture_top;
+  if(normal.x == -1) return assets_get_block_texture_array_index(block_id, BLOCK_FACE_LEFT);
+  if(normal.x ==  1) return assets_get_block_texture_array_index(block_id, BLOCK_FACE_RIGHT);
+  if(normal.y == -1) return assets_get_block_texture_array_index(block_id, BLOCK_FACE_BACK);
+  if(normal.y ==  1) return assets_get_block_texture_array_index(block_id, BLOCK_FACE_FRONT);
+  if(normal.z == -1) return assets_get_block_texture_array_index(block_id, BLOCK_FACE_BOTTOM);
+  if(normal.z ==  1) return assets_get_block_texture_array_index(block_id, BLOCK_FACE_TOP);
 
   assert(0 && "Unreachable");
 }
@@ -140,7 +142,7 @@ void update_chunk_remesh(void)
               for(int dx = -1; dx<=1; ++dx)
               {
                 blocks[1+dz][1+dy][1+dx] = chunk_block_lookup(chunk_mesh_infos.items[i].chunk, ivec3(x+dx, y+dy, z+dz));
-                block_infos[1+dz][1+dy][1+dx] = blocks[1+dz][1+dy][1+dx].id  != BLOCK_NONE ? mod_block_info_get(blocks[1+dz][1+dy][1+dx].id)  : &BLOCK_INFO_NONE;
+                block_infos[1+dz][1+dy][1+dx] = blocks[1+dz][1+dy][1+dx].id  != BLOCK_NONE ? query_block_info(blocks[1+dz][1+dy][1+dx].id)  : &BLOCK_INFO_NONE;
               }
 
           for(int dz = -1; dz<=1; ++dz)
@@ -150,6 +152,7 @@ void update_chunk_remesh(void)
                 {
                   const ivec3_t normal = ivec3(dx, dy, dz);
 
+                  const struct block block  = blocks[1][1][1];
                   const struct block nblock = blocks[1+dz][1+dy][1+dx];
 
                   const struct block_info *block_info  = block_infos[1][1][1];
@@ -198,7 +201,7 @@ void update_chunk_remesh(void)
 
                   struct chunk_quad chunk_quad;
                   chunk_quad.center = ivec3_add(ivec3_mul_scalar(chunk_mesh_infos.items[i].chunk->position, CHUNK_WIDTH), ivec3(x, y, z));
-                  chunk_quad.normal_index_and_texture_index = get_normal_index(normal) | get_texture_index(normal, block_info) << 3;
+                  chunk_quad.normal_index_and_texture_index = get_normal_index(normal) | get_texture_index(normal, block.id) << 3;
                   for(int v = 0; v < 2; ++v)
                     for(int u = 0; u < 2; ++u)
                       chunk_quad.light_levels[v][u] = light_levels[v][u];

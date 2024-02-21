@@ -47,89 +47,89 @@ static inline bool get_cave(seed_t seed, ivec3_t position)
   return true;
 }
 
-static inline uint8_t get_block(seed_t seed, ivec3_t position, float height)
+static inline block_id_t get_block(seed_t seed, ivec3_t position, float height)
 {
   int height1 = floorf(height);
   int height2 = height1 + 1;
 
   if(position.z < height1)
-    return get_cave(seed, position) ? BLOCK_EMPTY : BLOCK_STONE;
+    return get_cave(seed, position) ? BLOCK_ID_EMPTY : BLOCK_ID_STONE;
 
   if(position.z < height2)
-    return BLOCK_GRASS;
+    return BLOCK_ID_GRASS;
 
   if(position.z < WATER_HEIGHT)
-    return BLOCK_WATER;
+    return BLOCK_ID_WATER;
 
   if(position.z >= ETHER_HEIGHT)
-    return BLOCK_ETHER;
+    return BLOCK_ID_ETHER;
 
-  return BLOCK_EMPTY;
+  return BLOCK_ID_EMPTY;
 }
 
-static uint8_t TREE[6][5][5] = {
-  {
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_LOG,   BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-  },
-  {
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_LOG,   BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-  },
-  {
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_LOG,   BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-  },
-  {
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LOG,   BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-  },
-  {
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LOG,   BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-    {BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, },
-  },
-  {
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_LEAVE, BLOCK_EMPTY, },
-    {BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, BLOCK_EMPTY, },
-  },
-};
-
-static void place_block(uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position, uint8_t block)
+static void place_block(block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position, block_id_t block)
 {
   if(position.x < 0 || position.x >= CHUNK_WIDTH) return;
   if(position.y < 0 || position.y >= CHUNK_WIDTH) return;
   if(position.z < 0 || position.z >= CHUNK_WIDTH) return;
-  blocks[position.z][position.y][position.x] = block;
+  block_ids[position.z][position.y][position.x] = block;
 }
 
-static void place_tree(uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position)
+static void place_tree(block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position)
 {
+  const block_id_t TREE[6][5][5] = {
+  {
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_LOG,   BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+  },
+  {
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_LOG,   BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+  },
+  {
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_LOG,   BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+  },
+  {
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LOG,   BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+  },
+  {
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LOG,   BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+  },
+  {
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_EMPTY, },
+    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+  },
+};
+
   for(int z=0; z<6; ++z)
     for(int y=0; y<5; ++y)
       for(int x=0; x<5; ++x)
-        if(TREE[z][y][x] != BLOCK_EMPTY)
-          place_block(blocks, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
+        if(TREE[z][y][x] != BLOCK_ID_EMPTY)
+          place_block(block_ids, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
 }
 
-void generate_blocks(seed_t seed, ivec3_t position, uint8_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
+void generate_blocks(seed_t seed, ivec3_t position, block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
 {
   seed_t seed_height = seed ^ 0b0101010110101010111010110001001011011010111011010101111010101000;
   seed_t seed_block   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
@@ -153,7 +153,7 @@ void generate_blocks(seed_t seed, ivec3_t position, uint8_t blocks[CHUNK_WIDTH][
       {
         ivec3_t local_position  = ivec3(x, y, z);
         ivec3_t global_position = ivec3_add(ivec3_mul_scalar(position, CHUNK_WIDTH), local_position);
-        blocks[z][y][x] = get_block(seed_block, global_position, heights[y+2][x+2]);
+        block_ids[z][y][x] = get_block(seed_block, global_position, heights[y+2][x+2]);
       }
 
   for(int y = -2; y<CHUNK_WIDTH+2; ++y)
@@ -162,7 +162,7 @@ void generate_blocks(seed_t seed, ivec3_t position, uint8_t blocks[CHUNK_WIDTH][
       {
         int height = floorf(heights[y+2][x+2]) + 1;
         if(height >= WATER_HEIGHT)
-          place_tree(blocks, ivec3(x, y, height - position.z * CHUNK_WIDTH));
+          place_tree(block_ids, ivec3(x, y, height - position.z * CHUNK_WIDTH));
       }
 }
 

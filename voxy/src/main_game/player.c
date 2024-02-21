@@ -1,11 +1,11 @@
 #include <voxy/main_game/player.h>
 
+#include <voxy/main_game/assets.h>
 #include <voxy/main_game/config.h>
 #include <voxy/main_game/entity.h>
 #include <voxy/main_game/hotbar.h>
 #include <voxy/main_game/inventory.h>
 #include <voxy/main_game/mod.h>
-#include <voxy/main_game/mod_assets.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
 
@@ -60,8 +60,8 @@ static void cell_widget_render_item(const struct cell_widget *cell)
   if(cell->item->id == ITEM_NONE)
     return;
 
-  struct gl_texture_2d *texture = mod_assets_item_texture_get(cell->item->id);
-  ui_quad_textured(cell->position, cell->dimension, 0.0f, texture->id);
+  struct gl_texture_2d texture = assets_get_item_texture(cell->item->id);
+  ui_quad_textured(cell->position, cell->dimension, 0.0f, texture.id);
 
   char buffer[4];
   snprintf(buffer, sizeof buffer, "%u", cell->item->count);
@@ -251,7 +251,7 @@ static void player_update_ui(struct player *player)
     const struct item *selected_item = &player->hotbar.items[player->hotbar.selection];
     if(selected_item->id != ITEM_NONE)
     {
-      label_widget.text     = mod_item_info_get(selected_item->id)->name;
+      label_widget.text     = query_item_info(selected_item->id)->name;
       label_widget.position = selected_item_label_position;
       label_widget_render(&label_widget);
     }
@@ -263,7 +263,7 @@ static void player_update_ui(struct player *player)
       const struct block *target_block = world_block_get(position);
       if(target_block && target_block->id != BLOCK_NONE)
       {
-        label_widget.text     = mod_block_info_get(target_block->id)->name;
+        label_widget.text     = query_block_info(target_block->id)->name;
         label_widget.position = target_block_label_position;
         label_widget_render(&label_widget);
       }
@@ -311,7 +311,7 @@ static void player_update_action(struct player *player, float dt)
     const struct item *item = &player->hotbar.items[player->hotbar.selection];
     if(item->id != ITEM_NONE)
     {
-      const struct item_info *item_info = mod_item_info_get(item->id);
+      const struct item_info *item_info = query_item_info(item->id);
       if(item_info->on_use)
         item_info->on_use(item->id);
     }
@@ -405,10 +405,10 @@ void update_spawn_player(void)
   player->hand.id    = ITEM_NONE;
   player->hand.count = 0;
 
-  int count = mini(mod_item_info_count_get() * 2, HOTBAR_SIZE);
+  int count = mini(3, HOTBAR_SIZE);
   for(int i=0; i<count; ++i)
   {
-    player->hotbar.items[i].id = i % mod_item_info_count_get();
+    player->hotbar.items[i].id = i;
     player->hotbar.items[i].count = 8 * (i + 1);
   }
 

@@ -8,6 +8,7 @@
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
+#include <voxy/main_game/generate.h>
 
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/ui.h>
@@ -380,7 +381,7 @@ void update_spawn_player(void)
 
   player = malloc(sizeof *player);
 
-  player->entity.position                         = mod_generate_spawn(world_seed_get());
+  player->entity.position                         = generate_player_spawn(world_seed_get());
   player->entity.velocity                         = fvec3_zero();
   player->entity.dimension                        = PLAYER_DIMENSION;
   player->entity.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);

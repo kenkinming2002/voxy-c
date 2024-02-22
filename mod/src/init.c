@@ -1,6 +1,9 @@
 #include "ids.h"
+#include "generate.h"
 
 #include <voxy/main_game/registry.h>
+#include <voxy/main_game/generate.h>
+
 #include <stdbool.h>
 
 #define MOD "base"
@@ -91,5 +94,9 @@ void mod_init()
   ITEM_ID_GRASS = register_item_info((struct item_info){ .mod = MOD, .name = "grass", .texture = "assets/textures/grass_item.png", .on_use = on_block_item_use, });
   ITEM_ID_LOG   = register_item_info((struct item_info){ .mod = MOD, .name = "log",   .texture = "assets/textures/log_item.png",   .on_use = on_block_item_use, });
   ITEM_ID_LEAVE = register_item_info((struct item_info){ .mod = MOD, .name = "leave", .texture = "assets/textures/leave_item.png", .on_use = on_block_item_use, });
+
+  // 3: Callback
+  register_generate_chunk_blocks(&base_generate_chunk_blocks);
+  register_generate_player_spawn(&base_generate_player_spawn);
 }
 

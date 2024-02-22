@@ -2,7 +2,6 @@
 
 #include <voxy/main_game/block.h>
 #include <voxy/main_game/mod.h>
-#include <voxy/main_game/mod_interface.h>
 #include <voxy/main_game/world.h>
 
 #include <voxy/math/ray_cast.h>

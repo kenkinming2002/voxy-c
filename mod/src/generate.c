@@ -129,7 +129,7 @@ static void place_tree(block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDT
           place_block(block_ids, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
 }
 
-void generate_blocks(seed_t seed, ivec3_t position, block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
+void base_generate_chunk_blocks(seed_t seed, ivec3_t position, block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH])
 {
   seed_t seed_height = seed ^ 0b0101010110101010111010110001001011011010111011010101111010101000;
   seed_t seed_block   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;
@@ -166,7 +166,7 @@ void generate_blocks(seed_t seed, ivec3_t position, block_id_t block_ids[CHUNK_W
       }
 }
 
-fvec3_t generate_spawn(seed_t seed)
+fvec3_t base_generate_player_spawn(seed_t seed)
 {
   seed_t seed_height = seed ^ 0b0101010110101010111010110001001011011010111011010101111010101000;
   seed_t seed_block   = seed ^ 0b1011110101011101010110101010101010101001010101010100110101010001;

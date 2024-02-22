@@ -2,10 +2,12 @@
 
 #include <voxy/main_game/chunk.h>
 #include <voxy/main_game/config.h>
+#include <voxy/main_game/generate.h>
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
+
 #include <voxy/core/thread_pool.h>
 #include <voxy/utils.h>
 
@@ -63,7 +65,7 @@ void chunk_generate_wrapper_dispose(struct chunk_generate_wrapper *chunk_generat
 void chunk_generate_wrapper_invoke(struct thread_pool_job *job)
 {
   struct chunk_generate_wrapper *wrapper = container_of(job, struct chunk_generate_wrapper, job);
-  mod_generate_blocks(world_seed_get(), wrapper->position, wrapper->blocks);
+  generate_chunk_blocks(world_seed_get(), wrapper->position, wrapper->blocks);
   atomic_store_explicit(&wrapper->done, true, memory_order_release);
 }
 

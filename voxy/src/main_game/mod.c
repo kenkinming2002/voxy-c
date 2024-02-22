@@ -1,7 +1,8 @@
 #include <voxy/main_game/mod.h>
 
+#include <voxy/core/log.h>
+
 #include <dlfcn.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 void mod_load(const char *filepath)
@@ -9,8 +10,8 @@ void mod_load(const char *filepath)
   void *dl = dlopen(filepath, RTLD_LAZY);
   if(!dl)
   {
-    fprintf(stderr, "WARNING: Failed to load mod from %s.\n", filepath);
-    return;
+    LOG_ERROR("Failed to load mod from %s", filepath);
+    exit(EXIT_FAILURE);
   }
 
   void(*mod_init)(void) = dlsym(dl, "mod_init");

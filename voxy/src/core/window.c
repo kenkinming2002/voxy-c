@@ -1,11 +1,12 @@
 #include <voxy/core/window.h>
 
+#include <voxy/core/log.h>
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
 #include <stdlib.h>
-#include <stdio.h>
 
 static GLFWwindow *window;
 
@@ -25,7 +26,7 @@ ivec2_t mouse_scroll;
 static void glfw_error_callback(int error, const char *description)
 {
   (void)error;
-  fprintf(stderr, "ERROR: %s\n", description);
+  LOG_WARN("glfw: %s", description);
 }
 
 static void glfw_window_size_callback(GLFWwindow *window, int width, int height)
@@ -161,7 +162,7 @@ void window_init(const char *title, unsigned width, unsigned height)
   glfwSetErrorCallback(&glfw_error_callback);
   if(!glfwInit())
   {
-    fprintf(stderr, "ERROR: Failed to initialize GLFW\n");
+    LOG_ERROR("Failed to initialize GLFW");
     exit(EXIT_FAILURE);
   }
 
@@ -169,14 +170,14 @@ void window_init(const char *title, unsigned width, unsigned height)
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   if(!(window = glfwCreateWindow(width, height, title, NULL, NULL)))
   {
-    fprintf(stderr, "ERROR: Failed to create window\n");
+    LOG_ERROR("Failed to create window");
     exit(EXIT_FAILURE);
   }
 
   glfwMakeContextCurrent(window);
   if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
-    fprintf(stderr, "ERROR: Failed to load OpenGL\n");
+    LOG_ERROR("Failed to load OpenGL");
     exit(EXIT_FAILURE);
   }
 

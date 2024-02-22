@@ -1,7 +1,8 @@
 #ifndef VOXY_GRAPHICS_GL_H
 #define VOXY_GRAPHICS_GL_H
 
-#include "glad/glad.h"
+#include <voxy/core/log.h>
+#include <glad/glad.h>
 
 #include <stddef.h>
 
@@ -31,7 +32,10 @@ void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d);
       GLenum      targets[]   = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};                             \
       const char *filepaths[] = {"assets/shaders/" #name ".vert", "assets/shaders/" #name ".frag"}; \
       if(gl_program_load(&instance, 2, targets, filepaths) != 0)                                    \
+      {                                                                                             \
+        LOG_ERROR("Failed to load %s shader", #name);                                               \
         exit(EXIT_FAILURE);                                                                         \
+      }                                                                                             \
     }                                                                                               \
     instance;                                                                                       \
 })

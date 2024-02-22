@@ -1,7 +1,8 @@
 #include <voxy/main_game/registry.h>
 
+#include <voxy/core/log.h>
+
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 static struct block_info block_infos[BLOCK_MAX];
@@ -23,24 +24,24 @@ block_id_t register_block_info(struct block_info block_info)
   for(int i=0; i<BLOCK_MAX; ++i)
     if(!block_infos[i].mod  && !block_infos[i].name)
     {
-      fprintf(stderr, "INFO: Registered block: id = %d:\n", i);
-      fprintf(stderr, "INFO:   mod            = %s\n", block_info.mod);
-      fprintf(stderr, "INFO:   name           = %s\n", block_info.name);
-      fprintf(stderr, "INFO:   type           = %s\n", block_type_as_str(block_info.type));
-      fprintf(stderr, "INFO:   ether          = %u\n", block_info.ether);
-      fprintf(stderr, "INFO:   light level    = %u\n", block_info.light_level);
-      fprintf(stderr, "INFO:   texture left   = %s\n", block_info.textures[BLOCK_FACE_LEFT]);
-      fprintf(stderr, "INFO:   texture right  = %s\n", block_info.textures[BLOCK_FACE_RIGHT]);
-      fprintf(stderr, "INFO:   texture back   = %s\n", block_info.textures[BLOCK_FACE_BACK]);
-      fprintf(stderr, "INFO:   texture front  = %s\n", block_info.textures[BLOCK_FACE_FRONT]);
-      fprintf(stderr, "INFO:   texture bottom = %s\n", block_info.textures[BLOCK_FACE_BOTTOM]);
-      fprintf(stderr, "INFO:   texture top    = %s\n", block_info.textures[BLOCK_FACE_TOP]);
+      LOG_INFO("Registered block: id = %d:", i);
+      LOG_INFO("  mod            = %s", block_info.mod);
+      LOG_INFO("  name           = %s", block_info.name);
+      LOG_INFO("  type           = %s", block_type_as_str(block_info.type));
+      LOG_INFO("  ether          = %u", block_info.ether);
+      LOG_INFO("  light level    = %u", block_info.light_level);
+      LOG_INFO("  texture left   = %s", block_info.textures[BLOCK_FACE_LEFT]);
+      LOG_INFO("  texture right  = %s", block_info.textures[BLOCK_FACE_RIGHT]);
+      LOG_INFO("  texture back   = %s", block_info.textures[BLOCK_FACE_BACK]);
+      LOG_INFO("  texture front  = %s", block_info.textures[BLOCK_FACE_FRONT]);
+      LOG_INFO("  texture bottom = %s", block_info.textures[BLOCK_FACE_BOTTOM]);
+      LOG_INFO("  texture top    = %s", block_info.textures[BLOCK_FACE_TOP]);
 
       block_infos[i] = block_info;
       return i;
     }
 
-  fprintf(stderr, "ERROR: Failed to allocate block id\n");
+  LOG_ERROR("Failed to allocate block id");
   exit(EXIT_FAILURE);
 }
 
@@ -49,17 +50,17 @@ item_id_t register_item_info(struct item_info item_info)
   for(int i=0; i<BLOCK_MAX; ++i)
     if(!item_infos[i].mod  && !item_infos[i].name)
     {
-      fprintf(stderr, "INFO: Registered item: id = %d:\n", i);
-      fprintf(stderr, "INFO:   mod     = %s\n", item_info.mod);
-      fprintf(stderr, "INFO:   name    = %s\n", item_info.name);
-      fprintf(stderr, "INFO:   texture = %s\n", item_info.texture);
-      fprintf(stderr, "INFO:   on use  = %p\n", item_info.on_use);
+      LOG_INFO("Registered item: id = %d:", i);
+      LOG_INFO("  mod     = %s", item_info.mod);
+      LOG_INFO("  name    = %s", item_info.name);
+      LOG_INFO("  texture = %s", item_info.texture);
+      LOG_INFO("  on use  = %p", item_info.on_use);
 
       item_infos[i] = item_info;
       return i;
     }
 
-  fprintf(stderr, "ERROR: Failed to allocate item id\n");
+  LOG_ERROR("Failed to allocate item id");
   exit(EXIT_FAILURE);
 }
 

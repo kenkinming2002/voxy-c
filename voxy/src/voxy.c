@@ -4,9 +4,9 @@
 
 #include <voxy/core/window.h>
 #include <voxy/core/delta_time.h>
+#include <voxy/core/log.h>
 
 #include <stdlib.h>
-#include <stdio.h>
 
 #define FIXED_DT (1.0f/30.0f)
 
@@ -29,7 +29,7 @@ int main()
 
     if(accumulated_dt >= FIXED_DT)
     {
-      fprintf(stderr, "WARNING: Skipping %d fixed update\n", (int)floorf(accumulated_dt / FIXED_DT));
+      LOG_WARN("Skipping %d fixed update", (int)floorf(accumulated_dt / FIXED_DT));
       accumulated_dt = fmodf(accumulated_dt, FIXED_DT);
     }
 

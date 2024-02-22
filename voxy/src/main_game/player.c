@@ -14,10 +14,10 @@
 #include <voxy/graphics/ui.h>
 
 #include <voxy/core/window.h>
+#include <voxy/core/log.h>
 
 #include <voxy/utils.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 
 static inline int mini(int a, int b) { return a < b ? a : b; }
@@ -419,6 +419,6 @@ void update_spawn_player(void)
   player->cooldown = 0.0f;
 
   world_entity_add(&player->entity);
-  fprintf(stderr, "INFO: Spawning player at (%f, %f, %f) with %d items\n", player->entity.position.x, player->entity.position.y, player->entity.position.z, count);
+  LOG_INFO("Spawning player at (%f, %f, %f) with %d items", player->entity.position.x, player->entity.position.y, player->entity.position.z, count);
 }
 

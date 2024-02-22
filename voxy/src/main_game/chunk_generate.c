@@ -9,6 +9,8 @@
 #include <voxy/main_game/world_seed.h>
 
 #include <voxy/core/thread_pool.h>
+#include <voxy/core/log.h>
+
 #include <voxy/utils.h>
 
 #include <sc/hash_table.h>
@@ -137,5 +139,5 @@ void update_chunk_generate(void)
       }
 
   if(count != 0)
-    fprintf(stderr, "DEBUG: Chunk Generator: Generarted %zu chunks in background\n", count);
+    LOG_INFO("Chunk Generator: Generarted %zu chunks in background", count);
 }

@@ -4,7 +4,8 @@
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/world.h>
 
-#include <stdio.h>
+#include <voxy/core/log.h>
+
 #include <time.h>
 
 /// Rule for light update
@@ -278,5 +279,5 @@ void update_light(void)
 
   clock_t end = clock();
   if(count != 0)
-    fprintf(stderr, "DEBUG: Light System: Processed %zu chunks in %fs - Average %fs\n", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
+    LOG_INFO("Light System: Processed %zu chunks in %fs - Average %fs", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
 }

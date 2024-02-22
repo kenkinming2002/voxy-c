@@ -1,5 +1,7 @@
 #include <voxy/graphics/font_set.h>
 
+#include <voxy/core/log.h>
+
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX glyph
 #define SC_HASH_TABLE_NODE_TYPE struct glyph
@@ -11,8 +13,6 @@
 #undef SC_HASH_TABLE_IMPLEMENTATION
 
 #include <fontconfig/fontconfig.h>
-
-#include <stdio.h>
 
 ////////////////////////
 /// Glyph Hash Table ///
@@ -120,7 +120,7 @@ int font_set_load(struct font_set *font_set, const char *filepath)
   font.filepath = strdup(filepath); // FIXME: Non-POSIX platforms
   if((error = FT_New_Face(FT_HANDLE, filepath, 0, &font.face)) != 0)
   {
-    fprintf(stderr, "ERROR: Failed to load font from %s: %s\n", filepath, ft_strerror(error));
+    LOG_WARN("Failed to load font from %s: %s", filepath, ft_strerror(error));
     return -1;
   }
 
@@ -175,19 +175,19 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       // TODO: Use FT_Set_Char_Size and handle DPI scaling
       if((error = FT_Set_Pixel_Sizes(font_set->fonts[i].face, 0, height)) != 0)
       {
-        fprintf(stderr, "WARN: Failed to set pixel size: Font %s: %s\n", font_set->fonts[i].filepath, ft_strerror(error));
+        LOG_WARN("Failed to set pixel size: Font %s: %s", font_set->fonts[i].filepath, ft_strerror(error));
         continue;
       }
 
       if((error = FT_Load_Glyph(font_set->fonts[i].face, char_index, FT_LOAD_RENDER)) != 0)
       {
-        fprintf(stderr, "WARN: Failed to load character %c: Font %s: %s\n", c, font_set->fonts[i].filepath, ft_strerror(error));
+        LOG_WARN("Failed to load character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
         continue;
       }
 
       if((long)font_set->fonts[i].face->glyph->bitmap.width != (long)font_set->fonts[i].face->glyph->bitmap.pitch)
       {
-        fprintf(stderr, "WARN: Bitmap is not tightly packed for character %c: Font %s\n", c, font_set->fonts[i].filepath);
+        LOG_WARN("Bitmap is not tightly packed for character %c: Font %s", c, font_set->fonts[i].filepath);
         continue;
       }
 
@@ -220,7 +220,7 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
 
   if(!glyph)
   {
-    fprintf(stderr, "ERROR: No font found for character %c\n", c);
+    LOG_WARN("No font found for character %c", c);
     return NULL;
   }
 

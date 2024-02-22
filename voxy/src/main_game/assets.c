@@ -1,11 +1,11 @@
 #include <voxy/main_game/assets.h>
 
+#include <voxy/core/log.h>
 #include <voxy/graphics/gl.h>
 #include <voxy/dynamic_array.h>
 
 #include <assert.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,8 +25,8 @@ static void ensure_item_texture(item_id_t item_id)
     const struct item_info *item_info = query_item_info(item_id);
     if(gl_texture_2d_load(&item_textures[item_id], item_info->texture) != 0)
     {
-      fprintf(stderr, "WARNING: Failed to load texture for item %s:%s\n", item_info->mod, item_info->name);
-      fprintf(stderr, "ERROR:   Fallback texture not implemented\n");
+      LOG_WARN("Failed to load texture for item %s:%s", item_info->mod, item_info->name);
+      LOG_ERROR("Fallback texture not implemented");
       exit(EXIT_FAILURE);
     }
   }
@@ -55,14 +55,14 @@ static void ensure_block_array_texture(void)
         }
     }
 
-    fprintf(stderr, "INFO: Collected block textures:\n");
+    LOG_INFO("Collected block textures:");
     for(size_t i=0; i<textures.item_count; ++i)
-      fprintf(stderr, "INFO:   %s\n", textures.items[i]);
+      LOG_INFO("  %s", textures.items[i]);
 
     // 2: Build texture array
     if(gl_array_texture_2d_load(&block_array_texture, textures.item_count, textures.items) != 0)
     {
-      fprintf(stderr, "ERROR: Failed to load block array texture\n");
+      LOG_ERROR("Failed to load block array texture");
       exit(EXIT_FAILURE);
     }
   }

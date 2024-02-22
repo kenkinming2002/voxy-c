@@ -7,10 +7,13 @@
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/world.h>
 
+#include <voxy/core/log.h>
+
 #include <voxy/math/vector.h>
 
 #include <voxy/dynamic_array.h>
 
+#include <time.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -233,6 +236,9 @@ void update_chunk_remesh(void)
    * data to GPU using OpenGL which is not thread-safe. Unfortunate.
    */
 
+  size_t count = jobs.item_count;
+  clock_t begin = clock();
+
 #pragma omp parallel for
   for(size_t i=0; i<jobs.item_count; ++i) chunk_build_mesh (jobs.items[i].chunk, &jobs.items[i].opaque_quads, &jobs.items[i].transparent_quads);
   for(size_t i=0; i<jobs.item_count; ++i) chunk_upload_mesh(jobs.items[i].chunk, &jobs.items[i].opaque_quads, &jobs.items[i].transparent_quads);
@@ -242,4 +248,8 @@ void update_chunk_remesh(void)
     free(jobs.items[i].opaque_quads.items);
   }
   free(jobs.items);
+
+  clock_t end = clock();
+  if(count != 0)
+    LOG_INFO("Chunk Mesher: Processed %zu chunks in %fs - Average %fs", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
 }

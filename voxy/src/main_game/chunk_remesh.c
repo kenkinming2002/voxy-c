@@ -20,9 +20,18 @@
 
 struct chunk_quad
 {
-  ivec3_t  center;
+  ivec3_t center;
+
+  // Bits 0..2: normal index
+  // Bits 3.15: texture index
   uint32_t normal_index_and_texture_index;
-  float    light_levels[2][2]; // FIXME: Occlusion
+
+  // Bits 0..3:   base light level
+  // Bits 4..7:   occlusion count 0
+  // Bits 8..11:  occlusion count 1
+  // Bits 12..15: occlusion count 2
+  // Bits 16..20: occlusion count 3
+  uint32_t light_level_and_occlusion_counts;
 };
 DYNAMIC_ARRAY_DEFINE(chunk_quads, struct chunk_quad);
 
@@ -115,11 +124,15 @@ static void chunk_build_mesh(struct chunk *chunk, struct chunk_quads *opaque_qua
 
           const ivec3_t axis2 = normal.z != 0 ? ivec3(1, 0, 0) : ivec3(0, 0, 1);
           const ivec3_t axis1 = ivec3_cross(normal, axis2);
+
+          uint16_t light_level = nblock.light_level;
+          uint16_t occlusion_counts[2][2];
           for(int v = 0; v < 2; ++v)
             for(int u = 0; u < 2; ++u)
             {
               // Fixed-point!?
               ivec3_t position;
+
               position = ivec3_mul_scalar(ivec3(x, y, z), 2);
               position = ivec3_add(position, normal);
               position = ivec3_add(position, ivec3_mul_scalar(axis1, u * 2 - 1));
@@ -127,10 +140,13 @@ static void chunk_build_mesh(struct chunk *chunk, struct chunk_quads *opaque_qua
               position = ivec3_add(position, ivec3(1, 1, 1));
               position = ivec3_div_scalar(position, 2);
 
-              const float   block_light_level = nblock.light_level / 15.0f;
-              const uint8_t occlusion         = occlusions[position.z][position.y][position.x];
-              chunk_quad.light_levels[v][u] = (block_light_level * 0.9f + 0.1f) * (1.0f - (float)occlusion / (float)(2 * 2 * 2));
+              occlusion_counts[v][u] = occlusions[position.z][position.y][position.x];
             }
+
+          chunk_quad.light_level_and_occlusion_counts = light_level | occlusion_counts[0][0] << 4
+                                                                    | occlusion_counts[0][1] << 8
+                                                                    | occlusion_counts[1][0] << 12
+                                                                    | occlusion_counts[1][1] << 16;
 
           switch(block_type)
           {
@@ -169,9 +185,9 @@ static void chunk_upload_mesh(struct chunk *chunk, struct chunk_quads *opaque_qu
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, center));
-    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, normal_index_and_texture_index));
-    glVertexAttribPointer (2, 4, GL_FLOAT, GL_FALSE, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, light_levels));
+    glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, center));
+    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, normal_index_and_texture_index));
+    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, light_level_and_occlusion_counts));
 
     glVertexAttribDivisor(0, 1);
     glVertexAttribDivisor(1, 1);
@@ -192,9 +208,9 @@ static void chunk_upload_mesh(struct chunk *chunk, struct chunk_quads *opaque_qu
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, center));
-    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT,    sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, normal_index_and_texture_index));
-    glVertexAttribPointer (2, 4, GL_FLOAT, GL_FALSE, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, light_levels));
+    glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, center));
+    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, normal_index_and_texture_index));
+    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(struct chunk_quad), (void *)offsetof(struct chunk_quad, light_level_and_occlusion_counts));
 
     glVertexAttribDivisor(0, 1);
     glVertexAttribDivisor(1, 1);

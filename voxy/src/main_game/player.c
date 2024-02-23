@@ -10,6 +10,7 @@
 #include <voxy/main_game/world_seed.h>
 #include <voxy/main_game/generate.h>
 
+#include <voxy/graphics/camera.h>
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/ui.h>
 
@@ -369,9 +370,23 @@ struct entity *player_as_entity(struct player *player)
   return &player->entity;
 }
 
-bool player_third_person(struct player *player)
+bool player_get_third_person(struct player *player)
 {
   return player->third_person;
+}
+
+struct camera player_get_camera(struct player *player)
+{
+  struct camera camera;
+  camera.transform = entity_view_transform(&player->entity);
+  camera.fovy   = M_PI / 2.0f;
+  camera.near   = 0.1f;
+  camera.far    = 1000.0f;
+  camera.aspect = (float)window_size.x / (float)window_size.y;
+  if(player_get_third_person(player))
+    camera.transform = transform_local_translate(camera.transform, fvec3(0.0f, -10.0f, 0.0f));
+
+  return camera;
 }
 
 void update_spawn_player(void)

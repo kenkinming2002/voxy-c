@@ -22,16 +22,7 @@ void world_render()
   if(!player)
     return;
 
-  struct entity *player_entity = player_as_entity(player);
-
-  struct camera camera;
-  camera.transform = entity_view_transform(player_entity);
-  camera.fovy   = M_PI / 2.0f;
-  camera.near   = 0.1f;
-  camera.far    = 1000.0f;
-  camera.aspect = (float)window_size.x / (float)window_size.y;
-  if(player_third_person(player))
-    camera.transform = transform_local_translate(camera.transform, fvec3(0.0f, -10.0f, 0.0f));
+  struct camera camera = player_get_camera(player);
 
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(&camera),       VP);
@@ -97,7 +88,7 @@ void world_render()
     glUniformMatrix4fv(glGetUniformLocation(program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
     for(size_t i=0; i<entity_count; ++i)
     {
-      if(entities[i] == player_entity && !player_third_person(player))
+      if(entities[i] == player_as_entity(player) && !player_get_third_person(player))
         continue;
 
       glUniform3f(glGetUniformLocation(program.id, "position"),  entities[i]->position.x,  entities[i]->position.y,  entities[i]->position.z);

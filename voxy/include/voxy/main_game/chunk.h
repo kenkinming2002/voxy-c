@@ -42,4 +42,6 @@ struct chunk
   GLsizei count_transparent;
 };
 
+struct block *chunk_get_block(struct chunk *chunk, ivec3_t position);
+
 #endif // VOXY_MAIN_GAME_CHUNK_H

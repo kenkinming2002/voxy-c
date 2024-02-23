@@ -15,6 +15,7 @@ VOXY_SRCS += voxy/src/graphics/ui.c
 VOXY_SRCS += voxy/src/graphics/camera.c
 
 VOXY_SRCS += voxy/src/main_game/assets.c
+VOXY_SRCS += voxy/src/main_game/chunk.c
 VOXY_SRCS += voxy/src/main_game/chunk_generate.c
 VOXY_SRCS += voxy/src/main_game/chunk_hash_table.c
 VOXY_SRCS += voxy/src/main_game/chunk_remesh.c

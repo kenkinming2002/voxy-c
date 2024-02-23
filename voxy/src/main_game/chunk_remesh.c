@@ -35,26 +35,6 @@ struct chunk_quad
 };
 DYNAMIC_ARRAY_DEFINE(chunk_quads, struct chunk_quad);
 
-static inline struct block chunk_block_lookup(struct chunk *chunk, ivec3_t position)
-{
-  if(!chunk)
-    return (struct block) { .id = BLOCK_NONE, .ether = false, .light_level = 0, };
-
-  if(position.z >= 0 && position.z < CHUNK_WIDTH)
-    if(position.y >= 0 && position.y < CHUNK_WIDTH)
-      if(position.x >= 0 && position.x < CHUNK_WIDTH)
-        return chunk->blocks[position.z][position.y][position.x];
-
-  if(position.x == -1)          return chunk_block_lookup(chunk->left,   ivec3_add(position, ivec3(CHUNK_WIDTH, 0, 0)));
-  if(position.x == CHUNK_WIDTH) return chunk_block_lookup(chunk->right,  ivec3_sub(position, ivec3(CHUNK_WIDTH, 0, 0)));
-  if(position.y == -1)          return chunk_block_lookup(chunk->back,   ivec3_add(position, ivec3(0, CHUNK_WIDTH, 0)));
-  if(position.y == CHUNK_WIDTH) return chunk_block_lookup(chunk->front,  ivec3_sub(position, ivec3(0, CHUNK_WIDTH, 0)));
-  if(position.z == -1)          return chunk_block_lookup(chunk->bottom, ivec3_add(position, ivec3(0, 0, CHUNK_WIDTH)));
-  if(position.z == CHUNK_WIDTH) return chunk_block_lookup(chunk->top,    ivec3_sub(position, ivec3(0, 0, CHUNK_WIDTH)));
-
-  assert(0 && "Unreachable");
-}
-
 static inline ivec3_t face_get_normal(enum block_face face)
 {
   switch(face)
@@ -76,7 +56,17 @@ static void chunk_build_mesh(struct chunk *chunk, struct chunk_quads *opaque_qua
   for(int z = -1; z<CHUNK_WIDTH+1; ++z)
     for(int y = -1; y<CHUNK_WIDTH+1; ++y)
       for(int x = -1; x<CHUNK_WIDTH+1; ++x)
-        blocks[z+1][y+1][x+1] = chunk_block_lookup(chunk, ivec3(x, y, z));
+      {
+        struct block *block = chunk_get_block(chunk, ivec3(x, y, z));
+        if(!block)
+        {
+          blocks[z+1][y+1][x+1].id          = BLOCK_NONE;
+          blocks[z+1][y+1][x+1].ether       = false;
+          blocks[z+1][y+1][x+1].light_level = 0;
+        }
+        else
+          blocks[z+1][y+1][x+1] = *block;
+      }
 
   enum block_type block_types[CHUNK_WIDTH+2][CHUNK_WIDTH+2][CHUNK_WIDTH+2];
   for(int z = -1; z<CHUNK_WIDTH+1; ++z)

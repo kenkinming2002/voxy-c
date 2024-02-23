@@ -99,6 +99,7 @@ static void chunk_build_mesh(struct chunk *chunk, struct chunk_quads *opaque_qua
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
+        #pragma omp unroll
         for(enum block_face face = 0; face<BLOCK_FACE_COUNT; ++face)
         {
           const ivec3_t normal = face_get_normal(face);
@@ -127,6 +128,7 @@ static void chunk_build_mesh(struct chunk *chunk, struct chunk_quads *opaque_qua
 
           uint16_t light_level = nblock.light_level;
           uint16_t occlusion_counts[2][2];
+
           for(int v = 0; v < 2; ++v)
             for(int u = 0; u < 2; ++u)
             {

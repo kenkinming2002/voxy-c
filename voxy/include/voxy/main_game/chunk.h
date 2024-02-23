@@ -47,6 +47,10 @@ struct chunk
   struct
   {
     struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+
+    struct entity **entities;
+    size_t          entity_count;
+    size_t          entity_capacity;
   };
 
   /*************
@@ -77,5 +81,10 @@ struct chunk
  * queried block is close.
  */
 struct block *chunk_get_block(struct chunk *chunk, ivec3_t position);
+
+/*
+ * Add an entity to a chunk.
+ */
+void chunk_add_entity(struct chunk *chunk, struct entity *entity);
 
 #endif // VOXY_MAIN_GAME_CHUNK_H

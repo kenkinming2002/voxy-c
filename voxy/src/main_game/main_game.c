@@ -47,7 +47,11 @@ void main_game_update(float dt)
       struct entity *entity        = malloc(sizeof *entity);
       *entity = *player_entity;
       entity->update = &weird_entity_update;
-      world_entity_add(entity);
+
+      // This always succeed, since we will add entity to the same chunk that
+      // the player is in, which means it exists.
+      int success = world_entity_add(entity);
+      assert(success == 0);
     }
   }
 
@@ -55,9 +59,10 @@ void main_game_update(float dt)
   update_chunk_generate();
   update_spawn_player();
 
-  for(size_t i=0; i<entity_count; ++i)
-    if(entities[i]->update)
-      entities[i]->update(entities[i], dt);
+  world_chunk_for_each(chunk)
+    for(size_t i=0; i<chunk->entity_count; ++i)
+      if(chunk->entities[i]->update)
+        chunk->entities[i]->update(chunk->entities[i], dt);
 
   update_light();
   update_physics(dt);

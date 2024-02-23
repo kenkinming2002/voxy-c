@@ -358,11 +358,10 @@ static void player_update(struct entity *entity, float dt)
   player_update_movement(player, dt);
 }
 
-static struct player *player;
-
+static struct player *g_player;
 struct player *player_get(void)
 {
-  return player;
+  return g_player;
 }
 
 struct entity *player_as_entity(struct player *player)
@@ -391,10 +390,10 @@ struct camera player_get_camera(struct player *player)
 
 void update_spawn_player(void)
 {
-  if(player)
+  if(g_player)
     return;
 
-  player = malloc(sizeof *player);
+  struct player *player = malloc(sizeof *player);
 
   player->entity.position                         = generate_player_spawn(world_seed_get());
   player->entity.velocity                         = fvec3_zero();
@@ -433,7 +432,13 @@ void update_spawn_player(void)
 
   player->cooldown = 0.0f;
 
-  world_entity_add(&player->entity);
+  if(world_entity_add(&player->entity) != 0)
+  {
+    free(player);
+    return;
+  }
+
+  g_player = player;
   LOG_INFO("Spawning player at (%f, %f, %f) with %d items", player->entity.position.x, player->entity.position.y, player->entity.position.z, count);
 }
 

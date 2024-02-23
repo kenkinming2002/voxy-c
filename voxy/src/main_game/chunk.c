@@ -1,5 +1,7 @@
 #include <voxy/main_game/chunk.h>
 
+#include <stdlib.h>
+
 struct block *chunk_get_block(struct chunk *chunk, ivec3_t position)
 {
   if(!chunk)
@@ -18,4 +20,14 @@ struct block *chunk_get_block(struct chunk *chunk, ivec3_t position)
   if(position.z == CHUNK_WIDTH) return chunk_get_block(chunk->top,    ivec3_sub(position, ivec3(0, 0, CHUNK_WIDTH)));
 
   assert(0 && "Unreachable");
+}
+
+void chunk_add_entity(struct chunk *chunk, struct entity *entity)
+{
+  if(chunk->entity_capacity == chunk->entity_count)
+  {
+    chunk->entity_capacity = chunk->entity_capacity != 0 ? chunk->entity_capacity * 2 : 1;
+    chunk->entities        = realloc(chunk->entities, chunk->entity_capacity * sizeof *chunk->entities);
+  }
+  chunk->entities[chunk->entity_count++] = entity;
 }

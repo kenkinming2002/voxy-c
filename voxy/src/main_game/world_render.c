@@ -81,20 +81,21 @@ void world_render()
   }
 
   // 2: Entity outline rendering
-  if(entity_count != 0)
   {
     struct gl_program program = GL_PROGRAM_LOAD(outline);
     glUseProgram(program.id);
     glUniformMatrix4fv(glGetUniformLocation(program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
-    for(size_t i=0; i<entity_count; ++i)
-    {
-      if(entities[i] == player_as_entity(player) && !player_get_third_person(player))
-        continue;
 
-      glUniform3f(glGetUniformLocation(program.id, "position"),  entities[i]->position.x,  entities[i]->position.y,  entities[i]->position.z);
-      glUniform3f(glGetUniformLocation(program.id, "dimension"), entities[i]->dimension.x, entities[i]->dimension.y, entities[i]->dimension.z);
-      glUniform4f(glGetUniformLocation(program.id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
-      glDrawArrays(GL_LINES, 0, 24);
-    }
+    world_chunk_for_each(chunk)
+      for(size_t i=0; i<chunk->entity_count; ++i)
+      {
+        if(chunk->entities[i] == player_as_entity(player) && !player_get_third_person(player))
+          continue;
+
+        glUniform3f(glGetUniformLocation(program.id, "position"),  chunk->entities[i]->position.x,  chunk->entities[i]->position.y,  chunk->entities[i]->position.z);
+        glUniform3f(glGetUniformLocation(program.id, "dimension"), chunk->entities[i]->dimension.x, chunk->entities[i]->dimension.y, chunk->entities[i]->dimension.z);
+        glUniform4f(glGetUniformLocation(program.id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
+        glDrawArrays(GL_LINES, 0, 24);
+      }
   }
 }

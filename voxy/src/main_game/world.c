@@ -149,17 +149,18 @@ void world_block_invalidate_mesh(ivec3_t position)
   world_chunk_invalidate_mesh(world_chunk_lookup(chunk_position));
 }
 
-struct entity **entities;
-size_t          entity_count;
-size_t          entity_capacity;
-
-void world_entity_add(struct entity *entity)
+int world_entity_add(struct entity *entity)
 {
-  if(entity_capacity == entity_count)
-  {
-    entity_capacity = entity_capacity != 0 ? entity_capacity * 2 : 1;
-    entities        = realloc(entities, entity_capacity * sizeof *entities);
-  }
-  entities[entity_count++] = entity;
+  ivec3_t position = fvec3_as_ivec3_round(entity->position);
+  ivec3_t chunk_position;
+  ivec3_t block_position;
+  split_position(position, &chunk_position, &block_position);
+
+  struct chunk *chunk = world_chunk_lookup(chunk_position);
+  if(!chunk)
+    return -1;
+
+  chunk_add_entity(chunk, entity);
+  return 0;
 }
 

@@ -77,66 +77,74 @@ void chunk_generate_wrapper_destroy(struct thread_pool_job *job)
 }
 
 static struct chunk_generate_wrapper_hash_table chunk_generate_wrappers;
+static bool update_generate_chunk_at(ivec3_t position)
+{
+  if(world_chunk_lookup(position))
+    return false;
+
+  struct chunk_generate_wrapper *wrapper = chunk_generate_wrapper_hash_table_lookup(&chunk_generate_wrappers, position);
+  if(!wrapper)
+  {
+    wrapper = malloc(sizeof *wrapper);
+    wrapper->job.invoke  = chunk_generate_wrapper_invoke;
+    wrapper->job.destroy = chunk_generate_wrapper_destroy;
+    wrapper->position = position;
+    wrapper->done = false;
+
+    thread_pool_enqueue(&wrapper->job);
+    chunk_generate_wrapper_hash_table_insert(&chunk_generate_wrappers, wrapper);
+    return false;
+  }
+
+  if(!atomic_load_explicit(&wrapper->done, memory_order_acquire))
+    return false;
+
+  struct chunk *chunk = world_chunk_create(wrapper->position);
+  for(int z = 0; z<CHUNK_WIDTH; ++z)
+    for(int y = 0; y<CHUNK_WIDTH; ++y)
+      for(int x = 0; x<CHUNK_WIDTH; ++x)
+      {
+        chunk->blocks[z][y][x].id          = wrapper->blocks[z][y][x];
+        chunk->blocks[z][y][x].ether       = false;
+        chunk->blocks[z][y][x].light_level = 0;
+      }
+
+  chunk->entities        = NULL;
+  chunk->entity_count    = 0;
+  chunk->entity_capacity = 0;
+
+  world_chunk_invalidate_mesh(chunk);
+  world_chunk_invalidate_mesh(chunk->left);
+  world_chunk_invalidate_mesh(chunk->right);
+  world_chunk_invalidate_mesh(chunk->back);
+  world_chunk_invalidate_mesh(chunk->front);
+  world_chunk_invalidate_mesh(chunk->bottom);
+  world_chunk_invalidate_mesh(chunk->top);
+  world_chunk_invalidate_light(chunk);
+
+  free(chunk_generate_wrapper_hash_table_remove(&chunk_generate_wrappers, position));
+  return true;
+}
 
 void update_chunk_generate(void)
 {
   size_t count = 0;
 
+  for(int dz = -GENERATOR_DISTANCE_SPAWN; dz<=GENERATOR_DISTANCE_SPAWN; ++dz)
+    for(int dy = -GENERATOR_DISTANCE_SPAWN; dy<=GENERATOR_DISTANCE_SPAWN; ++dy)
+      for(int dx = -GENERATOR_DISTANCE_SPAWN; dx<=GENERATOR_DISTANCE_SPAWN; ++dx)
+        count += update_generate_chunk_at(ivec3(dx, dy, dz));
+
   struct player *player = player_get();
-  if(!player)
-    return;
-
-  struct entity *player_entity   = player_as_entity(player);
-  ivec3_t        player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player_entity->position, CHUNK_WIDTH));
-
-  for(int dz = -GENERATOR_DISTANCE; dz<=GENERATOR_DISTANCE; ++dz)
-    for(int dy = -GENERATOR_DISTANCE; dy<=GENERATOR_DISTANCE; ++dy)
-      for(int dx = -GENERATOR_DISTANCE; dx<=GENERATOR_DISTANCE; ++dx)
-      {
-        ivec3_t position = ivec3_add(player_position, ivec3(dx, dy, dz));
-        if(world_chunk_lookup(position))
-          continue;
-
-        struct chunk_generate_wrapper *wrapper = chunk_generate_wrapper_hash_table_lookup(&chunk_generate_wrappers, position);
-        if(!wrapper)
-        {
-          wrapper = malloc(sizeof *wrapper);
-          wrapper->job.invoke  = chunk_generate_wrapper_invoke;
-          wrapper->job.destroy = chunk_generate_wrapper_destroy;
-          wrapper->position = position;
-          wrapper->done = false;
-
-          thread_pool_enqueue(&wrapper->job);
-          chunk_generate_wrapper_hash_table_insert(&chunk_generate_wrappers, wrapper);
-          continue;
-        }
-
-        if(!atomic_load_explicit(&wrapper->done, memory_order_acquire))
-          continue;
-
-        struct chunk *chunk = world_chunk_create(wrapper->position);
-        for(int z = 0; z<CHUNK_WIDTH; ++z)
-          for(int y = 0; y<CHUNK_WIDTH; ++y)
-            for(int x = 0; x<CHUNK_WIDTH; ++x)
-            {
-              chunk->blocks[z][y][x].id          = wrapper->blocks[z][y][x];
-              chunk->blocks[z][y][x].ether       = false;
-              chunk->blocks[z][y][x].light_level = 0;
-            }
-
-        world_chunk_invalidate_mesh(chunk);
-        world_chunk_invalidate_mesh(chunk->left);
-        world_chunk_invalidate_mesh(chunk->right);
-        world_chunk_invalidate_mesh(chunk->back);
-        world_chunk_invalidate_mesh(chunk->front);
-        world_chunk_invalidate_mesh(chunk->bottom);
-        world_chunk_invalidate_mesh(chunk->top);
-        world_chunk_invalidate_light(chunk);
-
-        free(chunk_generate_wrapper_hash_table_remove(&chunk_generate_wrappers, position));
-
-        count += 1;
-      }
+  if(player)
+  {
+    struct entity *player_entity   = player_as_entity(player);
+    ivec3_t        player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player_entity->position, CHUNK_WIDTH));
+    for(int dz = -GENERATOR_DISTANCE_PLAYER; dz<=GENERATOR_DISTANCE_PLAYER; ++dz)
+      for(int dy = -GENERATOR_DISTANCE_PLAYER; dy<=GENERATOR_DISTANCE_PLAYER; ++dy)
+        for(int dx = -GENERATOR_DISTANCE_PLAYER; dx<=GENERATOR_DISTANCE_PLAYER; ++dx)
+          count += update_generate_chunk_at(ivec3_add(player_position, ivec3(dx, dy, dz)));
+  }
 
   if(count != 0)
     LOG_INFO("Chunk Generator: Generarted %zu chunks in background", count);

@@ -209,6 +209,7 @@ static void entity_update_physics(struct entity *entity, float dt)
 
 void update_physics(float dt)
 {
-  for(size_t i=0; i<entity_count; ++i)
-    entity_update_physics(entities[i], dt);
+  world_chunk_for_each(chunk)
+    for(size_t i=0; i<chunk->entity_count; ++i)
+      entity_update_physics(chunk->entities[i], dt);
 }

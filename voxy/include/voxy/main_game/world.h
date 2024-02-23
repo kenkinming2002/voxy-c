@@ -29,10 +29,13 @@ void world_block_set(ivec3_t position, uint8_t block_id);
 void world_block_invalidate_light(ivec3_t position);
 void world_block_invalidate_mesh(ivec3_t position);
 
-extern struct entity **entities;
-extern size_t          entity_count;
-extern size_t          entity_capacity;
-
-void world_entity_add(struct entity *entity);
+/*
+ * Add an entity to the world, returning 0 on success.
+ *
+ * It may seems at first glance that this function should never fail. However,
+ * in our game, we store each inside the chunk they are in. If the chunk has not
+ * yet been generated. There is no way we could add the entity.
+ */
+int world_entity_add(struct entity *entity) __attribute__((warn_unused_result));
 
 #endif // VOXY_MAIN_GAME_WORLD_H

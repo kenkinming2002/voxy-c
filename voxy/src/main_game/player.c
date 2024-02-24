@@ -117,6 +117,9 @@ static void cell_widget_update(const struct cell_widget *cell)
       cell->item->count -= cell->hand->count;
     }
   }
+
+  if(cell->hand->count == 0) cell->hand->id = ITEM_NONE;
+  if(cell->item->count == 0) cell->item->id = ITEM_NONE;
 }
 
 struct label_widget

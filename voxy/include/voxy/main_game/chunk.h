@@ -40,10 +40,10 @@ struct chunk
    *****************/
   struct
   {
-    bool          mesh_invalidated;
-    struct chunk *mesh_next;
+    bool mesh_invalidated  : 1;
+    bool light_invalidated : 1;
 
-    bool          light_invalidated;
+    struct chunk *mesh_next;
     struct chunk *light_next;
   };
 

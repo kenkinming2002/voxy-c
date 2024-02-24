@@ -77,22 +77,19 @@ void SC_HASH_TABLE_MAKE_NAME(hash_table_rehash)(struct SC_HASH_TABLE_MAKE_NAME(h
   for(size_t i=0; i<hash_table->bucket_count; ++i)
   {
     struct SC_HASH_TABLE_MAKE_NAME(hash_table_bucket) *bucket = &hash_table->buckets[i];
-    SC_HASH_TABLE_NODE_TYPE *prev = (SC_HASH_TABLE_NODE_TYPE *)bucket;
-    SC_HASH_TABLE_NODE_TYPE *node = prev->next;
-    while(node)
-      if(node->hash % hash_table->bucket_count == i)
+
+    SC_HASH_TABLE_NODE_TYPE **it = &bucket->head;
+    while(*it)
+      if((*it)->hash % hash_table->bucket_count != i)
       {
-        prev = node;
-        node = node->next;
-      }
-      else
-      {
-        SC_HASH_TABLE_NODE_TYPE *orphan = node;
-        prev->next   = node->next;
-        node         = node->next;
+        SC_HASH_TABLE_NODE_TYPE *orphan = *it;
+        *it = (*it)->next;
+
         orphan->next = orphans;
         orphans      = orphan;
       }
+      else
+        it = &((*it)->next);
   }
 
   while(orphans)
@@ -168,19 +165,19 @@ SC_HASH_TABLE_NODE_TYPE *SC_HASH_TABLE_MAKE_NAME(hash_table_remove)(struct SC_HA
   size_t hash = SC_HASH_TABLE_MAKE_NAME(hash)(key);
 
   struct SC_HASH_TABLE_MAKE_NAME(hash_table_bucket) *bucket = &hash_table->buckets[hash % hash_table->bucket_count];
-  SC_HASH_TABLE_NODE_TYPE *prev = (SC_HASH_TABLE_NODE_TYPE *)bucket;
-  SC_HASH_TABLE_NODE_TYPE *node = prev->next;
-  for(; node; prev = node, node = node->next)
-    if(node->hash == hash && SC_HASH_TABLE_MAKE_NAME(compare)(SC_HASH_TABLE_MAKE_NAME(key)(node), key) == 0)
+
+  SC_HASH_TABLE_NODE_TYPE **it = &bucket->head;
+  while(*it)
+    if((*it)->hash == hash && SC_HASH_TABLE_MAKE_NAME(compare)(SC_HASH_TABLE_MAKE_NAME(key)(*it), key) == 0)
     {
-      SC_HASH_TABLE_NODE_TYPE *orphan = node;
-      prev->next   = node->next;
-      node         = node->next;
-      orphan->next = NULL;
+      SC_HASH_TABLE_NODE_TYPE *orphan = *it;
+      *it = (*it)->next;
 
       --hash_table->load;
       return orphan;
     }
+    else
+      it = &((*it)->next);
 
   return NULL;
 }

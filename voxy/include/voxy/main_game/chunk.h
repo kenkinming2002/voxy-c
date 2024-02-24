@@ -12,15 +12,21 @@
 
 struct chunk
 {
+  /*******
+   * Key *
+   *******/
+  struct
+  {
+    ivec3_t position;
+    size_t  hash;
+  };
+
   /*********
    * Links *
    *********/
   struct
   {
     struct chunk *next;
-    size_t        hash;
-    ivec3_t       position;
-
     struct chunk *bottom;
     struct chunk *top;
     struct chunk *back;

@@ -18,7 +18,7 @@ static block_id_t item_id_to_block_id(item_id_t item_id)
   assert(0 && "Unreachable");
 }
 
-void on_block_item_use(item_id_t item_id)
+void on_use_block_item(item_id_t item_id)
 {
   struct player *player        = player_get();
   struct entity *player_entity = player_as_entity(player);

@@ -8,7 +8,7 @@
 
 #define MOD "base"
 
-void on_block_item_use(uint8_t item_id);
+void on_use_block_item(uint8_t item_id);
 void mod_init()
 {
   // 1: Blocks
@@ -90,10 +90,10 @@ void mod_init()
   });
 
   // 2: Items
-  ITEM_ID_STONE = register_item_info((struct item_info){ .mod = MOD, .name = "stone", .texture = "assets/textures/stone_item.png", .on_use = on_block_item_use, });
-  ITEM_ID_GRASS = register_item_info((struct item_info){ .mod = MOD, .name = "grass", .texture = "assets/textures/grass_item.png", .on_use = on_block_item_use, });
-  ITEM_ID_LOG   = register_item_info((struct item_info){ .mod = MOD, .name = "log",   .texture = "assets/textures/log_item.png",   .on_use = on_block_item_use, });
-  ITEM_ID_LEAVE = register_item_info((struct item_info){ .mod = MOD, .name = "leave", .texture = "assets/textures/leave_item.png", .on_use = on_block_item_use, });
+  ITEM_ID_STONE = register_item_info((struct item_info){ .mod = MOD, .name = "stone", .texture = "assets/textures/stone_item.png", .on_use = on_use_block_item, });
+  ITEM_ID_GRASS = register_item_info((struct item_info){ .mod = MOD, .name = "grass", .texture = "assets/textures/grass_item.png", .on_use = on_use_block_item, });
+  ITEM_ID_LOG   = register_item_info((struct item_info){ .mod = MOD, .name = "log",   .texture = "assets/textures/log_item.png",   .on_use = on_use_block_item, });
+  ITEM_ID_LEAVE = register_item_info((struct item_info){ .mod = MOD, .name = "leave", .texture = "assets/textures/leave_item.png", .on_use = on_use_block_item, });
 
   // 3: Callback
   register_generate_chunk_blocks(&base_generate_chunk_blocks);

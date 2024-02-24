@@ -36,7 +36,8 @@ VOXY_SRCS += voxy/src/voxy.c
 MOD_SRCS += mod/src/init.c
 MOD_SRCS += mod/src/ids.c
 MOD_SRCS += mod/src/generate.c
-MOD_SRCS += mod/src/block_item.c
+
+MOD_SRCS += mod/src/on_use_block_item.c
 
 voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -fno-semantic-interposition
 voxy/voxy: LIBS   += -lm

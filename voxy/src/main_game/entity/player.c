@@ -5,8 +5,7 @@
 #include <voxy/main_game/assets.h>
 #include <voxy/main_game/config.h>
 #include <voxy/main_game/entity.h>
-#include <voxy/main_game/hotbar.h>
-#include <voxy/main_game/inventory.h>
+#include <voxy/main_game/item.h>
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
@@ -25,8 +24,24 @@
 
 #include <stdlib.h>
 
+#define INVENTORY_SIZE_HORIZONTAL 9
+#define INVENTORY_SIZE_VERTICAL   5
+
+#define HOTBAR_SIZE 9
+
 static inline int mini(int a, int b) { return a < b ? a : b; }
 static inline float minf(float a, float b) { return a < b ? a : b; }
+
+struct inventory
+{
+  struct item items[INVENTORY_SIZE_VERTICAL][INVENTORY_SIZE_HORIZONTAL];
+};
+
+struct hotbar
+{
+  struct item items[HOTBAR_SIZE];
+  uint8_t selection;
+};
 
 struct player_opaque
 {

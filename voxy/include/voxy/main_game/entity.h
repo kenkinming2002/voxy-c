@@ -4,26 +4,24 @@
 #include <voxy/math/vector.h>
 #include <voxy/math/transform.h>
 
+#include <voxy/main_game/registry.h>
+
 #include <stdbool.h>
 
 struct entity
 {
-  fvec3_t position;
-  fvec3_t dimension;
-  fvec3_t velocity;
+  entity_id_t id;
 
-  transform_t local_view_transform;
+  fvec3_t position;
+  fvec3_t velocity;
+  fvec3_t rotation;
 
   bool grounded;
 
-  void(*update)(struct entity *entity, float dt);
+  void *opaque;
 };
 
-fvec3_t entity_view_position(const struct entity *entity);
-fvec3_t entity_view_rotation(const struct entity *entity);
-fvec3_t entity_view_direction(const struct entity *entity);
-
-transform_t entity_view_transform(const struct entity *entity);
+fvec3_t entity_local_to_global(struct entity *entity, fvec3_t vec);
 
 void entity_apply_impulse(struct entity *entity, fvec3_t impulse);
 void entity_move(struct entity *entity, fvec2_t direction, float speed, float dt);

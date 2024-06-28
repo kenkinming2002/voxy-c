@@ -1,7 +1,9 @@
 #include <voxy/main_game/world_render.h>
 
-#include <voxy/main_game/assets.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/world_camera.h>
+
+#include <voxy/main_game/assets.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/chunk.h>
 
@@ -10,26 +12,17 @@
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/camera.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
 void world_render()
 {
   glClearColor(0.52f, 0.81f, 0.98f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  struct player *player = player_get();
-  if(!player)
-    return;
-
-  struct camera camera = player_get_camera(player);
-
   fmat4_t VP = fmat4_identity();
-  VP = fmat4_mul(camera_view_matrix(&camera),       VP);
-  VP = fmat4_mul(camera_projection_matrix(&camera), VP);
+  VP = fmat4_mul(camera_view_matrix(&world_camera),       VP);
+  VP = fmat4_mul(camera_projection_matrix(&world_camera), VP);
 
   fmat4_t V = fmat4_identity();
-  V = fmat4_mul(camera_view_matrix(&camera), V);
+  V = fmat4_mul(camera_view_matrix(&world_camera), V);
 
   glEnable(GL_BLEND);
   glEnable(GL_CULL_FACE);
@@ -89,11 +82,16 @@ void world_render()
     world_chunk_for_each(chunk)
       for(size_t i=0; i<chunk->entity_count; ++i)
       {
-        if(chunk->entities[i] == player_as_entity(player) && !player_get_third_person(player))
-          continue;
+        struct entity *entity = &chunk->entities[i];
+        const struct entity_info *entity_info = query_entity_info(entity->id);
 
-        glUniform3f(glGetUniformLocation(program.id, "position"),  chunk->entities[i]->position.x,  chunk->entities[i]->position.y,  chunk->entities[i]->position.z);
-        glUniform3f(glGetUniformLocation(program.id, "dimension"), chunk->entities[i]->dimension.x, chunk->entities[i]->dimension.y, chunk->entities[i]->dimension.z);
+        // FIXME: Skip rendering of current active player.
+
+        fvec3_t hitbox_position = fvec3_add(entity->position, entity_info->hitbox_offset);
+        fvec3_t hitbox_dimension = entity_info->hitbox_dimension;
+
+        glUniform3f(glGetUniformLocation(program.id, "position"),  hitbox_position.x, hitbox_position.y, hitbox_position.z);
+        glUniform3f(glGetUniformLocation(program.id, "dimension"),  hitbox_dimension.x, hitbox_dimension.y, hitbox_dimension.z);
         glUniform4f(glGetUniformLocation(program.id, "color"),     1.0f, 0.0f, 0.0f, 1.0f);
         glDrawArrays(GL_LINES, 0, 24);
       }

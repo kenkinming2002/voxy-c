@@ -25,11 +25,14 @@ VOXY_SRCS += voxy/src/main_game/light.c
 VOXY_SRCS += voxy/src/main_game/main_game.c
 VOXY_SRCS += voxy/src/main_game/mod.c
 VOXY_SRCS += voxy/src/main_game/physics.c
-VOXY_SRCS += voxy/src/main_game/player.c
 VOXY_SRCS += voxy/src/main_game/registry.c
 VOXY_SRCS += voxy/src/main_game/world.c
+VOXY_SRCS += voxy/src/main_game/world_camera.c
 VOXY_SRCS += voxy/src/main_game/world_render.c
 VOXY_SRCS += voxy/src/main_game/world_seed.c
+
+VOXY_SRCS += voxy/src/main_game/entity/player.c
+VOXY_SRCS += voxy/src/main_game/entity/weird.c
 
 VOXY_SRCS += voxy/src/voxy.c
 

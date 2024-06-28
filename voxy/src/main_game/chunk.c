@@ -22,7 +22,7 @@ struct block *chunk_get_block(struct chunk *chunk, ivec3_t position)
   assert(0 && "Unreachable");
 }
 
-void chunk_add_entity(struct chunk *chunk, struct entity *entity)
+void chunk_add_entity(struct chunk *chunk, struct entity entity)
 {
   if(chunk->entity_capacity == chunk->entity_count)
   {

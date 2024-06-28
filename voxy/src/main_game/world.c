@@ -149,9 +149,9 @@ void world_block_invalidate_mesh(ivec3_t position)
   world_chunk_invalidate_mesh(world_chunk_lookup(chunk_position));
 }
 
-int world_entity_add(struct entity *entity)
+int world_entity_add(struct entity entity)
 {
-  ivec3_t position = fvec3_as_ivec3_round(entity->position);
+  ivec3_t position = fvec3_as_ivec3_round(entity.position);
   ivec3_t chunk_position;
   ivec3_t block_position;
   split_position(position, &chunk_position, &block_position);

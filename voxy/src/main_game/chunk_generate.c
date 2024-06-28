@@ -15,7 +15,22 @@
 
 #include <sc/hash_table.h>
 
+#include <stdlib.h>
 #include <stdio.h>
+
+static ivec3_t *chunk_generate_positions;
+static size_t   chunk_generate_position_count;
+static size_t   chunk_generate_position_capacity;
+
+void enqueue_chunk_generate(ivec3_t position)
+{
+  if(chunk_generate_position_count == chunk_generate_position_capacity)
+  {
+    chunk_generate_position_capacity = chunk_generate_position_capacity != 0 ? 2 * chunk_generate_position_capacity : 1;
+    chunk_generate_positions = realloc(chunk_generate_positions, chunk_generate_position_capacity * sizeof *chunk_generate_positions);
+  }
+  chunk_generate_positions[chunk_generate_position_count++] = position;
+}
 
 struct chunk_generate_wrapper
 {
@@ -130,21 +145,22 @@ void update_chunk_generate(void)
 {
   size_t count = 0;
 
+  // We have a chicken-and-egg problem here.
+  //
+  // 1: Player can only spawned on a generated chunk.
+  // 2: Only chunks around player will be generated.
+  //
+  // We break the above cycle and unconditionally loading "spawn chunks" at the
+  // center.
   for(int dz = -GENERATOR_DISTANCE_SPAWN; dz<=GENERATOR_DISTANCE_SPAWN; ++dz)
     for(int dy = -GENERATOR_DISTANCE_SPAWN; dy<=GENERATOR_DISTANCE_SPAWN; ++dy)
       for(int dx = -GENERATOR_DISTANCE_SPAWN; dx<=GENERATOR_DISTANCE_SPAWN; ++dx)
         count += update_generate_chunk_at(ivec3(dx, dy, dz));
 
-  struct player *player = player_get();
-  if(player)
-  {
-    struct entity *player_entity   = player_as_entity(player);
-    ivec3_t        player_position = fvec3_as_ivec3_floor(fvec3_div_scalar(player_entity->position, CHUNK_WIDTH));
-    for(int dz = -GENERATOR_DISTANCE_PLAYER; dz<=GENERATOR_DISTANCE_PLAYER; ++dz)
-      for(int dy = -GENERATOR_DISTANCE_PLAYER; dy<=GENERATOR_DISTANCE_PLAYER; ++dy)
-        for(int dx = -GENERATOR_DISTANCE_PLAYER; dx<=GENERATOR_DISTANCE_PLAYER; ++dx)
-          count += update_generate_chunk_at(ivec3_add(player_position, ivec3(dx, dy, dz)));
-  }
+  // Ordinary chunk loading mechanics
+  for(size_t i=0; i<chunk_generate_position_count; ++i)
+    count += update_generate_chunk_at(chunk_generate_positions[i]);
+  chunk_generate_position_count = 0;
 
   if(count != 0)
     LOG_INFO("Chunk Generator: Generarted %zu chunks in background", count);

@@ -3,11 +3,11 @@
 #include <voxy/main_game/entity.h>
 #include <voxy/main_game/player.h>
 #include <voxy/main_game/world.h>
+#include <voxy/main_game/item.h>
 
 #include <voxy/math/vector.h>
 
 #include <assert.h>
-#include <stdint.h>
 
 static block_id_t item_id_to_block_id(item_id_t item_id)
 {
@@ -18,14 +18,11 @@ static block_id_t item_id_to_block_id(item_id_t item_id)
   assert(0 && "Unreachable");
 }
 
-void on_use_block_item(item_id_t item_id)
+void on_use_block_item(struct entity *entity, struct item *item)
 {
-  struct player *player        = player_get();
-  struct entity *player_entity = player_as_entity(player);
-
   ivec3_t position;
   ivec3_t normal;
-  if(entity_ray_cast(player_entity, 20.0f, &position, &normal))
-    world_block_set(ivec3_add(position, normal), item_id_to_block_id(item_id));
+  if(entity_ray_cast(entity, 20.0f, &position, &normal))
+    world_block_set(ivec3_add(position, normal), item_id_to_block_id(item->id));
 }
 

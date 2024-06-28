@@ -146,11 +146,15 @@ static inline bool box_swept(const struct box *box1, const struct box *box2, fve
 
 static void entity_physics_update(struct entity *entity, float dt)
 {
+  const struct entity_info *entity_info = query_entity_info(entity->id);
   for(;;)
   {
     fvec3_t offset = fvec3_mul_scalar(entity->velocity, dt);
 
-    struct box entity_box = { .position = entity->position, .dimension = entity->dimension };
+    struct box entity_box;
+    entity_box.position = fvec3_add(entity->position, entity_info->hitbox_offset);
+    entity_box.dimension = entity_info->hitbox_dimension;
+
     struct box entity_box_expanded = box_expand(&entity_box, offset);
 
     float min_t =  INFINITY;
@@ -211,5 +215,5 @@ void update_physics(float dt)
 {
   world_chunk_for_each(chunk)
     for(size_t i=0; i<chunk->entity_count; ++i)
-      entity_update_physics(chunk->entities[i], dt);
+      entity_update_physics(&chunk->entities[i], dt);
 }

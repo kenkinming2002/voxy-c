@@ -7,6 +7,7 @@
 
 static struct block_info block_infos[BLOCK_MAX];
 static struct item_info  item_infos[ITEM_MAX];
+static struct entity_info entity_infos[ENTITY_MAX];
 
 const char *block_type_as_str(enum block_type block_type)
 {
@@ -64,6 +65,25 @@ item_id_t register_item_info(struct item_info item_info)
   exit(EXIT_FAILURE);
 }
 
+entity_id_t register_entity_info(struct entity_info entity_info)
+{
+  for(int i=0; i<ENTITY_MAX; ++i)
+    if(!entity_infos[i].mod  && !entity_infos[i].name)
+    {
+      LOG_INFO("Registered entity: id = %d:", i);
+      LOG_INFO("  mod              = %s", entity_info.mod);
+      LOG_INFO("  name             = %s", entity_info.name);
+      LOG_INFO("  hitbox offset    = %f %f %f", entity_info.hitbox_offset.x, entity_info.hitbox_offset.y, entity_info.hitbox_offset.z);
+      LOG_INFO("  hitbox dimension = %f %f %f", entity_info.hitbox_dimension.x, entity_info.hitbox_dimension.y, entity_info.hitbox_dimension.z);
+
+      entity_infos[i] = entity_info;
+      return i;
+    }
+
+  LOG_ERROR("Failed to allocate entity id");
+  exit(EXIT_FAILURE);
+}
+
 const struct block_info *query_block_info(block_id_t block_id)
 {
   assert(block_id != BLOCK_NONE);
@@ -74,4 +94,10 @@ const struct item_info *query_item_info(item_id_t item_id)
 {
   assert(item_id != ITEM_NONE);
   return &item_infos[item_id];
+}
+
+const struct entity_info *query_entity_info(entity_id_t entity_id)
+{
+  assert(entity_id != ENTITY_NONE);
+  return &entity_infos[entity_id];
 }

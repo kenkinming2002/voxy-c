@@ -1,14 +1,13 @@
 #ifndef VOXY_MAIN_GAME_PLAYER_H
 #define VOXY_MAIN_GAME_PLAYER_H
 
+#include <voxy/main_game/entity.h>
+
 #include <stdbool.h>
 
-struct player *player_get(void);
-struct entity *player_as_entity(struct player *player);
+void player_entity_init(struct entity *entity);
+void player_entity_fini(struct entity *entity);
 
-bool          player_get_third_person(struct player *player);
-struct camera player_get_camera      (struct player *player);
-
-void update_spawn_player(void);
+void player_is_third_person(struct entity *entity);
 
 #endif // VOXY_MAIN_GAME_PLAYER_H

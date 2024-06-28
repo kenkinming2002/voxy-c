@@ -4,6 +4,7 @@
 #include <voxy/core/log.h>
 #include <glad/glad.h>
 
+#include <stdlib.h>
 #include <stddef.h>
 
 struct gl_shader { GLuint id; };

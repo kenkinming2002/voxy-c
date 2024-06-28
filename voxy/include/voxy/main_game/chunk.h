@@ -3,6 +3,8 @@
 
 #include <voxy/main_game/config.h>
 #include <voxy/main_game/block.h>
+#include <voxy/main_game/entity.h>
+
 #include <voxy/math/vector.h>
 
 #include <glad/glad.h>
@@ -54,9 +56,9 @@ struct chunk
   {
     struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 
-    struct entity **entities;
-    size_t          entity_count;
-    size_t          entity_capacity;
+    struct entity *entities;
+    size_t         entity_count;
+    size_t         entity_capacity;
   };
 
   /*************
@@ -91,6 +93,6 @@ struct block *chunk_get_block(struct chunk *chunk, ivec3_t position);
 /*
  * Add an entity to a chunk.
  */
-void chunk_add_entity(struct chunk *chunk, struct entity *entity);
+void chunk_add_entity(struct chunk *chunk, struct entity entity);
 
 #endif // VOXY_MAIN_GAME_CHUNK_H

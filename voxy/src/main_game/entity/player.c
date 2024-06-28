@@ -1,4 +1,6 @@
-#include <voxy/main_game/player.h>
+#include <voxy/main_game/entity/player.h>
+
+#include <voxy/main_game/entity/weird.h>
 
 #include <voxy/main_game/assets.h>
 #include <voxy/main_game/config.h>
@@ -8,7 +10,9 @@
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
+#include <voxy/main_game/world_camera.h>
 #include <voxy/main_game/generate.h>
+#include <voxy/main_game/chunk_generate.h>
 
 #include <voxy/graphics/camera.h>
 #include <voxy/graphics/gl.h>
@@ -24,10 +28,8 @@
 static inline int mini(int a, int b) { return a < b ? a : b; }
 static inline float minf(float a, float b) { return a < b ? a : b; }
 
-struct player
+struct player_opaque
 {
-  struct entity entity;
-
   struct inventory inventory;
   struct hotbar    hotbar;
   struct item      hand;
@@ -36,7 +38,66 @@ struct player
   bool inventory_opened;
 
   float cooldown;
+  float cooldown_weird;
 };
+
+static void player_entity_update(struct entity *entity, float dt);
+static entity_id_t player_entity_id(void)
+{
+  static entity_id_t id = ENTITY_NONE;
+  if(id == ENTITY_NONE)
+  {
+    struct entity_info entity_info;
+    entity_info.mod = "main";
+    entity_info.name = "player";
+    entity_info.hitbox_dimension = fvec3(1.0f, 1.0f, 2.0f);
+    entity_info.hitbox_offset = fvec3(0.0f, 0.0f, -0.5f);
+    entity_info.on_update = player_entity_update;
+    id = register_entity_info(entity_info);
+  }
+  return id;
+}
+
+void player_entity_init(struct entity *entity)
+{
+  struct player_opaque *opaque = malloc(sizeof *opaque);
+
+  for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
+    for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
+    {
+      opaque->inventory.items[j][i].id = ITEM_NONE;
+      opaque->inventory.items[j][i].count = 0;
+    }
+
+  for(int i=0; i<HOTBAR_SIZE; ++i)
+  {
+    opaque->hotbar.items[i].id = ITEM_NONE;
+    opaque->hotbar.items[i].count = 0;
+  }
+
+  opaque->hand.id = ITEM_NONE;
+  opaque->hand.count = 0;
+
+  int count = mini(3, HOTBAR_SIZE);
+  for(int i=0; i<count; ++i)
+  {
+    opaque->hotbar.items[i].id = i;
+    opaque->hotbar.items[i].count = 8 * (i + 1);
+  }
+
+  opaque->third_person = false;
+  opaque->inventory_opened = false;
+  opaque->cooldown = 0.0f;
+  opaque->cooldown_weird = 0.0f;
+
+  entity->id = player_entity_id();
+  entity->opaque = opaque;
+}
+
+void player_entity_fini(struct entity *entity)
+{
+  free(entity->opaque);
+}
 
 struct cell_widget
 {
@@ -137,8 +198,10 @@ static void label_widget_render(const struct label_widget *label)
   ui_text(position, label->height, label->text);
 }
 
-static void player_update_ui(struct player *player)
+static void player_entity_update_ui(struct entity *entity)
 {
+  struct player_opaque *opaque = entity->opaque;
+
   /**************************************************
    * Laying out UI elements manually => How Lovely? *
    **************************************************/
@@ -168,23 +231,23 @@ static void player_update_ui(struct player *player)
    ********************************************/
   if(input_press(KEY_I))
   {
-    player->inventory_opened = !player->inventory_opened;
-    window_show_cursor(player->inventory_opened);
+    opaque->inventory_opened = !opaque->inventory_opened;
+    window_show_cursor(opaque->inventory_opened);
   }
 
-  if(input_press(KEY_1)) player->hotbar.selection = 0;
-  if(input_press(KEY_2)) player->hotbar.selection = 1;
-  if(input_press(KEY_3)) player->hotbar.selection = 2;
-  if(input_press(KEY_4)) player->hotbar.selection = 3;
-  if(input_press(KEY_5)) player->hotbar.selection = 4;
-  if(input_press(KEY_6)) player->hotbar.selection = 5;
-  if(input_press(KEY_7)) player->hotbar.selection = 6;
-  if(input_press(KEY_8)) player->hotbar.selection = 7;
-  if(input_press(KEY_9)) player->hotbar.selection = 8;
+  if(input_press(KEY_1)) opaque->hotbar.selection = 0;
+  if(input_press(KEY_2)) opaque->hotbar.selection = 1;
+  if(input_press(KEY_3)) opaque->hotbar.selection = 2;
+  if(input_press(KEY_4)) opaque->hotbar.selection = 3;
+  if(input_press(KEY_5)) opaque->hotbar.selection = 4;
+  if(input_press(KEY_6)) opaque->hotbar.selection = 5;
+  if(input_press(KEY_7)) opaque->hotbar.selection = 6;
+  if(input_press(KEY_8)) opaque->hotbar.selection = 7;
+  if(input_press(KEY_9)) opaque->hotbar.selection = 8;
 
-  player->hotbar.selection += mouse_scroll.x;
-  player->hotbar.selection += 9;
-  player->hotbar.selection %= 9;
+  opaque->hotbar.selection += mouse_scroll.x;
+  opaque->hotbar.selection += 9;
+  opaque->hotbar.selection %= 9;
 
   /*********************
    * Major UI Handling *
@@ -192,23 +255,23 @@ static void player_update_ui(struct player *player)
   struct cell_widget cell_widget;
   cell_widget.dimension = cell_dimension;
   cell_widget.rounding  = rounding;
-  cell_widget.hand      = &player->hand;
+  cell_widget.hand      = &opaque->hand;
 
   ui_quad_colored(hotbar_position, hotbar_dimension, rounding, UI_HOTBAR_COLOR_BACKGROUND);
   for(int i=0; i<HOTBAR_SIZE; ++i)
   {
     cell_widget.position        = fvec2_add(fvec2_add(hotbar_position, fvec2(cell_sep, cell_sep)), fvec2_mul_scalar(fvec2(i, 0), cell_sep + cell_width));
-    cell_widget.default_color   = player->hotbar.selection == i ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
+    cell_widget.default_color   = opaque->hotbar.selection == i ? UI_HOTBAR_COLOR_SELECTED : UI_HOTBAR_COLOR_DEFAULT;
     cell_widget.highlight_color = UI_HOTBAR_COLOR_HOVER;
-    cell_widget.item            = &player->hotbar.items[i];
+    cell_widget.item            = &opaque->hotbar.items[i];
 
     cell_widget_render_background(&cell_widget);
     cell_widget_render_item(&cell_widget);
-    if(player->inventory_opened)
+    if(opaque->inventory_opened)
       cell_widget_update(&cell_widget);
   }
 
-  if(player->inventory_opened)
+  if(opaque->inventory_opened)
   {
     ui_quad_colored(inventory_position, inventory_dimension, rounding, UI_INVENTORY_COLOR_BACKGROUND);
     for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
@@ -217,7 +280,7 @@ static void player_update_ui(struct player *player)
         cell_widget.position        = fvec2_add(fvec2_add(inventory_position, fvec2(cell_sep, cell_sep)), fvec2_mul_scalar(fvec2(i, j), cell_sep + cell_width));
         cell_widget.default_color   = UI_INVENTORY_COLOR_DEFAULT;
         cell_widget.highlight_color = UI_INVENTORY_COLOR_HOVER;
-        cell_widget.item            = &player->inventory.items[j][i];
+        cell_widget.item            = &opaque->inventory.items[j][i];
 
         cell_widget_render_background(&cell_widget);
         cell_widget_render_item(&cell_widget);
@@ -225,15 +288,15 @@ static void player_update_ui(struct player *player)
       }
   }
 
-  if(player->inventory_opened)
+  if(opaque->inventory_opened)
   {
     cell_widget.position = fvec2_sub(mouse_position, fvec2_mul_scalar(fvec2(cell_width, cell_width), 0.5f));
-    cell_widget.item     = &player->hand;
+    cell_widget.item     = &opaque->hand;
 
     cell_widget_render_item(&cell_widget);
   }
 
-  if(!player->inventory_opened)
+  if(!opaque->inventory_opened)
   {
     static bool                 cursor_loaded;
     static struct gl_texture_2d cursor;
@@ -248,12 +311,12 @@ static void player_update_ui(struct player *player)
     ui_quad_textured(position, dimension, 0.0f, cursor.id);
   }
 
-  if(!player->inventory_opened)
+  if(!opaque->inventory_opened)
   {
     struct label_widget label_widget;
     label_widget.height = UI_TEXT_SIZE;
 
-    const struct item *selected_item = &player->hotbar.items[player->hotbar.selection];
+    const struct item *selected_item = &opaque->hotbar.items[opaque->hotbar.selection];
     if(selected_item->id != ITEM_NONE)
     {
       label_widget.text     = query_item_info(selected_item->id)->name;
@@ -263,7 +326,7 @@ static void player_update_ui(struct player *player)
 
     ivec3_t position;
     ivec3_t normal;
-    if(entity_ray_cast(&player->entity, 20.0f, &position, &normal))
+    if(entity_ray_cast(entity, 20.0f, &position, &normal))
     {
       const struct block *target_block = world_block_get(position);
       if(target_block && target_block->id != BLOCK_NONE)
@@ -276,172 +339,119 @@ static void player_update_ui(struct player *player)
   }
 }
 
-static bool player_action(struct player *player)
+static void player_entity_update_actions(struct entity *entity, float dt)
 {
-  if(player->cooldown >= PLAYER_ACTION_COOLDOWN)
+  struct player_opaque *opaque = entity->opaque;
+  opaque->cooldown += dt;
+  if(!opaque->inventory_opened)
   {
-    player->cooldown = 0.0f;
-    return true;
-  }
-  else
-    return false;
-}
-
-static void player_update_action(struct player *player, float dt)
-{
-  player->cooldown += dt;
-  if(player->inventory_opened)
-    return;
-
-  if(input_state(BUTTON_LEFT) && player_action(player))
-  {
-    ivec3_t position;
-    ivec3_t normal;
-    if(entity_ray_cast(&player->entity, 20.0f, &position, &normal))
+    // Destroy block
+    if(input_state(BUTTON_LEFT) && opaque->cooldown >= PLAYER_ACTION_COOLDOWN)
     {
-      int radius = input_state(KEY_CTRL) ? 2 : 0;
-      for(int dz=-radius; dz<=radius; ++dz)
-        for(int dy=-radius; dy<=radius; ++dy)
-          for(int dx=-radius; dx<=radius; ++dx)
-          {
-            ivec3_t offset = ivec3(dx, dy, dz);
-            if(ivec3_length_squared(offset) <= radius * radius)
-              world_block_set(ivec3_add(position, offset), 0);
-          }
-    }
-  }
+      ivec3_t position;
+      ivec3_t normal;
+      if(entity_ray_cast(entity, 20.0f, &position, &normal))
+      {
+        int radius = input_state(KEY_CTRL) ? 2 : 0;
+        for(int dz=-radius; dz<=radius; ++dz)
+          for(int dy=-radius; dy<=radius; ++dy)
+            for(int dx=-radius; dx<=radius; ++dx)
+            {
+              ivec3_t offset = ivec3(dx, dy, dz);
+              if(ivec3_length_squared(offset) <= radius * radius)
+                world_block_set(ivec3_add(position, offset), 0);
+            }
+      }
 
-  if(input_state(BUTTON_RIGHT) && player_action(player))
-  {
-    const struct item *item = &player->hotbar.items[player->hotbar.selection];
-    if(item->id != ITEM_NONE)
-    {
-      const struct item_info *item_info = query_item_info(item->id);
-      if(item_info->on_use)
-        item_info->on_use(item->id);
-    }
-  }
-}
-
-static void player_update_camera(struct player *player)
-{
-  if(player->inventory_opened)
-    return;
-
-  player->third_person = player->third_person != input_press(KEY_F);
-
-  fvec3_t rotation = fvec3_zero();
-  rotation.yaw   =  mouse_motion.x * PLAYER_PAN_SPEED;
-  rotation.pitch = -mouse_motion.y * PLAYER_PAN_SPEED;
-  player->entity.local_view_transform = transform_rotate(player->entity.local_view_transform, rotation);
-}
-
-static void player_update_movement(struct player *player, float dt)
-{
-  if(player->inventory_opened)
-    return;
-
-  fvec2_t direction = fvec2_zero();
-  if(input_state(KEY_A)) direction.x -= 1.0f;
-  if(input_state(KEY_D)) direction.x += 1.0f;
-  if(input_state(KEY_S)) direction.y -= 1.0f;
-  if(input_state(KEY_W)) direction.y += 1.0f;
-  entity_move(&player->entity, direction, player->entity.grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR, dt);
-
-  if(input_state(KEY_SPACE))
-    entity_jump(&player->entity, PLAYER_JUMP_STRENGTH);
-}
-
-static void player_update(struct entity *entity, float dt)
-{
-  struct player *player = container_of(entity, struct player, entity);
-  player_update_ui(player);
-  player_update_action(player, dt);
-  player_update_camera(player);
-  player_update_movement(player, dt);
-}
-
-static struct player *g_player;
-struct player *player_get(void)
-{
-  return g_player;
-}
-
-struct entity *player_as_entity(struct player *player)
-{
-  return &player->entity;
-}
-
-bool player_get_third_person(struct player *player)
-{
-  return player->third_person;
-}
-
-struct camera player_get_camera(struct player *player)
-{
-  struct camera camera;
-  camera.transform = entity_view_transform(&player->entity);
-  camera.fovy   = M_PI / 2.0f;
-  camera.near   = 0.1f;
-  camera.far    = 1000.0f;
-  camera.aspect = (float)window_size.x / (float)window_size.y;
-  if(player_get_third_person(player))
-    camera.transform = transform_local_translate(camera.transform, fvec3(0.0f, -10.0f, 0.0f));
-
-  return camera;
-}
-
-void update_spawn_player(void)
-{
-  if(g_player)
-    return;
-
-  struct player *player = malloc(sizeof *player);
-
-  player->entity.position                         = generate_player_spawn(world_seed_get());
-  player->entity.velocity                         = fvec3_zero();
-  player->entity.dimension                        = PLAYER_DIMENSION;
-  player->entity.local_view_transform.translation = fvec3(0.0f, 0.0f, PLAYER_EYE_HEIGHT);
-  player->entity.local_view_transform.rotation    = fvec3(0.0f, 0.0f, 0.0f);
-  player->entity.grounded                         = false;
-
-  player->entity.update = &player_update;
-
-  for(int j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
-    for(int i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
-    {
-      player->inventory.items[j][i].id    = ITEM_NONE;
-      player->inventory.items[j][i].count = 0;
+      opaque->cooldown = 0.0f;
+      return;
     }
 
-  for(int i=0; i<HOTBAR_SIZE; ++i)
-  {
-    player->hotbar.items[i].id    = ITEM_NONE;
-    player->hotbar.items[i].count = 0;
+    // Use item
+    if(input_state(BUTTON_RIGHT) && opaque->cooldown >= PLAYER_ACTION_COOLDOWN)
+    {
+      struct item *item = &opaque->hotbar.items[opaque->hotbar.selection];
+      if(item->id != ITEM_NONE)
+      {
+        const struct item_info *item_info = query_item_info(item->id);
+        if(item_info->on_use)
+          item_info->on_use(entity, item);
+      }
+
+      opaque->cooldown = 0.0f;
+      return;
+    }
   }
+}
 
-  player->hand.id    = ITEM_NONE;
-  player->hand.count = 0;
-
-  int count = mini(3, HOTBAR_SIZE);
-  for(int i=0; i<count; ++i)
+static void player_entity_update_controls(struct entity *entity, float dt)
+{
+  struct player_opaque *opaque = entity->opaque;
+  if(!opaque->inventory_opened)
   {
-    player->hotbar.items[i].id = i;
-    player->hotbar.items[i].count = 8 * (i + 1);
+    // Camera - Third person
+    opaque->third_person = opaque->third_person != input_press(KEY_F);
+
+    // Camera - Rotation
+    entity->rotation.yaw   +=  mouse_motion.x * PLAYER_PAN_SPEED;
+    entity->rotation.pitch += -mouse_motion.y * PLAYER_PAN_SPEED;
+
+    // World Camera
+    world_camera.transform.translation = entity->position;
+    world_camera.transform.rotation = entity->rotation;
+    if(opaque->third_person)
+      world_camera.transform.translation = fvec3_sub(world_camera.transform.translation, entity_local_to_global(entity, fvec3(0.0f, 10.0f, 0.0f)));
+
+    world_camera.fovy   = M_PI / 2.0f;
+    world_camera.near   = 0.1f;
+    world_camera.far    = 1000.0f;
+    world_camera.aspect = (float)window_size.x / (float)window_size.y;
+
+    // Movement
+    fvec2_t direction = fvec2_zero();
+    if(input_state(KEY_A)) direction.x -= 1.0f;
+    if(input_state(KEY_D)) direction.x += 1.0f;
+    if(input_state(KEY_S)) direction.y -= 1.0f;
+    if(input_state(KEY_W)) direction.y += 1.0f;
+    entity_move(entity, direction, entity->grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR, dt);
+
+    // Jump
+    if(input_state(KEY_SPACE))
+      entity_jump(entity, PLAYER_JUMP_STRENGTH);
   }
+}
 
-  player->third_person     = false;
-  player->inventory_opened = false;
-
-  player->cooldown = 0.0f;
-
-  if(world_entity_add(&player->entity) != 0)
+static void player_entity_update_weird(struct entity *entity, float dt)
+{
+  struct player_opaque *opaque = entity->opaque;
+  for(opaque->cooldown_weird += dt; opaque->cooldown >= 2.0f; opaque->cooldown -= 2.0f)
   {
-    free(player);
-    return;
+    struct entity new_entity;
+    new_entity.position = entity->position;
+    new_entity.velocity = entity->velocity;
+    new_entity.rotation = entity->rotation;
+    new_entity.grounded = entity->grounded;
+    weird_entity_init(&new_entity);
+    if(world_entity_add(new_entity) != 0)
+      weird_entity_fini(&new_entity);
   }
+}
 
-  g_player = player;
-  LOG_INFO("Spawning player at (%f, %f, %f) with %d items", player->entity.position.x, player->entity.position.y, player->entity.position.z, count);
+static void player_entity_update_load_chunks(struct entity *entity)
+{
+  ivec3_t center = fvec3_as_ivec3_floor(fvec3_div_scalar(entity->position, CHUNK_WIDTH));
+  for(int dz = -GENERATOR_DISTANCE_PLAYER; dz<=GENERATOR_DISTANCE_PLAYER; ++dz)
+    for(int dy = -GENERATOR_DISTANCE_PLAYER; dy<=GENERATOR_DISTANCE_PLAYER; ++dy)
+      for(int dx = -GENERATOR_DISTANCE_PLAYER; dx<=GENERATOR_DISTANCE_PLAYER; ++dx)
+        enqueue_chunk_generate(ivec3_add(center, ivec3(dx, dy, dz)));
+}
+
+static void player_entity_update(struct entity *entity, float dt)
+{
+  player_entity_update_ui(entity);
+  player_entity_update_actions(entity, dt);
+  player_entity_update_controls(entity, dt);
+  player_entity_update_weird(entity, dt);
+  player_entity_update_load_chunks(entity);
 }
 

@@ -36,6 +36,6 @@ void world_block_invalidate_mesh(ivec3_t position);
  * in our game, we store each inside the chunk they are in. If the chunk has not
  * yet been generated. There is no way we could add the entity.
  */
-int world_entity_add(struct entity *entity) __attribute__((warn_unused_result));
+int world_entity_add(struct entity entity) __attribute__((warn_unused_result));
 
 #endif // VOXY_MAIN_GAME_WORLD_H

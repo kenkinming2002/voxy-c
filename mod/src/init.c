@@ -8,7 +8,7 @@
 
 #define MOD "base"
 
-void on_use_block_item(uint8_t item_id);
+void on_use_block_item(struct entity *entity, struct item *item);
 void mod_init()
 {
   // 1: Blocks

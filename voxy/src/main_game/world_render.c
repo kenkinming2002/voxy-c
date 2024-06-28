@@ -4,7 +4,6 @@
 #include <voxy/main_game/world_camera.h>
 
 #include <voxy/main_game/assets.h>
-#include <voxy/main_game/player.h>
 #include <voxy/main_game/chunk.h>
 
 #include <voxy/core/window.h>

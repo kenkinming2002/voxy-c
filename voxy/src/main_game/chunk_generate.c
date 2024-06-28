@@ -4,7 +4,6 @@
 #include <voxy/main_game/config.h>
 #include <voxy/main_game/generate.h>
 #include <voxy/main_game/mod.h>
-#include <voxy/main_game/player.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
 

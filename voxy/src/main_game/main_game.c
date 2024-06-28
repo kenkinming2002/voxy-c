@@ -9,9 +9,10 @@
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/world_seed.h>
 #include <voxy/main_game/registry.h>
-#include <voxy/main_game/player.h>
 
 #include <voxy/main_game/generate.h>
+
+#include <voxy/main_game/entity/player.h>
 
 #include <voxy/graphics/ui.h>
 

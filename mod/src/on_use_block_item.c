@@ -1,7 +1,6 @@
 #include "ids.h"
 
 #include <voxy/main_game/entity.h>
-#include <voxy/main_game/player.h>
 #include <voxy/main_game/world.h>
 #include <voxy/main_game/item.h>
 

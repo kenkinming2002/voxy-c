@@ -23,6 +23,11 @@ void on_use_block_item(struct entity *entity, struct item *item)
   ivec3_t position;
   ivec3_t normal;
   if(entity_ray_cast(entity, 20.0f, &position, &normal))
-    world_block_set(ivec3_add(position, normal), item_id_to_block_id(item->id));
+    if(item->count > 0)
+    {
+      world_block_set(ivec3_add(position, normal), item_id_to_block_id(item->id));
+      if(--item->count == 0)
+        item->id = ITEM_NONE;
+    }
 }
 

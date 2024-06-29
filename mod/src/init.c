@@ -88,12 +88,27 @@ void mod_init()
       "assets/textures/water.png"
     }
   });
+  BLOCK_ID_LAMP = register_block_info((struct block_info){
+    .name = "lamp",
+    .type = BLOCK_TYPE_OPAQUE,
+    .ether = false,
+    .light_level = 15,
+    .textures = {
+      "assets/textures/lamp.png",
+      "assets/textures/lamp.png",
+      "assets/textures/lamp.png",
+      "assets/textures/lamp.png",
+      "assets/textures/lamp.png",
+      "assets/textures/lamp.png"
+    }
+  });
 
   // 2: Items
   ITEM_ID_STONE = register_item_info((struct item_info){ .mod = MOD, .name = "stone", .texture = "assets/textures/stone_item.png", .on_use = on_use_block_item, });
   ITEM_ID_GRASS = register_item_info((struct item_info){ .mod = MOD, .name = "grass", .texture = "assets/textures/grass_item.png", .on_use = on_use_block_item, });
   ITEM_ID_LOG   = register_item_info((struct item_info){ .mod = MOD, .name = "log",   .texture = "assets/textures/log_item.png",   .on_use = on_use_block_item, });
   ITEM_ID_LEAVE = register_item_info((struct item_info){ .mod = MOD, .name = "leave", .texture = "assets/textures/leave_item.png", .on_use = on_use_block_item, });
+  ITEM_ID_LAMP  = register_item_info((struct item_info){ .mod = MOD, .name = "lamp",  .texture = "assets/textures/leave_item.png", .on_use = on_use_block_item, });
 
   // 3: Callback
   register_generate_chunk_blocks(&base_generate_chunk_blocks);

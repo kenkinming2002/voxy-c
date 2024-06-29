@@ -14,6 +14,7 @@ static block_id_t item_id_to_block_id(item_id_t item_id)
   if(item_id == ITEM_ID_GRASS) return BLOCK_ID_GRASS;
   if(item_id == ITEM_ID_LOG)   return BLOCK_ID_LOG;
   if(item_id == ITEM_ID_LEAVE) return BLOCK_ID_LEAVE;
+  if(item_id == ITEM_ID_LAMP)  return BLOCK_ID_LAMP;
   assert(0 && "Unreachable");
 }
 

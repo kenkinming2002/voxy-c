@@ -97,7 +97,7 @@ void player_entity_init(struct entity *entity)
   opaque->hand.id = ITEM_NONE;
   opaque->hand.count = 0;
 
-  int count = mini(3, HOTBAR_SIZE);
+  int count = mini(5, HOTBAR_SIZE);
   for(int i=0; i<count; ++i)
   {
     opaque->hotbar.items[i].id = i;

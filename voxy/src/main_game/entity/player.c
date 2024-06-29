@@ -1,17 +1,21 @@
 #include <voxy/main_game/entity/player.h>
 
+#include <voxy/main_game/types/entity.h>
+#include <voxy/main_game/types/item.h>
+
 #include <voxy/main_game/entity/weird.h>
 
-#include <voxy/main_game/assets.h>
+#include <voxy/main_game/render/assets.h>
 #include <voxy/main_game/config.h>
-#include <voxy/main_game/entity.h>
-#include <voxy/main_game/item.h>
+
+#include <voxy/main_game/states/world.h>
+#include <voxy/main_game/states/world_seed.h>
+#include <voxy/main_game/states/world_camera.h>
+
 #include <voxy/main_game/mod.h>
-#include <voxy/main_game/world.h>
-#include <voxy/main_game/world_seed.h>
-#include <voxy/main_game/world_camera.h>
-#include <voxy/main_game/generate.h>
-#include <voxy/main_game/chunk_generate.h>
+
+#include <voxy/main_game/update/generate.h>
+#include <voxy/main_game/update/chunk_generate.h>
 
 #include <voxy/graphics/camera.h>
 #include <voxy/graphics/gl.h>

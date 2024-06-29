@@ -1,8 +1,8 @@
 #include "ids.h"
 
-#include <voxy/main_game/entity.h>
-#include <voxy/main_game/world.h>
-#include <voxy/main_game/item.h>
+#include <voxy/main_game/states/world.h>
+#include <voxy/main_game/types/entity.h>
+#include <voxy/main_game/types/item.h>
 
 #include <voxy/math/vector.h>
 

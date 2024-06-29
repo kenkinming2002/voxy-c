@@ -1,8 +1,8 @@
 #include "ids.h"
 #include "generate.h"
 
-#include <voxy/main_game/registry.h>
-#include <voxy/main_game/generate.h>
+#include <voxy/main_game/types/registry.h>
+#include <voxy/main_game/update/generate.h>
 
 #include <stdbool.h>
 

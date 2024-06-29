@@ -1,7 +1,7 @@
 #ifndef MOD_GENERATE_H
 #define MOD_GENERATE_H
 
-#include <voxy/main_game/registry.h>
+#include <voxy/main_game/types/registry.h>
 #include <voxy/main_game/config.h>
 
 #include <voxy/math/vector.h>

@@ -1,16 +1,19 @@
 #include <voxy/main_game/main_game.h>
 
-#include <voxy/main_game/chunk_generate.h>
-#include <voxy/main_game/light.h>
-#include <voxy/main_game/physics.h>
-#include <voxy/main_game/chunk_remesh.h>
-#include <voxy/main_game/world_render.h>
+#include <voxy/main_game/types/chunk.h>
+#include <voxy/main_game/types/entity.h>
 
-#include <voxy/main_game/world.h>
-#include <voxy/main_game/world_seed.h>
-#include <voxy/main_game/registry.h>
+#include <voxy/main_game/states/chunk_hash_table.h>
+#include <voxy/main_game/states/world.h>
+#include <voxy/main_game/states/world_seed.h>
 
-#include <voxy/main_game/generate.h>
+#include <voxy/main_game/update/generate.h>
+#include <voxy/main_game/update/chunk_generate.h>
+#include <voxy/main_game/update/light.h>
+#include <voxy/main_game/update/physics.h>
+
+#include <voxy/main_game/render/chunk_remesh.h>
+#include <voxy/main_game/render/world_render.h>
 
 #include <voxy/main_game/entity/player.h>
 
@@ -20,8 +23,6 @@
 #include <voxy/core/log.h>
 
 #include <glad/glad.h>
-
-#include <stdio.h>
 
 void main_game_update(float dt)
 {

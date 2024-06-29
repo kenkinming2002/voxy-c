@@ -14,27 +14,31 @@ VOXY_SRCS += voxy/src/graphics/font_set.c
 VOXY_SRCS += voxy/src/graphics/ui.c
 VOXY_SRCS += voxy/src/graphics/camera.c
 
-VOXY_SRCS += voxy/src/main_game/assets.c
-VOXY_SRCS += voxy/src/main_game/chunk.c
-VOXY_SRCS += voxy/src/main_game/chunk_generate.c
-VOXY_SRCS += voxy/src/main_game/chunk_hash_table.c
-VOXY_SRCS += voxy/src/main_game/chunk_remesh.c
-VOXY_SRCS += voxy/src/main_game/entity.c
-VOXY_SRCS += voxy/src/main_game/generate.c
-VOXY_SRCS += voxy/src/main_game/light.c
+VOXY_SRCS += voxy/src/voxy.c
+
 VOXY_SRCS += voxy/src/main_game/main_game.c
 VOXY_SRCS += voxy/src/main_game/mod.c
-VOXY_SRCS += voxy/src/main_game/physics.c
-VOXY_SRCS += voxy/src/main_game/registry.c
-VOXY_SRCS += voxy/src/main_game/world.c
-VOXY_SRCS += voxy/src/main_game/world_camera.c
-VOXY_SRCS += voxy/src/main_game/world_render.c
-VOXY_SRCS += voxy/src/main_game/world_seed.c
 
-VOXY_SRCS += voxy/src/main_game/entity/player.c
+VOXY_SRCS += voxy/src/main_game/types/chunk.c
+VOXY_SRCS += voxy/src/main_game/types/registry.c
+VOXY_SRCS += voxy/src/main_game/types/entity.c
+
 VOXY_SRCS += voxy/src/main_game/entity/weird.c
+VOXY_SRCS += voxy/src/main_game/entity/player.c
 
-VOXY_SRCS += voxy/src/voxy.c
+VOXY_SRCS += voxy/src/main_game/states/world_seed.c
+VOXY_SRCS += voxy/src/main_game/states/chunk_hash_table.c
+VOXY_SRCS += voxy/src/main_game/states/world.c
+VOXY_SRCS += voxy/src/main_game/states/world_camera.c
+
+VOXY_SRCS += voxy/src/main_game/update/physics.c
+VOXY_SRCS += voxy/src/main_game/update/light.c
+VOXY_SRCS += voxy/src/main_game/update/generate.c
+VOXY_SRCS += voxy/src/main_game/update/chunk_generate.c
+
+VOXY_SRCS += voxy/src/main_game/render/world_render.c
+VOXY_SRCS += voxy/src/main_game/render/assets.c
+VOXY_SRCS += voxy/src/main_game/render/chunk_remesh.c
 
 MOD_SRCS += mod/src/init.c
 MOD_SRCS += mod/src/ids.c

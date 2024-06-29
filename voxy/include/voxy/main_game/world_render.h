@@ -1,6 +1,0 @@
-#ifndef VOXY_MAIN_GAME_WORLD_RENDER_H
-#define VOXY_MAIN_GAME_WORLD_RENDER_H
-
-void world_render(void);
-
-#endif // VOXY_MAIN_GAME_WORLD_RENDER_H

@@ -7,26 +7,77 @@
 #include <stdbool.h>
 
 #define ETHER_HEIGHT 128
-#define WATER_HEIGHT 3
+#define WATER_HEIGHT 2
 
-static inline float lerpf(float a, float b, float t)
+static inline float get_river_factor(seed_t seed, ivec2_t position)
 {
-  return a + (b - a) * t;
+  const size_t n = 3;
+
+  float rivers[n];
+  for(size_t i=0; i<n; ++i)
+  {
+    rivers[i] = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 1/500.0f, 2.0f, 0.4f, 8);
+    rivers[i] = fabs(rivers[i]);
+    rivers[i] = smooth_step_sigmoid(rivers[i], 0.008f, 0.001f);
+    rivers[i] = 1.0f - rivers[i];
+  }
+  return smooth_min(n, rivers, 10.0f);
+}
+
+static inline float get_mountain_factor(seed_t seed, ivec2_t position)
+{
+  float mountain = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 0.008f, 2.0f, 0.3f, 8);
+  mountain = (mountain + 1.0f) * 0.5f;
+  mountain = smoother_step(mountain);
+  return mountain;
+}
+
+static inline float get_bump_factor(seed_t seed, ivec2_t position)
+{
+  float scale = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 0.005f, 1.5f, 0.3f, 8);
+  scale = (scale + 1.0f) * 0.5f;
+  scale = ease_out(scale, 3.0f);
+  scale = lerp(scale, 0.5f, 1.0f);
+
+  float value = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 0.05f, 2.0f, 0.3f, 8);
+  value = (value + 1.0f) * 0.5f;
+  return scale * value;
 }
 
 static inline float get_height(seed_t seed, ivec2_t position)
 {
-  float value1 = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 1/200.0f, 2.3f, 0.4f, 8);
-  value1 = fabs(value1);
-  value1 = powf(value1, 2.0f);
-  value1 = ease_out(value1, 3.0f);
-  value1 = value1 * 100.0f;
+  float river_factor = get_river_factor(seed ^ 0b0101010101111101010101010111011111010101010110101010101111010100, position);
+  float mountain_factor = get_mountain_factor(seed ^ 0b0110111101010101010101101110101101110101101010101010010101010100, position);
+  float bump_factor = get_bump_factor(seed ^ 0b1010101011010110111101010101010100001010110101010101010100010101, position);
 
-  float value2 = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 1/2000.0f, 2.1f, 0.6f, 8);
-  value2 = 0.5f * (value2 + 1.0f);
-  value2 = smooth_step(value2);
+  float flatness = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 0.001f, 1.1f, 0.3f, 4);
+  flatness = (flatness + 1.0f) * 0.5f;
+  flatness = smoother_step(flatness);
 
-  return value1 * value2;
+  float wetness = noise_perlin2_ex(seed_next(&seed), ivec2_as_fvec2(position), 0.001f, 1.1f, 0.3f, 4);
+  wetness = (wetness + 1.0f) * 0.5f;
+  wetness = smoother_step(wetness);
+
+  // | flatness | wetness |
+  // =======================================
+  // | high     | high    | river plateau  | river + bump
+  // | high     | low     | normal plateau |         bump
+  // | low      |         | mountain range | mountain
+
+  float mountain_blend_factor = powf(1.0f-flatness, 10.0f);
+  float plateau_blend_factor  = powf(flatness, 10.0f);
+  {
+    float total = mountain_blend_factor + plateau_blend_factor;
+    mountain_blend_factor /= total;
+    plateau_blend_factor /= total;
+  }
+  float river_blend_factor = wetness;
+
+  float river    = -10.0f * river_factor    * plateau_blend_factor * river_blend_factor;
+  float bump     =  10.0f * bump_factor     * plateau_blend_factor;
+  float mountain =  50.0f * mountain_factor * mountain_blend_factor;
+
+  return river + mountain + bump;
 }
 
 static inline bool get_tree(seed_t seed, ivec2_t position)
@@ -37,7 +88,7 @@ static inline bool get_tree(seed_t seed, ivec2_t position)
 static inline bool get_cave(seed_t seed, ivec3_t position)
 {
   // Reference: https://blog.danol.cz/voxel-cave-generation-using-3d-perlin-noise-isosurfaces/
-  float threshold = lerpf(0.0f, 0.1f, 1.0f/(1.0f+expf(position.z/1000.0f)));
+  float threshold = lerp(0.0f, 0.1f, 1.0f/(1.0f+expf(position.z/1000.0f)));
   for(unsigned i=0; i<2; ++i)
   {
     float value = noise_perlin3_ex(seed_next(&seed), ivec3_as_fvec3(position), 0.02f, 1.5f, 0.3f, 4);

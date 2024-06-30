@@ -221,7 +221,7 @@ static inline float noise_perlin2_ex(seed_t seed, fvec2_t position, float freque
     frequency *= lacunarity;
     amplitude *= persistence;
   }
-  return value / max_value / (sqrtf(2.0f) / 4.0f);
+  return value / max_value / (sqrtf(2.0f) / 2.0f);
 }
 
 static inline float noise_perlin3_ex(seed_t seed, fvec3_t position, float frequency, float lacunarity, float persistence, size_t octaves)
@@ -236,7 +236,7 @@ static inline float noise_perlin3_ex(seed_t seed, fvec3_t position, float freque
     frequency *= lacunarity;
     amplitude *= persistence;
   }
-  return value / max_value / (sqrtf(3.0f) / 4.0f);
+  return value / max_value / (sqrtf(3.0f) / 2.0f);
 }
 
 static inline float lerp(float a, float b, float t)
@@ -265,6 +265,42 @@ static inline float smoother_step(float x)
   return 6.0f  * x * x * x * x * x
        - 15.0f * x * x * x * x
        + 10.0f * x * x * x;
+}
+
+static inline float smooth_step_sigmoid(float x, float cutoff, float smoothness)
+{
+  return 1.0f / (1.0f + expf(-(x-cutoff)/smoothness));
+}
+
+//static inline float smooth_max(float a, float b, float smoothness)
+//{
+//  return (a * expf(a / smoothness) + b * expf(b / smoothness)) / (expf(a / smoothness) + expf(b / smoothness));
+//}
+
+static inline float smooth_max(size_t n, float values[n], float smoothness)
+{
+  float weights[n];
+  for(size_t i=0; i<n; ++i)
+    weights[i] = expf(values[i] / smoothness);
+
+  float total_sum = 0.0f;
+  for(size_t i=0; i<n; ++i)
+    total_sum += values[i] * weights[i];
+
+  float total_weight = 0.0f;
+  for(size_t i=0; i<n; ++i)
+    total_weight += weights[i];
+
+  return total_sum / total_weight;
+}
+
+static inline float smooth_min(size_t n, float values[n], float smoothness)
+{
+  float negative_values[n];
+  for(size_t i=0; i<n; ++i)
+    negative_values[i] = -values[i];
+
+  return -smooth_max(n, negative_values, smoothness);
 }
 
 #endif // VOXY_MATH_NOISE_H

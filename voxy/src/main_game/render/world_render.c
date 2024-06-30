@@ -78,6 +78,19 @@ void world_render()
     glUniformMatrix4fv(glGetUniformLocation(program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
 
     world_chunk_for_each(chunk)
+      if(!chunk->culled)
+      {
+        fvec3_t chunk_position = fvec3_add_scalar(ivec3_as_fvec3(ivec3_mul_scalar(chunk->position, CHUNK_WIDTH)), (CHUNK_WIDTH-1) * 0.5f);
+        fvec3_t chunk_dimension = fvec3(CHUNK_WIDTH, CHUNK_WIDTH, CHUNK_WIDTH);
+
+        glUniform3f(glGetUniformLocation(program.id, "position"), chunk_position.x, chunk_position.y, chunk_position.z);
+        glUniform3f(glGetUniformLocation(program.id, "dimension"), chunk_dimension.x, chunk_dimension.y, chunk_dimension.z);
+        glUniform4f(glGetUniformLocation(program.id, "color"), 1.0f, 0.0f, 0.0f, 1.0f);
+        glDrawArrays(GL_LINES, 0, 24);
+      }
+
+
+    world_chunk_for_each(chunk)
       for(size_t i=0; i<chunk->entity_count; ++i)
       {
         struct entity *entity = &chunk->entities[i];

@@ -143,20 +143,6 @@ static bool update_generate_chunk_at(ivec3_t position)
 void update_chunk_generate(void)
 {
   size_t count = 0;
-
-  // We have a chicken-and-egg problem here.
-  //
-  // 1: Player can only spawned on a generated chunk.
-  // 2: Only chunks around player will be generated.
-  //
-  // We break the above cycle and unconditionally loading "spawn chunks" at the
-  // center.
-  for(int dz = -GENERATOR_DISTANCE_SPAWN; dz<=GENERATOR_DISTANCE_SPAWN; ++dz)
-    for(int dy = -GENERATOR_DISTANCE_SPAWN; dy<=GENERATOR_DISTANCE_SPAWN; ++dy)
-      for(int dx = -GENERATOR_DISTANCE_SPAWN; dx<=GENERATOR_DISTANCE_SPAWN; ++dx)
-        count += update_generate_chunk_at(ivec3(dx, dy, dz));
-
-  // Ordinary chunk loading mechanics
   for(size_t i=0; i<chunk_generate_position_count; ++i)
     count += update_generate_chunk_at(chunk_generate_positions[i]);
   chunk_generate_position_count = 0;

@@ -17,6 +17,8 @@
 #include <voxy/main_game/update/generate.h>
 #include <voxy/main_game/update/chunk_generate.h>
 
+#include <voxy/main_game/render/debug.h>
+
 #include <voxy/graphics/camera.h>
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/ui.h>
@@ -472,5 +474,8 @@ static void player_entity_update(struct entity *entity, float dt)
   player_entity_update_controls(entity, dt);
   player_entity_update_weird(entity, dt);
   player_entity_update_load_chunks(entity);
+
+  if(input_press(KEY_P))
+    g_render_debug = !g_render_debug;
 }
 

@@ -1,6 +1,8 @@
 #include <voxy/main_game/render/world_render.h>
 
 #include <voxy/main_game/render/assets.h>
+#include <voxy/main_game/render/debug.h>
+
 #include <voxy/main_game/states/world.h>
 #include <voxy/main_game/states/world_camera.h>
 #include <voxy/main_game/types/chunk.h>
@@ -72,6 +74,7 @@ void world_render()
   }
 
   // 2: Entity outline rendering
+  if(g_render_debug)
   {
     struct gl_program program = GL_PROGRAM_LOAD(outline);
     glUseProgram(program.id);

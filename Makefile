@@ -36,6 +36,7 @@ VOXY_SRCS += voxy/src/main_game/update/light.c
 VOXY_SRCS += voxy/src/main_game/update/generate.c
 VOXY_SRCS += voxy/src/main_game/update/chunk_generate.c
 
+VOXY_SRCS += voxy/src/main_game/render/debug.c
 VOXY_SRCS += voxy/src/main_game/render/world_render.c
 VOXY_SRCS += voxy/src/main_game/render/assets.c
 VOXY_SRCS += voxy/src/main_game/render/chunk_remesh.c

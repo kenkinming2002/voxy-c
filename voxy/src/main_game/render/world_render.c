@@ -88,7 +88,7 @@ void world_render()
 
         glUniform3f(glGetUniformLocation(program.id, "position"), chunk_position.x, chunk_position.y, chunk_position.z);
         glUniform3f(glGetUniformLocation(program.id, "dimension"), chunk_dimension.x, chunk_dimension.y, chunk_dimension.z);
-        glUniform4f(glGetUniformLocation(program.id, "color"), 1.0f, 0.0f, 0.0f, 1.0f);
+        glUniform4f(glGetUniformLocation(program.id, "color"), 1.0f, 1.0f, 0.0f, 1.0f);
         glDrawArrays(GL_LINES, 0, 24);
       }
 

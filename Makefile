@@ -33,15 +33,15 @@ VOXY_SRCS += voxy/src/main_game/states/chunks.c
 VOXY_SRCS += voxy/src/main_game/states/invalidate.c
 VOXY_SRCS += voxy/src/main_game/states/seed.c
 
-VOXY_SRCS += voxy/src/main_game/update/physics.c
-VOXY_SRCS += voxy/src/main_game/update/light.c
-VOXY_SRCS += voxy/src/main_game/update/generate.c
 VOXY_SRCS += voxy/src/main_game/update/chunk_generate.c
+VOXY_SRCS += voxy/src/main_game/update/chunk_remesh.c
+VOXY_SRCS += voxy/src/main_game/update/generate.c
+VOXY_SRCS += voxy/src/main_game/update/light.c
+VOXY_SRCS += voxy/src/main_game/update/physics.c
 
 VOXY_SRCS += voxy/src/main_game/render/debug.c
-VOXY_SRCS += voxy/src/main_game/render/world_render.c
+VOXY_SRCS += voxy/src/main_game/render/render.c
 VOXY_SRCS += voxy/src/main_game/render/assets.c
-VOXY_SRCS += voxy/src/main_game/render/chunk_remesh.c
 
 MOD_SRCS += mod/src/init.c
 MOD_SRCS += mod/src/ids.c

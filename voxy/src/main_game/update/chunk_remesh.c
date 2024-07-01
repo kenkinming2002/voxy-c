@@ -1,4 +1,4 @@
-#include <voxy/main_game/render/chunk_remesh.h>
+#include <voxy/main_game/update/chunk_remesh.h>
 
 #include <voxy/main_game/config.h>
 #include <voxy/main_game/mod.h>

@@ -1,10 +1,11 @@
-#include <voxy/main_game/render/world_render.h>
+#include <voxy/main_game/render/render.h>
 
 #include <voxy/main_game/render/assets.h>
 #include <voxy/main_game/render/debug.h>
 
 #include <voxy/main_game/states/chunks.h>
 #include <voxy/main_game/states/camera.h>
+
 #include <voxy/main_game/types/chunk.h>
 
 #include <voxy/core/window.h>

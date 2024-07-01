@@ -7,12 +7,12 @@
 #include <voxy/main_game/states/chunks.h>
 #include <voxy/main_game/states/seed.h>
 
-#include <voxy/main_game/update/generate.h>
 #include <voxy/main_game/update/chunk_generate.h>
+#include <voxy/main_game/update/chunk_remesh.h>
+#include <voxy/main_game/update/generate.h>
 #include <voxy/main_game/update/light.h>
 #include <voxy/main_game/update/physics.h>
 
-#include <voxy/main_game/render/chunk_remesh.h>
 #include <voxy/main_game/render/world_render.h>
 
 #include <voxy/main_game/entity/player.h>

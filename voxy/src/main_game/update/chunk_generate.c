@@ -1,10 +1,11 @@
 #include <voxy/main_game/update/chunk_generate.h>
 
 #include <voxy/main_game/config.h>
-#include <voxy/main_game/mod.h>
-#include <voxy/main_game/states/world.h>
-#include <voxy/main_game/states/world_seed.h>
-#include <voxy/main_game/types/chunk.h>
+
+#include <voxy/main_game/states/chunks.h>
+#include <voxy/main_game/states/invalidate.h>
+#include <voxy/main_game/states/seed.h>
+
 #include <voxy/main_game/update/generate.h>
 
 #include <voxy/core/thread_pool.h>
@@ -93,7 +94,8 @@ void chunk_generate_wrapper_destroy(struct thread_pool_job *job)
 static struct chunk_generate_wrapper_hash_table chunk_generate_wrappers;
 static bool update_generate_chunk_at(ivec3_t position)
 {
-  if(world_chunk_lookup(position))
+  struct chunk *chunk = world_get_chunk(position);
+  if(chunk->data)
     return false;
 
   struct chunk_generate_wrapper *wrapper = chunk_generate_wrapper_hash_table_lookup(&chunk_generate_wrappers, position);
@@ -113,28 +115,30 @@ static bool update_generate_chunk_at(ivec3_t position)
   if(!atomic_load_explicit(&wrapper->done, memory_order_acquire))
     return false;
 
-  struct chunk *chunk = world_chunk_create(wrapper->position);
+  chunk->data = malloc(sizeof *chunk->data);
+
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
       {
-        chunk->blocks[z][y][x].id          = wrapper->blocks[z][y][x];
-        chunk->blocks[z][y][x].ether       = false;
-        chunk->blocks[z][y][x].light_level = 0;
+        chunk->data->blocks[z][y][x].id          = wrapper->blocks[z][y][x];
+        chunk->data->blocks[z][y][x].ether       = false;
+        chunk->data->blocks[z][y][x].light_level = 0;
       }
 
-  chunk->entities        = NULL;
-  chunk->entity_count    = 0;
-  chunk->entity_capacity = 0;
+  chunk->data->entities        = NULL;
+  chunk->data->entity_count    = 0;
+  chunk->data->entity_capacity = 0;
 
-  world_chunk_invalidate_mesh(chunk);
-  world_chunk_invalidate_mesh(chunk->left);
-  world_chunk_invalidate_mesh(chunk->right);
-  world_chunk_invalidate_mesh(chunk->back);
-  world_chunk_invalidate_mesh(chunk->front);
-  world_chunk_invalidate_mesh(chunk->bottom);
-  world_chunk_invalidate_mesh(chunk->top);
-  world_chunk_invalidate_light(chunk);
+  world_invalidate_chunk_mesh(chunk);
+  world_invalidate_chunk_mesh(chunk->left);
+  world_invalidate_chunk_mesh(chunk->right);
+  world_invalidate_chunk_mesh(chunk->back);
+  world_invalidate_chunk_mesh(chunk->front);
+  world_invalidate_chunk_mesh(chunk->bottom);
+  world_invalidate_chunk_mesh(chunk->top);
+
+  world_invalidate_chunk_light(chunk);
 
   free(chunk_generate_wrapper_hash_table_remove(&chunk_generate_wrappers, position));
   return true;

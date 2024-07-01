@@ -1,11 +1,11 @@
 #include <voxy/main_game/main_game.h>
 
 #include <voxy/main_game/types/chunk.h>
+#include <voxy/main_game/types/chunk_hash_table.h>
 #include <voxy/main_game/types/entity.h>
 
-#include <voxy/main_game/states/chunk_hash_table.h>
-#include <voxy/main_game/states/world.h>
-#include <voxy/main_game/states/world_seed.h>
+#include <voxy/main_game/states/chunks.h>
+#include <voxy/main_game/states/seed.h>
 
 #include <voxy/main_game/update/generate.h>
 #include <voxy/main_game/update/chunk_generate.h>
@@ -38,7 +38,7 @@ void main_game_update(float dt)
     entity.rotation = fvec3_zero();
     entity.grounded = false;
     player_entity_init(&entity);
-    if(world_entity_add(entity) != 0)
+    if(!world_add_entity(entity))
     {
       player_entity_fini(&entity);
 
@@ -59,14 +59,15 @@ void main_game_update(float dt)
   // Update World
   {
     update_chunk_generate();
-    world_chunk_for_each(chunk)
-      for(size_t i=0; i<chunk->entity_count; ++i)
-      {
-        struct entity *entity = &chunk->entities[i];
-        const struct entity_info *entity_info = query_entity_info(entity->id);
-        if(entity_info->on_update)
-          entity_info->on_update(&chunk->entities[i], dt);
-      }
+    world_for_each_chunk(chunk)
+      if(chunk->data)
+        for(size_t i=0; i<chunk->data->entity_count; ++i)
+        {
+          struct entity *entity = &chunk->data->entities[i];
+          const struct entity_info *entity_info = query_entity_info(entity->id);
+          if(entity_info->on_update)
+            entity_info->on_update(&chunk->data->entities[i], dt);
+        }
 
     update_light();
     update_physics(dt);

@@ -3,13 +3,12 @@
 #include <voxy/main_game/config.h>
 #include <voxy/main_game/mod.h>
 #include <voxy/main_game/render/assets.h>
-#include <voxy/main_game/states/world.h>
-#include <voxy/main_game/types/chunk.h>
+
+#include <voxy/main_game/states/chunks.h>
+#include <voxy/main_game/states/invalidate.h>
 
 #include <voxy/core/log.h>
-
 #include <voxy/math/vector.h>
-
 #include <voxy/dynamic_array.h>
 
 #include <time.h>
@@ -166,10 +165,23 @@ static void bind_quad_ebo()
 
 static void chunk_upload_mesh(struct chunk *chunk, struct chunk_quads *opaque_quads, struct chunk_quads *transparent_quads)
 {
+  if(!chunk->render_info)
+  {
+    chunk->render_info = malloc(sizeof *chunk->render_info);
+
+    glGenVertexArrays(1, &chunk->render_info->opaque_mesh.vao);
+    glGenBuffers(1, &chunk->render_info->opaque_mesh.vbo);
+    chunk->render_info->opaque_mesh.count = 0;
+
+    glGenVertexArrays(1, &chunk->render_info->transparent_mesh.vao);
+    glGenBuffers(1, &chunk->render_info->transparent_mesh.vbo);
+    chunk->render_info->transparent_mesh.count = 0;
+  }
+
   // Opaque
   {
-    glBindVertexArray(chunk->vao_opaque);
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_opaque);
+    glBindVertexArray(chunk->render_info->opaque_mesh.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->render_info->opaque_mesh.vbo);
     glBufferData(GL_ARRAY_BUFFER, opaque_quads->item_count * sizeof *opaque_quads->items, opaque_quads->items, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -186,13 +198,13 @@ static void chunk_upload_mesh(struct chunk *chunk, struct chunk_quads *opaque_qu
 
     bind_quad_ebo();
 
-    chunk->count_opaque = opaque_quads->item_count;
+    chunk->render_info->opaque_mesh.count = opaque_quads->item_count;
   }
 
   // Transparent
   {
-    glBindVertexArray(chunk->vao_transparent);
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_transparent);
+    glBindVertexArray(chunk->render_info->transparent_mesh.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->render_info->transparent_mesh.vbo);
     glBufferData(GL_ARRAY_BUFFER, transparent_quads->item_count * sizeof *transparent_quads->items, transparent_quads->items, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -209,7 +221,7 @@ static void chunk_upload_mesh(struct chunk *chunk, struct chunk_quads *opaque_qu
 
     bind_quad_ebo();
 
-    chunk->count_transparent = transparent_quads->item_count;
+    chunk->render_info->transparent_mesh.count = transparent_quads->item_count;
   }
 }
 
@@ -225,11 +237,12 @@ void update_chunk_remesh(void)
 
   for(struct chunk *chunk = chunks_invalidated_mesh_head; chunk; chunk = chunk->mesh_next)
   {
-    DYNAMIC_ARRAY_APPEND(jobs, ((struct job){
-        .chunk = chunk,
-        .opaque_quads      = {0},
-        .transparent_quads = {0},
-    }));
+    if(chunk->data)
+      DYNAMIC_ARRAY_APPEND(jobs, ((struct job){
+          .chunk = chunk,
+          .opaque_quads      = {0},
+          .transparent_quads = {0},
+      }));
     chunk->mesh_invalidated = false;
   }
   chunks_invalidated_mesh_head = NULL;

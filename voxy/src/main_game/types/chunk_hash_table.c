@@ -1,5 +1,4 @@
-#include <voxy/main_game/states/chunk_hash_table.h>
-
+#include <voxy/main_game/types/chunk_hash_table.h>
 #include <voxy/main_game/types/chunk.h>
 
 #define SC_HASH_TABLE_IMPLEMENTATION
@@ -32,12 +31,7 @@ int chunk_compare(ivec3_t position1, ivec3_t position2)
 
 void chunk_dispose(struct chunk *chunk)
 {
-  glDeleteVertexArrays(1, &chunk->vao_opaque);
-  glDeleteBuffers(1, &chunk->vbo_opaque);
-
-  glDeleteVertexArrays(1, &chunk->vao_transparent);
-  glDeleteBuffers(1, &chunk->vbo_transparent);
-
-  free(chunk);
+  (void)chunk;
+  assert(0 && "Unreachable");
 }
 

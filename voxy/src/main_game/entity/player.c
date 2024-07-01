@@ -8,9 +8,9 @@
 #include <voxy/main_game/render/assets.h>
 #include <voxy/main_game/config.h>
 
-#include <voxy/main_game/states/world.h>
-#include <voxy/main_game/states/world_seed.h>
-#include <voxy/main_game/states/world_camera.h>
+#include <voxy/main_game/states/chunks.h>
+#include <voxy/main_game/states/seed.h>
+#include <voxy/main_game/states/camera.h>
 
 #include <voxy/main_game/mod.h>
 
@@ -349,7 +349,7 @@ static void player_entity_update_ui(struct entity *entity)
     ivec3_t normal;
     if(entity_ray_cast(entity, 20.0f, &position, &normal))
     {
-      const struct block *target_block = world_block_get(position);
+      const struct block *target_block = world_get_block(position);
       if(target_block && target_block->id != BLOCK_NONE)
       {
         label_widget.text     = query_block_info(target_block->id)->name;
@@ -380,7 +380,13 @@ static void player_entity_update_actions(struct entity *entity, float dt)
             {
               ivec3_t offset = ivec3(dx, dy, dz);
               if(ivec3_length_squared(offset) <= radius * radius)
-                world_block_set(ivec3_add(position, offset), 0);
+              {
+                ivec3_t block_position = ivec3_add(position, offset);
+
+                struct block *block = world_get_block(block_position);
+                block->id = 0;
+                world_invalidate_block(block_position);
+              }
             }
       }
 
@@ -453,7 +459,7 @@ static void player_entity_update_weird(struct entity *entity, float dt)
     new_entity.rotation = entity->rotation;
     new_entity.grounded = entity->grounded;
     weird_entity_init(&new_entity);
-    if(world_entity_add(new_entity) != 0)
+    if(!world_add_entity(new_entity))
       weird_entity_fini(&new_entity);
   }
 }

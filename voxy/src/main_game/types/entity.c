@@ -3,7 +3,7 @@
 #include <voxy/main_game/types/block.h>
 #include <voxy/main_game/types/registry.h>
 
-#include <voxy/main_game/states/world.h>
+#include <voxy/main_game/states/chunks.h>
 
 #include <voxy/main_game/mod.h>
 
@@ -55,7 +55,7 @@ bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, i
 
   while(ray_cast.distance < distance)
   {
-    struct block *block = world_block_get(ray_cast.iposition);
+    struct block *block = world_get_block(ray_cast.iposition);
     if(block && query_block_info(block->id)->type == BLOCK_TYPE_OPAQUE)
       return true;
 

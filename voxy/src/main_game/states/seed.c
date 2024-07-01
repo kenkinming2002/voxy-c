@@ -1,4 +1,4 @@
-#include <voxy/main_game/states/world_seed.h>
+#include <voxy/main_game/states/seed.h>
 
 #include <time.h>
 

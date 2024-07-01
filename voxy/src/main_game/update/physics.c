@@ -3,7 +3,7 @@
 #include <voxy/main_game/types/block.h>
 #include <voxy/main_game/types/entity.h>
 
-#include <voxy/main_game/states/world.h>
+#include <voxy/main_game/states/chunks.h>
 
 #include <voxy/main_game/config.h>
 #include <voxy/main_game/mod.h>
@@ -169,8 +169,8 @@ static void entity_physics_update(struct entity *entity, float dt)
         {
           ivec3_t position = ivec3(x, y, z);
 
-          const struct block *block = world_block_get(position);
-          if((block))
+          const struct block *block = world_get_block(position);
+          if(block)
           {
             const struct block_info *block_info = query_block_info(block->id);
             if(block_info->type == BLOCK_TYPE_OPAQUE)
@@ -213,7 +213,8 @@ static void entity_update_physics(struct entity *entity, float dt)
 
 void update_physics(float dt)
 {
-  world_chunk_for_each(chunk)
-    for(size_t i=0; i<chunk->entity_count; ++i)
-      entity_update_physics(&chunk->entities[i], dt);
+  world_for_each_chunk(chunk)
+    if(chunk->data)
+      for(size_t i=0; i<chunk->data->entity_count; ++i)
+        entity_update_physics(&chunk->data->entities[i], dt);
 }

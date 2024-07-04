@@ -13,7 +13,7 @@
 #include <voxy/main_game/update/light.h>
 #include <voxy/main_game/update/physics.h>
 
-#include <voxy/main_game/render/world_render.h>
+#include <voxy/main_game/render/render.h>
 
 #include <voxy/main_game/entity/player.h>
 

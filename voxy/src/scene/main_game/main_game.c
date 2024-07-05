@@ -28,14 +28,15 @@
 #define MOD_PATH "mod/mod.so"
 
 static float accumulated_dt;
-static bool mod_loaded;
+static bool initialized;
 
 void main_game_enter()
 {
   accumulated_dt = 0.0f;
-  if(!mod_loaded)
+  if(!initialized)
   {
-    mod_loaded = true;
+    initialized = true;
+    world_seed_generate();
     mod_load(MOD_PATH);
   }
 }

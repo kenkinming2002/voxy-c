@@ -19,9 +19,9 @@ int main()
   {
     scene_update();
     scene_render();
-    scene_commit();
-
     window_present();
+    if(scene_commit())
+      break;
   }
 }
 

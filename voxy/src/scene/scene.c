@@ -22,6 +22,7 @@ void scene_update(void)
     main_game_update();
     break;
   case SCENE_NONE:
+  case SCENE_EXIT:
     break;
   }
 }
@@ -37,11 +38,12 @@ void scene_render(void)
     main_game_render();
     break;
   case SCENE_NONE:
+  case SCENE_EXIT:
     break;
   }
 }
 
-void scene_commit(void)
+bool scene_commit(void)
 {
   if(current_scene != next_scene)
   {
@@ -54,6 +56,7 @@ void scene_commit(void)
         main_game_leave();
         break;
       case SCENE_NONE:
+      case SCENE_EXIT:
         break;
     }
 
@@ -66,9 +69,11 @@ void scene_commit(void)
         main_game_enter();
         break;
       case SCENE_NONE:
+      case SCENE_EXIT:
         break;
     }
 
     current_scene = next_scene;
   }
+  return current_scene == SCENE_EXIT;
 }

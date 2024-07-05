@@ -1,6 +1,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include <stdbool.h>
+
 /// Different scene for the game. By default, the game has no current scene
 /// (i.e. SCENE_NONE).
 enum Scene
@@ -8,6 +10,7 @@ enum Scene
   SCENE_NONE,
   SCENE_MAIN_MENU,
   SCENE_MAIN_GAME,
+  SCENE_EXIT,
 };
 
 /// Switch to another scene. This would call *_leave() for the previous scene if
@@ -22,7 +25,7 @@ void scene_update(void);
 /// Dispatch to the underlying *_render function.
 void scene_render(void);
 
-/// Commit switching scene
-void scene_commit(void);
+/// Commit switching scene, returning true if we should exit.
+bool scene_commit(void);
 
 #endif // SCENE_H

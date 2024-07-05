@@ -43,6 +43,15 @@ struct chunk *world_get_chunk(ivec3_t position);
 /// by calling world_invalidate_block().
 struct block *world_get_block(ivec3_t position);
 
+/// An *extended* version of world_get_block(), also returning intermediate
+/// information.
+bool world_get_block_ex(ivec3_t position, struct chunk **chunk, struct block **block);
+
+/// Set a block at position. Pass id == ID_NONE to destroy the block. This takes
+/// of sending invalidation events to all relevant systems, and calling all
+/// relevant callbacks.
+void world_set_block(ivec3_t position, block_id_t id, struct entity *entity);
+
 /// Invalidate the block at position.
 ///
 /// This need to be called if block at position is changed.

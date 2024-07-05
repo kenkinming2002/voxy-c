@@ -25,12 +25,7 @@ void on_use_block_item(struct entity *entity, struct item *item)
   if(entity_ray_cast(entity, 20.0f, &position, &normal))
     if(item->count > 0)
     {
-      ivec3_t block_position = ivec3_add(position, normal);
-
-      struct block *block = world_get_block(block_position);
-      block->id = item_id_to_block_id(item->id);
-      world_invalidate_block(block_position);
-
+      world_set_block(ivec3_add(position, normal), item_id_to_block_id(item->id), entity);
       if(--item->count == 0)
         item->id = ITEM_NONE;
     }

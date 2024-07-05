@@ -380,13 +380,7 @@ static void player_entity_update_actions(struct entity *entity, float dt)
             {
               ivec3_t offset = ivec3(dx, dy, dz);
               if(ivec3_length_squared(offset) <= radius * radius)
-              {
-                ivec3_t block_position = ivec3_add(position, offset);
-
-                struct block *block = world_get_block(block_position);
-                block->id = 0;
-                world_invalidate_block(block_position);
-              }
+                world_set_block(ivec3_add(position, offset), 0, entity); // FIXME: We are hardcoding the fact that empty block have id 0
             }
       }
 

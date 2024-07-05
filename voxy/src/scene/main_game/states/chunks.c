@@ -50,6 +50,49 @@ struct block *world_get_block(ivec3_t position)
   return chunk_get_block(chunk, block_position);
 }
 
+bool world_get_block_ex(ivec3_t position, struct chunk **chunk, struct block **block)
+{
+  ivec3_t chunk_position;
+  ivec3_t block_position;
+  split_position(position, &chunk_position, &block_position);
+
+  *chunk = world_get_chunk(chunk_position);
+  *block = chunk_get_block(*chunk, block_position);
+  return *block;
+}
+
+/// Set a block at position. Pass id == ID_NONE to destroy the block. This takes
+/// of sending invalidation events to all relevant systems, and calling all
+/// relevant callbacks.
+void world_set_block(ivec3_t position, block_id_t id, struct entity *entity)
+{
+  struct chunk *chunk;
+  struct block *block;
+
+  if(world_get_block_ex(position, &chunk, &block))
+  {
+    // Destroy
+    {
+      const struct block_info *block_info = query_block_info(block->id);
+      if(block_info->on_destroy)
+        block_info->on_destroy(entity, chunk, block);
+    }
+
+    // Set
+    block->id = id;
+
+    // Create
+    {
+      const struct block_info *block_info = query_block_info(block->id);
+      if(block_info->on_create)
+        block_info->on_create(entity, chunk, block);
+    }
+
+    // Invalidate
+    world_invalidate_block(position);
+  }
+}
+
 static void world_invalidate_block_impl(ivec3_t position)
 {
   ivec3_t chunk_position;

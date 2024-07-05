@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct chunk;
 struct block;
 struct item;
 struct entity;
@@ -51,6 +52,9 @@ struct block_info
   uint8_t light_level : 4;
 
   const char *textures[BLOCK_FACE_COUNT];
+
+  void(*on_create)(struct entity *entity, struct chunk *chunk, struct block *block);
+  void(*on_destroy)(struct entity *entity, struct chunk *chunk, struct block *block);
 };
 
 struct item_info

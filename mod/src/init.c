@@ -1,6 +1,8 @@
 #include "ids.h"
 #include "generate.h"
 
+#include "block.h"
+
 #include <voxy/scene/main_game/types/registry.h>
 #include <voxy/scene/main_game/update/generate.h>
 
@@ -12,8 +14,24 @@ void on_use_block_item(struct entity *entity, struct item *item);
 void mod_init()
 {
   // 1: Blocks
-  BLOCK_ID_EMPTY = register_block_info((struct block_info){ .mod = MOD, .name = "empty", .type = BLOCK_TYPE_INVISIBLE, .ether = false, .light_level = 0,  });
-  BLOCK_ID_ETHER = register_block_info((struct block_info){ .mod = MOD, .name = "ether", .type = BLOCK_TYPE_INVISIBLE, .ether = true,  .light_level = 15, });
+  BLOCK_ID_EMPTY = register_block_info((struct block_info){
+      .mod = MOD,
+      .name = "empty",
+      .type = BLOCK_TYPE_INVISIBLE,
+      .ether = false,
+      .light_level = 0,
+      .on_create = NULL,
+      .on_destroy = NULL,
+  });
+  BLOCK_ID_ETHER = register_block_info((struct block_info){
+      .mod = MOD,
+      .name = "ether",
+      .type = BLOCK_TYPE_INVISIBLE,
+      .ether = true,
+      .light_level = 15,
+      .on_create = NULL,
+      .on_destroy = NULL,
+  });
   BLOCK_ID_STONE = register_block_info((struct block_info){
     .mod = MOD,
     .name = "stone",
@@ -27,7 +45,9 @@ void mod_init()
       "assets/textures/stone.png",
       "assets/textures/stone.png",
       "assets/textures/stone.png"
-    }
+    },
+    .on_create = block_on_create,
+    .on_destroy = block_on_destroy,
   });
   BLOCK_ID_GRASS = register_block_info((struct block_info){
     .mod = MOD,
@@ -42,7 +62,9 @@ void mod_init()
       "assets/textures/grass_side.png",
       "assets/textures/grass_bottom.png",
       "assets/textures/grass_top.png",
-    }
+    },
+    .on_create = block_on_create,
+    .on_destroy = block_on_destroy,
   });
   BLOCK_ID_LOG = register_block_info((struct block_info){
     .mod = MOD,
@@ -57,7 +79,9 @@ void mod_init()
       "assets/textures/log_side.png",
       "assets/textures/log_top_bottom.png",
       "assets/textures/log_top_bottom.png",
-    }
+    },
+    .on_create = block_on_create,
+    .on_destroy = block_on_destroy,
   });
   BLOCK_ID_LEAVE = register_block_info((struct block_info){
     .mod = MOD,
@@ -72,7 +96,9 @@ void mod_init()
       "assets/textures/leave.png",
       "assets/textures/leave.png",
       "assets/textures/leave.png",
-    }
+    },
+    .on_create = block_on_create,
+    .on_destroy = block_on_destroy,
   });
   BLOCK_ID_WATER = register_block_info((struct block_info){
     .name = "water",
@@ -86,7 +112,9 @@ void mod_init()
       "assets/textures/water.png",
       "assets/textures/water.png",
       "assets/textures/water.png"
-    }
+    },
+    .on_create = block_on_create,
+    .on_destroy = block_on_destroy,
   });
   BLOCK_ID_LAMP = register_block_info((struct block_info){
     .name = "lamp",
@@ -100,7 +128,9 @@ void mod_init()
       "assets/textures/lamp.png",
       "assets/textures/lamp.png",
       "assets/textures/lamp.png"
-    }
+    },
+    .on_create = block_on_create,
+    .on_destroy = block_on_destroy,
   });
 
   // 2: Items

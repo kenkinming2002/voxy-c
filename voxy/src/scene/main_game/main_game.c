@@ -32,6 +32,8 @@ static bool initialized;
 
 void main_game_enter()
 {
+  window_show_cursor(false);
+
   accumulated_dt = 0.0f;
   if(!initialized)
   {
@@ -43,6 +45,7 @@ void main_game_enter()
 
 void main_game_leave()
 {
+  window_show_cursor(true);
 }
 
 static void main_game_update_fixed(float dt)

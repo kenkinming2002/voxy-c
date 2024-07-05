@@ -31,6 +31,7 @@ VOXY_SRCS += voxy/src/scene/main_game/types/entity.c
 
 VOXY_SRCS += voxy/src/scene/main_game/entity/weird.c
 VOXY_SRCS += voxy/src/scene/main_game/entity/player.c
+VOXY_SRCS += voxy/src/scene/main_game/entity/item.c
 
 VOXY_SRCS += voxy/src/scene/main_game/states/camera.c
 VOXY_SRCS += voxy/src/scene/main_game/states/chunks.c

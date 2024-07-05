@@ -435,12 +435,23 @@ static void player_entity_update_controls(struct entity *entity, float dt)
     world_camera.aspect = (float)window_size.x / (float)window_size.y;
 
     // Movement
+    bool is_moving = false;
     fvec2_t direction = fvec2_zero();
-    if(input_state(KEY_A)) direction.x -= 1.0f;
-    if(input_state(KEY_D)) direction.x += 1.0f;
-    if(input_state(KEY_S)) direction.y -= 1.0f;
-    if(input_state(KEY_W)) direction.y += 1.0f;
-    entity_move(entity, direction, entity->grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR, dt);
+    if(input_state(KEY_A)) { is_moving = true; direction.x -= 1.0f; }
+    if(input_state(KEY_D)) { is_moving = true; direction.x += 1.0f; }
+    if(input_state(KEY_S)) { is_moving = true; direction.y -= 1.0f; }
+    if(input_state(KEY_W)) { is_moving = true; direction.y += 1.0f; }
+    if(is_moving)
+    {
+      const float speed = entity->grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR;
+      entity_move(entity, direction, speed, dt);
+    }
+    else if(entity->grounded)
+    {
+      // Player should actively stop their movement if they are not moving.
+      const float speed = minf(dt * (entity->grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR), fvec3_length(entity->velocity));
+      entity_apply_impulse(entity, fvec3_mul_scalar(fvec3_normalize(entity->velocity), -speed));
+    }
 
     // Jump
     if(input_state(KEY_SPACE))

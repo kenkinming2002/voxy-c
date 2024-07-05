@@ -1,7 +1,7 @@
 #ifndef MOD_IDS_H
 #define MOD_IDS_H
 
-#include <voxy/main_game/types/registry.h>
+#include <voxy/scene/main_game/types/registry.h>
 
 extern block_id_t BLOCK_ID_EMPTY;
 extern block_id_t BLOCK_ID_ETHER;

@@ -55,6 +55,8 @@ enum input
   KEY_Y,
   KEY_Z,
 
+  KEY_ESC,
+
   KEY_SPACE,
   KEY_SHIFT,
   KEY_CTRL,

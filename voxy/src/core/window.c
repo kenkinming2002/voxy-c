@@ -97,6 +97,8 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
     case GLFW_KEY_Y: mask = 1ULL << KEY_Y; break;
     case GLFW_KEY_Z: mask = 1ULL << KEY_Z; break;
 
+    case GLFW_KEY_ESCAPE: mask = 1ULL << KEY_ESC; break;
+
     case GLFW_KEY_LEFT_SHIFT:  mask = 1ULL << KEY_SHIFT; break;
     case GLFW_KEY_RIGHT_SHIFT: mask = 1ULL << KEY_SHIFT; break;
 

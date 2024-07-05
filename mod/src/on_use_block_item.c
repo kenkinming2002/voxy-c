@@ -1,8 +1,8 @@
 #include "ids.h"
 
-#include <voxy/main_game/states/chunks.h>
-#include <voxy/main_game/types/entity.h>
-#include <voxy/main_game/types/item.h>
+#include <voxy/scene/main_game/states/chunks.h>
+#include <voxy/scene/main_game/types/entity.h>
+#include <voxy/scene/main_game/types/item.h>
 
 #include <voxy/math/vector.h>
 

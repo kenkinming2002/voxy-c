@@ -16,32 +16,36 @@ VOXY_SRCS += voxy/src/graphics/camera.c
 
 VOXY_SRCS += voxy/src/voxy.c
 
-VOXY_SRCS += voxy/src/main_game/main_game.c
-VOXY_SRCS += voxy/src/main_game/mod.c
+VOXY_SRCS += voxy/src/scene/scene.c
 
-VOXY_SRCS += voxy/src/main_game/types/chunk_hash_table.c
-VOXY_SRCS += voxy/src/main_game/types/chunk.c
-VOXY_SRCS += voxy/src/main_game/types/chunk_data.c
-VOXY_SRCS += voxy/src/main_game/types/registry.c
-VOXY_SRCS += voxy/src/main_game/types/entity.c
+VOXY_SRCS += voxy/src/scene/main_menu/main_menu.c
 
-VOXY_SRCS += voxy/src/main_game/entity/weird.c
-VOXY_SRCS += voxy/src/main_game/entity/player.c
+VOXY_SRCS += voxy/src/scene/main_game/main_game.c
+VOXY_SRCS += voxy/src/scene/main_game/mod.c
 
-VOXY_SRCS += voxy/src/main_game/states/camera.c
-VOXY_SRCS += voxy/src/main_game/states/chunks.c
-VOXY_SRCS += voxy/src/main_game/states/invalidate.c
-VOXY_SRCS += voxy/src/main_game/states/seed.c
+VOXY_SRCS += voxy/src/scene/main_game/types/chunk_hash_table.c
+VOXY_SRCS += voxy/src/scene/main_game/types/chunk.c
+VOXY_SRCS += voxy/src/scene/main_game/types/chunk_data.c
+VOXY_SRCS += voxy/src/scene/main_game/types/registry.c
+VOXY_SRCS += voxy/src/scene/main_game/types/entity.c
 
-VOXY_SRCS += voxy/src/main_game/update/chunk_generate.c
-VOXY_SRCS += voxy/src/main_game/update/chunk_remesh.c
-VOXY_SRCS += voxy/src/main_game/update/generate.c
-VOXY_SRCS += voxy/src/main_game/update/light.c
-VOXY_SRCS += voxy/src/main_game/update/physics.c
+VOXY_SRCS += voxy/src/scene/main_game/entity/weird.c
+VOXY_SRCS += voxy/src/scene/main_game/entity/player.c
 
-VOXY_SRCS += voxy/src/main_game/render/debug.c
-VOXY_SRCS += voxy/src/main_game/render/render.c
-VOXY_SRCS += voxy/src/main_game/render/assets.c
+VOXY_SRCS += voxy/src/scene/main_game/states/camera.c
+VOXY_SRCS += voxy/src/scene/main_game/states/chunks.c
+VOXY_SRCS += voxy/src/scene/main_game/states/invalidate.c
+VOXY_SRCS += voxy/src/scene/main_game/states/seed.c
+
+VOXY_SRCS += voxy/src/scene/main_game/update/chunk_generate.c
+VOXY_SRCS += voxy/src/scene/main_game/update/chunk_remesh.c
+VOXY_SRCS += voxy/src/scene/main_game/update/generate.c
+VOXY_SRCS += voxy/src/scene/main_game/update/light.c
+VOXY_SRCS += voxy/src/scene/main_game/update/physics.c
+
+VOXY_SRCS += voxy/src/scene/main_game/render/debug.c
+VOXY_SRCS += voxy/src/scene/main_game/render/render.c
+VOXY_SRCS += voxy/src/scene/main_game/render/assets.c
 
 MOD_SRCS += mod/src/init.c
 MOD_SRCS += mod/src/ids.c

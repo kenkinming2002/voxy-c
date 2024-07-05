@@ -45,3 +45,12 @@ static void item_entity_update(struct entity *entity, float dt)
   (void)dt;
 }
 
+bool try_item_entity_get_item(struct entity *entity, struct item *item)
+{
+  if(entity->id != item_entity_id())
+    return false;
+
+  struct item_opaque *opaque = entity->opaque;
+  *item = opaque->item;
+  return true;
+}

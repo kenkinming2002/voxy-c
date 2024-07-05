@@ -4,6 +4,7 @@
 #include <voxy/scene/main_game/types/item.h>
 
 #include <voxy/scene/main_game/entity/weird.h>
+#include <voxy/scene/main_game/entity/item.h>
 
 #include <voxy/scene/main_game/render/assets.h>
 #include <voxy/scene/main_game/config.h>
@@ -478,6 +479,53 @@ static void player_entity_update_load_chunks(struct entity *entity)
         enqueue_chunk_generate(ivec3_add(center, ivec3(dx, dy, dz)));
 }
 
+static void player_entity_update_pickup_item(struct entity *entity)
+{
+  struct player_opaque *opaque = entity->opaque;
+  world_for_each_chunk(chunk)
+    if(chunk->data)
+      for(size_t i=0; i<chunk->data->entity_count; ++i)
+      {
+        struct entity *other_entity = &chunk->data->entities[i];
+
+        if(entity == other_entity)
+          continue;
+
+        if(!entity_intersect(entity, other_entity))
+          continue;
+
+        struct item item;
+        if(try_item_entity_get_item(other_entity, &item))
+        {
+          bool success = false;
+
+          for(unsigned i=0; i<HOTBAR_SIZE; ++i)
+            if(opaque->hotbar.items[i].count == 0)
+            {
+              opaque->hotbar.items[i] = item;
+              success = true;
+              goto done;
+            }
+
+          for(unsigned j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
+            for(unsigned i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
+              if(opaque->inventory.items[j][i].count == 0)
+              {
+                opaque->inventory.items[j][i] = item;
+                success = true;
+                goto done;
+              }
+
+done:
+          if(success)
+          {
+            item_entity_fini(other_entity);
+            *other_entity = chunk->data->entities[--chunk->data->entity_count];
+          }
+        }
+      }
+}
+
 static void player_entity_update(struct entity *entity, float dt)
 {
   player_entity_update_ui(entity);
@@ -485,6 +533,7 @@ static void player_entity_update(struct entity *entity, float dt)
   player_entity_update_controls(entity, dt);
   player_entity_update_weird(entity, dt);
   player_entity_update_load_chunks(entity);
+  player_entity_update_pickup_item(entity);
 
   if(input_press(KEY_P))
     g_render_debug = !g_render_debug;

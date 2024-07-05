@@ -29,4 +29,7 @@ void entity_jump(struct entity *entity, float strength);
 
 bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal);
 
+// Check if two entity collision box intersect.
+bool entity_intersect(struct entity *entity1, struct entity *entity2);
+
 #endif // VOXY_MAIN_GAME_TYPES_ENTITY_H

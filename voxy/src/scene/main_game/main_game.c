@@ -11,7 +11,6 @@
 #include <voxy/scene/main_game/types/chunk_hash_table.h>
 #include <voxy/scene/main_game/types/entity.h>
 #include <voxy/scene/main_game/update/chunk_generate.h>
-#include <voxy/scene/main_game/update/chunk_remesh.h>
 #include <voxy/scene/main_game/update/generate.h>
 #include <voxy/scene/main_game/update/light.h>
 #include <voxy/scene/main_game/update/physics.h>
@@ -95,7 +94,6 @@ static void main_game_update_fixed(float dt)
 
     update_light();
     update_physics(dt);
-    update_chunk_remesh();
   }
 
   // FIXME: Write a real UI
@@ -124,12 +122,5 @@ void main_game_update(void)
     LOG_WARN("Skipping %d fixed update", (int)floorf(accumulated_dt / FIXED_DT));
     accumulated_dt = fmodf(accumulated_dt, FIXED_DT);
   }
-}
-
-void main_game_render()
-{
-  glViewport(0, 0, window_size.x, window_size.y);
-  world_render();
-  ui_render();
 }
 

@@ -1,3 +1,4 @@
+#include <voxy/scene/main_game/render/entities.h>
 #include <voxy/scene/main_game/render/debug.h>
 
 #include <voxy/scene/main_game/states/camera.h>
@@ -6,19 +7,7 @@
 #include <voxy/graphics/camera.h>
 #include <voxy/graphics/gl.h>
 
-static bool g_debug;
-
-void main_game_render_set_debug(bool debug)
-{
-  g_debug = debug;
-}
-
-bool main_game_render_get_debug(void)
-{
-  return g_debug;
-}
-
-void main_game_render_debug(void)
+void main_game_render_entities(void)
 {
   // TODO: Actual entity rendering
   if(main_game_render_get_debug())
@@ -31,21 +20,6 @@ void main_game_render_debug(void)
     glUseProgram(program.id);
     glUniformMatrix4fv(glGetUniformLocation(program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
 
-    // Render chunks outline
-    world_for_each_chunk(chunk)
-      if(chunk->render_info)
-        if(!chunk->render_info->culled)
-        {
-          fvec3_t chunk_position = fvec3_add_scalar(ivec3_as_fvec3(ivec3_mul_scalar(chunk->position, CHUNK_WIDTH)), (CHUNK_WIDTH-1) * 0.5f);
-          fvec3_t chunk_dimension = fvec3(CHUNK_WIDTH, CHUNK_WIDTH, CHUNK_WIDTH);
-
-          glUniform3f(glGetUniformLocation(program.id, "position"), chunk_position.x, chunk_position.y, chunk_position.z);
-          glUniform3f(glGetUniformLocation(program.id, "dimension"), chunk_dimension.x, chunk_dimension.y, chunk_dimension.z);
-          glUniform4f(glGetUniformLocation(program.id, "color"), 1.0f, 1.0f, 0.0f, 1.0f);
-          glDrawArrays(GL_LINES, 0, 24);
-        }
-
-    // Render entities outline
     world_for_each_chunk(chunk)
       if(chunk->data)
         for(size_t i=0; i<chunk->data->entity_count; ++i)

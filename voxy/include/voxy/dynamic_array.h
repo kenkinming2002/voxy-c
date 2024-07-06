@@ -1,6 +1,8 @@
 #ifndef VOXY_DYNAMIC_ARRAY_H
 #define VOXY_DYNAMIC_ARRAY_H
 
+#include <stdlib.h>
+
 #define DYNAMIC_ARRAY_DEFINE(name, type) \
   struct name \
   { \

@@ -1,0 +1,6 @@
+#ifndef VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_H
+#define VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_H
+
+void main_game_render_blocks(void);
+
+#endif // VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_H

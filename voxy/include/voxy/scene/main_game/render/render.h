@@ -1,6 +1,7 @@
 #ifndef VOXY_SCENE_MAIN_GAME_RENDER_RENDER_H
 #define VOXY_SCENE_MAIN_GAME_RENDER_RENDER_H
 
-void world_render(void);
+/// Render everything.
+void render(void);
 
 #endif // VOXY_SCENE_MAIN_GAME_RENDER_RENDER_H

@@ -35,7 +35,6 @@ struct chunk
 
   /// Pointers to next chunk in the singly-linked list of chunks that have been
   /// invalidated.
-  struct chunk *mesh_next;
   struct chunk *light_next;
 
   /// Pointer to chunk data.

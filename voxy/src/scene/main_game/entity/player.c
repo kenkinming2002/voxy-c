@@ -525,6 +525,6 @@ static void player_entity_update(struct entity *entity, float dt)
   player_entity_update_pickup_item(entity);
 
   if(input_press(KEY_P))
-    g_render_debug = !g_render_debug;
+    main_game_render_set_debug(!main_game_render_get_debug());
 }
 

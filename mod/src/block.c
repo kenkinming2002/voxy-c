@@ -55,6 +55,4 @@ void block_on_destroy(struct entity *entity, struct chunk *chunk, struct block *
   item_entity.grounded = false;
   item_entity_init(&item_entity, (struct item) { .id = block_id_to_item_id(block->id), .count = 1 });
   world_add_entity(item_entity);
-
-  LOG_WARN("Item entity spawned at %f %f %f", item_entity.position.x, item_entity.position.y, item_entity.position.z);
 }

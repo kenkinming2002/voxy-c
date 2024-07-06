@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_TYPES_BLOCK_H
-#define VOXY_MAIN_GAME_TYPES_BLOCK_H
+#ifndef VOXY_SCENE_MAIN_GAME_TYPES_BLOCK_H
+#define VOXY_SCENE_MAIN_GAME_TYPES_BLOCK_H
 
 #include <voxy/scene/main_game/types/registry.h>
 #include <stdint.h>
@@ -11,4 +11,4 @@ struct block
   uint8_t    light_level : 4;
 };
 
-#endif // VOXY_MAIN_GAME_TYPES_BLOCK_H
+#endif // VOXY_SCENE_MAIN_GAME_TYPES_BLOCK_H

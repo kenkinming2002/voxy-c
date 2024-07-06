@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_TYPES_CHUNK_H
-#define VOXY_MAIN_GAME_TYPES_CHUNK_H
+#ifndef VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_H
+#define VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_H
 
 #include <voxy/scene/main_game/config.h>
 
@@ -76,4 +76,4 @@ struct block *chunk_get_block(struct chunk *chunk, ivec3_t position);
 /// entity is added which may cause reallocation in the underlying dynamic array.
 struct entity *chunk_add_entity(struct chunk *chunk_data, struct entity entity);
 
-#endif // VOXY_MAIN_GAME_TYPES_CHUNK_H
+#endif // VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_H

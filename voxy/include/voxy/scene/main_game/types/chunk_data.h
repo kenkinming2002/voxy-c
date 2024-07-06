@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_TYPES_CHUNK_DATA_H
-#define VOXY_MAIN_GAME_TYPES_CHUNK_DATA_H
+#ifndef VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_DATA_H
+#define VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_DATA_H
 
 #include <voxy/scene/main_game/config.h>
 #include <voxy/scene/main_game/types/block.h>
@@ -33,4 +33,4 @@ struct block *chunk_data_get_block(struct chunk_data *chunk_data, ivec3_t positi
 /// reallocation in the underlying dynamic array.
 struct entity *chunk_data_add_entity(struct chunk_data *chunk_data, struct entity entity);
 
-#endif // VOXY_MAIN_GAME_TYPES_CHUNK_DATA_H
+#endif // VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_DATA_H

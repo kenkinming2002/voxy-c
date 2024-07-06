@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_ENTITY_ITEM_H
-#define VOXY_MAIN_GAME_ENTITY_ITEM_H
+#ifndef VOXY_SCENE_MAIN_GAME_ENTITY_ITEM_H
+#define VOXY_SCENE_MAIN_GAME_ENTITY_ITEM_H
 
 #include <voxy/scene/main_game/types/entity.h>
 #include <stdbool.h>
@@ -14,5 +14,4 @@ void item_entity_set_item(struct entity *entity, struct item item);
 
 bool item_entity_should_destroy(struct entity *entity);
 
-#endif // VOXY_MAIN_GAME_ENTITY_ITEM_H
-
+#endif // VOXY_SCENE_MAIN_GAME_ENTITY_ITEM_H

@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_STATES_CHUNKS_H
-#define VOXY_MAIN_GAME_STATES_CHUNKS_H
+#ifndef VOXY_SCENE_MAIN_GAME_STATES_CHUNKS_H
+#define VOXY_SCENE_MAIN_GAME_STATES_CHUNKS_H
 
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/types/chunk_hash_table.h>
@@ -70,4 +70,4 @@ void world_invalidate_block(ivec3_t position);
 /// is added which may cause reallocation in the underlying dynamic array.
 struct entity *world_add_entity(struct entity entity);
 
-#endif // VOXY_MAIN_GAME_STATES_CHUNKS_H
+#endif // VOXY_SCENE_MAIN_GAME_STATES_CHUNKS_H

@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_TYPES_ENTITY_H
-#define VOXY_MAIN_GAME_TYPES_ENTITY_H
+#ifndef VOXY_SCENE_MAIN_GAME_TYPES_ENTITY_H
+#define VOXY_SCENE_MAIN_GAME_TYPES_ENTITY_H
 
 #include <voxy/math/vector.h>
 #include <voxy/math/transform.h>
@@ -32,4 +32,4 @@ bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, i
 // Check if two entity collision box intersect.
 bool entity_intersect(struct entity *entity1, struct entity *entity2);
 
-#endif // VOXY_MAIN_GAME_TYPES_ENTITY_H
+#endif // VOXY_SCENE_MAIN_GAME_TYPES_ENTITY_H

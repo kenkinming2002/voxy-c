@@ -1,5 +1,5 @@
-#ifndef SCENE_H
-#define SCENE_H
+#ifndef VOXY_SCENE_SCENE_H
+#define VOXY_SCENE_SCENE_H
 
 #include <stdbool.h>
 
@@ -28,4 +28,4 @@ void scene_render(void);
 /// Commit switching scene, returning true if we should exit.
 bool scene_commit(void);
 
-#endif // SCENE_H
+#endif // VOXY_SCENE_SCENE_H

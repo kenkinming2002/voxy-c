@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_TYPES_REGISTRY_H
-#define VOXY_MAIN_GAME_TYPES_REGISTRY_H
+#ifndef VOXY_SCENE_MAIN_GAME_TYPES_REGISTRY_H
+#define VOXY_SCENE_MAIN_GAME_TYPES_REGISTRY_H
 
 #include <voxy/math/vector.h>
 
@@ -88,4 +88,4 @@ const struct block_info *query_block_info(block_id_t block_id);
 const struct item_info *query_item_info(item_id_t item_id);
 const struct entity_info *query_entity_info(entity_id_t entity_id);
 
-#endif // VOXY_MAIN_GAME_TYPES_REGISTRY_H
+#endif // VOXY_SCENE_MAIN_GAME_TYPES_REGISTRY_H

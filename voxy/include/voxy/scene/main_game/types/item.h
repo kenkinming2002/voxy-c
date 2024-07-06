@@ -1,5 +1,5 @@
-#ifndef VOXY_MAIN_GAME_TYPES_ITEM_H
-#define VOXY_MAIN_GAME_TYPES_ITEM_H
+#ifndef VOXY_SCENE_MAIN_GAME_TYPES_ITEM_H
+#define VOXY_SCENE_MAIN_GAME_TYPES_ITEM_H
 
 #include <voxy/scene/main_game/types/registry.h>
 #include <stdint.h>
@@ -26,4 +26,4 @@ struct item
 /// no-op.
 void item_merge(struct item* target, struct item *source);
 
-#endif // VOXY_MAIN_GAME_TYPES_ITEM_H
+#endif // VOXY_SCENE_MAIN_GAME_TYPES_ITEM_H

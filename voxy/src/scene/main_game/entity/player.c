@@ -487,41 +487,30 @@ static void player_entity_update_pickup_item(struct entity *entity)
       for(size_t i=0; i<chunk->data->entity_count; ++i)
       {
         struct entity *other_entity = &chunk->data->entities[i];
-
         if(entity == other_entity)
           continue;
 
         if(!entity_intersect(entity, other_entity))
           continue;
 
-        struct item item;
-        if(try_item_entity_get_item(other_entity, &item))
+        if(!is_item_entity(other_entity))
+          continue;
+
+        struct item item = item_entity_get_item(other_entity);
+
+        for(unsigned i=0; i<HOTBAR_SIZE; ++i)
+          item_merge(&opaque->hotbar.items[i], &item);
+
+        for(unsigned j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
+          for(unsigned i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
+            item_merge(&opaque->inventory.items[j][i], &item);
+
+        item_entity_set_item(other_entity, item);
+
+        if(item_entity_should_destroy(other_entity))
         {
-          bool success = false;
-
-          for(unsigned i=0; i<HOTBAR_SIZE; ++i)
-            if(opaque->hotbar.items[i].count == 0)
-            {
-              opaque->hotbar.items[i] = item;
-              success = true;
-              goto done;
-            }
-
-          for(unsigned j=0; j<INVENTORY_SIZE_VERTICAL; ++j)
-            for(unsigned i=0; i<INVENTORY_SIZE_HORIZONTAL; ++i)
-              if(opaque->inventory.items[j][i].count == 0)
-              {
-                opaque->inventory.items[j][i] = item;
-                success = true;
-                goto done;
-              }
-
-done:
-          if(success)
-          {
-            item_entity_fini(other_entity);
-            *other_entity = chunk->data->entities[--chunk->data->entity_count];
-          }
+          item_entity_fini(other_entity);
+          *other_entity = chunk->data->entities[--chunk->data->entity_count];
         }
       }
 }

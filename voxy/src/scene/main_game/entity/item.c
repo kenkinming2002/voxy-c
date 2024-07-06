@@ -2,6 +2,7 @@
 #include <voxy/scene/main_game/types/item.h>
 
 #include <stdlib.h>
+#include <assert.h>
 
 struct item_opaque
 {
@@ -53,4 +54,30 @@ bool try_item_entity_get_item(struct entity *entity, struct item *item)
   struct item_opaque *opaque = entity->opaque;
   *item = opaque->item;
   return true;
+}
+
+bool is_item_entity(struct entity *entity)
+{
+  return entity->id == item_entity_id();
+}
+
+struct item item_entity_get_item(struct entity *entity)
+{
+  assert(is_item_entity(entity));
+  struct item_opaque *opaque = entity->opaque;
+  return opaque->item;
+}
+
+void item_entity_set_item(struct entity *entity, struct item item)
+{
+  assert(is_item_entity(entity));
+  struct item_opaque *opaque = entity->opaque;
+  opaque->item = item;
+}
+
+bool item_entity_should_destroy(struct entity *entity)
+{
+  assert(is_item_entity(entity));
+  struct item_opaque *opaque = entity->opaque;
+  return opaque->item.id == ITEM_NONE;
 }

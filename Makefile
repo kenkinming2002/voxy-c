@@ -28,6 +28,7 @@ VOXY_SRCS += voxy/src/scene/main_game/types/chunk.c
 VOXY_SRCS += voxy/src/scene/main_game/types/chunk_data.c
 VOXY_SRCS += voxy/src/scene/main_game/types/registry.c
 VOXY_SRCS += voxy/src/scene/main_game/types/entity.c
+VOXY_SRCS += voxy/src/scene/main_game/types/item.c
 
 VOXY_SRCS += voxy/src/scene/main_game/entity/weird.c
 VOXY_SRCS += voxy/src/scene/main_game/entity/player.c

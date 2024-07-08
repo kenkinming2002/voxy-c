@@ -91,7 +91,7 @@ void main()
 
   uint light_level     = get_light_level();
   uint occlusion_count = get_occlusion_count();
-  f_light = (float(light_level) / 15.0 * 0.9 + 0.1) * (1.0 - float(occlusion_count) / float(2 * 2 * 2));
+  f_light = (float(light_level) / 15.0 * 0.95 + 0.05) * (1.0 - float(occlusion_count) / float(2 * 2 * 2));
 
   vec4  view_position = V * vec4(position, 1.0);
   float view_distance = length(view_position.xyz);

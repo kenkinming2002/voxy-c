@@ -82,6 +82,7 @@ static void main_game_update_fixed(float dt)
   // Update World
   {
     update_chunk_generate();
+
     world_for_each_chunk(chunk)
       if(chunk->data)
         for(size_t i=0; i<chunk->data->entity_count; ++i)
@@ -91,6 +92,9 @@ static void main_game_update_fixed(float dt)
           if(entity_info->on_update)
             entity_info->on_update(&chunk->data->entities[i], dt);
         }
+
+    world_for_each_chunk(chunk)
+      chunk_commit_add_entities(chunk);
 
     update_light();
     update_physics(dt);

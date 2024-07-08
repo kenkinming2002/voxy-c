@@ -15,6 +15,10 @@ struct chunk_data
   struct entity *entities;
   size_t         entity_count;
   size_t         entity_capacity;
+
+  struct entity *new_entities;
+  size_t         new_entity_count;
+  size_t         new_entity_capacity;
 };
 
 /// Get a pointer to a block at position, which is specified in chunk local
@@ -26,11 +30,20 @@ struct block *chunk_data_get_block(struct chunk_data *chunk_data, ivec3_t positi
 
 /// Add an entity.
 ///
+/// The entity is only added after call to chunk_data_commit_add_entities().
+/// This is because we might be iterating over the entity dynamic array, and we
+/// have to be careful not to invalidate any pointer.
+///
 /// This always succeeds unless you run out of memory in which case you have
 /// bigger problem.
 ///
 /// The returned pointer is valid until another entity is added which may cause
 /// reallocation in the underlying dynamic array.
-struct entity *chunk_data_add_entity(struct chunk_data *chunk_data, struct entity entity);
+void chunk_data_add_entity(struct chunk_data *chunk_data, struct entity entity);
+
+/// Commit adding of entities.
+///
+/// See chunk_data_add_entity() for more details.
+void chunk_data_commit_add_entities(struct chunk_data *chunk_data);
 
 #endif // VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_DATA_H

@@ -132,7 +132,7 @@ void world_invalidate_block(ivec3_t position)
   world_invalidate_block_impl(ivec3_add(position, ivec3(0, 0,  1)));
 }
 
-struct entity *world_add_entity(struct entity entity)
+bool world_add_entity(struct entity entity)
 {
   ivec3_t chunk_position;
   ivec3_t block_position;

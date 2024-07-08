@@ -117,7 +117,19 @@ struct block *chunk_get_block(struct chunk *chunk, ivec3_t position)
   return chunk->data ? chunk_data_get_block(chunk->data, position) : NULL;
 }
 
-struct entity *chunk_add_entity(struct chunk *chunk, struct entity entity)
+bool chunk_add_entity(struct chunk *chunk, struct entity entity)
 {
-  return chunk->data ? chunk_data_add_entity(chunk->data, entity) : NULL;
+  if(chunk->data)
+  {
+    chunk_data_add_entity(chunk->data, entity);
+    return true;
+  }
+  else
+    return false;
+}
+
+void chunk_commit_add_entities(struct chunk *chunk)
+{
+  if(chunk->data)
+    chunk_data_commit_add_entities(chunk->data);
 }

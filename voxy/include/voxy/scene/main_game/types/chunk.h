@@ -93,10 +93,18 @@ struct block *chunk_get_block(struct chunk *chunk, ivec3_t position);
 ///
 /// Unlike chunk_data_add_entity(), this function may fail if data field of
 /// target chunk is NULL, which signifies that the chunk is either not generated
-/// yet or not loaded. NULL is returned in such a case.
+/// yet or not loaded. False is returned in such a case.
 ///
 /// Like chunk_data_add_entity(), the returned pointer is valid until another
-/// entity is added which may cause reallocation in the underlying dynamic array.
-struct entity *chunk_add_entity(struct chunk *chunk_data, struct entity entity);
+/// entity is added which may cause reallocation in the underlying dynamic
+/// array.
+bool chunk_add_entity(struct chunk *chunk_data, struct entity entity);
+
+/// Commit adding of entities by calling chunk_data_commit_add_entities().
+///
+/// This function is a no-op if data field of target chunk is NULL, which
+/// signifies that the chunk is either not generated yet or not loaded. NULL is
+/// returned in such a case.
+void chunk_commit_add_entities(struct chunk *chunk);
 
 #endif // VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_H

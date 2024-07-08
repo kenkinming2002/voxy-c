@@ -136,6 +136,10 @@ static bool update_generate_chunk_at(ivec3_t position)
   chunk->data->entity_count    = 0;
   chunk->data->entity_capacity = 0;
 
+  chunk->data->new_entities        = NULL;
+  chunk->data->new_entity_count    = 0;
+  chunk->data->new_entity_capacity = 0;
+
   chunk->mesh_invalidated = true;
   if(chunk->left) chunk->left->mesh_invalidated = true;
   if(chunk->right) chunk->right->mesh_invalidated = true;

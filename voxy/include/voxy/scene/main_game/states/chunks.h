@@ -64,10 +64,10 @@ void world_invalidate_block(ivec3_t position);
 ///
 /// Like chunk_add_entity(), this function may fail if data field of target
 /// chunk is NULL, which signifies that the chunk is either not generated yet or
-/// not loaded. NULL is returned in such a case.
+/// not loaded. False is returned in such a case.
 ///
 /// Like chunk_add_entity(), the returned pointer is valid until another entity
 /// is added which may cause reallocation in the underlying dynamic array.
-struct entity *world_add_entity(struct entity entity);
+bool world_add_entity(struct entity entity);
 
 #endif // VOXY_SCENE_MAIN_GAME_STATES_CHUNKS_H

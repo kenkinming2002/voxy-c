@@ -1,5 +1,8 @@
 #include <voxy/scene/main_game/states/chunks.h>
-#include <voxy/scene/main_game/states/invalidate.h>
+
+#include <voxy/scene/main_game/update/light.h>
+
+#include <voxy/core/log.h>
 
 #include <stdlib.h>
 
@@ -71,6 +74,9 @@ void world_set_block(ivec3_t position, block_id_t id, struct entity *entity)
 
   if(world_get_block_ex(position, &chunk, &block))
   {
+    // Opaque => Transparent : destruction
+    // Transparent => Opaque : destruction
+
     // Destroy
     {
       const struct block_info *block_info = query_block_info(block->id);
@@ -78,12 +84,23 @@ void world_set_block(ivec3_t position, block_id_t id, struct entity *entity)
         block_info->on_destroy(entity, chunk, block);
     }
 
-    // Set
-    block->id = id;
-
     // Create
     {
-      const struct block_info *block_info = query_block_info(block->id);
+      const struct block_info *block_info = query_block_info(id);
+
+      const unsigned old_light_level = block->light_level;
+      const unsigned old_ether = block->ether;
+
+      block->id = id;
+      block->light_level = block_info->light_level;
+      block->ether = block_info->ether;
+
+      if(old_light_level < block->light_level || old_ether < block->ether)
+        enqueue_light_create_update(position);
+
+      if(old_light_level >= block->light_level || old_ether >= block->ether)
+        enqueue_light_destroy_update(position, old_light_level, old_ether);
+
       if(block_info->on_create)
         block_info->on_create(entity, chunk, block);
     }
@@ -100,8 +117,8 @@ static void world_invalidate_block_impl(ivec3_t position)
   split_position(position, &chunk_position, &block_position);
 
   struct chunk *chunk = world_get_chunk(chunk_position);
-  world_invalidate_chunk_light(chunk);
-  world_invalidate_chunk_mesh(chunk);
+  if(chunk)
+    chunk->mesh_invalidated = true;
 }
 
 void world_invalidate_block(ivec3_t position)

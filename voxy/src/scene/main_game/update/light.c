@@ -1,12 +1,14 @@
 #include <voxy/scene/main_game/update/light.h>
 
 #include <voxy/scene/main_game/types/chunk.h>
-
 #include <voxy/scene/main_game/states/chunks.h>
-#include <voxy/scene/main_game/states/invalidate.h>
+#include <voxy/scene/main_game/states/cursor.h>
 
 #include <voxy/core/log.h>
 
+#include <sys/queue.h>
+
+#include <stdlib.h>
 #include <time.h>
 
 /// Rule for light update
@@ -27,259 +29,199 @@
 ///
 /// The rules are simple. The implementation, not so much.
 
-struct light_info
+// We need to store light creation/destruction in a fifo data structure i.e.
+// queue but obviously we do not have a implementation in C. We are using the
+// singly linked list from BSD. This is both non-portable and inefficien
+// considering the size of our structure is so small.
+struct light_creation
 {
-  uint8_t opaque      : 1;
-  uint8_t ether       : 1;
+  STAILQ_ENTRY(light_creation) link;
+  struct cursor cursor;
+};
+STAILQ_HEAD(light_creations, light_creation);
+
+// We need to store light creation/destruction in a fifo data structure i.e.
+// queue but obviously we do not have a implementation in C. We are using the
+// singly linked list from BSD. This is both non-portable and inefficien
+// considering the size of our structure is so small.
+struct light_destruction
+{
+  STAILQ_ENTRY(light_destruction) link;
+  struct cursor cursor;
+  uint8_t ether : 1;
   uint8_t light_level : 4;
 };
+STAILQ_HEAD(light_destructions, light_destruction);
 
-struct light_infos
+struct light_creations light_creations = STAILQ_HEAD_INITIALIZER(light_creations);
+struct light_destructions light_destructions = STAILQ_HEAD_INITIALIZER(light_destructions);
+
+void enqueue_light_create_update(ivec3_t position)
 {
-  struct light_info items[CHUNK_WIDTH+2][CHUNK_WIDTH+2][CHUNK_WIDTH+2];
-};
-
-//////////////////////////////
-/// 1: Loading Light Level ///
-//////////////////////////////
-
-static inline struct light_info light_info_load_default()
-{
-  return (struct light_info){
-    .opaque      = true,
-    .ether       = 0,
-    .light_level = 0,
-  };
-}
-
-static inline struct light_info light_info_load_from_block(const struct block *block)
-{
-  const struct block_info *block_info = query_block_info(block->id);
-  return (struct light_info){
-    .opaque      = block_info->type == BLOCK_TYPE_OPAQUE,
-    .ether       = block_info->ether,
-    .light_level = block_info->light_level,
-  };
-}
-
-static inline struct light_info light_info_load_from_block_neighbour(const struct block *block)
-{
-  const struct block_info *block_info = query_block_info(block->id);
-  return (struct light_info){
-    .opaque      = block_info->type == BLOCK_TYPE_OPAQUE,
-    .ether       = block->ether,
-    .light_level = block->light_level,
-  };
-}
-
-static inline struct light_info light_info_load(struct chunk *chunk, ivec3_t position)
-{
-  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->left   && chunk->left  ->data  ? light_info_load_from_block_neighbour(&chunk->left  ->data->blocks[position.z][position.y][CHUNK_WIDTH-1]) : light_info_load_default();
-  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->right  && chunk->right ->data  ? light_info_load_from_block_neighbour(&chunk->right ->data->blocks[position.z][position.y][0]            ) : light_info_load_default();
-  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->back   && chunk->back  ->data  ? light_info_load_from_block_neighbour(&chunk->back  ->data->blocks[position.z][CHUNK_WIDTH-1][position.x]) : light_info_load_default();
-  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) return chunk->front  && chunk->front ->data  ? light_info_load_from_block_neighbour(&chunk->front ->data->blocks[position.z][0]            [position.x]) : light_info_load_default();
-  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->bottom && chunk->bottom->data  ? light_info_load_from_block_neighbour(&chunk->bottom->data->blocks[CHUNK_WIDTH-1][position.y][position.x]) : light_info_load_default();
-  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) return chunk->top    && chunk->top   ->data  ? light_info_load_from_block_neighbour(&chunk->top   ->data->blocks[0]            [position.y][position.x]) : light_info_load_default();
-
-  if((position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH))
-    return light_info_load_from_block(&chunk->data->blocks[position.z][position.y][position.x]);
-
-  return light_info_load_default();
-}
-
-static inline void light_infos_load(struct light_infos *light_infos, struct chunk *chunk)
-{
-  for(int z=0; z<CHUNK_WIDTH+2; ++z)
-    for(int y=0; y<CHUNK_WIDTH+2; ++y)
-      for(int x=0; x<CHUNK_WIDTH+2; ++x)
-        light_infos->items[z][y][x] = light_info_load(chunk, ivec3(x-1, y-1, z-1));
-}
-
-/////////////////////////////
-/// 2: Saving Light Level ///
-/////////////////////////////
-
-static inline void light_info_save_to_block(struct block *block, struct light_info light_info)
-{
-  block->light_level = light_info.light_level;
-  block->ether       = light_info.ether;
-}
-
-static inline bool light_info_save_to_block_neighbour(struct block *block, struct light_info light_info)
-{
-  return block->light_level != light_info.light_level || block->ether != light_info.ether;
-}
-
-static inline void light_info_save(struct chunk *chunk, ivec3_t position, struct light_info light_info)
-{
-  if(position.x == -1          && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->left   && chunk->left  ->data && light_info_save_to_block_neighbour(&chunk->left  ->data->blocks[position.z][position.y][CHUNK_WIDTH-1], light_info)) { world_invalidate_chunk_light(chunk->left);   };
-  if(position.x == CHUNK_WIDTH && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->right  && chunk->right ->data && light_info_save_to_block_neighbour(&chunk->right ->data->blocks[position.z][position.y][0]            , light_info)) { world_invalidate_chunk_light(chunk->right);  };
-  if(position.y == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->back   && chunk->back  ->data && light_info_save_to_block_neighbour(&chunk->back  ->data->blocks[position.z][CHUNK_WIDTH-1][position.x], light_info)) { world_invalidate_chunk_light(chunk->back);   };
-  if(position.y == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH)) if(chunk->front  && chunk->front ->data && light_info_save_to_block_neighbour(&chunk->front ->data->blocks[position.z][0]            [position.x], light_info)) { world_invalidate_chunk_light(chunk->front);  };
-  if(position.z == -1          && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->bottom && chunk->bottom->data && light_info_save_to_block_neighbour(&chunk->bottom->data->blocks[CHUNK_WIDTH-1][position.y][position.x], light_info)) { world_invalidate_chunk_light(chunk->bottom); };
-  if(position.z == CHUNK_WIDTH && (position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH)) if(chunk->top    && chunk->top   ->data && light_info_save_to_block_neighbour(&chunk->top   ->data->blocks[0]            [position.y][position.x], light_info)) { world_invalidate_chunk_light(chunk->top);    };
-  if((position.x >= 0 && position.x < CHUNK_WIDTH) && (position.y >= 0 && position.y < CHUNK_WIDTH) && (position.z >= 0 && position.z < CHUNK_WIDTH))
-    light_info_save_to_block(&chunk->data->blocks[position.z][position.y][position.x], light_info);
-}
-
-static inline void light_infos_save(struct light_infos *light_infos, struct chunk *chunk)
-{
-  for(int z=0; z<CHUNK_WIDTH+2; ++z)
-    for(int y=0; y<CHUNK_WIDTH+2; ++y)
-      for(int x=0; x<CHUNK_WIDTH+2; ++x)
-        light_info_save(chunk, ivec3(x-1, y-1, z-1), light_infos->items[z][y][x]);
-}
-
-/////////////////////////
-/// 3: Ether Handling ///
-/////////////////////////
-
-static inline void light_infos_propagate_ether(struct light_infos *light_infos)
-{
-  for(int z=CHUNK_WIDTH+1; z>0; --z)
-    for(int y=1; y<CHUNK_WIDTH+1; ++y)
-      for(int x=1; x<CHUNK_WIDTH+1; ++x)
-      {
-        struct light_info *light_info        = &light_infos->items[z]  [y][x];
-        struct light_info *light_info_bottom = &light_infos->items[z-1][y][x];
-        if(light_info->ether && !light_info_bottom->opaque)
-          light_info_bottom->ether = true;
-      }
-}
-
-static inline void light_infos_apply_ether(struct light_infos *light_infos)
-{
-  for(int z=0; z<CHUNK_WIDTH+2; ++z)
-    for(int y=0; y<CHUNK_WIDTH+2; ++y)
-      for(int x=0; x<CHUNK_WIDTH+2; ++x)
-        if(light_infos->items[z][y][x].ether)
-          light_infos->items[z][y][x].light_level = 15;
-}
-
-//////////////////////
-/// 4: Propagation ///
-//////////////////////
-
-struct light_update
-{
-  uint16_t x : 5;
-  uint16_t y : 5;
-  uint16_t z : 5;
-};
-
-struct light_update_layer
-{
-  struct light_update items[CHUNK_WIDTH*CHUNK_WIDTH*CHUNK_WIDTH+6*CHUNK_WIDTH*CHUNK_WIDTH];
-  size_t              count;
-};
-
-struct light_update_stack
-{
-  struct light_update_layer layers[15];
-};
-
-static inline void light_update_stack_enqueue(struct light_update_stack *light_update_stack, int x, int y, int z, unsigned light_level)
-{
-  struct light_update_layer *light_update_layer = &light_update_stack->layers[light_level-1];
-  struct light_update       *light_update       = &light_update_layer->items[light_update_layer->count++];
-
-  light_update->x = x;
-  light_update->y = y;
-  light_update->z = z;
-}
-
-static inline void light_update_stack_propagate_set(struct light_update_stack *light_update_stack, int x, int y, int z, unsigned light_level, struct light_infos *light_infos)
-{
-  if(x < 0 || x >= CHUNK_WIDTH+2) return;
-  if(y < 0 || y >= CHUNK_WIDTH+2) return;
-  if(z < 0 || z >= CHUNK_WIDTH+2) return;
-
-  struct light_info *light_info = &light_infos->items[z][y][x];
-  if(!light_info->opaque && light_info->light_level < light_level)
+  struct light_creation light_creation;
+  if(!cursor_at(position, &light_creation.cursor))
   {
-    light_info->light_level = light_level;
-    light_update_stack_enqueue(light_update_stack, x, y, z, light_level);
+    LOG_WARN("Failed to enqueue light creation update at %d %d %d: block not found", position.x, position.y, position.z);
+    return;
   }
+
+  struct light_creation *p_light_creation = malloc(sizeof *p_light_creation);
+  *p_light_creation = light_creation;
+  STAILQ_INSERT_TAIL(&light_creations, p_light_creation, link);
 }
 
-static inline void light_infos_propagate_light(struct light_infos *light_infos)
+void enqueue_light_destroy_update(ivec3_t position, unsigned light_level, unsigned ether)
 {
-  struct light_update_stack light_update_stack;
-  for(unsigned i=0; i<15; ++i)
-    light_update_stack.layers[i].count = 0;
-
-  for(int z=0; z<CHUNK_WIDTH+2; ++z)
-    for(int y=0; y<CHUNK_WIDTH+2; ++y)
-      for(int x=0; x<CHUNK_WIDTH+2; ++x)
-        if(light_infos->items[z][y][x].light_level != 0)
-          light_update_stack_enqueue(&light_update_stack, x, y, z, light_infos->items[z][y][x].light_level);
-
-  for(unsigned light_level = 15; light_level > 0; --light_level)
+  struct light_destruction light_destruction;
+  light_destruction.light_level = light_level;
+  light_destruction.ether = ether;
+  if(!cursor_at(position, &light_destruction.cursor))
   {
-    struct light_update_layer *light_update_layer = &light_update_stack.layers[light_level-1];
-    for(size_t i=0; i<light_update_layer->count; ++i)
-    {
-      struct light_update *light_update = &light_update_layer->items[i];
-      struct light_info   *light_info   = &light_infos->items[light_update->z][light_update->y][light_update->x];
-      if(light_info->light_level == light_level)
-      {
-        light_update_stack_propagate_set(&light_update_stack, light_update->x-1, light_update->y, light_update->z, light_level-1, light_infos);
-        light_update_stack_propagate_set(&light_update_stack, light_update->x+1, light_update->y, light_update->z, light_level-1, light_infos);
-        light_update_stack_propagate_set(&light_update_stack, light_update->x, light_update->y-1, light_update->z, light_level-1, light_infos);
-        light_update_stack_propagate_set(&light_update_stack, light_update->x, light_update->y+1, light_update->z, light_level-1, light_infos);
-        light_update_stack_propagate_set(&light_update_stack, light_update->x, light_update->y, light_update->z-1, light_level-1, light_infos);
-        light_update_stack_propagate_set(&light_update_stack, light_update->x, light_update->y, light_update->z+1, light_level-1, light_infos);
-      }
-    }
+    LOG_WARN("Failed to enqueue light destruction update at %d %d %d: block not found", position.x, position.y, position.z);
+    return;
   }
+
+  struct light_destruction *p_light_destruction = malloc(sizeof *p_light_destruction);
+  *p_light_destruction = light_destruction;
+  STAILQ_INSERT_TAIL(&light_destructions, p_light_destruction, link);
 }
 
-//////////////
-/// 5: ??? ///
-//////////////
-static struct chunk *chunk_invalidated_light_pop(void)
+void enqueue_light_create_update_raw(struct chunk *chunk, unsigned x, unsigned y, unsigned z)
 {
-  struct chunk *chunk = chunks_invalidated_light_head;
-  if(chunk)
-  {
-    chunk->light_invalidated = false;
-    if(!(chunks_invalidated_light_head = chunks_invalidated_light_head->light_next))
-      chunks_invalidated_light_tail = NULL;
-  }
-  return chunk;
+  struct light_creation *p_light_creation = malloc(sizeof *p_light_creation);
+  p_light_creation->cursor.chunk = chunk;
+  p_light_creation->cursor.x = x;
+  p_light_creation->cursor.y = y;
+  p_light_creation->cursor.z = z;
+  STAILQ_INSERT_TAIL(&light_creations, p_light_creation, link);
 }
 
-void update_light(void)
+void enqueue_light_destroy_update_raw(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level, unsigned ether)
+{
+  struct light_destruction *p_light_destruction = malloc(sizeof *p_light_destruction);
+  p_light_destruction->cursor.chunk = chunk;
+  p_light_destruction->cursor.x = x;
+  p_light_destruction->cursor.y = y;
+  p_light_destruction->cursor.z = z;
+  p_light_destruction->light_level = light_level;
+  p_light_destruction->ether = ether;
+  STAILQ_INSERT_TAIL(&light_destructions, p_light_destruction, link);
+}
+
+static void update_light_creation(void)
 {
   size_t count = 0;
   clock_t begin = clock();
 
-  struct chunk *chunk;
-  while((chunk = chunk_invalidated_light_pop()))
-    if(chunk->data)
+  struct light_creation *light_creation;
+  while((light_creation = STAILQ_FIRST(&light_creations)))
+  {
+    STAILQ_REMOVE_HEAD(&light_creations, link);
+    count += 1;
+
+    // Esentially, we want to do is the following:
+    //   1. Loop through each adjacent block
+    //   2. Check we can propagate light to each of them i.e. it is both
+    //     1. Not opaque
+    //     2. Have a lower light level strictly lower than what we could propagate
+    //   3. Propagate if that is the case
+
+    struct cursor cursor = light_creation->cursor;
+    struct block *block = cursor_get(cursor);
+
+    for(enum direction direction = 0; direction < DIRECTION_COUNT; ++direction)
     {
-      // 1: Perform the light update
-      struct light_infos light_infos;
-      light_infos_load(&light_infos, chunk);
-      light_infos_propagate_ether(&light_infos);
-      light_infos_apply_ether(&light_infos);
-      light_infos_propagate_light(&light_infos);
-      light_infos_save(&light_infos, chunk);
+      struct cursor neighbour_cursor = light_creation->cursor;
+      if(cursor_move(&neighbour_cursor, direction))
+      {
+        struct block *neighbour_block = cursor_get(neighbour_cursor);
+        const struct block_info *neighbour_block_info = query_block_info(neighbour_block->id);
 
-      // 2: Propagate invalidation
-      world_invalidate_chunk_mesh(chunk);
-      world_invalidate_chunk_mesh(chunk->left);
-      world_invalidate_chunk_mesh(chunk->right);
-      world_invalidate_chunk_mesh(chunk->back);
-      world_invalidate_chunk_mesh(chunk->front);
-      world_invalidate_chunk_mesh(chunk->bottom);
-      world_invalidate_chunk_mesh(chunk->top);
+        if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
+          if((direction == DIRECTION_BOTTOM && (int)neighbour_block->ether < (int)block->ether) || (int)neighbour_block->light_level < (int)block->light_level - 1)
+          {
+            struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
+            new_light_creation->cursor = neighbour_cursor;
+            STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
 
-      // 3: Record
-      count += 1;
+            chunk_set_block_ether(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, direction == DIRECTION_BOTTOM ? block->ether : 0);
+            chunk_set_block_light_level(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, neighbour_block->ether ? 15 : (int)block->light_level - 1);
+          }
+      }
     }
+
+    free(light_creation);
+  }
 
   clock_t end = clock();
   if(count != 0)
-    LOG_INFO("Light System: Processed %zu chunks in %fs - Average %fs", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
+    LOG_INFO("Light System: Processed %zu creation updates in %fs - Average %fs", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
 }
+
+static void update_light_destruction(void)
+{
+  size_t count = 0;
+  clock_t begin = clock();
+
+  struct light_destruction *light_destruction;
+  while((light_destruction = STAILQ_FIRST(&light_destructions)))
+  {
+    STAILQ_REMOVE_HEAD(&light_destructions, link);
+    count += 1;
+
+    // Esentially, we want to do is the following:
+    //   1. Loop through each adjacent block
+    //   2. Check we may have propagated light to each of them i.e. it is both
+    //     1. Not opaque
+    //     2. Have a lower light level lower than or equal to what we could propagate
+    //     3: Non-zero ***
+    //   3. Propagate if that is the case
+    //   4. Otherwise, we would need to redo light propagation from them ***
+
+    for(enum direction direction = 0; direction < DIRECTION_COUNT; ++direction)
+    {
+      struct cursor neighbour_cursor = light_destruction->cursor;
+      if(cursor_move(&neighbour_cursor, direction))
+      {
+        struct block *neighbour_block = cursor_get(neighbour_cursor);
+        const struct block_info *neighbour_block_info = query_block_info(neighbour_block->id);
+
+        if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
+        {
+          if((direction == DIRECTION_BOTTOM && (int)neighbour_block->ether != 0 && (int)neighbour_block->ether <= (int)light_destruction->ether) || ((int)neighbour_block->light_level != 0 && (int)neighbour_block->light_level <= (int)light_destruction->light_level - 1))
+          {
+            struct light_destruction *new_light_destruction = malloc(sizeof *new_light_destruction);
+            new_light_destruction->cursor = neighbour_cursor;
+            new_light_destruction->light_level = neighbour_block->light_level;
+            new_light_destruction->ether = neighbour_block->ether;
+            STAILQ_INSERT_TAIL(&light_destructions, new_light_destruction, link);
+
+            chunk_set_block_ether(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, 0);
+            chunk_set_block_light_level(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, 0);
+          }
+          else if(neighbour_block->ether != 0 || neighbour_block->light_level != 0)
+          {
+            struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
+            new_light_creation->cursor = neighbour_cursor;
+            STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
+          }
+        }
+      }
+    }
+    free(light_destruction);
+  }
+
+  clock_t end = clock();
+  if(count != 0)
+    LOG_INFO("Light System: Processed %zu destruction updates in %fs - Average %fs", count, (float)(end - begin) / (float)CLOCKS_PER_SEC, (float)(end - begin) / (float)CLOCKS_PER_SEC / (float)count);
+}
+
+void update_light(void)
+{
+  // Process light creation and destruction updates. We have to process
+  // destruction updates first because we may create light creation updates
+  // while creating light destruction updates.
+  update_light_destruction();
+  update_light_creation();
+}
+

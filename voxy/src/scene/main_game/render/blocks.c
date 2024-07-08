@@ -204,7 +204,7 @@ static bool remesh_chunk(struct chunk *chunk)
             const uint32_t texture_index = assets_get_block_texture_array_index(block.id, face);
             vertex.normal_index_and_texture_index = normal_index | texture_index << 3;
 
-            uint16_t light_level = neighbour_block.light_level;
+            uint16_t light_level = neighbour_block.ether ? 15 : neighbour_block.light_level;
             vertex.light_level_and_occlusion_counts = light_level;
 
             uint16_t occlusion_counts[2][2];

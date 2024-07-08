@@ -31,11 +31,6 @@ struct chunk
 
   /// If we are in the singly-linked list of invalidated chunks.
   bool mesh_invalidated : 1;
-  bool light_invalidated : 1;
-
-  /// Pointers to next chunk in the singly-linked list of chunks that have been
-  /// invalidated.
-  struct chunk *light_next;
 
   /// Pointer to chunk data.
   ///
@@ -48,6 +43,35 @@ struct chunk
   /// because we are not inside the view distance.
   struct chunk_render_info *render_info;
 };
+
+/// Get id of block at position x, y, z where 0 <= x, y, z < CHUNK_WIDTH.
+block_id_t chunk_get_block_id(struct chunk *chunk, int x, int y, int z);
+
+/// Get light level of block at position x, y, z where 0 <= x, y, z <
+/// CHUNK_WIDTH.
+unsigned chunk_get_light_level(struct chunk *chunk, int x, int y, int z);
+
+/// Get ether of block at position x, y, z where 0 <= x, y, z < CHUNK_WIDTH.
+unsigned chunk_get_block_ether(struct chunk *chunk, int x, int y, int z);
+
+/// Set id of block at position x, y, z where 0 <= x, y, z < CHUNK_WIDTH. Also
+/// set mesh_invalidated for current chunk and neighbouring chunks if necessary.
+void chunk_set_block_id(struct chunk *chunk, int x, int y, int z, block_id_t block_id);
+
+/// Set light level of block at position x, y, z where 0 <= x, y, z <
+/// CHUNK_WIDTH. Also set mesh_invalidated for current chunk and neighbouring
+/// chunks if necessary.
+void chunk_set_block_light_level(struct chunk *chunk, int x, int y, int z, unsigned light_level);
+
+/// Set ether of block at position x, y, z where 0 <= x, y, z <
+/// CHUNK_WIDTH. Also set mesh_invalidated for current chunk and neighbouring
+/// chunks if necessary.
+void chunk_set_block_ether(struct chunk *chunk, int x, int y, int z, unsigned ether);
+
+/// Set id of block at position x, y, z and update ether and light level of
+/// block according to block information in the registry. Also set
+/// mesh_invalidated for current chunk and neighbouring chunks if necessary.
+void chunk_set_block(struct chunk *chunk, int x, int y, int z, block_id_t id);
 
 /// Get a pointer to a block at position, which is specified in chunk local
 /// coordinate.

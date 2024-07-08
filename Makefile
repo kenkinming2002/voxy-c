@@ -5,6 +5,8 @@ CFLAGS += -D_GNU_SOURCE
 VOXY_SRCS += voxy/bundled/src/glad.c
 VOXY_SRCS += voxy/bundled/src/stb_image.c
 
+VOXY_SRCS += voxy/src/math/direction.c
+
 VOXY_SRCS += voxy/src/core/window.c
 VOXY_SRCS += voxy/src/core/thread_pool.c
 VOXY_SRCS += voxy/src/core/delta_time.c
@@ -36,8 +38,8 @@ VOXY_SRCS += voxy/src/scene/main_game/entity/item.c
 
 VOXY_SRCS += voxy/src/scene/main_game/states/camera.c
 VOXY_SRCS += voxy/src/scene/main_game/states/chunks.c
-VOXY_SRCS += voxy/src/scene/main_game/states/invalidate.c
 VOXY_SRCS += voxy/src/scene/main_game/states/seed.c
+VOXY_SRCS += voxy/src/scene/main_game/states/cursor.c
 
 VOXY_SRCS += voxy/src/scene/main_game/update/chunk_generate.c
 VOXY_SRCS += voxy/src/scene/main_game/update/generate.c

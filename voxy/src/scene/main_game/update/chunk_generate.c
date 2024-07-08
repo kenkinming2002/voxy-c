@@ -3,10 +3,10 @@
 #include <voxy/scene/main_game/config.h>
 
 #include <voxy/scene/main_game/states/chunks.h>
-#include <voxy/scene/main_game/states/invalidate.h>
 #include <voxy/scene/main_game/states/seed.h>
 
 #include <voxy/scene/main_game/update/generate.h>
+#include <voxy/scene/main_game/update/light.h>
 
 #include <voxy/core/thread_pool.h>
 #include <voxy/core/log.h>
@@ -121,24 +121,28 @@ static bool update_generate_chunk_at(ivec3_t position)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
       {
-        chunk->data->blocks[z][y][x].id          = wrapper->blocks[z][y][x];
-        chunk->data->blocks[z][y][x].ether       = false;
-        chunk->data->blocks[z][y][x].light_level = 0;
+        block_id_t block_id = wrapper->blocks[z][y][x];
+        const struct block_info *block_info = query_block_info(block_id);
+
+        chunk->data->blocks[z][y][x].id = block_id;
+        chunk->data->blocks[z][y][x].ether = block_info->ether;
+        chunk->data->blocks[z][y][x].light_level = block_info->light_level;
+
+        if(block_info->ether != 0 || block_info->light_level != 0)
+          enqueue_light_create_update_raw(chunk, x, y, z);
       }
 
   chunk->data->entities        = NULL;
   chunk->data->entity_count    = 0;
   chunk->data->entity_capacity = 0;
 
-  world_invalidate_chunk_mesh(chunk);
-  world_invalidate_chunk_mesh(chunk->left);
-  world_invalidate_chunk_mesh(chunk->right);
-  world_invalidate_chunk_mesh(chunk->back);
-  world_invalidate_chunk_mesh(chunk->front);
-  world_invalidate_chunk_mesh(chunk->bottom);
-  world_invalidate_chunk_mesh(chunk->top);
-
-  world_invalidate_chunk_light(chunk);
+  chunk->mesh_invalidated = true;
+  if(chunk->left) chunk->left->mesh_invalidated = true;
+  if(chunk->right) chunk->right->mesh_invalidated = true;
+  if(chunk->back) chunk->back->mesh_invalidated = true;
+  if(chunk->front) chunk->front->mesh_invalidated = true;
+  if(chunk->bottom) chunk->bottom->mesh_invalidated = true;
+  if(chunk->top) chunk->top->mesh_invalidated = true;
 
   free(chunk_generate_wrapper_hash_table_remove(&chunk_generate_wrappers, position));
   return true;

@@ -46,6 +46,7 @@ bool cursor_move(struct cursor *cursor, enum direction direction)
       cursor->chunk = cursor->chunk->back;
       new_position.y += CHUNK_WIDTH;
     }
+    break;
   case DIRECTION_BOTTOM:
     if(new_position.z < 0)
     {

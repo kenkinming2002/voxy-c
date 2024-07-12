@@ -113,8 +113,8 @@ void mod_init()
       "assets/textures/water.png",
       "assets/textures/water.png"
     },
-    .on_create = block_on_create,
-    .on_destroy = block_on_destroy,
+    .on_create = NULL,
+    .on_destroy = NULL,
   });
   BLOCK_ID_LAMP = register_block_info((struct block_info){
     .name = "lamp",

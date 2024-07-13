@@ -4,6 +4,7 @@
 #include <voxy/math/random.h>
 
 #include <math.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 /// Data-Types
@@ -63,6 +64,8 @@ static inline ivec4_t fvec4_as_ivec4_round(fvec4_t vec) { return ivec4(roundf(ve
 #define VECTOR_DEFINE_OP_MIN(prefix, type, count) static inline VECTOR_TYPE(prefix, count) VECTOR_FUNCTION_NAME(prefix, count, min) (VECTOR_TYPE(prefix, count) a, VECTOR_TYPE(prefix, count) b) { VECTOR_TYPE(prefix, count) result; for(unsigned i=0; i<count; ++i) result.values[i] = a.values[i] < b.values[i] ? a.values[i] : b.values[i]; return result; }
 #define VECTOR_DEFINE_OP_MAX(prefix, type, count) static inline VECTOR_TYPE(prefix, count) VECTOR_FUNCTION_NAME(prefix, count, max) (VECTOR_TYPE(prefix, count) a, VECTOR_TYPE(prefix, count) b) { VECTOR_TYPE(prefix, count) result; for(unsigned i=0; i<count; ++i) result.values[i] = a.values[i] > b.values[i] ? a.values[i] : b.values[i]; return result; }
 
+#define VECTOR_DEFINE_OP_EQL(prefix, type, count) static inline bool VECTOR_FUNCTION_NAME(prefix, count, eql) (VECTOR_TYPE(prefix, count) a, VECTOR_TYPE(prefix, count) b) { for(unsigned i=0; i<count; ++i) if(a.values[i] != b.values[i]) return false; return true; }
+
 #define VECTOR_DEFINE_OPS(prefix, type, count)                \
   VECTOR_DEFINE_OP_NULLARY(prefix, type, count, zero, 0)      \
   VECTOR_DEFINE_OP_UNARY  (prefix, type, count, neg, -)       \
@@ -88,7 +91,9 @@ static inline ivec4_t fvec4_as_ivec4_round(fvec4_t vec) { return ivec4(roundf(ve
   VECTOR_DEFINE_OP_COPYSIGN(prefix, type, count)              \
                                                               \
   VECTOR_DEFINE_OP_MIN(prefix, type, count)                   \
-  VECTOR_DEFINE_OP_MAX(prefix, type, count)
+  VECTOR_DEFINE_OP_MAX(prefix, type, count)                   \
+                                                              \
+  VECTOR_DEFINE_OP_EQL(prefix, type, count)
 
 VECTOR_DEFINE_OPS(f, float, 2)
 VECTOR_DEFINE_OPS(f, float, 3)

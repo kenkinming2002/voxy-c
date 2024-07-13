@@ -38,6 +38,7 @@ VOXY_SRCS += voxy/src/scene/main_game/entity/item.c
 
 VOXY_SRCS += voxy/src/scene/main_game/states/camera.c
 VOXY_SRCS += voxy/src/scene/main_game/states/chunks.c
+VOXY_SRCS += voxy/src/scene/main_game/states/digger.c
 VOXY_SRCS += voxy/src/scene/main_game/states/seed.c
 VOXY_SRCS += voxy/src/scene/main_game/states/cursor.c
 

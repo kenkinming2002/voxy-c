@@ -37,7 +37,7 @@
 
 #define HOTBAR_SIZE 9
 
-#define PLAYER_DIG_SPEED 10.0f
+#define PLAYER_DIG_SPEED 1.0f
 
 static inline int mini(int a, int b) { return a < b ? a : b; }
 static inline float minf(float a, float b) { return a < b ? a : b; }
@@ -386,6 +386,9 @@ static void player_entity_update_actions(struct entity *entity, float dt)
         g_digger.damage += dt * PLAYER_DIG_SPEED;
         if(g_digger.damage >= 1.0f)
           world_set_block(position, 0, entity); // FIXME: We are hardcoding the fact that empty block have id 0
+        else
+          world_invalidate_block(position);
+
       }
 
       opaque->cooldown = 0.0f;

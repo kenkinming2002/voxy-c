@@ -3,6 +3,7 @@
 
 #include <voxy/scene/main_game/states/camera.h>
 #include <voxy/scene/main_game/states/chunks.h>
+#include <voxy/scene/main_game/states/digger.h>
 
 #include <voxy/graphics/camera.h>
 #include <voxy/graphics/gl.h>
@@ -25,6 +26,8 @@ struct vertex
   // Bits 12..15: occlusion count 2
   // Bits 16..20: occlusion count 3
   uint32_t light_level_and_occlusion_counts;
+
+  float damage;
 };
 DYNAMIC_ARRAY_DEFINE(vertices, struct vertex);
 
@@ -79,14 +82,17 @@ static void chunk_mesh_update(struct chunk_mesh *chunk_mesh, struct vertices ver
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
 
     glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT, sizeof(struct vertex), (void *)offsetof(struct vertex, center));
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(struct vertex), (void *)offsetof(struct vertex, normal_index_and_texture_index));
     glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(struct vertex), (void *)offsetof(struct vertex, light_level_and_occlusion_counts));
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, damage));
 
     glVertexAttribDivisor(0, 1);
     glVertexAttribDivisor(1, 1);
     glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
   }
 
   chunk_mesh->count = vertices.item_count;
@@ -173,6 +179,12 @@ static bool remesh_chunk(struct chunk *chunk)
     for(int z = 0; z<CHUNK_WIDTH; ++z)
       for(int y = 0; y<CHUNK_WIDTH; ++y)
         for(int x = 0; x<CHUNK_WIDTH; ++x)
+        {
+          /// Is this block being currently digged?
+          const ivec3_t local_position = ivec3(x, y, z);
+          const ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk->position, CHUNK_WIDTH), local_position);
+          const float damage = ivec3_eql(g_digger.position, global_position) ? g_digger.damage : 0.0f;
+
           for(enum block_face face = 0; face<BLOCK_FACE_COUNT; ++face)
           {
             const ivec3_t normal = face_get_normal(face);
@@ -230,6 +242,8 @@ static bool remesh_chunk(struct chunk *chunk)
             vertex.light_level_and_occlusion_counts |= occlusion_counts[1][0] << 12;
             vertex.light_level_and_occlusion_counts |= occlusion_counts[1][1] << 16;
 
+            vertex.damage = damage;
+
             switch(block_type)
             {
               case BLOCK_TYPE_OPAQUE:      DYNAMIC_ARRAY_APPEND(opaque_vertices, vertex);      break;
@@ -238,6 +252,7 @@ static bool remesh_chunk(struct chunk *chunk)
                                            assert(0 && "Unreachable");
             }
           }
+        }
   }
 
   // Mesh upload

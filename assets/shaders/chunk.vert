@@ -2,11 +2,13 @@
 layout(location = 0) in ivec3 v_center;
 layout(location = 1) in uint  v_normal_index_and_texture_index;
 layout(location = 2) in uint  v_light_level_and_occlusion_counts;
+layout(location = 3) in float v_damage;
 
 out vec2      f_texture_coords;
 flat out uint f_texture_index;
 out float     f_light;
 out float     f_visibility;
+out float     f_damage;
 
 uniform mat4 VP;
 uniform mat4 V;
@@ -96,5 +98,7 @@ void main()
   vec4  view_position = V * vec4(position, 1.0);
   float view_distance = length(view_position.xyz);
   f_visibility = clamp(exp(-pow(view_distance * fogDensity, fogGradient)), 0.0, 1.0);
+
+  f_damage = v_damage;
 }
 

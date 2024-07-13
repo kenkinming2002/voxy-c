@@ -390,9 +390,12 @@ static void player_entity_update_actions(struct entity *entity, float dt)
           world_invalidate_block(position);
 
       }
-
-      opaque->cooldown = 0.0f;
-      return;
+    }
+    else if(g_digger.damage != 0.0f)
+    {
+      world_invalidate_block(g_digger.position);
+      g_digger.position = ivec3_zero();
+      g_digger.damage = 0.0f;
     }
 
     // Use item

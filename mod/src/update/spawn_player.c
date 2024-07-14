@@ -30,9 +30,9 @@ void update_spawn_player(void)
       // the chunk in which the player is to be spawned in need to be loaded
       // first.
       ivec3_t center = fvec3_as_ivec3_floor(fvec3_div_scalar(entity.position, CHUNK_WIDTH));
-      for(int dz = -GENERATOR_DISTANCE_PLAYER; dz<=GENERATOR_DISTANCE_PLAYER; ++dz)
-        for(int dy = -GENERATOR_DISTANCE_PLAYER; dy<=GENERATOR_DISTANCE_PLAYER; ++dy)
-          for(int dx = -GENERATOR_DISTANCE_PLAYER; dx<=GENERATOR_DISTANCE_PLAYER; ++dx)
+      for(int dz = -PLAYER_CHUNK_LOAD_DISTANCE; dz<=PLAYER_CHUNK_LOAD_DISTANCE; ++dz)
+        for(int dy = -PLAYER_CHUNK_LOAD_DISTANCE; dy<=PLAYER_CHUNK_LOAD_DISTANCE; ++dy)
+          for(int dx = -PLAYER_CHUNK_LOAD_DISTANCE; dx<=PLAYER_CHUNK_LOAD_DISTANCE; ++dx)
             enqueue_chunk_generate(ivec3_add(center, ivec3(dx, dy, dz)));
     }
     else

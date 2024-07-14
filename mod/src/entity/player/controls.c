@@ -67,7 +67,7 @@ void player_entity_update_controls(struct entity *entity, float dt)
 
   // Jump
   {
-    if(entity->grounded && input_press(KEY_SPACE))
+    if(entity->grounded && input_state(KEY_SPACE))
     {
       fvec3_t impulse;
       impulse = direction_as_fvec(DIRECTION_TOP);

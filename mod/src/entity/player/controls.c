@@ -3,6 +3,16 @@
 #include <voxy/core/window.h>
 #include <voxy/math/direction.h>
 
+static float clampf(float value, float min, float max)
+{
+  if(value < min)
+    return min;
+  else if(value > max)
+    return max;
+  else
+    return value;
+}
+
 void player_entity_update_controls(struct entity *entity, float dt)
 {
   struct player_opaque *opaque = entity->opaque;
@@ -18,6 +28,9 @@ void player_entity_update_controls(struct entity *entity, float dt)
   {
     entity->rotation.yaw   +=  mouse_motion.x * PLAYER_PAN_SPEED;
     entity->rotation.pitch += -mouse_motion.y * PLAYER_PAN_SPEED;
+
+    entity->rotation.yaw = fmodf(entity->rotation.yaw, 2 * M_PI);
+    entity->rotation.pitch = clampf(entity->rotation.pitch, -M_PI_2, M_PI_2);
   }
 
   // Move

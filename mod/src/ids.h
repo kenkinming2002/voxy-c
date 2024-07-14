@@ -1,5 +1,5 @@
-#ifndef MOD_IDS_H
-#define MOD_IDS_H
+#ifndef IDS_H
+#define IDS_H
 
 #include <voxy/scene/main_game/types/registry.h>
 
@@ -18,4 +18,4 @@ extern item_id_t ITEM_ID_LOG;
 extern item_id_t ITEM_ID_LEAVE;
 extern item_id_t ITEM_ID_LAMP;
 
-#endif // MOD_IDS_H
+#endif // IDS_H

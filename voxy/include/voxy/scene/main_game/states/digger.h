@@ -1,5 +1,5 @@
-#ifndef DIGGER_H
-#define DIGGER_H
+#ifndef VOXY_SCENE_MAIN_GAME_STATES_DIGGER_H
+#define VOXY_SCENE_MAIN_GAME_STATES_DIGGER_H
 
 #include <voxy/math/vector.h>
 
@@ -21,4 +21,4 @@ struct digger
 /// in the future this should be some form of a dynamic array.
 extern struct digger g_digger;
 
-#endif // DIGGER_H
+#endif // VOXY_SCENE_MAIN_GAME_STATES_DIGGER_H

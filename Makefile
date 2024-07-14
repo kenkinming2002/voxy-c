@@ -32,10 +32,6 @@ VOXY_SRCS += voxy/src/scene/main_game/types/registry.c
 VOXY_SRCS += voxy/src/scene/main_game/types/entity.c
 VOXY_SRCS += voxy/src/scene/main_game/types/item.c
 
-VOXY_SRCS += voxy/src/scene/main_game/entity/weird.c
-VOXY_SRCS += voxy/src/scene/main_game/entity/player.c
-VOXY_SRCS += voxy/src/scene/main_game/entity/item.c
-
 VOXY_SRCS += voxy/src/scene/main_game/states/camera.c
 VOXY_SRCS += voxy/src/scene/main_game/states/chunks.c
 VOXY_SRCS += voxy/src/scene/main_game/states/digger.c
@@ -59,6 +55,19 @@ MOD_SRCS += mod/src/generate.c
 
 MOD_SRCS += mod/src/block.c
 MOD_SRCS += mod/src/on_use_block_item.c
+
+MOD_SRCS += mod/src/entity/item/item.c
+MOD_SRCS += mod/src/entity/player/actions.c
+MOD_SRCS += mod/src/entity/player/camera_follow.c
+MOD_SRCS += mod/src/entity/player/chunk_loader.c
+MOD_SRCS += mod/src/entity/player/controls.c
+MOD_SRCS += mod/src/entity/player/inventory.c
+MOD_SRCS += mod/src/entity/player/player.c
+MOD_SRCS += mod/src/entity/player/spawn_weird.c
+MOD_SRCS += mod/src/entity/weird/weird.c
+
+MOD_SRCS += mod/src/update/update.c
+MOD_SRCS += mod/src/update/spawn_player.c
 
 voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -fno-semantic-interposition
 voxy/voxy: LIBS   += -lm

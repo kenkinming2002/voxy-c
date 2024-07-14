@@ -1,4 +1,4 @@
-#include <voxy/scene/main_game/entity/weird.h>
+#include "weird.h"
 
 #include <stdlib.h>
 
@@ -7,8 +7,7 @@ static float randf(float low, float high)
   return low + (float)rand() / (float)RAND_MAX * (high - low);
 }
 
-static void weird_entity_update(struct entity *entity, float dt);
-static entity_id_t weird_entity_id()
+entity_id_t weird_entity_id(void)
 {
   static entity_id_t id = ENTITY_NONE;
   if(id == ENTITY_NONE)
@@ -35,10 +34,11 @@ void weird_entity_fini(struct entity *entity)
   (void)entity;
 }
 
-static void weird_entity_update(struct entity *entity, float dt)
+void weird_entity_update(struct entity *entity, float dt)
 {
   entity_jump(entity, 20.0f);
   entity_move(entity, fvec2(randf(-1.0f, 1.0f), randf(-1.0f, 1.0f)), 30.0f, dt);
 }
+
 
 

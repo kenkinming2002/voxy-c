@@ -1,9 +1,9 @@
 #include "block.h"
 #include "ids.h"
 
-#include <voxy/scene/main_game/states/chunks.h>
+#include "entity/item/item.h"
 
-#include <voxy/scene/main_game/entity/item.h>
+#include <voxy/scene/main_game/states/chunks.h>
 
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/types/block.h>

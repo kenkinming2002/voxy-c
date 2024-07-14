@@ -137,16 +137,15 @@ static void update_light_creation(void)
         struct block *neighbour_block = cursor_get(neighbour_cursor);
         const struct block_info *neighbour_block_info = query_block_info(neighbour_block->id);
 
-        if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
-          if((direction == DIRECTION_BOTTOM && (int)neighbour_block->ether < (int)block->ether) || (int)neighbour_block->light_level < (int)block->light_level - 1)
-          {
-            struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
-            new_light_creation->cursor = neighbour_cursor;
-            STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
+        if((neighbour_block_info->type != BLOCK_TYPE_OPAQUE) && ((direction == DIRECTION_BOTTOM && (int)neighbour_block->ether < (int)block->ether) || (int)neighbour_block->light_level < (int)block->light_level - 1))
+        {
+          struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
+          new_light_creation->cursor = neighbour_cursor;
+          STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
 
-            chunk_set_block_ether(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, direction == DIRECTION_BOTTOM ? block->ether : 0);
-            chunk_set_block_light_level(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, neighbour_block->ether ? 15 : (int)block->light_level - 1);
-          }
+          chunk_set_block_ether(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, direction == DIRECTION_BOTTOM ? block->ether : 0);
+          chunk_set_block_light_level(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, neighbour_block->ether ? 15 : (int)block->light_level - 1);
+        }
       }
     }
 
@@ -186,25 +185,22 @@ static void update_light_destruction(void)
         struct block *neighbour_block = cursor_get(neighbour_cursor);
         const struct block_info *neighbour_block_info = query_block_info(neighbour_block->id);
 
-        if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
+        if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE && ((direction == DIRECTION_BOTTOM && (int)neighbour_block->ether != 0 && (int)neighbour_block->ether <= (int)light_destruction->ether) || ((int)neighbour_block->light_level != 0 && (int)neighbour_block->light_level <= (int)light_destruction->light_level - 1)))
         {
-          if((direction == DIRECTION_BOTTOM && (int)neighbour_block->ether != 0 && (int)neighbour_block->ether <= (int)light_destruction->ether) || ((int)neighbour_block->light_level != 0 && (int)neighbour_block->light_level <= (int)light_destruction->light_level - 1))
-          {
-            struct light_destruction *new_light_destruction = malloc(sizeof *new_light_destruction);
-            new_light_destruction->cursor = neighbour_cursor;
-            new_light_destruction->light_level = neighbour_block->light_level;
-            new_light_destruction->ether = neighbour_block->ether;
-            STAILQ_INSERT_TAIL(&light_destructions, new_light_destruction, link);
+          struct light_destruction *new_light_destruction = malloc(sizeof *new_light_destruction);
+          new_light_destruction->cursor = neighbour_cursor;
+          new_light_destruction->light_level = neighbour_block->light_level;
+          new_light_destruction->ether = neighbour_block->ether;
+          STAILQ_INSERT_TAIL(&light_destructions, new_light_destruction, link);
 
-            chunk_set_block_ether(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, 0);
-            chunk_set_block_light_level(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, 0);
-          }
-          else if(neighbour_block->ether != 0 || neighbour_block->light_level != 0)
-          {
-            struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
-            new_light_creation->cursor = neighbour_cursor;
-            STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
-          }
+          chunk_set_block_ether(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, 0);
+          chunk_set_block_light_level(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, 0);
+        }
+        else if(neighbour_block->ether != 0 || neighbour_block->light_level != 0)
+        {
+          struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
+          new_light_creation->cursor = neighbour_cursor;
+          STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
         }
       }
     }

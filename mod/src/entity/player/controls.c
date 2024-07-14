@@ -73,6 +73,8 @@ void player_entity_update_controls(struct entity *entity, float dt)
       impulse = direction_as_fvec(DIRECTION_TOP);
       impulse = fvec3_mul_scalar(impulse, PLAYER_JUMP_STRENGTH);
       entity_apply_impulse(entity, impulse);
+
+      entity->grounded = false;
     }
   }
 }

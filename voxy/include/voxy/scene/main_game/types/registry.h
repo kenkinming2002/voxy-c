@@ -72,6 +72,9 @@ struct entity_info
   const char *mod;
   const char *name;
 
+  const char *mesh;
+  const char *texture;
+
   fvec3_t hitbox_offset;
   fvec3_t hitbox_dimension;
 

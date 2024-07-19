@@ -13,11 +13,17 @@ entity_id_t weird_entity_id(void)
   if(id == ENTITY_NONE)
   {
     struct entity_info entity_info;
+
     entity_info.mod = "main";
     entity_info.name = "weird";
+
+    entity_info.mesh = "assets/models/pig.obj";
+    entity_info.texture = "assets/models/pig.png";
+
     entity_info.hitbox_dimension = fvec3(1.0f, 1.0f, 2.0f);
     entity_info.hitbox_offset = fvec3(0.0f, 0.0f, -0.5f);
     entity_info.on_update = weird_entity_update;
+
     id = register_entity_info(entity_info);
   }
   return id;

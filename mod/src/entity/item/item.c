@@ -8,11 +8,17 @@ entity_id_t item_entity_id(void)
   if(id == ENTITY_NONE)
   {
     struct entity_info entity_info;
+
     entity_info.mod = "main";
     entity_info.name = "item";
+
+    entity_info.mesh = NULL;
+    entity_info.texture = NULL;
+
     entity_info.hitbox_dimension = fvec3(0.1f, 0.1f, 0.1f);
     entity_info.hitbox_offset = fvec3_zero();
     entity_info.on_update = item_entity_update;
+
     id = register_entity_info(entity_info);
   }
   return id;

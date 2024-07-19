@@ -278,7 +278,7 @@ void player_entity_update_inventory(struct entity *entity)
           if(!entity_intersect(entity, other_entity))
             continue;
 
-          if(entity->id != item_entity_id())
+          if(other_entity->id != item_entity_id())
             continue;
 
           struct item_opaque *other_opaque = other_entity->opaque;

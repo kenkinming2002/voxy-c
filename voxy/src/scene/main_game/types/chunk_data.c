@@ -13,21 +13,11 @@ struct block *chunk_data_get_block(struct chunk_data *chunk_data, ivec3_t positi
 
 void chunk_data_add_entity(struct chunk_data *chunk_data, struct entity entity)
 {
-  if(chunk_data->new_entity_capacity == chunk_data->new_entity_count)
-  {
-    chunk_data->new_entity_capacity = chunk_data->new_entity_capacity != 0 ? chunk_data->new_entity_capacity * 2 : 1;
-    chunk_data->new_entities = realloc(chunk_data->new_entities, chunk_data->new_entity_capacity * sizeof *chunk_data->new_entities);
-  }
-  chunk_data->new_entities[chunk_data->new_entity_count++] = entity;
+  DYNAMIC_ARRAY_APPEND(chunk_data->new_entities, entity);
 }
 
 void chunk_data_commit_add_entities(struct chunk_data *chunk_data)
 {
-  while(chunk_data->entity_capacity < chunk_data->entity_count + chunk_data->new_entity_count)
-    chunk_data->entity_capacity = chunk_data->entity_capacity != 0 ? chunk_data->entity_capacity * 2 : 1;
-  chunk_data->entities = realloc(chunk_data->entities, chunk_data->entity_capacity * sizeof *chunk_data->entities);
-
-  for(size_t i=0; i<chunk_data->new_entity_count; ++i)
-    chunk_data->entities[chunk_data->entity_count++] = chunk_data->new_entities[i];
-  chunk_data->new_entity_count = 0;
+  DYNAMIC_ARRAY_APPEND_MANY(chunk_data->entities, chunk_data->new_entities.items, chunk_data->new_entities.item_count);
+  DYNAMIC_ARRAY_CLEAR(chunk_data->new_entities);
 }

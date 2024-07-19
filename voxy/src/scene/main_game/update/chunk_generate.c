@@ -132,13 +132,8 @@ static bool update_generate_chunk_at(ivec3_t position)
           enqueue_light_create_update_raw(chunk, x, y, z);
       }
 
-  chunk->data->entities        = NULL;
-  chunk->data->entity_count    = 0;
-  chunk->data->entity_capacity = 0;
-
-  chunk->data->new_entities        = NULL;
-  chunk->data->new_entity_count    = 0;
-  chunk->data->new_entity_capacity = 0;
+  DYNAMIC_ARRAY_INIT(chunk->data->entities);
+  DYNAMIC_ARRAY_INIT(chunk->data->new_entities);
 
   chunk->mesh_invalidated = true;
   if(chunk->left) chunk->left->mesh_invalidated = true;

@@ -269,9 +269,9 @@ void player_entity_update_inventory(struct entity *entity)
     //             component system.
     world_for_each_chunk(chunk)
       if(chunk->data)
-        for(size_t i=0; i<chunk->data->entity_count; ++i)
+        for(size_t i=0; i<chunk->data->entities.item_count; ++i)
         {
-          struct entity *other_entity = &chunk->data->entities[i];
+          struct entity *other_entity = &chunk->data->entities.items[i];
           if(entity == other_entity)
             continue;
 
@@ -295,7 +295,7 @@ void player_entity_update_inventory(struct entity *entity)
             // FIXME: May be we should not be modifying the entities array
             //        during iteration.
             item_entity_fini(other_entity);
-            *other_entity = chunk->data->entities[--chunk->data->entity_count];
+            *other_entity = chunk->data->entities.items[--chunk->data->entities.item_count];
           }
         }
   }

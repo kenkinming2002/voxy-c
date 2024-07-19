@@ -61,12 +61,12 @@ static void main_game_update_fixed(float dt)
 
     world_for_each_chunk(chunk)
       if(chunk->data)
-        for(size_t i=0; i<chunk->data->entity_count; ++i)
+        for(size_t i=0; i<chunk->data->entities.item_count; ++i)
         {
-          struct entity *entity = &chunk->data->entities[i];
+          struct entity *entity = &chunk->data->entities.items[i];
           const struct entity_info *entity_info = query_entity_info(entity->id);
           if(entity_info->on_update)
-            entity_info->on_update(&chunk->data->entities[i], dt);
+            entity_info->on_update(&chunk->data->entities.items[i], dt);
         }
 
     world_for_each_chunk(chunk)

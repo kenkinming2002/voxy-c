@@ -5,6 +5,10 @@
 #include <voxy/scene/main_game/types/block.h>
 #include <voxy/scene/main_game/types/entity.h>
 
+#include <voxy/dynamic_array.h>
+
+DYNAMIC_ARRAY_DEFINE(entities, struct entity);
+
 /// Chunk data.
 ///
 /// This store persistent data local to a chunk such as blocks or entities.
@@ -12,13 +16,8 @@ struct chunk_data
 {
   struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 
-  struct entity *entities;
-  size_t         entity_count;
-  size_t         entity_capacity;
-
-  struct entity *new_entities;
-  size_t         new_entity_count;
-  size_t         new_entity_capacity;
+  struct entities entities;
+  struct entities new_entities;
 };
 
 /// Get a pointer to a block at position, which is specified in chunk local

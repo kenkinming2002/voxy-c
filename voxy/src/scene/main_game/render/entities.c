@@ -24,9 +24,9 @@ void main_game_render_entities(void)
 
     world_for_each_chunk(chunk)
       if(chunk->data)
-        for(size_t i=0; i<chunk->data->entity_count; ++i)
+        for(size_t i=0; i<chunk->data->entities.item_count; ++i)
         {
-          struct entity *entity = &chunk->data->entities[i];
+          struct entity *entity = &chunk->data->entities.items[i];
           const struct entity_info *entity_info = query_entity_info(entity->id);
 
           // FIXME: Skip rendering of current active player.
@@ -47,9 +47,9 @@ void main_game_render_entities(void)
 
     world_for_each_chunk(chunk)
       if(chunk->data)
-        for(size_t i=0; i<chunk->data->entity_count; ++i)
+        for(size_t i=0; i<chunk->data->entities.item_count; ++i)
         {
-          struct entity *entity = &chunk->data->entities[i];
+          struct entity *entity = &chunk->data->entities.items[i];
 
           const struct gl_texture_2d *texture = assets_get_entity_texture(entity->id);
           if(!texture)

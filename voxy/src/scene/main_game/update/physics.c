@@ -215,6 +215,6 @@ void update_physics(float dt)
 {
   world_for_each_chunk(chunk)
     if(chunk->data)
-      for(size_t i=0; i<chunk->data->entity_count; ++i)
-        entity_update_physics(&chunk->data->entities[i], dt);
+      for(size_t i=0; i<chunk->data->entities.item_count; ++i)
+        entity_update_physics(&chunk->data->entities.items[i], dt);
 }

@@ -1,6 +1,8 @@
 #include <voxy/scene/scene.h>
 #include <voxy/core/window.h>
 
+#include <voxy/graphics/mesh.h>
+
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 720
 #define WINDOW_TITLE "voxy"

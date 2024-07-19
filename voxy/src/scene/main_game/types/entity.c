@@ -7,7 +7,17 @@
 
 #include <voxy/scene/main_game/mod.h>
 
+#include <voxy/math/transform.h>
+
 #include <voxy/math/ray_cast.h>
+
+transform_t entity_transform(struct entity *entity)
+{
+  transform_t transform;
+  transform.translation = entity->position;
+  transform.rotation = entity->rotation;
+  return transform;
+}
 
 fvec3_t entity_local_to_global(struct entity *entity, fvec3_t vec)
 {

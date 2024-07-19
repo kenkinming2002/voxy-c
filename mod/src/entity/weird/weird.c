@@ -36,7 +36,7 @@ void weird_entity_fini(struct entity *entity)
 
 void weird_entity_update(struct entity *entity, float dt)
 {
-  entity_jump(entity, 20.0f);
+  entity_jump(entity, 10.0f);
   entity_move(entity, fvec2(randf(-1.0f, 1.0f), randf(-1.0f, 1.0f)), 30.0f, dt);
 }
 

@@ -21,6 +21,8 @@ struct entity
   void *opaque;
 };
 
+transform_t entity_transform(struct entity *entity);
+
 fvec3_t entity_local_to_global(struct entity *entity, fvec3_t vec);
 
 void entity_apply_impulse(struct entity *entity, fvec3_t impulse);

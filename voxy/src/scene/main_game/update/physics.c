@@ -73,6 +73,7 @@ static bool swept_box_rect(box_t box, rect_t rect, fvec3_t offset, float *t)
 
 static void entity_physics_update(struct entity *entity, float dt)
 {
+  entity->grounded = false;
   for(;;)
   {
     bool hit = false;

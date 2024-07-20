@@ -129,7 +129,7 @@ static void update_light_creation(void)
     struct cursor cursor = light_creation->cursor;
     struct block *block = cursor_get(cursor);
 
-    for(enum direction direction = 0; direction < DIRECTION_COUNT; ++direction)
+    for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
     {
       struct cursor neighbour_cursor = light_creation->cursor;
       if(cursor_move(&neighbour_cursor, direction))
@@ -177,7 +177,7 @@ static void update_light_destruction(void)
     //   3. Propagate if that is the case
     //   4. Otherwise, we would need to redo light propagation from them ***
 
-    for(enum direction direction = 0; direction < DIRECTION_COUNT; ++direction)
+    for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
     {
       struct cursor neighbour_cursor = light_destruction->cursor;
       if(cursor_move(&neighbour_cursor, direction))

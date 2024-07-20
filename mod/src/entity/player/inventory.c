@@ -34,7 +34,7 @@ static void cell_widget_render_item(const struct cell_widget *cell)
     return;
 
   struct gl_texture_2d texture = assets_get_item_texture(cell->item->id);
-  ui_quad_textured(cell->position, cell->dimension, 0.0f, texture.id);
+  ui_rect_textured(cell->position, cell->dimension, 0.0f, texture.id);
 
   char buffer[4];
   snprintf(buffer, sizeof buffer, "%u", cell->item->count);
@@ -223,7 +223,7 @@ void player_entity_update_inventory(struct entity *entity)
 
       fvec2_t dimension = fvec2(32.0f, 32.0f);
       fvec2_t position  = fvec2_mul_scalar(fvec2_sub(ivec2_as_fvec2(window_size), dimension), 0.5f);
-      ui_quad_textured(position, dimension, 0.0f, cursor.id);
+      ui_rect_textured(position, dimension, 0.0f, cursor.id);
     }
 
     if(!opaque->inventory_opened)

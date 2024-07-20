@@ -9,6 +9,9 @@
 #include <voxy/scene/main_game/mod.h>
 
 #include <voxy/math/box.h>
+#include <voxy/math/direction.h>
+
+#include <voxy/core/log.h>
 
 #include <stdbool.h>
 
@@ -18,159 +21,111 @@ static void entity_physics_apply_law(struct entity *entity, float dt)
   entity->velocity = fvec3_mul_scalar(entity->velocity, expf(-dt * (entity->grounded ? PHYSICS_DRAG_GROUND : PHYSICS_DRAG_AIR))); // Drag
 }
 
-// Return true if collision will occurs if box1 were to move by offset. This
-// does not include the case that box1 and box2 are already intersecting.
-//
-// If collision will occurs, *t is set to the time of collision, *s is set to
-// the "smoothness" of collision and normal is set to the normal of the face of
-// box2 that box1 will collide with.
-//
-// The smoothness parameter represent how close are box1 and box2 to be
-// colliding with each other along an edge or even a corner. This is to solve
-// one nasty problem if box1 and box2 are extremely well-aligned. Pictorially,
-//
-//      PPP
-//      P P
-//      PPP
-//   AAABBB
-//   A AB B
-//   AAABBB
-//
-// where P represent collision box for an entity, and A and B represent
-// collision box for 2 blocks.
-//
-// Imagine the entity is move towards bottom-left direction. Then according to
-// swept AABB algorithm, the entity will collide with both blocks at exactly the
-// same time t=0. Since we are resolving collision based on the minimum t,
-// the order of collision resolution depends solely on our traversal order.
-//
-// Since we are hitting block A at the corner exactly, it dependes on our
-// implementation whether we resolve our collision upwards on to the right, but
-// resolving collision to the right is clearly wrong in our case since that
-// would just stop the entity.
-//
-// Mathematically, if we were to denote t1, t2, t3 as time to entry along the 3
-// axises, smoothness is computed as the sum of pairwise absolute differences,
-// i.e. abs(t1-t2) + abs(t1-t3) + abs(t2-t3)
-// To illustrate, when t1=t2=t3, the two boxes are hitting exactly at the
-// corner, and our smoothness becomes 0.
-//
-// By maximizing smoothness, we penalize if box1 and box2 are hitting each other
-// close to an edge or a corner.
-//
-// Because I am totally original, I call the above problem t-fighting, in spirit
-// of the z-fighting problem in computer graphics.
-static inline bool box_swept(box_t box1, box_t box2, fvec3_t offset, float *t, float *s, fvec3_t *normal)
+static bool intersect_intervals(float a1, float a2, float b1, float b2)
 {
-  // We are essentially solving:
-  //
-  // ts[i] * offset[i] = box2_point1[i] - box1_point2[i]
-  // ts[i] * offset[i] = box1_point2[i]   box2_point1[i]
-  //
-  // However, there is one slight problem.
-  // It is possible we would have:
-  //
-  // ts[i] * 0 = 0
-  //
-  // A naive division will yield nan. We need to think about what is actually
-  // happening in such a case. The two boxes are just
-  // sliding along the boundary.
-  //
-  // We make the choice that this does not count as collision. This is because
-  // that is the configuration we would have after resolving collision.
-  fvec3_t ts_1 = fvec3_div(fvec3_sub(box_min_corner(box2), box_max_corner(box1)), offset);
-  fvec3_t ts_2 = fvec3_div(fvec3_sub(box_max_corner(box2), box_min_corner(box1)), offset);
-  for(int i=0; i<3; ++i)
-    if(isnanf(ts_1.values[i]) || isnanf(ts_2.values[i]))
-      return false;
+  return a2 > b1 && b2 > a1;
+}
 
-  fvec3_t ts_near = fvec3_min(ts_1, ts_2);
-  fvec3_t ts_far  = fvec3_max(ts_1, ts_2);
-
-  float t_near = -INFINITY;
-  float t_far  =  INFINITY;
-  for(int i=0; i<3; ++i)
-  {
-    if(t_near < ts_near.values[i]) t_near = ts_near.values[i];
-    if(t_far  > ts_far .values[i]) t_far  = ts_far .values[i];
-  }
-  if(t_near < 0.0f) t_near = 0.0f;
-  if(t_far  > 1.0f) t_far  = 1.0f;
-
-  if(t_near >= t_far)
+/// Return if there is any *t in the range [0.0, 1.0] such that if box where to
+/// move by *t * offset, box would intersect with rect.
+static bool swept_box_rect(box_t box, rect_t rect, fvec3_t offset, float *t)
+{
+  // The only possibility in such a case is if we hit the rect on its edge or
+  // are already intersecting with the rect without moving, in in both of the
+  // cases there is no resonable resolution and we might as well ignore it.
+  if(offset.values[rect.axis] == 0.0f)
     return false;
 
-  for(int i=0; i<3; ++i)
-    if(t_near == ts_near.values[i])
+  // Compute the time required for the box to maybe hit the rect.
+  if(rect.center.values[rect.axis] >= box_max_corner(box).values[rect.axis] && offset.values[rect.axis] > 0.0f) {
+    *t = (rect.center.values[rect.axis] - box_max_corner(box).values[rect.axis]) / offset.values[rect.axis];
+  } else if(rect.center.values[rect.axis] <= box_min_corner(box).values[rect.axis] && offset.values[rect.axis] < 0.0f) {
+    *t = (rect.center.values[rect.axis] - box_min_corner(box).values[rect.axis]) / offset.values[rect.axis];
+  } else {
+    // We are in a degnerate case here. If determine that we are colliding after
+    // checking the other axis, we are stuck in a block. In that case, we want
+    // to treat it as if there is no collision anyway so we may as well skip the
+    // check early.
+    return false;
+  }
+
+  if(*t > 1.0f)
+    return false;
+
+  // Adjust the box center according to the computed time and check if the box
+  // really do hit the rect.
+  box.center = fvec3_add(box.center, fvec3_mul_scalar(offset, *t));
+  for(unsigned axis=0; axis<3; ++axis)
+    if(axis != rect.axis)
     {
-      *t = t_near;
-      *s = fabs(ts_near.values[0]-ts_near.values[1])
-         + fabs(ts_near.values[0]-ts_near.values[2])
-         + fabs(ts_near.values[1]-ts_near.values[2]);
+      const float a1 = box.center.values[axis] - 0.5f * box.dimension.values[axis];
+      const float a2 = box.center.values[axis] + 0.5f * box.dimension.values[axis];
 
-      *normal = fvec3_zero();
-      normal->values[i] = signbit(offset.values[i]) ? 1.0f : -1.0f;
+      const float b1 = rect.center.values[axis] - 0.5f * rect.dimension.values[axis];
+      const float b2 = rect.center.values[axis] + 0.5f * rect.dimension.values[axis];
 
-      return true;
+      if(!intersect_intervals(a1, a2, b1, b2))
+        return false;
     }
 
-  // That means we are already colliding even without moving box1. That is - we
-  // some how managed to get ourselves stuck. Do not attempt to resolve
-  // collision.
-  return false;
+  return true;
 }
 
 static void entity_physics_update(struct entity *entity, float dt)
 {
-  const struct entity_info *entity_info = query_entity_info(entity->id);
   for(;;)
   {
+    bool hit = false;
+    float min_t;
+    direction_t min_direction;
+
     const fvec3_t offset = fvec3_mul_scalar(entity->velocity, dt);
 
-    const box_t entity_box = box(fvec3_add(entity->position, entity_info->hitbox_offset), entity_info->hitbox_dimension);
-    const box_t entity_box_expanded = box_expand(entity_box, offset);
+    const struct entity_info *entity_info = query_entity_info(entity->id);
+    const box_t entity_hitbox = box(fvec3_add(entity->position, entity_info->hitbox_offset), entity_info->hitbox_dimension);
+    const box_t entity_hitbox_expanded = box_expand(entity_hitbox, offset);
 
-    float min_t =  INFINITY;
-    float max_s = -INFINITY;
-    fvec3_t min_normal;
-
-    ivec3_t point1 = fvec3_as_ivec3_round(box_min_corner(entity_box_expanded));
-    ivec3_t point2 = fvec3_as_ivec3_round(box_max_corner(entity_box_expanded));
-    for(int z=point1.z; z<=point2.z; ++z)
-      for(int y=point1.y; y<=point2.y; ++y)
-        for(int x=point1.x; x<=point2.x; ++x)
+    const ivec3_t block_position_min = fvec3_as_ivec3_round(box_min_corner(entity_hitbox_expanded));
+    const ivec3_t block_position_max = fvec3_as_ivec3_round(box_max_corner(entity_hitbox_expanded));
+    for(int z=block_position_min.z; z<=block_position_max.z; ++z)
+      for(int y=block_position_min.y; y<=block_position_max.y; ++y)
+        for(int x=block_position_min.x; x<=block_position_max.x; ++x)
         {
-          ivec3_t position = ivec3(x, y, z);
-
-          const struct block *block = world_get_block(position);
-          if(block)
-          {
-            const struct block_info *block_info = query_block_info(block->id);
-            if(block_info->type == BLOCK_TYPE_OPAQUE)
+          const ivec3_t block_position = ivec3(x, y, z);
+          const struct block *block = world_get_block(block_position);
+          if(block && query_block_info(block->id)->type == BLOCK_TYPE_OPAQUE)
+            for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
             {
-              float t;
-              float s;
-              fvec3_t normal;
+              const ivec3_t neighbour_block_position = ivec3_add(block_position, direction_as_ivec(direction));
+              const struct block *neighbour_block = world_get_block(neighbour_block_position);
+              if(!neighbour_block || query_block_info(neighbour_block->id)->type != BLOCK_TYPE_OPAQUE)
+              {
+                const box_t block_hitbox = box(ivec3_as_fvec3(block_position), fvec3(1.0f, 1.0f, 1.0f));
+                const rect_t block_face_hitbox = box_face(block_hitbox, direction);
 
-              const box_t block_box = box(ivec3_as_fvec3(position), fvec3(1.0f, 1.0f, 1.0f));
-              if(box_swept(entity_box, block_box, offset, &t, &s, &normal))
-                if(min_t > t || (min_t == t && max_s < s))
-                {
-                  min_t = t;
-                  max_s = s;
-                  min_normal = normal;
-                }
+                float t;
+                if(swept_box_rect(entity_hitbox, block_face_hitbox, offset, &t))
+                  if(!hit || min_t > t)
+                  {
+                    hit = true;
+                    min_t = t;
+                    min_direction = direction;
+                  }
+              }
             }
-          }
         }
 
-    if(isinff(min_t))
-      return;
-
-    if(min_normal.z == 1.0f)
-      entity->grounded = true;
-
-    entity->velocity = fvec3_sub(entity->velocity, fvec3_mul_scalar(min_normal, fvec3_dot(min_normal, entity->velocity) * (1-min_t)));
+    // Update entity velocity accordingly if we hit something. We have to make
+    // sure that we are actually updating something and not get stuck in an
+    // infinite loop.
+    if(hit && entity->velocity.values[direction_axis(min_direction)] != 0.0f && min_t != 1.0f)
+    {
+      entity->velocity.values[direction_axis(min_direction)] *= min_t;
+      if(min_direction == DIRECTION_TOP)
+        entity->grounded = true;
+    }
+    else
+      break;
   }
 }
 

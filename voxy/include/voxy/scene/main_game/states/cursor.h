@@ -27,6 +27,6 @@ bool cursor_at(ivec3_t position, struct cursor *cursor);
 struct block *cursor_get(struct cursor cursor);
 
 /// Move the cursor by one block along the given direction.
-bool cursor_move(struct cursor *cursor, enum direction direction);
+bool cursor_move(struct cursor *cursor, direction_t direction);
 
 #endif // VOXY_SCENE_MAIN_GAME_STATES_CURSOR_H

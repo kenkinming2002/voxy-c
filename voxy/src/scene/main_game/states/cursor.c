@@ -26,7 +26,7 @@ bool cursor_at(ivec3_t position, struct cursor *cursor)
   return cursor->chunk && cursor->chunk->data;
 }
 
-bool cursor_move(struct cursor *cursor, enum direction direction)
+bool cursor_move(struct cursor *cursor, direction_t direction)
 {
   ivec3_t position = ivec3(cursor->x, cursor->y, cursor->z);
   ivec3_t new_position = ivec3_add(position, direction_as_ivec(direction));

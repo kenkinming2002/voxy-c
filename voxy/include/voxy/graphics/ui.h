@@ -23,7 +23,7 @@ void ui_reset(void);
  * useful on its own. The rendered quad is anchored on bottom-left.
  */
 void ui_quad_colored(fvec2_t position, fvec2_t dimension, float rounding, fvec4_t color);
-void ui_quad_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuint texture);
+void ui_rect_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuint texture);
 
 /*
  * Rendering of text, which in reality is a bunch of textured quads. Again, the

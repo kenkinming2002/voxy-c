@@ -49,7 +49,7 @@ void ui_quad_colored(fvec2_t position, fvec2_t dimension, float rounding, fvec4_
   colored_quad_count += 1;
 }
 
-void ui_quad_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuint texture)
+void ui_rect_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuint texture)
 {
   assert(textured_quad_count < MAX_QUADS);
 
@@ -145,7 +145,7 @@ void ui_text(fvec2_t position, unsigned height, const char *str)
     struct glyph *glyph = font_set_get_glyph(&font_set, c, height);
     fvec2_t current_position  = fvec2_add(position, glyph->bearing);
     fvec2_t current_dimension = fvec2_mul(glyph->dimension, fvec2(1.0f, -1.0f));
-    ui_quad_textured(current_position, current_dimension, 0.0f, glyph->texture);
+    ui_rect_textured(current_position, current_dimension, 0.0f, glyph->texture);
     position.x += glyph->advance;
   }
 }

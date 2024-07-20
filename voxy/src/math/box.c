@@ -8,6 +8,21 @@ box_t box(fvec3_t center, fvec3_t dimension)
   };
 }
 
+rect_t box_face(box_t box, direction_t direction)
+{
+  rect_t quad;
+
+  quad.axis = direction_axis(direction);
+
+  quad.center = box.center;
+  quad.center.values[quad.axis] +=  0.5f * direction_signf(direction) * box.dimension.values[quad.axis];
+
+  quad.dimension = box.dimension;
+  quad.dimension.values[quad.axis] = 0.0f;
+
+  return quad;
+}
+
 fvec3_t box_min_corner(box_t box)
 {
   return fvec3_sub(box.center, fvec3_mul_scalar(box.dimension, 0.5f));

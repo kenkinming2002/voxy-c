@@ -4,7 +4,7 @@
 #include <voxy/math/vector.h>
 
 /// Enum of 6 axial direction
-enum direction {
+typedef enum {
   DIRECTION_LEFT,
   DIRECTION_RIGHT,
   DIRECTION_BACK,
@@ -12,10 +12,21 @@ enum direction {
   DIRECTION_BOTTOM,
   DIRECTION_TOP,
   DIRECTION_COUNT,
-};
+} direction_t;
+
+/// Return sign of direction i.e. 1 if direction is in the positive direction and -1 otherwise.
+int direction_signi(direction_t direction);
+
+/// Return sign of direction i.e. 1.0 if direction is in the positive direction and -1.0 otherwise.
+float direction_signf(direction_t direction);
+
+/// Return the index for the axis corresponding to the given direction.
+unsigned direction_axis(direction_t direction);
 
 /// Convert direction to a vector.
-fvec3_t direction_as_fvec(enum direction direction);
-ivec3_t direction_as_ivec(enum direction direction);
+ivec3_t direction_as_ivec(direction_t direction);
+
+/// Convert direction to a vector.
+fvec3_t direction_as_fvec(direction_t direction);
 
 #endif // VOXY_MATH_DIRECTION_H

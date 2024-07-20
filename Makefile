@@ -6,6 +6,7 @@ VOXY_SRCS += voxy/bundled/src/glad.c
 VOXY_SRCS += voxy/bundled/src/stb_image.c
 
 VOXY_SRCS += voxy/src/math/direction.c
+VOXY_SRCS += voxy/src/math/box.c
 
 VOXY_SRCS += voxy/src/core/window.c
 VOXY_SRCS += voxy/src/core/thread_pool.c

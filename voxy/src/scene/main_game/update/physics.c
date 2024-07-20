@@ -8,33 +8,9 @@
 #include <voxy/scene/main_game/config.h>
 #include <voxy/scene/main_game/mod.h>
 
+#include <voxy/math/box.h>
+
 #include <stdbool.h>
-
-struct box
-{
-  fvec3_t position;
-  fvec3_t dimension;
-};
-
-static inline fvec3_t box_point1(const struct box *box) { return fvec3_sub(box->position, fvec3_mul_scalar(box->dimension, 0.5f)); }
-static inline fvec3_t box_point2(const struct box *box) { return fvec3_add(box->position, fvec3_mul_scalar(box->dimension, 0.5f)); }
-
-static inline struct box box_expand(const struct box *box, fvec3_t offset)
-{
-  fvec3_t point1 = box_point1(box);
-  fvec3_t point2 = box_point2(box);
-
-  for(int i=0; i<3; ++i)
-    if(signbit(offset.values[i]))
-      point1.values[i] += offset.values[i];
-    else
-      point2.values[i] += offset.values[i];
-
-  return (struct box){
-    .position  = fvec3_mul_scalar(fvec3_add(point1, point2), 0.5f),
-    .dimension = fvec3_sub(point2, point1),
-  };
-}
 
 static void entity_physics_apply_law(struct entity *entity, float dt)
 {
@@ -84,7 +60,7 @@ static void entity_physics_apply_law(struct entity *entity, float dt)
 //
 // Because I am totally original, I call the above problem t-fighting, in spirit
 // of the z-fighting problem in computer graphics.
-static inline bool box_swept(const struct box *box1, const struct box *box2, fvec3_t offset, float *t, float *s, fvec3_t *normal)
+static inline bool box_swept(box_t box1, box_t box2, fvec3_t offset, float *t, float *s, fvec3_t *normal)
 {
   // We are essentially solving:
   //
@@ -102,8 +78,8 @@ static inline bool box_swept(const struct box *box1, const struct box *box2, fve
   //
   // We make the choice that this does not count as collision. This is because
   // that is the configuration we would have after resolving collision.
-  fvec3_t ts_1 = fvec3_div(fvec3_sub(box_point1(box2), box_point2(box1)), offset);
-  fvec3_t ts_2 = fvec3_div(fvec3_sub(box_point2(box2), box_point1(box1)), offset);
+  fvec3_t ts_1 = fvec3_div(fvec3_sub(box_min_corner(box2), box_max_corner(box1)), offset);
+  fvec3_t ts_2 = fvec3_div(fvec3_sub(box_max_corner(box2), box_min_corner(box1)), offset);
   for(int i=0; i<3; ++i)
     if(isnanf(ts_1.values[i]) || isnanf(ts_2.values[i]))
       return false;
@@ -149,20 +125,17 @@ static void entity_physics_update(struct entity *entity, float dt)
   const struct entity_info *entity_info = query_entity_info(entity->id);
   for(;;)
   {
-    fvec3_t offset = fvec3_mul_scalar(entity->velocity, dt);
+    const fvec3_t offset = fvec3_mul_scalar(entity->velocity, dt);
 
-    struct box entity_box;
-    entity_box.position = fvec3_add(entity->position, entity_info->hitbox_offset);
-    entity_box.dimension = entity_info->hitbox_dimension;
-
-    struct box entity_box_expanded = box_expand(&entity_box, offset);
+    const box_t entity_box = box(fvec3_add(entity->position, entity_info->hitbox_offset), entity_info->hitbox_dimension);
+    const box_t entity_box_expanded = box_expand(entity_box, offset);
 
     float min_t =  INFINITY;
     float max_s = -INFINITY;
     fvec3_t min_normal;
 
-    ivec3_t point1 = fvec3_as_ivec3_round(box_point1(&entity_box_expanded));
-    ivec3_t point2 = fvec3_as_ivec3_round(box_point2(&entity_box_expanded));
+    ivec3_t point1 = fvec3_as_ivec3_round(box_min_corner(entity_box_expanded));
+    ivec3_t point2 = fvec3_as_ivec3_round(box_max_corner(entity_box_expanded));
     for(int z=point1.z; z<=point2.z; ++z)
       for(int y=point1.y; y<=point2.y; ++y)
         for(int x=point1.x; x<=point2.x; ++x)
@@ -178,7 +151,9 @@ static void entity_physics_update(struct entity *entity, float dt)
               float t;
               float s;
               fvec3_t normal;
-              if(box_swept(&entity_box, &(struct box){ .position = ivec3_as_fvec3(position), .dimension = fvec3(1.0f, 1.0f, 1.0f), }, offset, &t, &s, &normal))
+
+              const box_t block_box = box(ivec3_as_fvec3(position), fvec3(1.0f, 1.0f, 1.0f));
+              if(box_swept(entity_box, block_box, offset, &t, &s, &normal))
                 if(min_t > t || (min_t == t && max_s < s))
                 {
                   min_t = t;

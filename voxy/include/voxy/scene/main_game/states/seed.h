@@ -3,6 +3,9 @@
 
 #include <voxy/math/random.h>
 
+void save_world_seed(void);
+void load_world_seed(void);
+
 void world_seed_set(seed_t seed);
 seed_t world_seed_get(void);
 

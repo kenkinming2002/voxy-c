@@ -6,6 +6,8 @@
 #include <stdlib.h>
 
 void(*mod_init)(void);
+void (*mod_enter)(void);
+void (*mod_leave)(void);
 void(*mod_update)(void);
 
 void mod_load(const char *filepath)
@@ -18,6 +20,8 @@ void mod_load(const char *filepath)
   }
 
   mod_init = dlsym(dl, "mod_init");
+  mod_enter = dlsym(dl, "mod_enter");
+  mod_leave = dlsym(dl, "mod_leave");
   mod_update = dlsym(dl, "mod_update");
 
   if(mod_init)

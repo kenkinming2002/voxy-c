@@ -8,6 +8,7 @@
 
 #include <voxy/math/vector.h>
 
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -29,13 +30,23 @@ struct chunk
   struct chunk *left;
   struct chunk *right;
 
-  /// If we are in the singly-linked list of invalidated chunks.
-  bool mesh_invalidated : 1;
-
   /// Pointer to chunk data.
   ///
   /// If this is NULL, we are either not yet generated or not loaded.
   struct chunk_data *data;
+
+  /// Busy flag.
+  ///
+  /// Indicate if the chunk is currently being generated.
+  bool busy : 1;
+
+  /// Atomic pointer to new data.
+  ///
+  /// This is how we can obtain newly generated chunk data.
+  struct chunk_data *_Atomic new_data;
+
+  /// If we are in the singly-linked list of invalidated chunks.
+  bool mesh_invalidated : 1;
 
   /// Render info for the chunk.
   ///
@@ -99,6 +110,14 @@ struct block *chunk_get_block(struct chunk *chunk, ivec3_t position);
 /// entity is added which may cause reallocation in the underlying dynamic
 /// array.
 bool chunk_add_entity(struct chunk *chunk_data, struct entity entity);
+
+/// Add an entity.
+///
+/// Same as chunk_add_entity() except entity is added directly and there is no
+/// need to call chunk_commit_add_entities(). It is important to make sure that
+/// there is no pointer to any entity in the chunk as the underlying dynamic
+/// array may be resized in the process.
+bool chunk_add_entity_raw(struct chunk *chunk_data, struct entity entity);
 
 /// Commit adding of entities by calling chunk_data_commit_add_entities().
 ///

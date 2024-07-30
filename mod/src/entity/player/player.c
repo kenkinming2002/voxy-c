@@ -9,29 +9,38 @@
 
 #include <voxy/scene/main_game/render/debug.h>
 #include <voxy/core/window.h>
+#include <voxy/core/log.h>
 
 #include <stdlib.h>
 
-entity_id_t player_entity_id(void)
+static entity_id_t player_entity_id = ENTITY_NONE;
+
+void player_entity_register(void)
 {
-  static entity_id_t id = ENTITY_NONE;
-  if(id == ENTITY_NONE)
-  {
-    struct entity_info entity_info;
+  struct entity_info entity_info;
 
-    entity_info.mod = "main";
-    entity_info.name = "player";
+  entity_info.mod = "main";
+  entity_info.name = "player";
 
-    entity_info.mesh = NULL;
-    entity_info.texture = NULL;
+  entity_info.mesh = NULL;
+  entity_info.texture = NULL;
 
-    entity_info.hitbox_dimension = fvec3(0.8f, 0.8f, 2.0f);
-    entity_info.hitbox_offset = fvec3(0.0f, 0.0f, -0.5f);
-    entity_info.on_update = player_entity_update;
+  entity_info.hitbox_dimension = fvec3(0.8f, 0.8f, 2.0f);
+  entity_info.hitbox_offset = fvec3(0.0f, 0.0f, -0.5f);
 
-    id = register_entity_info(entity_info);
-  }
-  return id;
+  entity_info.on_dispose = player_entity_fini;
+
+  entity_info.on_save = player_entity_save;
+  entity_info.on_load = player_entity_load;
+
+  entity_info.on_update = player_entity_update;
+
+  player_entity_id = register_entity_info(entity_info);
+}
+
+entity_id_t player_entity_id_get(void)
+{
+  return player_entity_id;
 }
 
 void player_entity_init(struct entity *entity)
@@ -68,13 +77,46 @@ void player_entity_init(struct entity *entity)
   opaque->cooldown = 0.0f;
   opaque->cooldown_weird = 0.0f;
 
-  entity->id = player_entity_id();
+  entity->id = player_entity_id;
   entity->opaque = opaque;
 }
 
-void player_entity_fini(struct entity *entity)
+void player_entity_fini(struct entity *entity) { free(entity->opaque); }
+
+bool player_entity_save(const struct entity *entity, FILE *file)
 {
-  free(entity->opaque);
+  const struct player_opaque *opaque = entity->opaque;
+
+#define SAVE(x) if(fwrite(&x, sizeof x, 1, file) != 1) return false;
+  SAVE(opaque->inventory);
+  SAVE(opaque->hotbar);
+  SAVE(opaque->hand);
+  SAVE(opaque->hotbar_selection);
+  SAVE(opaque->cooldown);
+  SAVE(opaque->cooldown_weird);
+#undef SAVE
+
+  return true;
+}
+
+bool player_entity_load(struct entity *entity, FILE *file)
+{
+  struct player_opaque *opaque = malloc(sizeof *opaque);
+  entity->opaque = opaque;
+
+  opaque->inventory_opened = false;
+  opaque->third_person = false;
+
+#define LOAD(x) if(fread(&x, sizeof x, 1, file) != 1) return false;
+  LOAD(opaque->inventory);
+  LOAD(opaque->hotbar);
+  LOAD(opaque->hand);
+  LOAD(opaque->hotbar_selection);
+  LOAD(opaque->cooldown);
+  LOAD(opaque->cooldown_weird);
+#undef LOAD
+
+  return true;
 }
 
 void player_entity_update(struct entity *entity, float dt)

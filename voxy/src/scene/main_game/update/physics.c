@@ -146,6 +146,11 @@ void update_physics(float dt)
 {
   world_for_each_chunk(chunk)
     if(chunk->data)
+    {
       for(size_t i=0; i<chunk->data->entities.item_count; ++i)
         entity_update_physics(&chunk->data->entities.items[i], dt);
+
+      if(chunk->data->entities.item_count != 0)
+        chunk->data->dirty = true;
+    }
 }

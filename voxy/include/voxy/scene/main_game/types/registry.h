@@ -5,6 +5,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 struct chunk;
 struct block;
@@ -78,7 +80,12 @@ struct entity_info
   fvec3_t hitbox_offset;
   fvec3_t hitbox_dimension;
 
+  void(*on_dispose)(struct entity *entity);
+
   void(*on_update)(struct entity *entity, float dt);
+
+  bool(*on_save)(const struct entity *entity, FILE *file);
+  bool(*on_load)(struct entity *entity, FILE *file);
 };
 
 const char *block_type_as_str(enum block_type block_type);

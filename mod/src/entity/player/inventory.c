@@ -278,7 +278,7 @@ void player_entity_update_inventory(struct entity *entity)
           if(!entity_intersect(entity, other_entity))
             continue;
 
-          if(other_entity->id != item_entity_id())
+          if(other_entity->id != item_entity_id_get())
             continue;
 
           struct item_opaque *other_opaque = other_entity->opaque;
@@ -299,4 +299,6 @@ void player_entity_update_inventory(struct entity *entity)
           }
         }
   }
+
+  window_show_cursor(opaque->inventory_opened);
 }

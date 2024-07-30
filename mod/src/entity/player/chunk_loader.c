@@ -4,7 +4,7 @@
 #include <voxy/graphics/camera.h>
 #include <voxy/scene/main_game/states/camera.h>
 #include <voxy/scene/main_game/types/chunk.h>
-#include <voxy/scene/main_game/update/chunk_generate.h>
+#include <voxy/scene/main_game/update/chunk_manager.h>
 
 void player_entity_update_chunk_loader(struct entity *entity)
 {
@@ -12,6 +12,6 @@ void player_entity_update_chunk_loader(struct entity *entity)
   for(int dz = -PLAYER_CHUNK_LOAD_DISTANCE; dz<=PLAYER_CHUNK_LOAD_DISTANCE; ++dz)
     for(int dy = -PLAYER_CHUNK_LOAD_DISTANCE; dy<=PLAYER_CHUNK_LOAD_DISTANCE; ++dy)
       for(int dx = -PLAYER_CHUNK_LOAD_DISTANCE; dx<=PLAYER_CHUNK_LOAD_DISTANCE; ++dx)
-        enqueue_chunk_generate(ivec3_add(center, ivec3(dx, dy, dz)));
+        activate_chunk(ivec3_add(center, ivec3(dx, dy, dz)));
 }
 

@@ -10,6 +10,7 @@
 #include <voxy/scene/main_game/types/chunk_hash_table.h>
 #include <voxy/scene/main_game/types/entity.h>
 #include <voxy/scene/main_game/update/chunk_generate.h>
+#include <voxy/scene/main_game/update/chunk_manager.h>
 #include <voxy/scene/main_game/update/generate.h>
 #include <voxy/scene/main_game/update/light.h>
 #include <voxy/scene/main_game/update/physics.h>
@@ -27,24 +28,33 @@
 #define FIXED_DT (1.0f/30.0f)
 #define MOD_PATH "mod/mod.so"
 
+extern void (*mod_enter)(void);
+extern void (*mod_leave)(void);
+extern void (*mod_update)(void);
+
 static float accumulated_dt;
 static bool initialized;
 
 void main_game_enter()
 {
-  window_show_cursor(false);
-
   accumulated_dt = 0.0f;
   if(!initialized)
   {
     initialized = true;
-    world_seed_generate();
     mod_load(MOD_PATH);
   }
+
+  window_show_cursor(false);
+  load_world_seed();
+  load_active_chunks();
+  mod_enter();
 }
 
 void main_game_leave()
 {
+  mod_leave();
+  save_active_chunks();
+  save_world_seed();
   window_show_cursor(true);
 }
 
@@ -52,28 +62,48 @@ static void main_game_update_fixed(float dt)
 {
   ui_reset();
 
-  extern void (*mod_update)(void);
-  mod_update();
-
   // Update World
   {
-    update_chunk_generate();
+    sync_active_chunks();
+    reset_active_chunks();
+    {
+      mod_update();
 
-    world_for_each_chunk(chunk)
-      if(chunk->data)
-        for(size_t i=0; i<chunk->data->entities.item_count; ++i)
+      world_for_each_chunk(chunk)
+        if(chunk->data)
+          for(size_t i=0; i<chunk->data->entities.item_count; ++i)
+          {
+            struct entity *entity = &chunk->data->entities.items[i];
+            const struct entity_info *entity_info = query_entity_info(entity->id);
+            if(entity_info->on_update)
+              entity_info->on_update(&chunk->data->entities.items[i], dt);
+          }
+
+      update_light();
+      update_physics(dt);
+
+      world_for_each_chunk(chunk)
+        chunk_commit_add_entities(chunk);
+
+      world_for_each_chunk(chunk)
+        if(chunk->data)
         {
-          struct entity *entity = &chunk->data->entities.items[i];
-          const struct entity_info *entity_info = query_entity_info(entity->id);
-          if(entity_info->on_update)
-            entity_info->on_update(&chunk->data->entities.items[i], dt);
+          size_t new_item_count = 0;
+          for(size_t i=0; i<chunk->data->entities.item_count; ++i)
+          {
+            struct entity *entity = &chunk->data->entities.items[i];
+
+            const fvec3_t entity_position = entity->position;
+            const ivec3_t chunk_position = ivec3_div_scalar(fvec3_as_ivec3_round(entity_position), CHUNK_WIDTH);
+
+            if(!ivec3_eql(chunk->position, chunk_position) && chunk_add_entity_raw(world_get_chunk(chunk_position), *entity))
+              continue;
+
+            chunk->data->entities.items[new_item_count++] = chunk->data->entities.items[i];
+          }
+          chunk->data->entities.item_count = new_item_count;
         }
-
-    world_for_each_chunk(chunk)
-      chunk_commit_add_entities(chunk);
-
-    update_light();
-    update_physics(dt);
+    }
   }
 
   // FIXME: Write a real UI

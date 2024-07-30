@@ -3,7 +3,8 @@
 
 #include <voxy/scene/main_game/types/entity.h>
 
-entity_id_t weird_entity_id(void);
+void weird_entity_register(void);
+entity_id_t weird_entity_id_get(void);
 
 void weird_entity_init(struct entity *entity);
 void weird_entity_fini(struct entity *entity);

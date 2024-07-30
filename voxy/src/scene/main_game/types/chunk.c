@@ -19,6 +19,7 @@ void chunk_set_block_id(struct chunk *chunk, int x, int y, int z, block_id_t id)
 {
   if(chunk->data->blocks[z][y][x].id != id)
   {
+    chunk->data->dirty = true;
     chunk->data->blocks[z][y][x].id = id;
     chunk->mesh_invalidated = true;
 
@@ -46,6 +47,7 @@ void chunk_set_block_light_level(struct chunk *chunk, int x, int y, int z, unsig
 {
   if(chunk->data->blocks[z][y][x].light_level != light_level)
   {
+    chunk->data->dirty = true;
     chunk->data->blocks[z][y][x].light_level = light_level;
     chunk->mesh_invalidated = true;
 
@@ -73,6 +75,7 @@ void chunk_set_block_ether(struct chunk *chunk, int x, int y, int z, unsigned et
 {
   if(chunk->data->blocks[z][y][x].ether != ether)
   {
+    chunk->data->dirty = true;
     chunk->data->blocks[z][y][x].ether = ether;
     chunk->mesh_invalidated = true;
 
@@ -127,6 +130,18 @@ bool chunk_add_entity(struct chunk *chunk, struct entity entity)
   else
     return false;
 }
+
+bool chunk_add_entity_raw(struct chunk *chunk, struct entity entity)
+{
+  if(chunk->data)
+  {
+    chunk_data_add_entity_raw(chunk->data, entity);
+    return true;
+  }
+  else
+    return false;
+}
+
 
 void chunk_commit_add_entities(struct chunk *chunk)
 {

@@ -25,5 +25,8 @@ int main()
     if(scene_commit())
       break;
   }
+
+  scene_switch(SCENE_NONE);
+  scene_commit();
 }
 

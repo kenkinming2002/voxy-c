@@ -9,6 +9,8 @@
 
 #define MOD_FILEPATH "mod/mod.so"
 
+#define WORLD_DIRPATH "world"
+
 #define RENDERER_LOAD_DISTANCE   4
 #define RENDERER_UNLOAD_DISTANCE 64
 

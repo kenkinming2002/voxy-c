@@ -23,10 +23,14 @@ struct player_opaque
   float cooldown_weird;
 };
 
-entity_id_t player_entity_id(void);
+void player_entity_register(void);
+entity_id_t player_entity_id_get(void);
 
 void player_entity_init(struct entity *entity);
 void player_entity_fini(struct entity *entity);
+
+bool player_entity_save(const struct entity *entity, FILE *file);
+bool player_entity_load(struct entity *entity, FILE *file);
 
 void player_entity_update(struct entity *entity, float dt);
 

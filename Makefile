@@ -11,6 +11,7 @@ VOXY_SRCS += voxy/src/math/box.c
 VOXY_SRCS += voxy/src/core/window.c
 VOXY_SRCS += voxy/src/core/thread_pool.c
 VOXY_SRCS += voxy/src/core/delta_time.c
+VOXY_SRCS += voxy/src/core/fs.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
 VOXY_SRCS += voxy/src/graphics/font_set.c
@@ -40,7 +41,9 @@ VOXY_SRCS += voxy/src/scene/main_game/states/digger.c
 VOXY_SRCS += voxy/src/scene/main_game/states/seed.c
 VOXY_SRCS += voxy/src/scene/main_game/states/cursor.c
 
+VOXY_SRCS += voxy/src/scene/main_game/update/chunk_database.c
 VOXY_SRCS += voxy/src/scene/main_game/update/chunk_generate.c
+VOXY_SRCS += voxy/src/scene/main_game/update/chunk_manager.c
 VOXY_SRCS += voxy/src/scene/main_game/update/generate.c
 VOXY_SRCS += voxy/src/scene/main_game/update/light.c
 VOXY_SRCS += voxy/src/scene/main_game/update/physics.c
@@ -51,7 +54,7 @@ VOXY_SRCS += voxy/src/scene/main_game/render/assets.c
 VOXY_SRCS += voxy/src/scene/main_game/render/blocks.c
 VOXY_SRCS += voxy/src/scene/main_game/render/entities.c
 
-MOD_SRCS += mod/src/init.c
+MOD_SRCS += mod/src/mod.c
 MOD_SRCS += mod/src/ids.c
 MOD_SRCS += mod/src/generate.c
 
@@ -68,7 +71,6 @@ MOD_SRCS += mod/src/entity/player/player.c
 MOD_SRCS += mod/src/entity/player/spawn_weird.c
 MOD_SRCS += mod/src/entity/weird/weird.c
 
-MOD_SRCS += mod/src/update/update.c
 MOD_SRCS += mod/src/update/spawn_player.c
 
 voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -fno-semantic-interposition

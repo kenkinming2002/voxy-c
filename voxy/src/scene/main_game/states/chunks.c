@@ -91,9 +91,14 @@ void world_set_block(ivec3_t position, block_id_t id, struct entity *entity)
       const unsigned old_light_level = block->light_level;
       const unsigned old_ether = block->ether;
 
-      block->id = id;
-      block->light_level = block_info->light_level;
-      block->ether = block_info->ether;
+      if(block->id != id || block->light_level != block_info->light_level || block->ether != block_info->ether)
+      {
+        block->id = id;
+        block->light_level = block_info->light_level;
+        block->ether = block_info->ether;
+
+        chunk->data->dirty = true;
+      }
 
       if(old_light_level < block->light_level || old_ether < block->ether)
         enqueue_light_create_update(position);

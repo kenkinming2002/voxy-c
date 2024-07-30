@@ -299,6 +299,4 @@ void player_entity_update_inventory(struct entity *entity)
           }
         }
   }
-
-  window_show_cursor(opaque->inventory_opened);
 }

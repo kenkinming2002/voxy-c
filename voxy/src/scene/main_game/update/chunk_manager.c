@@ -97,8 +97,17 @@ void sync_active_chunks(void)
       if(!chunk->data && !chunk->busy)
       {
         load_count += 1;
-        generate_count -= 1;
-        chunk->new_data = load_chunk_data(chunk->position);
+        chunk->data = load_chunk_data(chunk->position);
+        if(chunk->data)
+        {
+          chunk->mesh_invalidated = true;
+          if(chunk->left) chunk->left->mesh_invalidated = true;
+          if(chunk->right) chunk->right->mesh_invalidated = true;
+          if(chunk->back) chunk->back->mesh_invalidated = true;
+          if(chunk->front) chunk->front->mesh_invalidated = true;
+          if(chunk->bottom) chunk->bottom->mesh_invalidated = true;
+          if(chunk->top) chunk->top->mesh_invalidated = true;
+        }
       }
 
       if(!chunk->data && !chunk->busy && enqueue_generate_chunk(chunk))

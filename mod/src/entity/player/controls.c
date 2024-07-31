@@ -13,6 +13,11 @@ static float clampf(float value, float min, float max)
     return value;
 }
 
+static float degree_to_radian(float value)
+{
+  return value / 180.0 * M_PI;
+}
+
 void player_entity_update_controls(struct entity *entity, float dt)
 {
   struct player_opaque *opaque = entity->opaque;
@@ -30,7 +35,7 @@ void player_entity_update_controls(struct entity *entity, float dt)
     entity->rotation.pitch += -mouse_motion.y * PLAYER_PAN_SPEED;
 
     entity->rotation.yaw = fmodf(entity->rotation.yaw, 2 * M_PI);
-    entity->rotation.pitch = clampf(entity->rotation.pitch, -M_PI_2, M_PI_2);
+    entity->rotation.pitch = clampf(entity->rotation.pitch, degree_to_radian(-89.99), degree_to_radian(89.99));
   }
 
   // Move

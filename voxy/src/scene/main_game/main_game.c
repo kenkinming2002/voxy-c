@@ -83,7 +83,8 @@ static void main_game_update_fixed(float dt)
       update_physics(dt);
 
       world_for_each_chunk(chunk)
-        chunk_commit_add_entities(chunk);
+        if(chunk->data)
+          chunk_commit_add_entities(chunk);
 
       world_for_each_chunk(chunk)
         if(chunk->data)
@@ -92,11 +93,7 @@ static void main_game_update_fixed(float dt)
           for(size_t i=0; i<chunk->data->entities.item_count; ++i)
           {
             struct entity *entity = &chunk->data->entities.items[i];
-
-            const fvec3_t entity_position = entity->position;
-            const ivec3_t chunk_position = ivec3_div_scalar(fvec3_as_ivec3_round(entity_position), CHUNK_WIDTH);
-
-            if(!ivec3_eql(chunk->position, chunk_position) && chunk_add_entity_raw(world_get_chunk(chunk_position), *entity))
+            if(!ivec3_eql(chunk->position, get_chunk_position(fvec3_as_ivec3_round(entity->position))) && world_add_entity_raw(*entity))
               continue;
 
             chunk->data->entities.items[new_item_count++] = chunk->data->entities.items[i];

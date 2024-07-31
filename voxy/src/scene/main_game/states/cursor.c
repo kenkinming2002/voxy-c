@@ -12,7 +12,6 @@ static inline void split_position(ivec3_t position, ivec3_t *chunk_position, ive
   }
 }
 
-
 bool cursor_at(ivec3_t position, struct cursor *cursor)
 {
   ivec3_t chunk_position;
@@ -26,9 +25,24 @@ bool cursor_at(ivec3_t position, struct cursor *cursor)
   return cursor->chunk && cursor->chunk->data;
 }
 
+ivec3_t cursor_get_chunk_position(struct cursor cursor)
+{
+  return cursor.chunk->position;
+}
+
+ivec3_t cursor_get_local_position(struct cursor cursor)
+{
+  return ivec3(cursor.x, cursor.y, cursor.z);
+}
+
+ivec3_t cursor_get_global_position(struct cursor cursor)
+{
+  return local_position_to_global_position(cursor_get_local_position(cursor), cursor_get_chunk_position(cursor));
+}
+
 bool cursor_move(struct cursor *cursor, direction_t direction)
 {
-  ivec3_t position = ivec3(cursor->x, cursor->y, cursor->z);
+  ivec3_t position = cursor_get_local_position(*cursor);
   ivec3_t new_position = ivec3_add(position, direction_as_ivec(direction));
 
   switch(direction)
@@ -85,8 +99,33 @@ bool cursor_move(struct cursor *cursor, direction_t direction)
   return cursor->chunk && cursor->chunk->data;
 }
 
-struct block *cursor_get(struct cursor cursor)
+block_id_t cursor_get_block_id(struct cursor cursor)
 {
-  return &cursor.chunk->data->blocks[cursor.z][cursor.y][cursor.x];
+  return chunk_get_block_id(cursor.chunk, cursor_get_local_position(cursor));
+}
+
+void cursor_set_block_id(struct cursor cursor, block_id_t id)
+{
+  chunk_set_block_id(cursor.chunk, cursor_get_local_position(cursor), id);
+}
+
+unsigned cursor_get_block_ether(struct cursor cursor)
+{
+  return chunk_get_block_ether(cursor.chunk, cursor_get_local_position(cursor));
+}
+
+void cursor_set_block_ether(struct cursor cursor, unsigned ether)
+{
+  chunk_set_block_ether(cursor.chunk, cursor_get_local_position(cursor), ether);
+}
+
+unsigned cursor_get_block_light_level(struct cursor cursor)
+{
+  return chunk_get_block_light_level(cursor.chunk, cursor_get_local_position(cursor));
+}
+
+void cursor_set_block_light_level(struct cursor cursor, unsigned light_level)
+{
+  chunk_set_block_light_level(cursor.chunk, cursor_get_local_position(cursor), light_level);
 }
 

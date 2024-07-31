@@ -135,15 +135,17 @@ static bool remesh_chunk(struct chunk *chunk)
       for(int y = -1; y<CHUNK_WIDTH+1; ++y)
         for(int x = -1; x<CHUNK_WIDTH+1; ++x)
         {
-          struct block *block = chunk_get_block(chunk, ivec3(x, y, z));
-          if(!block)
+          const ivec3_t block_position = ivec3(x, y, z);
+          if((blocks[z+1][y+1][x+1].id = chunk_get_block_id_ex(chunk, block_position)) != BLOCK_NONE)
           {
-            blocks[z+1][y+1][x+1].id = BLOCK_NONE;
+            blocks[z+1][y+1][x+1].ether = chunk_get_block_ether_ex(chunk, block_position);
+            blocks[z+1][y+1][x+1].light_level = chunk_get_block_light_level_ex(chunk, block_position);
+          }
+          else
+          {
             blocks[z+1][y+1][x+1].ether = false;
             blocks[z+1][y+1][x+1].light_level = 0;
           }
-          else
-            blocks[z+1][y+1][x+1] = *block;
         }
 
     // Cache block types also. Again, this may not be a good idea, but it does

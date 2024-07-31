@@ -28,7 +28,19 @@ struct chunk_data *load_chunk_data(ivec3_t position)
     if(!f)
       return NULL;
 
-    if(fread(&chunk_data->blocks, sizeof chunk_data->blocks, 1, f) != 1)
+    if(fread(&chunk_data->block_ids, sizeof chunk_data->block_ids, 1, f) != 1)
+    {
+      fclose(f);
+      return NULL;
+    }
+
+    if(fread(&chunk_data->block_ethers, sizeof chunk_data->block_ethers, 1, f) != 1)
+    {
+      fclose(f);
+      return NULL;
+    }
+
+    if(fread(&chunk_data->block_light_levels, sizeof chunk_data->block_light_levels, 1, f) != 1)
     {
       fclose(f);
       return NULL;
@@ -88,7 +100,19 @@ bool save_chunk_data(ivec3_t position, struct chunk_data *chunk_data)
     if(!f)
       return false;
 
-    if(fwrite(&chunk_data->blocks, sizeof chunk_data->blocks, 1, f) != 1)
+    if(fwrite(&chunk_data->block_ids, sizeof chunk_data->block_ids, 1, f) != 1)
+    {
+      fclose(f);
+      return false;
+    }
+
+    if(fwrite(&chunk_data->block_ethers, sizeof chunk_data->block_ethers, 1, f) != 1)
+    {
+      fclose(f);
+      return false;
+    }
+
+    if(fwrite(&chunk_data->block_light_levels, sizeof chunk_data->block_light_levels, 1, f) != 1)
     {
       fclose(f);
       return false;

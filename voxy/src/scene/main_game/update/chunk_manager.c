@@ -73,13 +73,13 @@ void sync_active_chunks(void)
   // Save/Discard chunk
   world_for_each_chunk(chunk)
   {
-    if(chunk->data && chunk->data->dirty && save_chunk_data(chunk->position, chunk->data))
+    if(chunk->data && chunk_is_dirty(chunk) && save_chunk_data(chunk->position, chunk->data))
     {
       chunk->data->dirty = false;
       save_count += 1;
     }
 
-    if(chunk->data && !chunk->data->dirty && !ivec3_hash_table_lookup(&active_chunk_positions, chunk->position))
+    if(chunk->data && !chunk_is_dirty(chunk) && !ivec3_hash_table_lookup(&active_chunk_positions, chunk->position))
     {
       chunk_data_destroy(chunk->data);
       chunk->data = NULL;
@@ -128,10 +128,13 @@ void sync_active_chunks(void)
         for(int z = 0; z<CHUNK_WIDTH; ++z)
           for(int y = 0; y<CHUNK_WIDTH; ++y)
             for(int x = 0; x<CHUNK_WIDTH; ++x)
-              if(chunk->data->blocks[z][y][x].ether != 0 || chunk->data->blocks[z][y][x].light_level != 0)
+            {
+              const ivec3_t position = ivec3(x, y, z);
+              if(chunk_get_block_ether(chunk, position) != 0 || chunk_get_block_light_level(chunk, position) != 0)
                 enqueue_light_create_update_raw(chunk, x, y, z);
               else if(z == 0 || z == CHUNK_WIDTH - 1 || y == 0 || y == CHUNK_WIDTH - 1 || x == 0 || x == CHUNK_WIDTH - 1)
                 enqueue_light_destroy_update_raw(chunk, x, y, z, 0, 0);
+            }
 
         generate_count += 1;
       }

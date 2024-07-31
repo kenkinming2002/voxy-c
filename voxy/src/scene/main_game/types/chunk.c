@@ -1,150 +1,166 @@
 #include <voxy/scene/main_game/types/chunk.h>
+#include <voxy/scene/main_game/update/light.h>
 
-block_id_t chunk_get_block_id(struct chunk *chunk, int x, int y, int z)
+bool chunk_is_dirty(const struct chunk *chunk)
 {
-  return chunk->data->blocks[z][y][x].id;
+  return chunk_data_is_dirty(chunk->data);
 }
 
-unsigned chunk_get_light_level(struct chunk *chunk, int x, int y, int z)
+static void chunk_traverse(const struct chunk **chunk, ivec3_t *position)
 {
-  return chunk->data->blocks[z][y][x].light_level;
-}
-
-unsigned chunk_get_block_ether(struct chunk *chunk, int x, int y, int z)
-{
-  return chunk->data->blocks[z][y][x].ether;
-}
-
-void chunk_set_block_id(struct chunk *chunk, int x, int y, int z, block_id_t id)
-{
-  if(chunk->data->blocks[z][y][x].id != id)
+  while(*chunk)
   {
-    chunk->data->dirty = true;
-    chunk->data->blocks[z][y][x].id = id;
-    chunk->mesh_invalidated = true;
-
-    if(x == 0 && chunk->left)
-      chunk->left->mesh_invalidated = true;
-
-    if(y == 0 && chunk->back)
-      chunk->back->mesh_invalidated = true;
-
-    if(z == 0 && chunk->bottom)
-      chunk->bottom->mesh_invalidated = true;
-
-    if(x == CHUNK_WIDTH - 1 && chunk->right)
-      chunk->right->mesh_invalidated = true;
-
-    if(y == CHUNK_WIDTH - 1 && chunk->front)
-      chunk->front->mesh_invalidated = true;
-
-    if(z == CHUNK_WIDTH - 1 && chunk->top)
-      chunk->top->mesh_invalidated = true;
+    if(position->x < 0)
+    {
+      *chunk = (*chunk)->left;
+      position->x += CHUNK_WIDTH;
+    }
+    else if(position->y < 0)
+    {
+      *chunk = (*chunk)->back;
+      position->y += CHUNK_WIDTH;
+    }
+    else if(position->z < 0)
+    {
+      *chunk = (*chunk)->bottom;
+      position->z += CHUNK_WIDTH;
+    }
+    else if(position->x >= CHUNK_WIDTH)
+    {
+      *chunk = (*chunk)->right;
+      position->x -= CHUNK_WIDTH;
+    }
+    else if(position->y >= CHUNK_WIDTH)
+    {
+      *chunk = (*chunk)->front;
+      position->y -= CHUNK_WIDTH;
+    }
+    else if(position->z >= CHUNK_WIDTH)
+    {
+      *chunk = (*chunk)->top;
+      position->z -= CHUNK_WIDTH;
+    }
+    else
+      return;
   }
 }
 
-void chunk_set_block_light_level(struct chunk *chunk, int x, int y, int z, unsigned light_level)
+void chunk_invalidate_mesh_at(struct chunk *chunk, ivec3_t position)
 {
-  if(chunk->data->blocks[z][y][x].light_level != light_level)
-  {
-    chunk->data->dirty = true;
-    chunk->data->blocks[z][y][x].light_level = light_level;
-    chunk->mesh_invalidated = true;
+  // FIXME: We are only invalidating chunks where blocks at position and the 6
+  //        adjacent blocks are located in. This is not sufficient if we also
+  //        take into account our ambient occlusion calculation.
 
-    if(x == 0 && chunk->left)
-      chunk->left->mesh_invalidated = true;
+  chunk->mesh_invalidated = true;
 
-    if(y == 0 && chunk->back)
-      chunk->back->mesh_invalidated = true;
+  if(position.x == 0 && chunk->left)
+    chunk->left->mesh_invalidated = true;
 
-    if(z == 0 && chunk->bottom)
-      chunk->bottom->mesh_invalidated = true;
+  if(position.y == 0 && chunk->back)
+    chunk->back->mesh_invalidated = true;
 
-    if(x == CHUNK_WIDTH - 1 && chunk->right)
-      chunk->right->mesh_invalidated = true;
+  if(position.z == 0 && chunk->bottom)
+    chunk->bottom->mesh_invalidated = true;
 
-    if(y == CHUNK_WIDTH - 1 && chunk->front)
-      chunk->front->mesh_invalidated = true;
+  if(position.x == CHUNK_WIDTH - 1 && chunk->right)
+    chunk->right->mesh_invalidated = true;
 
-    if(z == CHUNK_WIDTH - 1 && chunk->top)
-      chunk->top->mesh_invalidated = true;
-  }
+  if(position.y == CHUNK_WIDTH - 1 && chunk->front)
+    chunk->front->mesh_invalidated = true;
+
+  if(position.z == CHUNK_WIDTH - 1 && chunk->top)
+    chunk->top->mesh_invalidated = true;
 }
 
-void chunk_set_block_ether(struct chunk *chunk, int x, int y, int z, unsigned ether)
+block_id_t chunk_get_block_id(const struct chunk *chunk, ivec3_t position)
 {
-  if(chunk->data->blocks[z][y][x].ether != ether)
-  {
-    chunk->data->dirty = true;
-    chunk->data->blocks[z][y][x].ether = ether;
-    chunk->mesh_invalidated = true;
-
-    if(x == 0 && chunk->left)
-      chunk->left->mesh_invalidated = true;
-
-    if(y == 0 && chunk->back)
-      chunk->back->mesh_invalidated = true;
-
-    if(z == 0 && chunk->bottom)
-      chunk->bottom->mesh_invalidated = true;
-
-    if(x == CHUNK_WIDTH - 1 && chunk->right)
-      chunk->right->mesh_invalidated = true;
-
-    if(y == CHUNK_WIDTH - 1 && chunk->front)
-      chunk->front->mesh_invalidated = true;
-
-    if(z == CHUNK_WIDTH - 1 && chunk->top)
-      chunk->top->mesh_invalidated = true;
-  }
+  return chunk_data_get_block_id(chunk->data, position);
 }
 
-void chunk_set_block(struct chunk *chunk, int x, int y, int z, block_id_t id)
+block_id_t chunk_get_block_id_ex(const struct chunk *chunk, ivec3_t position)
 {
-  const struct block_info *info = query_block_info(id);
-  chunk_set_block_id(chunk, x, y, z, id);
-  chunk_set_block_light_level(chunk, x, y, z, info->light_level);
-  chunk_set_block_ether(chunk, x, y, z, info->ether);
-}
-
-struct block *chunk_get_block(struct chunk *chunk, ivec3_t position)
-{
-  if(position.z < 0) return chunk->bottom ? chunk_get_block(chunk->bottom, ivec3_add(position, ivec3(0, 0, CHUNK_WIDTH))) : NULL;
-  if(position.y < 0) return chunk->back   ? chunk_get_block(chunk->back,   ivec3_add(position, ivec3(0, CHUNK_WIDTH, 0))) : NULL;
-  if(position.x < 0) return chunk->left   ? chunk_get_block(chunk->left,   ivec3_add(position, ivec3(CHUNK_WIDTH, 0, 0))) : NULL;
-
-  if(position.z >= CHUNK_WIDTH) return chunk->top   ? chunk_get_block(chunk->top,   ivec3_sub(position, ivec3(0, 0, CHUNK_WIDTH))) : NULL;
-  if(position.y >= CHUNK_WIDTH) return chunk->front ? chunk_get_block(chunk->front, ivec3_sub(position, ivec3(0, CHUNK_WIDTH, 0))) : NULL;
-  if(position.x >= CHUNK_WIDTH) return chunk->right ? chunk_get_block(chunk->right, ivec3_sub(position, ivec3(CHUNK_WIDTH, 0, 0))) : NULL;
-
-  return chunk->data ? chunk_data_get_block(chunk->data, position) : NULL;
-}
-
-bool chunk_add_entity(struct chunk *chunk, struct entity entity)
-{
-  if(chunk->data)
-  {
-    chunk_data_add_entity(chunk->data, entity);
-    return true;
-  }
+  chunk_traverse(&chunk, &position);
+  if(chunk && chunk->data)
+    return chunk_data_get_block_id(chunk->data, position);
   else
-    return false;
+    return BLOCK_NONE;
 }
 
-bool chunk_add_entity_raw(struct chunk *chunk, struct entity entity)
+void chunk_set_block_id(struct chunk *chunk, ivec3_t position, block_id_t id)
 {
-  if(chunk->data)
-  {
-    chunk_data_add_entity_raw(chunk->data, entity);
-    return true;
-  }
-  else
-    return false;
+  chunk_data_set_block_id(chunk->data, position, id);
+  chunk_invalidate_mesh_at(chunk, position);
 }
 
+unsigned chunk_get_block_ether(const struct chunk *chunk, ivec3_t position)
+{
+  return chunk_data_get_block_ether(chunk->data, position);
+}
+
+unsigned chunk_get_block_ether_ex(const struct chunk *chunk, ivec3_t position)
+{
+  chunk_traverse(&chunk, &position);
+  if(chunk && chunk->data)
+    return chunk_data_get_block_ether(chunk->data, position);
+  else
+    return -1;
+}
+
+void chunk_set_block_ether(struct chunk *chunk, ivec3_t position, unsigned ether)
+{
+  chunk_data_set_block_ether(chunk->data, position, ether);
+  chunk_invalidate_mesh_at(chunk, position);
+}
+
+unsigned chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position)
+{
+  return chunk_data_get_block_light_level(chunk->data, position);
+}
+
+unsigned chunk_get_block_light_level_ex(const struct chunk *chunk, ivec3_t position)
+{
+  chunk_traverse(&chunk, &position);
+  if(chunk && chunk->data)
+    return chunk_data_get_block_light_level(chunk->data, position);
+  else
+    return -1;
+}
+
+void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned light_level)
+{
+  chunk_data_set_block_light_level(chunk->data, position, light_level);
+  chunk_invalidate_mesh_at(chunk, position);
+}
+
+void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id)
+{
+  const unsigned old_block_ether = chunk_data_get_block_ether(chunk->data, position);
+  const unsigned old_block_light_level = chunk_data_get_block_light_level(chunk->data, position);
+
+  chunk_data_set_block(chunk->data, position, id);
+  chunk_invalidate_mesh_at(chunk, position);
+
+  const unsigned new_block_ether = chunk_data_get_block_ether(chunk->data, position);
+  const unsigned new_block_light_level = chunk_data_get_block_light_level(chunk->data, position);
+
+  if(old_block_ether < new_block_ether || old_block_light_level < new_block_light_level)
+    enqueue_light_create_update_raw(chunk, position.x, position.y, position.z);
+
+  if(old_block_ether >= new_block_ether || old_block_light_level <= new_block_light_level)
+    enqueue_light_destroy_update_raw(chunk, position.x, position.y, position.z, old_block_light_level, old_block_ether);
+}
+
+void chunk_add_entity_raw(struct chunk *chunk, struct entity entity)
+{
+  chunk_data_add_entity_raw(chunk->data, entity);
+}
+
+void chunk_add_entity(struct chunk *chunk, struct entity entity)
+{
+  chunk_data_add_entity(chunk->data, entity);
+}
 
 void chunk_commit_add_entities(struct chunk *chunk)
 {
-  if(chunk->data)
-    chunk_data_commit_add_entities(chunk->data);
+  chunk_data_commit_add_entities(chunk->data);
 }

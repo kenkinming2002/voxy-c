@@ -34,116 +34,103 @@ struct chunk *world_get_chunk(ivec3_t position)
   return chunk;
 }
 
-static inline void split_position(ivec3_t position, ivec3_t *chunk_position, ivec3_t *block_position)
+ivec3_t global_position_to_local_position(ivec3_t position)
 {
   for(int i=0; i<3; ++i)
   {
-    (*block_position).values[i] = ((position.values[i] % CHUNK_WIDTH) + CHUNK_WIDTH) % CHUNK_WIDTH;
-    (*chunk_position).values[i] = (position.values[i] - (*block_position).values[i]) / CHUNK_WIDTH;
+    position.values[i] %= CHUNK_WIDTH;
+    position.values[i] += CHUNK_WIDTH;
+    position.values[i] %= CHUNK_WIDTH;
   }
+  return position;
 }
 
-struct block *world_get_block(ivec3_t position)
+ivec3_t get_chunk_position(ivec3_t position)
 {
-  ivec3_t chunk_position;
-  ivec3_t block_position;
-  split_position(position, &chunk_position, &block_position);
-
-  struct chunk *chunk = world_get_chunk(chunk_position);
-  return chunk_get_block(chunk, block_position);
+  return ivec3_div_scalar(ivec3_sub(position, global_position_to_local_position(position)), CHUNK_WIDTH);
 }
 
-bool world_get_block_ex(ivec3_t position, struct chunk **chunk, struct block **block)
+ivec3_t local_position_to_global_position(ivec3_t position, ivec3_t chunk_position)
 {
-  ivec3_t chunk_position;
-  ivec3_t block_position;
-  split_position(position, &chunk_position, &block_position);
-
-  *chunk = world_get_chunk(chunk_position);
-  *block = chunk_get_block(*chunk, block_position);
-  return *block;
+  return ivec3_add(ivec3_mul_scalar(chunk_position, CHUNK_WIDTH), position);
 }
 
-/// Set a block at position. Pass id == ID_NONE to destroy the block. This takes
-/// of sending invalidation events to all relevant systems, and calling all
-/// relevant callbacks.
+void world_invalidate_mesh_at(ivec3_t position)
+{
+  struct chunk *chunk = world_get_chunk(get_chunk_position(position));
+  if(chunk && chunk->data)
+    chunk_invalidate_mesh_at(chunk, global_position_to_local_position(position));
+}
+
+block_id_t world_get_block_id(ivec3_t position)
+{
+  struct chunk *chunk = world_get_chunk(get_chunk_position(position));
+  if(chunk && chunk->data)
+    return chunk_get_block_id(chunk, global_position_to_local_position(position));
+  else
+    return BLOCK_NONE;
+}
+
+unsigned world_get_block_ether(ivec3_t position)
+{
+  struct chunk *chunk = world_get_chunk(get_chunk_position(position));
+  if(chunk && chunk->data)
+    return chunk_get_block_ether(chunk, global_position_to_local_position(position));
+  else
+    return -1;
+}
+
+unsigned world_get_block_light_level(ivec3_t position)
+{
+  struct chunk *chunk = world_get_chunk(get_chunk_position(position));
+  if(chunk && chunk->data)
+    return chunk_get_block_light_level(chunk, global_position_to_local_position(position));
+  else
+    return -1;
+}
+
 void world_set_block(ivec3_t position, block_id_t id, struct entity *entity)
 {
-  struct chunk *chunk;
-  struct block *block;
-
-  if(world_get_block_ex(position, &chunk, &block))
+  struct chunk *chunk = world_get_chunk(get_chunk_position(position));
+  if(chunk && chunk->data)
   {
-    // Opaque => Transparent : destruction
-    // Transparent => Opaque : destruction
-
-    // Destroy
     {
-      const struct block_info *block_info = query_block_info(block->id);
+      const block_id_t block_id = chunk_get_block_id(chunk, global_position_to_local_position(position));
+      const struct block_info *block_info = query_block_info(block_id);
       if(block_info->on_destroy)
-        block_info->on_destroy(entity, chunk, block);
+        block_info->on_destroy(entity, chunk, global_position_to_local_position(position));
     }
-
-    // Create
+    chunk_set_block(chunk, global_position_to_local_position(position), id);
     {
-      const struct block_info *block_info = query_block_info(id);
-
-      const unsigned old_light_level = block->light_level;
-      const unsigned old_ether = block->ether;
-
-      if(block->id != id || block->light_level != block_info->light_level || block->ether != block_info->ether)
-      {
-        block->id = id;
-        block->light_level = block_info->light_level;
-        block->ether = block_info->ether;
-
-        chunk->data->dirty = true;
-      }
-
-      if(old_light_level < block->light_level || old_ether < block->ether)
-        enqueue_light_create_update(position);
-
-      if(old_light_level >= block->light_level || old_ether >= block->ether)
-        enqueue_light_destroy_update(position, old_light_level, old_ether);
-
+      const block_id_t block_id = chunk_get_block_id(chunk, global_position_to_local_position(position));
+      const struct block_info *block_info = query_block_info(block_id);
       if(block_info->on_create)
-        block_info->on_create(entity, chunk, block);
+        block_info->on_create(entity, chunk, global_position_to_local_position(position));
     }
-
-    // Invalidate
-    world_invalidate_block(position);
   }
 }
 
-static void world_invalidate_block_impl(ivec3_t position)
+bool world_add_entity_raw(struct entity entity)
 {
-  ivec3_t chunk_position;
-  ivec3_t block_position;
-  split_position(position, &chunk_position, &block_position);
-
-  struct chunk *chunk = world_get_chunk(chunk_position);
-  if(chunk)
-    chunk->mesh_invalidated = true;
-}
-
-void world_invalidate_block(ivec3_t position)
-{
-  world_invalidate_block_impl(position);
-  world_invalidate_block_impl(ivec3_add(position, ivec3(-1, 0, 0)));
-  world_invalidate_block_impl(ivec3_add(position, ivec3( 1, 0, 0)));
-  world_invalidate_block_impl(ivec3_add(position, ivec3(0, -1, 0)));
-  world_invalidate_block_impl(ivec3_add(position, ivec3(0,  1, 0)));
-  world_invalidate_block_impl(ivec3_add(position, ivec3(0, 0, -1)));
-  world_invalidate_block_impl(ivec3_add(position, ivec3(0, 0,  1)));
+  struct chunk *chunk = world_get_chunk(get_chunk_position(fvec3_as_ivec3_round(entity.position)));
+  if(chunk && chunk->data)
+  {
+    chunk_add_entity_raw(chunk, entity);
+    return true;
+  }
+  else
+    return false;
 }
 
 bool world_add_entity(struct entity entity)
 {
-  ivec3_t chunk_position;
-  ivec3_t block_position;
-  split_position(fvec3_as_ivec3_round(entity.position), &chunk_position, &block_position);
-
-  struct chunk *chunk = world_get_chunk(chunk_position);
-  return chunk_add_entity(chunk, entity);
+  struct chunk *chunk = world_get_chunk(get_chunk_position(fvec3_as_ivec3_round(entity.position)));
+  if(chunk && chunk->data)
+  {
+    chunk_add_entity(chunk, entity);
+    return true;
+  }
+  else
+    return false;
 }
 

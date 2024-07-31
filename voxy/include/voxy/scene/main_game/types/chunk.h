@@ -55,61 +55,41 @@ struct chunk
   struct chunk_render_info *render_info;
 };
 
-/// Get id of block at position x, y, z where 0 <= x, y, z < CHUNK_WIDTH.
-block_id_t chunk_get_block_id(struct chunk *chunk, int x, int y, int z);
+/// Return if chunk is dirty.
+bool chunk_is_dirty(const struct chunk *chunk);
 
-/// Get light level of block at position x, y, z where 0 <= x, y, z <
-/// CHUNK_WIDTH.
-unsigned chunk_get_light_level(struct chunk *chunk, int x, int y, int z);
+/// Invalidate mesh at position so that any necessary remeshing is done. This
+/// also takes care of also invalidating mesh of adjacent chunk if necessary.
+void chunk_invalidate_mesh_at(struct chunk *chunk, ivec3_t position);
 
-/// Get ether of block at position x, y, z where 0 <= x, y, z < CHUNK_WIDTH.
-unsigned chunk_get_block_ether(struct chunk *chunk, int x, int y, int z);
-
-/// Set id of block at position x, y, z where 0 <= x, y, z < CHUNK_WIDTH. Also
-/// set mesh_invalidated for current chunk and neighbouring chunks if necessary.
-void chunk_set_block_id(struct chunk *chunk, int x, int y, int z, block_id_t block_id);
-
-/// Set light level of block at position x, y, z where 0 <= x, y, z <
-/// CHUNK_WIDTH. Also set mesh_invalidated for current chunk and neighbouring
-/// chunks if necessary.
-void chunk_set_block_light_level(struct chunk *chunk, int x, int y, int z, unsigned light_level);
-
-/// Set ether of block at position x, y, z where 0 <= x, y, z <
-/// CHUNK_WIDTH. Also set mesh_invalidated for current chunk and neighbouring
-/// chunks if necessary.
-void chunk_set_block_ether(struct chunk *chunk, int x, int y, int z, unsigned ether);
-
-/// Set id of block at position x, y, z and update ether and light level of
-/// block according to block information in the registry. Also set
-/// mesh_invalidated for current chunk and neighbouring chunks if necessary.
-void chunk_set_block(struct chunk *chunk, int x, int y, int z, block_id_t id);
-
-/// Get a pointer to a block at position, which is specified in chunk local
-/// coordinate.
+/// Get/set block id.
 ///
-/// Unlike chunk_data_get_block(), position may be outside of the
-/// range [0, CHUNK_WIDTH)x[0, CHUNK_WIDTH)x[0, CHUNK_WIDTH) in which case
-/// neighbouring chunks would be traversed recursively to locate the correct
-/// chunk.
-///
-/// Unlike chunk_data_get_block(), this function may fail if data field of target
-/// chunk is NULL, which signifies that the chunk is either not generated yet or
-/// not loaded. NULL is returned in such a case.
-///
-/// This may be slow if the position is far from the current chunk. In that case
-/// consider using world_get_block() instead.
-struct block *chunk_get_block(struct chunk *chunk, ivec3_t position);
+/// The *_ex version will traverse to neighbour chunk recursively. If the
+/// neighbour chunk have not been generated, BLOCK_NONE is returned.
+block_id_t chunk_get_block_id(const struct chunk *chunk, ivec3_t position);
+block_id_t chunk_get_block_id_ex(const struct chunk *chunk, ivec3_t position);
+void chunk_set_block_id(struct chunk *chunk, ivec3_t position, block_id_t id);
 
-/// Add an entity.
+/// Get/set block ether.
 ///
-/// Unlike chunk_data_add_entity(), this function may fail if data field of
-/// target chunk is NULL, which signifies that the chunk is either not generated
-/// yet or not loaded. False is returned in such a case.
+/// The *_ex version will traverse to neighbour chunk recursively. If the
+/// neighbour chunk have not been generated, (unsigned)-1 is returned.
+unsigned chunk_get_block_ether(const struct chunk *chunk, ivec3_t position);
+unsigned chunk_get_block_ether_ex(const struct chunk *chunk, ivec3_t position);
+void chunk_set_block_ether(struct chunk *chunk, ivec3_t position, unsigned ether);
+
+/// Get/set block light level.
 ///
-/// Like chunk_data_add_entity(), the returned pointer is valid until another
-/// entity is added which may cause reallocation in the underlying dynamic
-/// array.
-bool chunk_add_entity(struct chunk *chunk_data, struct entity entity);
+/// The *_ex version will traverse to neighbour chunk recursively. If the
+/// neighbour chunk have not been generated, (unsigned)-1 is returned.
+unsigned chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position);
+unsigned chunk_get_block_light_level_ex(const struct chunk *chunk, ivec3_t position);
+void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned ether);
+
+/// Convenient helper to set block given its id where block ether and ether are
+/// set according block info from query_block_info(). This also take care of
+/// triggering lighting update if necessary.
+void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id);
 
 /// Add an entity.
 ///
@@ -117,13 +97,12 @@ bool chunk_add_entity(struct chunk *chunk_data, struct entity entity);
 /// need to call chunk_commit_add_entities(). It is important to make sure that
 /// there is no pointer to any entity in the chunk as the underlying dynamic
 /// array may be resized in the process.
-bool chunk_add_entity_raw(struct chunk *chunk_data, struct entity entity);
+void chunk_add_entity_raw(struct chunk *chunk_data, struct entity entity);
 
-/// Commit adding of entities by calling chunk_data_commit_add_entities().
-///
-/// This function is a no-op if data field of target chunk is NULL, which
-/// signifies that the chunk is either not generated yet or not loaded. NULL is
-/// returned in such a case.
+/// Add an entity.
+void chunk_add_entity(struct chunk *chunk_data, struct entity entity);
+
+/// Commit adding of entities.
 void chunk_commit_add_entities(struct chunk *chunk);
 
 #endif // VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_H

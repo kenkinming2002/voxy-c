@@ -93,13 +93,13 @@ static void entity_physics_update(struct entity *entity, float dt)
         for(int x=block_position_min.x; x<=block_position_max.x; ++x)
         {
           const ivec3_t block_position = ivec3(x, y, z);
-          const struct block *block = world_get_block(block_position);
-          if(block && query_block_info(block->id)->type == BLOCK_TYPE_OPAQUE)
+          const block_id_t block_id = world_get_block_id(block_position);
+          if(block_id != BLOCK_NONE && query_block_info(block_id)->type == BLOCK_TYPE_OPAQUE)
             for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
             {
               const ivec3_t neighbour_block_position = ivec3_add(block_position, direction_as_ivec(direction));
-              const struct block *neighbour_block = world_get_block(neighbour_block_position);
-              if(!neighbour_block || query_block_info(neighbour_block->id)->type != BLOCK_TYPE_OPAQUE)
+              const block_id_t neighbour_block_id = world_get_block_id(neighbour_block_position);
+              if(neighbour_block_id == BLOCK_NONE || query_block_info(neighbour_block_id)->type != BLOCK_TYPE_OPAQUE)
               {
                 const box_t block_hitbox = box(ivec3_as_fvec3(block_position), fvec3(1.0f, 1.0f, 1.0f));
                 const rect_t block_face_hitbox = box_face(block_hitbox, direction);

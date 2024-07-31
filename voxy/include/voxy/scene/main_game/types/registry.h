@@ -55,8 +55,8 @@ struct block_info
 
   const char *textures[BLOCK_FACE_COUNT];
 
-  void(*on_create)(struct entity *entity, struct chunk *chunk, struct block *block);
-  void(*on_destroy)(struct entity *entity, struct chunk *chunk, struct block *block);
+  void(*on_create)(struct entity *entity, struct chunk *chunk, ivec3_t position);
+  void(*on_destroy)(struct entity *entity, struct chunk *chunk, ivec3_t position);
 };
 
 struct item_info

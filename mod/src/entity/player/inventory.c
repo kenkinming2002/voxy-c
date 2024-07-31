@@ -243,10 +243,10 @@ void player_entity_update_inventory(struct entity *entity)
       ivec3_t normal;
       if(entity_ray_cast(entity, 20.0f, &position, &normal))
       {
-        const struct block *target_block = world_get_block(position);
-        if(target_block && target_block->id != BLOCK_NONE)
+        const block_id_t target_block_id = world_get_block_id(position);
+        if(target_block_id != BLOCK_NONE && target_block_id != BLOCK_NONE)
         {
-          label_widget.text     = query_block_info(target_block->id)->name;
+          label_widget.text = query_block_info(target_block_id)->name;
           label_widget.position = target_block_label_position;
           label_widget_render(&label_widget);
         }

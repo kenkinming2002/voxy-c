@@ -65,8 +65,8 @@ bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, i
 
   while(ray_cast.distance < distance)
   {
-    struct block *block = world_get_block(ray_cast.iposition);
-    if(block && query_block_info(block->id)->type == BLOCK_TYPE_OPAQUE)
+    const block_id_t block_id = world_get_block_id(ray_cast.iposition);
+    if(block_id != BLOCK_NONE && query_block_info(block_id)->type == BLOCK_TYPE_OPAQUE)
       return true;
 
     ray_cast_step(&ray_cast, ray_direction);

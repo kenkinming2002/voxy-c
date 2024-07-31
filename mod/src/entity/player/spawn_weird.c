@@ -6,7 +6,7 @@
 void player_entity_update_spawn_weird(struct entity *entity, float dt)
 {
   struct player_opaque *opaque = entity->opaque;
-  for(opaque->cooldown_weird += dt; opaque->cooldown >= 2.0f; opaque->cooldown -= 2.0f)
+  for(opaque->cooldown_weird += dt; opaque->cooldown_weird >= 2.0f; opaque->cooldown_weird -= 2.0f)
   {
     struct entity new_entity;
     new_entity.position = entity->position;

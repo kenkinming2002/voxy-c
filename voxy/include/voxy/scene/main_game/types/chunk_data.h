@@ -21,7 +21,10 @@ struct chunk_data
   /// If chunk data need to be written back onto the disk.
   bool dirty : 1;
 
-  struct block blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+  block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+
+  unsigned char block_ethers      [CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 1)];
+  unsigned char block_light_levels[CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 4)];
 
   struct entities entities;
   struct entities new_entities;
@@ -30,25 +33,24 @@ struct chunk_data
 /// Destroy chunk data and free all internally allocated memory.
 void chunk_data_destroy(struct chunk_data *chunk_data);
 
-/// Get a pointer to a block at position, which is specified in chunk local
-/// coordinate in the range [0, CHUNK_WIDTH)x[0, CHUNK_WIDTH)x[0, CHUNK_WIDTH).
-///
-/// If you would also like to access block in neighbouring chunks, consider
-/// using chunk_get_block().
-struct block *chunk_data_get_block(struct chunk_data *chunk_data, ivec3_t position);
+/// Return if chunk data is dirtied i.e. need to be written back to disk.
+bool chunk_data_is_dirty(const struct chunk_data *chunk_data);
 
-/// Add an entity.
-///
-/// The entity is only added after call to chunk_data_commit_add_entities().
-/// This is because we might be iterating over the entity dynamic array, and we
-/// have to be careful not to invalidate any pointer.
-///
-/// This always succeeds unless you run out of memory in which case you have
-/// bigger problem.
-///
-/// The returned pointer is valid until another entity is added which may cause
-/// reallocation in the underlying dynamic array.
-void chunk_data_add_entity(struct chunk_data *chunk_data, struct entity entity);
+/// Get/set block id.
+block_id_t chunk_data_get_block_id(const struct chunk_data *chunk_data, ivec3_t position);
+void chunk_data_set_block_id(struct chunk_data *chunk_data, ivec3_t position, block_id_t id);
+
+/// Get/set block ether.
+unsigned chunk_data_get_block_ether(const struct chunk_data *chunk_data, ivec3_t position);
+void chunk_data_set_block_ether(struct chunk_data *chunk_data, ivec3_t position, unsigned ether);
+
+/// Get/set block light level.
+unsigned chunk_data_get_block_light_level(const struct chunk_data *chunk_data, ivec3_t position);
+void chunk_data_set_block_light_level(struct chunk_data *chunk_data, ivec3_t position, unsigned light_level);
+
+/// Convenient helper to set block given its id where block ether and ether are
+/// set according block info from query_block_info().
+void chunk_data_set_block(struct chunk_data *chunk_data, ivec3_t position, block_id_t id);
 
 /// Add an entity.
 ///
@@ -58,9 +60,14 @@ void chunk_data_add_entity(struct chunk_data *chunk_data, struct entity entity);
 /// array may be resized in the process.
 void chunk_data_add_entity_raw(struct chunk_data *chunk_data, struct entity entity);
 
-/// Commit adding of entities.
+/// Add an entity.
 ///
-/// See chunk_data_add_entity() for more details.
+/// The entity is only added after call to chunk_data_commit_add_entities().
+/// This is because we might be iterating over the entity dynamic array, and we
+/// have to be careful not to invalidate any pointer.
+void chunk_data_add_entity(struct chunk_data *chunk_data, struct entity entity);
+
+/// Commit adding of entities.
 void chunk_data_commit_add_entities(struct chunk_data *chunk_data);
 
 #endif // VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_DATA_H

@@ -19,26 +19,12 @@ void player_entity_update_actions(struct entity *entity, float dt)
       ivec3_t normal;
       if(entity_ray_cast(entity, 20.0f, &position, &normal))
       {
-        if(!ivec3_eql(g_digger.position, position))
-        {
-          g_digger.position = position;
-          g_digger.damage = 0.0f;
-        }
-
-        g_digger.damage += dt * PLAYER_DIG_SPEED;
-        if(g_digger.damage >= 1.0f)
-          world_set_block(position, 0, entity); // FIXME: We are hardcoding the fact that empty block have id 0
-        else
-          world_invalidate_block(position);
-
+        digger_set_position(&g_digger, position);
+        digger_dig(&g_digger, dt * PLAYER_DIG_SPEED, entity);
       }
     }
-    else if(g_digger.damage != 0.0f)
-    {
-      world_invalidate_block(g_digger.position);
-      g_digger.position = ivec3_zero();
-      g_digger.damage = 0.0f;
-    }
+    else
+      digger_reset(&g_digger);
   }
 
   // Right click => place blocks

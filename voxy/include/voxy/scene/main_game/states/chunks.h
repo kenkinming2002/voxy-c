@@ -23,51 +23,59 @@ extern struct chunk_hash_table world_chunks;
   for (size_t i = 0; i < world_chunks.bucket_count; ++i)                             \
     for (struct chunk *it = world_chunks.buckets[i].head; it; it = it->next)
 
+/// Coordinate conversions.
+///
+/// FIXME: This probably should be moved to some other module.
+ivec3_t get_chunk_position(ivec3_t position);
+ivec3_t global_position_to_local_position(ivec3_t position);
+ivec3_t local_position_to_global_position(ivec3_t position, ivec3_t chunk_position);
+
 /// Get a pointer to a chunk at position, which is specified by chunk position.
 ///
 /// This will *create* the chunk if it does not exist yet but none of its
 /// internal states would be initialized. This may change in the future.
 struct chunk *world_get_chunk(ivec3_t position);
 
-/// Get a pointer to a block at position, which is specified in global
-/// coordinate.
-///
-/// Unlike chunk_data_get_block(), this function may fail if data field of
-/// target chunk is NULL, which signifies that the chunk is either not generated
-/// yet or not loaded. NULL is returned in such a case.
-///
-/// If you have an exising pointer to the target chunk or a nearby chunk,
-/// consider using chunk_get_block() instead.
-///
-/// If you intend on modifying the block, make sure to send invaldiation event
-/// by calling world_invalidate_block().
-struct block *world_get_block(ivec3_t position);
+/// Invalidate mesh at position so that any necessary remeshing is done.
+void world_invalidate_mesh_at(ivec3_t position);
 
-/// An *extended* version of world_get_block(), also returning intermediate
-/// information.
-bool world_get_block_ex(ivec3_t position, struct chunk **chunk, struct block **block);
+/// Getters.
+///
+/// This take care of splitting position to locate the correct chunk and
+/// position within said chunk.
+///
+/// This may fail if the chunk is not yet generated in which case BLOCK_NONE or
+/// (unsigned)-1 is returned.
+///
+/// Technically, it can be more efficient to return block id, ether and light
+/// level at once as it avoid repeated hash table lookup internally but I don't
+/// cares :). The point is, cares need to be taken if they are to be used in
+/// performance-critical code.
+block_id_t world_get_block_id(ivec3_t position);
+unsigned world_get_block_ether(ivec3_t position);
+unsigned world_get_block_light_level(ivec3_t position);
 
-/// Set a block at position. Pass id == ID_NONE to destroy the block. This takes
-/// of sending invalidation events to all relevant systems, and calling all
-/// relevant callbacks.
+/// Set a block at position by its id.
+///
+/// This takes of sending invalidation events to all relevant systems, and
+/// calling all relevant callbacks.
 void world_set_block(ivec3_t position, block_id_t id, struct entity *entity);
-
-/// Invalidate the block at position.
-///
-/// This need to be called if block at position is changed.
-void world_invalidate_block(ivec3_t position);
 
 /// Add an entity.
 ///
-/// Unlike chunk_add_entity(), the correct chunk to add the entity to would be
-/// located based-off of entity position.
+/// Same as world_add_entity() except entity is added directly and there is no
+/// need to call chunk_commit_add_entities(). It is important to make sure that
+/// there is no pointer to any entity in the chunk as the underlying dynamic
+/// array may be resized in the process.
+bool world_add_entity_raw(struct entity entity);
+
+/// Add an entity.
 ///
-/// Like chunk_add_entity(), this function may fail if data field of target
-/// chunk is NULL, which signifies that the chunk is either not generated yet or
-/// not loaded. False is returned in such a case.
+/// This take care of splitting entity position to locate the correct chunk to
+/// add the entity.
 ///
-/// Like chunk_add_entity(), the returned pointer is valid until another entity
-/// is added which may cause reallocation in the underlying dynamic array.
+/// This may fail if the chunk is not yet generated in which case false is
+/// returned.
 bool world_add_entity(struct entity entity);
 
 #endif // VOXY_SCENE_MAIN_GAME_STATES_CHUNKS_H

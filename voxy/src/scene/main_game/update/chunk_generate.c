@@ -18,14 +18,7 @@ static struct chunk_data *chunk_data_generate(ivec3_t position)
   for(int z = 0; z<CHUNK_WIDTH; ++z)
     for(int y = 0; y<CHUNK_WIDTH; ++y)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
-      {
-        block_id_t block_id = blocks[z][y][x];
-        const struct block_info *block_info = query_block_info(block_id);
-
-        chunk_data->blocks[z][y][x].id = block_id;
-        chunk_data->blocks[z][y][x].ether = block_info->ether;
-        chunk_data->blocks[z][y][x].light_level = block_info->light_level;
-      }
+        chunk_data_set_block(chunk_data, ivec3(x, y, z), blocks[z][y][x]);
 
   DYNAMIC_ARRAY_INIT(chunk_data->entities);
   DYNAMIC_ARRAY_INIT(chunk_data->new_entities);

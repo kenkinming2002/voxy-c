@@ -5,10 +5,9 @@
 #include <voxy/scene/main_game/states/cursor.h>
 
 #include <voxy/core/log.h>
+#include <voxy/dynamic_array.h>
+#include <voxy/utils.h>
 
-#include <sys/queue.h>
-
-#include <stdlib.h>
 #include <time.h>
 
 /// Rule for light update
@@ -35,10 +34,8 @@
 // considering the size of our structure is so small.
 struct light_creation
 {
-  STAILQ_ENTRY(light_creation) link;
   struct cursor cursor;
 };
-STAILQ_HEAD(light_creations, light_creation);
 
 // We need to store light creation/destruction in a fifo data structure i.e.
 // queue but obviously we do not have a implementation in C. We are using the
@@ -46,36 +43,37 @@ STAILQ_HEAD(light_creations, light_creation);
 // considering the size of our structure is so small.
 struct light_destruction
 {
-  STAILQ_ENTRY(light_destruction) link;
   struct cursor cursor;
   uint8_t ether : 1;
   uint8_t light_level : 4;
 };
-STAILQ_HEAD(light_destructions, light_destruction);
 
-struct light_creations light_creations = STAILQ_HEAD_INITIALIZER(light_creations);
-struct light_destructions light_destructions = STAILQ_HEAD_INITIALIZER(light_destructions);
+DYNAMIC_ARRAY_DEFINE(light_creations, struct light_creation);
+DYNAMIC_ARRAY_DEFINE(light_destructions, struct light_destruction);
+
+static struct light_creations light_creations;
+static struct light_destructions light_destructions;
 
 void enqueue_light_create_update(struct chunk *chunk, unsigned x, unsigned y, unsigned z)
 {
-  struct light_creation *p_light_creation = malloc(sizeof *p_light_creation);
-  p_light_creation->cursor.chunk = chunk;
-  p_light_creation->cursor.x = x;
-  p_light_creation->cursor.y = y;
-  p_light_creation->cursor.z = z;
-  STAILQ_INSERT_TAIL(&light_creations, p_light_creation, link);
+  struct light_creation light_creation;
+  light_creation.cursor.chunk = chunk;
+  light_creation.cursor.x = x;
+  light_creation.cursor.y = y;
+  light_creation.cursor.z = z;
+  DYNAMIC_ARRAY_APPEND(light_creations, light_creation);
 }
 
 void enqueue_light_destroy_update(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level, unsigned ether)
 {
-  struct light_destruction *p_light_destruction = malloc(sizeof *p_light_destruction);
-  p_light_destruction->cursor.chunk = chunk;
-  p_light_destruction->cursor.x = x;
-  p_light_destruction->cursor.y = y;
-  p_light_destruction->cursor.z = z;
-  p_light_destruction->light_level = light_level;
-  p_light_destruction->ether = ether;
-  STAILQ_INSERT_TAIL(&light_destructions, p_light_destruction, link);
+  struct light_destruction light_destruction;
+  light_destruction.cursor.chunk = chunk;
+  light_destruction.cursor.x = x;
+  light_destruction.cursor.y = y;
+  light_destruction.cursor.z = z;
+  light_destruction.light_level = light_level;
+  light_destruction.ether = ether;
+  DYNAMIC_ARRAY_APPEND(light_destructions, light_destruction);
 }
 
 static void update_light_creation(void)
@@ -83,40 +81,41 @@ static void update_light_creation(void)
   size_t count = 0;
   clock_t begin = clock();
 
-  struct light_creation *light_creation;
-  while((light_creation = STAILQ_FIRST(&light_creations)))
+  struct light_creations curr_light_creations = {0};
+  while(light_creations.item_count != 0)
   {
-    STAILQ_REMOVE_HEAD(&light_creations, link);
-    count += 1;
-
-    // Esentially, we want to do is the following:
-    //   1. Loop through each adjacent block
-    //   2. Check we can propagate light to each of them i.e. it is both
-    //     1. Not opaque
-    //     2. Have a lower light level strictly lower than what we could propagate
-    //   3. Propagate if that is the case
-
-    struct cursor cursor = light_creation->cursor;
-    for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+    SWAP(curr_light_creations, light_creations);
+    for(size_t i=0; i<curr_light_creations.item_count; ++i)
     {
-      struct cursor neighbour_cursor = light_creation->cursor;
-      if(cursor_move(&neighbour_cursor, direction))
-      {
-        const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-        if((neighbour_block_info->type != BLOCK_TYPE_OPAQUE) && ((direction == DIRECTION_BOTTOM && (int)cursor_get_block_ether(neighbour_cursor) < (int)cursor_get_block_ether(cursor)) || (int)cursor_get_block_light_level(neighbour_cursor) < (int)cursor_get_block_light_level(cursor) - 1))
-        {
-          struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
-          new_light_creation->cursor = neighbour_cursor;
-          STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
+      const struct light_creation light_creation = curr_light_creations.items[i];
 
-          cursor_set_block_ether(neighbour_cursor, direction == DIRECTION_BOTTOM ? cursor_get_block_ether(cursor) : 0);
-          cursor_set_block_light_level(neighbour_cursor, cursor_get_block_ether(neighbour_cursor) ? 15 : (int)cursor_get_block_light_level(cursor) - 1);
+      // Esentially, we want to do is the following:
+      //   1. Loop through each adjacent block
+      //   2. Check we can propagate light to each of them i.e. it is both
+      //     1. Not opaque
+      //     2. Have a lower light level strictly lower than what we could propagate
+      //   3. Propagate if that is the case
+      struct cursor cursor = light_creation.cursor;
+      for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+      {
+        struct cursor neighbour_cursor = light_creation.cursor;
+        if(cursor_move(&neighbour_cursor, direction))
+        {
+          const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
+          if((neighbour_block_info->type != BLOCK_TYPE_OPAQUE) && ((direction == DIRECTION_BOTTOM && (int)cursor_get_block_ether(neighbour_cursor) < (int)cursor_get_block_ether(cursor)) || (int)cursor_get_block_light_level(neighbour_cursor) < (int)cursor_get_block_light_level(cursor) - 1))
+          {
+            enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
+            cursor_set_block_ether(neighbour_cursor, direction == DIRECTION_BOTTOM ? cursor_get_block_ether(cursor) : 0);
+            cursor_set_block_light_level(neighbour_cursor, cursor_get_block_ether(neighbour_cursor) ? 15 : (int)cursor_get_block_light_level(cursor) - 1);
+          }
         }
       }
     }
-
-    free(light_creation);
+    count += curr_light_creations.item_count;
+    curr_light_creations.item_count = 0;
   }
+  DYNAMIC_ARRAY_CLEAR(light_creations);
+  DYNAMIC_ARRAY_CLEAR(curr_light_creations);
 
   clock_t end = clock();
   if(count != 0)
@@ -128,49 +127,44 @@ static void update_light_destruction(void)
   size_t count = 0;
   clock_t begin = clock();
 
-  struct light_destruction *light_destruction;
-  while((light_destruction = STAILQ_FIRST(&light_destructions)))
+  struct light_destructions curr_light_destructions = {0};
+  while(light_destructions.item_count != 0)
   {
-    STAILQ_REMOVE_HEAD(&light_destructions, link);
-    count += 1;
-
-    // Esentially, we want to do is the following:
-    //   1. Loop through each adjacent block
-    //   2. Check we may have propagated light to each of them i.e. it is both
-    //     1. Not opaque
-    //     2. Have a lower light level lower than or equal to what we could propagate
-    //     3: Non-zero ***
-    //   3. Propagate if that is the case
-    //   4. Otherwise, we would need to redo light propagation from them ***
-
-    for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+    SWAP(curr_light_destructions, light_destructions);
+    for(size_t i=0; i<curr_light_destructions.item_count; ++i)
     {
-      struct cursor neighbour_cursor = light_destruction->cursor;
-      if(cursor_move(&neighbour_cursor, direction))
+      const struct light_destruction light_destruction = curr_light_destructions.items[i];
+
+      // Esentially, we want to do is the following:
+      //   1. Loop through each adjacent block
+      //   2. Check we may have propagated light to each of them i.e. it is both
+      //     1. Not opaque
+      //     2. Have a lower light level lower than or equal to what we could propagate
+      //     3: Non-zero ***
+      //   3. Propagate if that is the case
+      //   4. Otherwise, we would need to redo light propagation from them ***
+      for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
       {
-        const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-
-        if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE && ((direction == DIRECTION_BOTTOM && (int)cursor_get_block_ether(neighbour_cursor) != 0 && (int)cursor_get_block_ether(neighbour_cursor) <= (int)light_destruction->ether) || ((int)cursor_get_block_light_level(neighbour_cursor) != 0 && (int)cursor_get_block_light_level(neighbour_cursor) <= (int)light_destruction->light_level - 1)))
+        struct cursor neighbour_cursor = light_destruction.cursor;
+        if(cursor_move(&neighbour_cursor, direction))
         {
-          struct light_destruction *new_light_destruction = malloc(sizeof *new_light_destruction);
-          new_light_destruction->cursor = neighbour_cursor;
-          new_light_destruction->light_level = cursor_get_block_light_level(neighbour_cursor);
-          new_light_destruction->ether = cursor_get_block_ether(neighbour_cursor);
-          STAILQ_INSERT_TAIL(&light_destructions, new_light_destruction, link);
-
-          cursor_set_block_ether(neighbour_cursor, 0);
-          cursor_set_block_light_level(neighbour_cursor, 0);
-        }
-        else if(cursor_get_block_ether(neighbour_cursor) != 0 || cursor_get_block_light_level(neighbour_cursor) != 0)
-        {
-          struct light_creation *new_light_creation = malloc(sizeof *new_light_creation);
-          new_light_creation->cursor = neighbour_cursor;
-          STAILQ_INSERT_TAIL(&light_creations, new_light_creation, link);
+          const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
+          if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE && ((direction == DIRECTION_BOTTOM && (int)cursor_get_block_ether(neighbour_cursor) != 0 && (int)cursor_get_block_ether(neighbour_cursor) <= (int)light_destruction.ether) || ((int)cursor_get_block_light_level(neighbour_cursor) != 0 && (int)cursor_get_block_light_level(neighbour_cursor) <= (int)light_destruction.light_level - 1)))
+          {
+            enqueue_light_destroy_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, cursor_get_block_light_level(neighbour_cursor), cursor_get_block_ether(neighbour_cursor));
+            cursor_set_block_ether(neighbour_cursor, 0);
+            cursor_set_block_light_level(neighbour_cursor, 0);
+          }
+          else if(cursor_get_block_ether(neighbour_cursor) != 0 || cursor_get_block_light_level(neighbour_cursor) != 0)
+            enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
         }
       }
     }
-    free(light_destruction);
+    count += curr_light_destructions.item_count;
+    curr_light_destructions.item_count = 0;
   }
+  DYNAMIC_ARRAY_CLEAR(light_destructions);
+  DYNAMIC_ARRAY_CLEAR(curr_light_destructions);
 
   clock_t end = clock();
   if(count != 0)

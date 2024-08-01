@@ -6,7 +6,6 @@ VOXY_SRCS += voxy/bundled/src/glad.c
 VOXY_SRCS += voxy/bundled/src/stb_image.c
 
 VOXY_SRCS += voxy/src/math/direction.c
-VOXY_SRCS += voxy/src/math/box.c
 
 VOXY_SRCS += voxy/src/core/window.c
 VOXY_SRCS += voxy/src/core/thread_pool.c
@@ -46,7 +45,9 @@ VOXY_SRCS += voxy/src/scene/main_game/update/chunk_generate.c
 VOXY_SRCS += voxy/src/scene/main_game/update/chunk_manager.c
 VOXY_SRCS += voxy/src/scene/main_game/update/generate.c
 VOXY_SRCS += voxy/src/scene/main_game/update/light.c
-VOXY_SRCS += voxy/src/scene/main_game/update/physics.c
+
+VOXY_SRCS += voxy/src/scene/main_game/update/physics/physics.c
+VOXY_SRCS += voxy/src/scene/main_game/update/physics/swept.c
 
 VOXY_SRCS += voxy/src/scene/main_game/render/render.c
 VOXY_SRCS += voxy/src/scene/main_game/render/debug.c

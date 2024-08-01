@@ -1,6 +1,0 @@
-#ifndef VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_H
-#define VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_H
-
-void update_physics(float dt);
-
-#endif // VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_H

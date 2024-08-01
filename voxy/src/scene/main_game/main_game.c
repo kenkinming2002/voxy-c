@@ -13,7 +13,7 @@
 #include <voxy/scene/main_game/update/chunk_manager.h>
 #include <voxy/scene/main_game/update/generate.h>
 #include <voxy/scene/main_game/update/light.h>
-#include <voxy/scene/main_game/update/physics.h>
+#include <voxy/scene/main_game/update/physics/physics.h>
 
 #include <voxy/graphics/ui.h>
 

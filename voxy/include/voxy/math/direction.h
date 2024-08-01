@@ -14,6 +14,11 @@ typedef enum {
   DIRECTION_COUNT,
 } direction_t;
 
+direction_t direction_from_sign_axis(bool sign, unsigned axis);
+
+/// Return sign of direction i.e. true if direction is in the positive direction and false otherwise.
+bool direction_sign(direction_t direction);
+
 /// Return sign of direction i.e. 1 if direction is in the positive direction and -1 otherwise.
 int direction_signi(direction_t direction);
 

@@ -8,36 +8,44 @@
 #include <stddef.h>
 
 /// Data-Types
+typedef struct { union { float values[1]; struct { float x;          };                                                                   }; } fvec1_t;
 typedef struct { union { float values[2]; struct { float x, y;       };                                                                   }; } fvec2_t;
 typedef struct { union { float values[3]; struct { float x, y, z;    }; struct { float r, g, b;    }; struct { float yaw, pitch, roll; }; }; } fvec3_t;
 typedef struct { union { float values[4]; struct { float x, y, z, w; }; struct { float r, g, b, a; };                                     }; } fvec4_t;
 
+typedef struct { union { int values[1]; struct { int x;          }; }; } ivec1_t;
 typedef struct { union { int values[2]; struct { int x, y;       }; }; } ivec2_t;
 typedef struct { union { int values[3]; struct { int x, y, z;    }; }; } ivec3_t;
 typedef struct { union { int values[4]; struct { int x, y, z, w; }; }; } ivec4_t;
 
 /// Initializers
+static inline fvec1_t fvec1(float a)                            { return (fvec1_t){ .values = {a}          }; }
 static inline fvec2_t fvec2(float a, float b)                   { return (fvec2_t){ .values = {a, b}       }; }
 static inline fvec3_t fvec3(float a, float b, float c)          { return (fvec3_t){ .values = {a, b, c}    }; }
 static inline fvec4_t fvec4(float a, float b, float c, float d) { return (fvec4_t){ .values = {a, b, c, d} }; }
 
+static inline ivec1_t ivec1(int a)                      { return (ivec1_t){ .values = {a}          }; }
 static inline ivec2_t ivec2(int a, int b)               { return (ivec2_t){ .values = {a, b}       }; }
 static inline ivec3_t ivec3(int a, int b, int c)        { return (ivec3_t){ .values = {a, b, c}    }; }
 static inline ivec4_t ivec4(int a, int b, int c, int d) { return (ivec4_t){ .values = {a, b, c, d} }; }
 
 /// Casts
+static inline fvec1_t ivec1_as_fvec1(ivec1_t vec) { return fvec1(vec.values[0]);                                              }
 static inline fvec2_t ivec2_as_fvec2(ivec2_t vec) { return fvec2(vec.values[0], vec.values[1]);                               }
 static inline fvec3_t ivec3_as_fvec3(ivec3_t vec) { return fvec3(vec.values[0], vec.values[1], vec.values[2]);                }
 static inline fvec4_t ivec4_as_fvec4(ivec4_t vec) { return fvec4(vec.values[0], vec.values[1], vec.values[2], vec.values[3]); }
 
+static inline ivec1_t fvec1_as_ivec1_floor(fvec1_t vec) { return ivec1(floorf(vec.values[0]));                                                                      }
 static inline ivec2_t fvec2_as_ivec2_floor(fvec2_t vec) { return ivec2(floorf(vec.values[0]), floorf(vec.values[1]));                                               }
 static inline ivec3_t fvec3_as_ivec3_floor(fvec3_t vec) { return ivec3(floorf(vec.values[0]), floorf(vec.values[1]), floorf(vec.values[2]));                        }
 static inline ivec4_t fvec4_as_ivec4_floor(fvec4_t vec) { return ivec4(floorf(vec.values[0]), floorf(vec.values[1]), floorf(vec.values[2]), floorf(vec.values[3])); }
 
-static inline ivec2_t fvec2_as_ivec2_ceil(fvec2_t vec) { return ivec2(ceilf(vec.values[0]), ceilf(vec.values[1]));                                               }
-static inline ivec3_t fvec3_as_ivec3_ceil(fvec3_t vec) { return ivec3(ceilf(vec.values[0]), ceilf(vec.values[1]), ceilf(vec.values[2]));                        }
+static inline ivec1_t fvec1_as_ivec1_ceil(fvec1_t vec) { return ivec1(ceilf(vec.values[0])); }
+static inline ivec2_t fvec2_as_ivec2_ceil(fvec2_t vec) { return ivec2(ceilf(vec.values[0]), ceilf(vec.values[1])); }
+static inline ivec3_t fvec3_as_ivec3_ceil(fvec3_t vec) { return ivec3(ceilf(vec.values[0]), ceilf(vec.values[1]), ceilf(vec.values[2])); }
 static inline ivec4_t fvec4_as_ivec4_ceil(fvec4_t vec) { return ivec4(ceilf(vec.values[0]), ceilf(vec.values[1]), ceilf(vec.values[2]), ceilf(vec.values[3])); }
 
+static inline ivec1_t fvec1_as_ivec1_round(fvec1_t vec) { return ivec1(roundf(vec.values[0])); }
 static inline ivec2_t fvec2_as_ivec2_round(fvec2_t vec) { return ivec2(roundf(vec.values[0]), roundf(vec.values[1]));                                               }
 static inline ivec3_t fvec3_as_ivec3_round(fvec3_t vec) { return ivec3(roundf(vec.values[0]), roundf(vec.values[1]), roundf(vec.values[2]));                        }
 static inline ivec4_t fvec4_as_ivec4_round(fvec4_t vec) { return ivec4(roundf(vec.values[0]), roundf(vec.values[1]), roundf(vec.values[2]), roundf(vec.values[3])); }
@@ -95,10 +103,12 @@ static inline ivec4_t fvec4_as_ivec4_round(fvec4_t vec) { return ivec4(roundf(ve
                                                               \
   VECTOR_DEFINE_OP_EQL(prefix, type, count)
 
+VECTOR_DEFINE_OPS(f, float, 1)
 VECTOR_DEFINE_OPS(f, float, 2)
 VECTOR_DEFINE_OPS(f, float, 3)
 VECTOR_DEFINE_OPS(f, float, 4)
 
+VECTOR_DEFINE_OPS(i, int, 1)
 VECTOR_DEFINE_OPS(i, int, 2)
 VECTOR_DEFINE_OPS(i, int, 3)
 VECTOR_DEFINE_OPS(i, int, 4)

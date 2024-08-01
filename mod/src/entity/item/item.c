@@ -16,6 +16,12 @@ void item_entity_register(void)
 
   entity_info.hitbox_dimension = fvec3(0.1f, 0.1f, 0.1f);
   entity_info.hitbox_offset = fvec3_zero();
+
+  entity_info.on_dispose = NULL;
+
+  entity_info.on_save = item_entity_save;
+  entity_info.on_load = item_entity_load;
+
   entity_info.on_update = item_entity_update;
 
   item_entity_id = register_entity_info(entity_info);

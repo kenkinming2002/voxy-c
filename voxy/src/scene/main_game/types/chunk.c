@@ -144,10 +144,10 @@ void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id)
   const unsigned new_block_light_level = chunk_data_get_block_light_level(chunk->data, position);
 
   if(old_block_ether < new_block_ether || old_block_light_level < new_block_light_level)
-    enqueue_light_create_update_raw(chunk, position.x, position.y, position.z);
+    enqueue_light_create_update(chunk, position.x, position.y, position.z);
 
   if(old_block_ether >= new_block_ether || old_block_light_level <= new_block_light_level)
-    enqueue_light_destroy_update_raw(chunk, position.x, position.y, position.z, old_block_light_level, old_block_ether);
+    enqueue_light_destroy_update(chunk, position.x, position.y, position.z, old_block_light_level, old_block_ether);
 }
 
 void chunk_add_entity_raw(struct chunk *chunk, struct entity entity)

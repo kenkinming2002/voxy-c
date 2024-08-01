@@ -56,37 +56,7 @@ STAILQ_HEAD(light_destructions, light_destruction);
 struct light_creations light_creations = STAILQ_HEAD_INITIALIZER(light_creations);
 struct light_destructions light_destructions = STAILQ_HEAD_INITIALIZER(light_destructions);
 
-void enqueue_light_create_update(ivec3_t position)
-{
-  struct light_creation light_creation;
-  if(!cursor_at(position, &light_creation.cursor))
-  {
-    LOG_WARN("Failed to enqueue light creation update at %d %d %d: block not found", position.x, position.y, position.z);
-    return;
-  }
-
-  struct light_creation *p_light_creation = malloc(sizeof *p_light_creation);
-  *p_light_creation = light_creation;
-  STAILQ_INSERT_TAIL(&light_creations, p_light_creation, link);
-}
-
-void enqueue_light_destroy_update(ivec3_t position, unsigned light_level, unsigned ether)
-{
-  struct light_destruction light_destruction;
-  light_destruction.light_level = light_level;
-  light_destruction.ether = ether;
-  if(!cursor_at(position, &light_destruction.cursor))
-  {
-    LOG_WARN("Failed to enqueue light destruction update at %d %d %d: block not found", position.x, position.y, position.z);
-    return;
-  }
-
-  struct light_destruction *p_light_destruction = malloc(sizeof *p_light_destruction);
-  *p_light_destruction = light_destruction;
-  STAILQ_INSERT_TAIL(&light_destructions, p_light_destruction, link);
-}
-
-void enqueue_light_create_update_raw(struct chunk *chunk, unsigned x, unsigned y, unsigned z)
+void enqueue_light_create_update(struct chunk *chunk, unsigned x, unsigned y, unsigned z)
 {
   struct light_creation *p_light_creation = malloc(sizeof *p_light_creation);
   p_light_creation->cursor.chunk = chunk;
@@ -96,7 +66,7 @@ void enqueue_light_create_update_raw(struct chunk *chunk, unsigned x, unsigned y
   STAILQ_INSERT_TAIL(&light_creations, p_light_creation, link);
 }
 
-void enqueue_light_destroy_update_raw(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level, unsigned ether)
+void enqueue_light_destroy_update(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level, unsigned ether)
 {
   struct light_destruction *p_light_destruction = malloc(sizeof *p_light_destruction);
   p_light_destruction->cursor.chunk = chunk;

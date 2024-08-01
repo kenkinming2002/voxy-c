@@ -131,9 +131,9 @@ void sync_active_chunks(void)
             {
               const ivec3_t position = ivec3(x, y, z);
               if(chunk_get_block_ether(chunk, position) != 0 || chunk_get_block_light_level(chunk, position) != 0)
-                enqueue_light_create_update_raw(chunk, x, y, z);
+                enqueue_light_create_update(chunk, x, y, z);
               else if(z == 0 || z == CHUNK_WIDTH - 1 || y == 0 || y == CHUNK_WIDTH - 1 || x == 0 || x == CHUNK_WIDTH - 1)
-                enqueue_light_destroy_update_raw(chunk, x, y, z, 0, 0);
+                enqueue_light_destroy_update(chunk, x, y, z, 0, 0);
             }
 
         generate_count += 1;

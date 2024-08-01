@@ -87,6 +87,40 @@ void enqueue_light_destroy_update(struct chunk *chunk, unsigned x, unsigned y, u
   DYNAMIC_ARRAY_APPEND(light_destructions, light_destruction);
 }
 
+static void enqueue_light_create_update_unsafe(struct chunk *chunk, unsigned x, unsigned y, unsigned z)
+{
+#ifdef PARALLEL_LIGHT
+  // We are relying on the fact that alignment of size_t and _Atomic size_t are
+  // probably the same to do the cast.
+  const size_t i = atomic_fetch_add_explicit((_Atomic size_t *)&light_creations.item_count, 1, memory_order_relaxed);
+  assert(i < light_creations.item_capacity);
+  light_creations.items[i].chunk = chunk;
+  light_creations.items[i].x = x;
+  light_creations.items[i].y = y;
+  light_creations.items[i].z = z;
+#else
+  enqueue_light_create_update(chunk, x, y, z);
+#endif
+}
+
+static void enqueue_light_destroy_update_unsafe(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level)
+{
+#ifdef PARALLEL_LIGHT
+  // We are relying on the fact that alignment of size_t and _Atomic size_t are
+  // probably the same to do the cast.
+  const size_t i = atomic_fetch_add_explicit((_Atomic size_t *)&light_destructions.item_count, 1, memory_order_relaxed);
+  assert(i < light_destructions.item_capacity);
+  light_destructions.items[i].chunk = chunk;
+  light_destructions.items[i].x = x;
+  light_destructions.items[i].y = y;
+  light_destructions.items[i].z = z;
+  light_destructions.items[i].light_level = light_level;
+#else
+  enqueue_light_destroy_update(chunk, x, y, z, light_level);
+#endif
+}
+
+
 static void update_light_creation(void)
 {
   size_t count = 0;
@@ -96,6 +130,10 @@ static void update_light_creation(void)
   while(light_creations.item_count != 0)
   {
     SWAP(curr_light_creations, light_creations);
+#ifdef PARALLEL_LIGHT
+    DYNAMIC_ARRAY_RESERVE(light_creations, curr_light_creations.item_count * DIRECTION_COUNT);
+#pragma omp parallel for
+#endif
     for(size_t i=0; i<curr_light_creations.item_count; ++i)
     {
       const struct light_creation light_creation = curr_light_creations.items[i];
@@ -135,7 +173,7 @@ static void update_light_creation(void)
             if(propagate)
             {
               cursor_set_block_light_level(neighbour_cursor, new_neighbour_light_level);
-              enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
+              enqueue_light_create_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
             }
           }
         }
@@ -161,6 +199,11 @@ static void update_light_destruction(void)
   while(light_destructions.item_count != 0)
   {
     SWAP(curr_light_destructions, light_destructions);
+#ifdef PARALLEL_LIGHT
+    DYNAMIC_ARRAY_RESERVE(light_creations, light_creations.item_count + curr_light_destructions.item_count * DIRECTION_COUNT);
+    DYNAMIC_ARRAY_RESERVE(light_destructions, curr_light_destructions.item_count * DIRECTION_COUNT);
+#pragma omp parallel for
+#endif
     for(size_t i=0; i<curr_light_destructions.item_count; ++i)
     {
       const struct light_destruction light_destruction = curr_light_destructions.items[i];
@@ -194,10 +237,10 @@ static void update_light_destruction(void)
             if(propagate)
             {
               cursor_set_block_light_level(neighbour_cursor, 0);
-              enqueue_light_destroy_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, neighbour_light_level);
+              enqueue_light_destroy_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, neighbour_light_level);
             }
             else if(neighbour_light_level != 0)
-              enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
+              enqueue_light_create_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
           }
         }
       }

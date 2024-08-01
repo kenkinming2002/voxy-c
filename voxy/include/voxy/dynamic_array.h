@@ -38,6 +38,17 @@
   } \
   while(0)
 
+#define DYNAMIC_ARRAY_RESERVE(array, capacity) \
+  do \
+  { \
+    if((array).item_capacity < (capacity)) \
+    { \
+      (array).item_capacity = (capacity); \
+      (array).items = realloc((array).items, (array).item_capacity * sizeof *(array).items); \
+    } \
+  } \
+  while(0)
+
 #define DYNAMIC_ARRAY_APPEND(array, value) \
   do \
   { \

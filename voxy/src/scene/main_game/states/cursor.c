@@ -109,16 +109,6 @@ void cursor_set_block_id(struct cursor cursor, block_id_t id)
   chunk_set_block_id(cursor.chunk, cursor_get_local_position(cursor), id);
 }
 
-unsigned cursor_get_block_ether(struct cursor cursor)
-{
-  return chunk_get_block_ether(cursor.chunk, cursor_get_local_position(cursor));
-}
-
-void cursor_set_block_ether(struct cursor cursor, unsigned ether)
-{
-  chunk_set_block_ether(cursor.chunk, cursor_get_local_position(cursor), ether);
-}
-
 unsigned cursor_get_block_light_level(struct cursor cursor)
 {
   return chunk_get_block_light_level(cursor.chunk, cursor_get_local_position(cursor));

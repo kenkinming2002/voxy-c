@@ -1,6 +1,8 @@
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/update/light.h>
 
+#include <voxy/core/log.h>
+
 bool chunk_is_dirty(const struct chunk *chunk)
 {
   return chunk_data_is_dirty(chunk->data);
@@ -92,26 +94,6 @@ void chunk_set_block_id(struct chunk *chunk, ivec3_t position, block_id_t id)
   chunk_invalidate_mesh_at(chunk, position);
 }
 
-unsigned chunk_get_block_ether(const struct chunk *chunk, ivec3_t position)
-{
-  return chunk_data_get_block_ether(chunk->data, position);
-}
-
-unsigned chunk_get_block_ether_ex(const struct chunk *chunk, ivec3_t position)
-{
-  chunk_traverse(&chunk, &position);
-  if(chunk && chunk->data)
-    return chunk_data_get_block_ether(chunk->data, position);
-  else
-    return -1;
-}
-
-void chunk_set_block_ether(struct chunk *chunk, ivec3_t position, unsigned ether)
-{
-  chunk_data_set_block_ether(chunk->data, position, ether);
-  chunk_invalidate_mesh_at(chunk, position);
-}
-
 unsigned chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position)
 {
   return chunk_data_get_block_light_level(chunk->data, position);
@@ -134,20 +116,20 @@ void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned
 
 void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id)
 {
-  const unsigned old_block_ether = chunk_data_get_block_ether(chunk->data, position);
   const unsigned old_block_light_level = chunk_data_get_block_light_level(chunk->data, position);
 
   chunk_data_set_block(chunk->data, position, id);
   chunk_invalidate_mesh_at(chunk, position);
 
-  const unsigned new_block_ether = chunk_data_get_block_ether(chunk->data, position);
   const unsigned new_block_light_level = chunk_data_get_block_light_level(chunk->data, position);
 
-  if(old_block_ether < new_block_ether || old_block_light_level < new_block_light_level)
+  if(old_block_light_level < new_block_light_level)
     enqueue_light_create_update(chunk, position.x, position.y, position.z);
 
-  if(old_block_ether >= new_block_ether || old_block_light_level <= new_block_light_level)
-    enqueue_light_destroy_update(chunk, position.x, position.y, position.z, old_block_light_level, old_block_ether);
+  // FIXME: Light destroy update really only support the case if light level
+  //        changes to 0. This happens to be the only possible cases for now.
+  if(old_block_light_level >= new_block_light_level)
+    enqueue_light_destroy_update(chunk, position.x, position.y, position.z, old_block_light_level);
 }
 
 void chunk_add_entity_raw(struct chunk *chunk, struct entity entity)

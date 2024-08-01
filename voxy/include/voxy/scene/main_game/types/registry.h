@@ -50,7 +50,6 @@ struct block_info
 
   enum block_type type;
 
-  uint8_t ether       : 1;
   uint8_t light_level : 4;
 
   const char *textures[BLOCK_FACE_COUNT];

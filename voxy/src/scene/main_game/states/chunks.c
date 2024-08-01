@@ -71,15 +71,6 @@ block_id_t world_get_block_id(ivec3_t position)
     return BLOCK_NONE;
 }
 
-unsigned world_get_block_ether(ivec3_t position)
-{
-  struct chunk *chunk = world_get_chunk(get_chunk_position(position));
-  if(chunk && chunk->data)
-    return chunk_get_block_ether(chunk, global_position_to_local_position(position));
-  else
-    return -1;
-}
-
 unsigned world_get_block_light_level(ivec3_t position)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position(position));

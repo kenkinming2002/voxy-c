@@ -136,16 +136,8 @@ static bool remesh_chunk(struct chunk *chunk)
         for(int x = -1; x<CHUNK_WIDTH+1; ++x)
         {
           const ivec3_t block_position = ivec3(x, y, z);
-          if((blocks[z+1][y+1][x+1].id = chunk_get_block_id_ex(chunk, block_position)) != BLOCK_NONE)
-          {
-            blocks[z+1][y+1][x+1].ether = chunk_get_block_ether_ex(chunk, block_position);
-            blocks[z+1][y+1][x+1].light_level = chunk_get_block_light_level_ex(chunk, block_position);
-          }
-          else
-          {
-            blocks[z+1][y+1][x+1].ether = false;
-            blocks[z+1][y+1][x+1].light_level = 0;
-          }
+          blocks[z+1][y+1][x+1].id = chunk_get_block_id_ex(chunk, block_position);
+          blocks[z+1][y+1][x+1].light_level = blocks[z+1][y+1][x+1].id != BLOCK_NONE ? chunk_get_block_light_level_ex(chunk, block_position) : 0;
         }
 
     // Cache block types also. Again, this may not be a good idea, but it does
@@ -218,7 +210,7 @@ static bool remesh_chunk(struct chunk *chunk)
             const uint32_t texture_index = assets_get_block_texture_array_index(block.id, face);
             vertex.normal_index_and_texture_index = normal_index | texture_index << 3;
 
-            uint16_t light_level = neighbour_block.ether ? 15 : neighbour_block.light_level;
+            const uint16_t light_level = neighbour_block.light_level;
             vertex.light_level_and_occlusion_counts = light_level;
 
             uint16_t occlusion_counts[2][2];

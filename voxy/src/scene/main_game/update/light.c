@@ -10,23 +10,10 @@
 
 #include <time.h>
 
-/// Rule for light update
-///
-/// 0: Block
-///  - Opaque block always has light level of 0 regardless of following rules.
-///
-/// 1: Ether
-///  - Block with z above or equal ETHER_HEIGHT always has ether set.
-///  - If block above has ether set, current block also has ether set.
-///  - Ether block has light level 15 during day
-///
-/// 2: Neighbour
-///  - If block does not have ether set or for light level during the night,
-///    block light level is minimum of light levels of neighbour blocks
-///    subtract 1.
-///  - If the computed light level is below 0, it will be set to 0.
-///
-/// The rules are simple. The implementation, not so much.
+// References:
+//  - https://www.seedofandromeda.com/blogs/29-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-1
+//  - https://www.seedofandromeda.com/blogs/30-fast-flood-fill-lighting-in-a-blocky-voxel-game-pt-2
+// The link is dead but the article could be still be accessed via wayback machine.
 
 // We need to store light creation/destruction in a fifo data structure i.e.
 // queue but obviously we do not have a implementation in C. We are using the
@@ -34,7 +21,10 @@
 // considering the size of our structure is so small.
 struct light_creation
 {
-  struct cursor cursor;
+  struct chunk *chunk;
+  uint8_t x : 4;
+  uint8_t y : 4;
+  uint8_t z : 4;
 };
 
 // We need to store light creation/destruction in a fifo data structure i.e.
@@ -43,13 +33,35 @@ struct light_creation
 // considering the size of our structure is so small.
 struct light_destruction
 {
-  struct cursor cursor;
-  uint8_t ether : 1;
+  struct chunk *chunk;
+  uint8_t x : 4;
+  uint8_t y : 4;
+  uint8_t z : 4;
   uint8_t light_level : 4;
 };
 
 DYNAMIC_ARRAY_DEFINE(light_creations, struct light_creation);
 DYNAMIC_ARRAY_DEFINE(light_destructions, struct light_destruction);
+
+static struct cursor light_creation_cursor(struct light_creation light_creation)
+{
+  struct cursor cursor;
+  cursor.chunk = light_creation.chunk;
+  cursor.x = light_creation.x;
+  cursor.y = light_creation.y;
+  cursor.z = light_creation.z;
+  return cursor;
+}
+
+static struct cursor light_destruction_cursor(struct light_destruction light_destruction)
+{
+  struct cursor cursor;
+  cursor.chunk = light_destruction.chunk;
+  cursor.x = light_destruction.x;
+  cursor.y = light_destruction.y;
+  cursor.z = light_destruction.z;
+  return cursor;
+}
 
 static struct light_creations light_creations;
 static struct light_destructions light_destructions;
@@ -57,22 +69,21 @@ static struct light_destructions light_destructions;
 void enqueue_light_create_update(struct chunk *chunk, unsigned x, unsigned y, unsigned z)
 {
   struct light_creation light_creation;
-  light_creation.cursor.chunk = chunk;
-  light_creation.cursor.x = x;
-  light_creation.cursor.y = y;
-  light_creation.cursor.z = z;
+  light_creation.chunk = chunk;
+  light_creation.x = x;
+  light_creation.y = y;
+  light_creation.z = z;
   DYNAMIC_ARRAY_APPEND(light_creations, light_creation);
 }
 
-void enqueue_light_destroy_update(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level, unsigned ether)
+void enqueue_light_destroy_update(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level)
 {
   struct light_destruction light_destruction;
-  light_destruction.cursor.chunk = chunk;
-  light_destruction.cursor.x = x;
-  light_destruction.cursor.y = y;
-  light_destruction.cursor.z = z;
+  light_destruction.chunk = chunk;
+  light_destruction.x = x;
+  light_destruction.y = y;
+  light_destruction.z = z;
   light_destruction.light_level = light_level;
-  light_destruction.ether = ether;
   DYNAMIC_ARRAY_APPEND(light_destructions, light_destruction);
 }
 
@@ -95,18 +106,37 @@ static void update_light_creation(void)
       //     1. Not opaque
       //     2. Have a lower light level strictly lower than what we could propagate
       //   3. Propagate if that is the case
-      struct cursor cursor = light_creation.cursor;
+      struct cursor cursor = light_creation_cursor(light_creation);
       for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
       {
-        struct cursor neighbour_cursor = light_creation.cursor;
+        struct cursor neighbour_cursor = light_creation_cursor(light_creation);
         if(cursor_move(&neighbour_cursor, direction))
         {
           const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-          if((neighbour_block_info->type != BLOCK_TYPE_OPAQUE) && ((direction == DIRECTION_BOTTOM && (int)cursor_get_block_ether(neighbour_cursor) < (int)cursor_get_block_ether(cursor)) || (int)cursor_get_block_light_level(neighbour_cursor) < (int)cursor_get_block_light_level(cursor) - 1))
+          if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
           {
-            enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
-            cursor_set_block_ether(neighbour_cursor, direction == DIRECTION_BOTTOM ? cursor_get_block_ether(cursor) : 0);
-            cursor_set_block_light_level(neighbour_cursor, cursor_get_block_ether(neighbour_cursor) ? 15 : (int)cursor_get_block_light_level(cursor) - 1);
+            const unsigned light_level = cursor_get_block_light_level(cursor);
+            const unsigned neighbour_light_level = cursor_get_block_light_level(neighbour_cursor);
+
+            bool propagate = false;
+            unsigned new_neighbour_light_level;
+
+            if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level < 15)
+            {
+              propagate = true;
+              new_neighbour_light_level = 15;
+            }
+            else if(light_level > neighbour_light_level + 1)
+            {
+              propagate = true;
+              new_neighbour_light_level = light_level - 1;
+            }
+
+            if(propagate)
+            {
+              cursor_set_block_light_level(neighbour_cursor, new_neighbour_light_level);
+              enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
+            }
           }
         }
       }
@@ -145,18 +175,30 @@ static void update_light_destruction(void)
       //   4. Otherwise, we would need to redo light propagation from them ***
       for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
       {
-        struct cursor neighbour_cursor = light_destruction.cursor;
+        struct cursor neighbour_cursor = light_destruction_cursor(light_destruction);
         if(cursor_move(&neighbour_cursor, direction))
         {
           const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-          if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE && ((direction == DIRECTION_BOTTOM && (int)cursor_get_block_ether(neighbour_cursor) != 0 && (int)cursor_get_block_ether(neighbour_cursor) <= (int)light_destruction.ether) || ((int)cursor_get_block_light_level(neighbour_cursor) != 0 && (int)cursor_get_block_light_level(neighbour_cursor) <= (int)light_destruction.light_level - 1)))
+          if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
           {
-            enqueue_light_destroy_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, cursor_get_block_light_level(neighbour_cursor), cursor_get_block_ether(neighbour_cursor));
-            cursor_set_block_ether(neighbour_cursor, 0);
-            cursor_set_block_light_level(neighbour_cursor, 0);
+            const unsigned light_level = light_destruction.light_level;
+            const unsigned neighbour_light_level = cursor_get_block_light_level(neighbour_cursor);
+
+            bool propagate = false;
+
+            if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level == 15)
+              propagate = true;
+            else if(light_level == neighbour_light_level + 1)
+              propagate = true;
+
+            if(propagate)
+            {
+              cursor_set_block_light_level(neighbour_cursor, 0);
+              enqueue_light_destroy_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, neighbour_light_level);
+            }
+            else if(neighbour_light_level != 0)
+              enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
           }
-          else if(cursor_get_block_ether(neighbour_cursor) != 0 || cursor_get_block_light_level(neighbour_cursor) != 0)
-            enqueue_light_create_update(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
         }
       }
     }

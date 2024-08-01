@@ -40,12 +40,8 @@ bool cursor_move(struct cursor *cursor, direction_t direction);
 block_id_t cursor_get_block_id(struct cursor cursor);
 void cursor_set_block_id(struct cursor cursor, block_id_t id);
 
-/// Get/set block ether.
-unsigned cursor_get_block_ether(struct cursor cursor);
-void cursor_set_block_ether(struct cursor cursor, unsigned ether);
-
 /// Get/set block light level.
 unsigned cursor_get_block_light_level(struct cursor cursor);
-void cursor_set_block_light_level(struct cursor cursor, unsigned ether);
+void cursor_set_block_light_level(struct cursor cursor, unsigned light_level);
 
 #endif // VOXY_SCENE_MAIN_GAME_STATES_CURSOR_H

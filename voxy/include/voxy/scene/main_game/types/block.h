@@ -7,7 +7,6 @@
 struct block
 {
   block_id_t id;
-  uint8_t    ether       : 1;
   uint8_t    light_level : 4;
 };
 

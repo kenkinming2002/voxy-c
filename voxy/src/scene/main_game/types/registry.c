@@ -29,7 +29,6 @@ block_id_t register_block_info(struct block_info block_info)
       LOG_INFO("  mod            = %s", block_info.mod);
       LOG_INFO("  name           = %s", block_info.name);
       LOG_INFO("  type           = %s", block_type_as_str(block_info.type));
-      LOG_INFO("  ether          = %u", block_info.ether);
       LOG_INFO("  light level    = %u", block_info.light_level);
       LOG_INFO("  texture left   = %s", block_info.textures[BLOCK_FACE_LEFT]);
       LOG_INFO("  texture right  = %s", block_info.textures[BLOCK_FACE_RIGHT]);

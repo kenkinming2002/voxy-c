@@ -47,12 +47,11 @@ void world_invalidate_mesh_at(ivec3_t position);
 /// This may fail if the chunk is not yet generated in which case BLOCK_NONE or
 /// (unsigned)-1 is returned.
 ///
-/// Technically, it can be more efficient to return block id, ether and light
-/// level at once as it avoid repeated hash table lookup internally but I don't
-/// cares :). The point is, cares need to be taken if they are to be used in
-/// performance-critical code.
+/// Technically, it can be more efficient to return block id and light level at
+/// once as it avoid repeated hash table lookup internally but I don't cares :).
+/// The point is, cares need to be taken if they are to be used in performance
+/// critical code.
 block_id_t world_get_block_id(ivec3_t position);
-unsigned world_get_block_ether(ivec3_t position);
 unsigned world_get_block_light_level(ivec3_t position);
 
 /// Set a block at position by its id.

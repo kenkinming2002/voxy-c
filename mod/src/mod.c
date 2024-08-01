@@ -28,16 +28,13 @@ void mod_init()
       .mod = MOD,
       .name = "empty",
       .type = BLOCK_TYPE_INVISIBLE,
-      .ether = false,
       .light_level = 0,
       .on_create = NULL,
       .on_destroy = NULL,
   });
   BLOCK_ID_ETHER = register_block_info((struct block_info){
       .mod = MOD,
-      .name = "ether",
       .type = BLOCK_TYPE_INVISIBLE,
-      .ether = true,
       .light_level = 15,
       .on_create = NULL,
       .on_destroy = NULL,
@@ -46,7 +43,6 @@ void mod_init()
     .mod = MOD,
     .name = "stone",
     .type = BLOCK_TYPE_OPAQUE,
-    .ether = false,
     .light_level = 0,
     .textures = {
       "assets/textures/stone.png",
@@ -63,7 +59,6 @@ void mod_init()
     .mod = MOD,
     .name = "grass",
     .type = BLOCK_TYPE_OPAQUE,
-    .ether = false,
     .light_level = 0,
     .textures = {
       "assets/textures/grass_side.png",
@@ -80,7 +75,6 @@ void mod_init()
     .mod = MOD,
     .name = "log",
     .type = BLOCK_TYPE_OPAQUE,
-    .ether = false,
     .light_level = 0,
     .textures = {
       "assets/textures/log_side.png",
@@ -97,7 +91,6 @@ void mod_init()
     .mod = MOD,
     .name = "leave",
     .type = BLOCK_TYPE_OPAQUE,
-    .ether = false,
     .light_level = 0,
     .textures = {
       "assets/textures/leave.png",
@@ -113,8 +106,7 @@ void mod_init()
   BLOCK_ID_WATER = register_block_info((struct block_info){
     .name = "water",
     .type = BLOCK_TYPE_TRANSPARENT,
-    .ether = false,
-    .light_level    = 0,
+    .light_level = 0,
     .textures = {
       "assets/textures/water.png",
       "assets/textures/water.png",
@@ -129,8 +121,7 @@ void mod_init()
   BLOCK_ID_LAMP = register_block_info((struct block_info){
     .name = "lamp",
     .type = BLOCK_TYPE_OPAQUE,
-    .ether = false,
-    .light_level = 15,
+    .light_level = 14,
     .textures = {
       "assets/textures/lamp.png",
       "assets/textures/lamp.png",

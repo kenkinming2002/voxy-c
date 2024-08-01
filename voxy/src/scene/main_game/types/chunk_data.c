@@ -71,16 +71,6 @@ static void chunk_data_set_bits(struct chunk_data *chunk_data, unsigned char dat
   data[q] |= bits << (r * width);
 }
 
-unsigned chunk_data_get_block_ether(const struct chunk_data *chunk_data, ivec3_t position)
-{
-  return chunk_data_get_bits(chunk_data, chunk_data->block_ethers, position, 1);
-}
-
-void chunk_data_set_block_ether(struct chunk_data *chunk_data, ivec3_t position, unsigned ether)
-{
-  return chunk_data_set_bits(chunk_data, chunk_data->block_ethers, position, 1, ether);
-}
-
 unsigned chunk_data_get_block_light_level(const struct chunk_data *chunk_data, ivec3_t position)
 {
   return chunk_data_get_bits(chunk_data, chunk_data->block_light_levels, position, 4);
@@ -95,7 +85,6 @@ void chunk_data_set_block(struct chunk_data *chunk_data, ivec3_t position, block
 {
   const struct block_info *info = query_block_info(id);
   chunk_data_set_block_id(chunk_data, position, id);
-  chunk_data_set_block_ether(chunk_data, position, info->ether);
   chunk_data_set_block_light_level(chunk_data, position, info->light_level);
 }
 

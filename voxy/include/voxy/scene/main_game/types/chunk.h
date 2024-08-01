@@ -70,24 +70,16 @@ block_id_t chunk_get_block_id(const struct chunk *chunk, ivec3_t position);
 block_id_t chunk_get_block_id_ex(const struct chunk *chunk, ivec3_t position);
 void chunk_set_block_id(struct chunk *chunk, ivec3_t position, block_id_t id);
 
-/// Get/set block ether.
-///
-/// The *_ex version will traverse to neighbour chunk recursively. If the
-/// neighbour chunk have not been generated, (unsigned)-1 is returned.
-unsigned chunk_get_block_ether(const struct chunk *chunk, ivec3_t position);
-unsigned chunk_get_block_ether_ex(const struct chunk *chunk, ivec3_t position);
-void chunk_set_block_ether(struct chunk *chunk, ivec3_t position, unsigned ether);
-
 /// Get/set block light level.
 ///
 /// The *_ex version will traverse to neighbour chunk recursively. If the
 /// neighbour chunk have not been generated, (unsigned)-1 is returned.
 unsigned chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position);
 unsigned chunk_get_block_light_level_ex(const struct chunk *chunk, ivec3_t position);
-void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned ether);
+void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned light_level);
 
-/// Convenient helper to set block given its id where block ether and ether are
-/// set according block info from query_block_info(). This also take care of
+/// Convenient helper to set block given its id where light level are set
+/// according block info from query_block_info(). This also take care of
 /// triggering lighting update if necessary.
 void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id);
 

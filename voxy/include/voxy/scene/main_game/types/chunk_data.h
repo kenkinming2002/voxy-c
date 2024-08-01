@@ -22,8 +22,6 @@ struct chunk_data
   bool dirty : 1;
 
   block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
-
-  unsigned char block_ethers      [CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 1)];
   unsigned char block_light_levels[CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 4)];
 
   struct entities entities;
@@ -40,16 +38,12 @@ bool chunk_data_is_dirty(const struct chunk_data *chunk_data);
 block_id_t chunk_data_get_block_id(const struct chunk_data *chunk_data, ivec3_t position);
 void chunk_data_set_block_id(struct chunk_data *chunk_data, ivec3_t position, block_id_t id);
 
-/// Get/set block ether.
-unsigned chunk_data_get_block_ether(const struct chunk_data *chunk_data, ivec3_t position);
-void chunk_data_set_block_ether(struct chunk_data *chunk_data, ivec3_t position, unsigned ether);
-
 /// Get/set block light level.
 unsigned chunk_data_get_block_light_level(const struct chunk_data *chunk_data, ivec3_t position);
 void chunk_data_set_block_light_level(struct chunk_data *chunk_data, ivec3_t position, unsigned light_level);
 
-/// Convenient helper to set block given its id where block ether and ether are
-/// set according block info from query_block_info().
+/// Convenient helper to set block given its id where light level are set
+/// according block info from query_block_info().
 void chunk_data_set_block(struct chunk_data *chunk_data, ivec3_t position, block_id_t id);
 
 /// Add an entity.

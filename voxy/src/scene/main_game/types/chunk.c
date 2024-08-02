@@ -114,6 +114,22 @@ void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned
   chunk_invalidate_mesh_at(chunk, position);
 }
 
+void chunk_get_block_light_level_atomic(const struct chunk *chunk, ivec3_t position, unsigned *light_level, unsigned char *tmp)
+{
+  chunk_data_get_block_light_level_atomic(chunk->data, position, light_level, tmp);
+}
+
+bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, unsigned *light_level, unsigned char *tmp)
+{
+  if(chunk_data_set_block_light_level_atomic(chunk->data, position, light_level, tmp))
+  {
+    chunk_invalidate_mesh_at(chunk, position);
+    return true;
+  }
+  else
+    return false;
+}
+
 void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id)
 {
   const unsigned old_block_light_level = chunk_data_get_block_light_level(chunk->data, position);

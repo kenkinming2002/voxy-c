@@ -44,4 +44,8 @@ void cursor_set_block_id(struct cursor cursor, block_id_t id);
 unsigned cursor_get_block_light_level(struct cursor cursor);
 void cursor_set_block_light_level(struct cursor cursor, unsigned light_level);
 
+/// Get/set block light level atomically.
+void cursor_get_block_light_level_atomic(struct cursor cursor, unsigned *light_level, unsigned char *tmp);
+bool cursor_set_block_light_level_atomic(struct cursor cursor, unsigned *light_level, unsigned char *tmp);
+
 #endif // VOXY_SCENE_MAIN_GAME_STATES_CURSOR_H

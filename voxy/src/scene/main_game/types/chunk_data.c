@@ -81,6 +81,39 @@ void chunk_data_set_block_light_level(struct chunk_data *chunk_data, ivec3_t pos
   return chunk_data_set_bits(chunk_data, chunk_data->block_light_levels, position, 4, light_level);
 }
 
+void chunk_data_get_block_light_level_atomic(const struct chunk_data *chunk_data, ivec3_t position, unsigned *light_level, unsigned char *tmp)
+{
+  check_position(position);
+
+  const size_t offset = position.z * CHUNK_WIDTH * CHUNK_WIDTH + position.y * CHUNK_WIDTH + position.x;
+  const size_t q = offset / (CHAR_BIT / 4);
+  const size_t r = offset % (CHAR_BIT / 4);
+
+  *tmp = atomic_load((_Atomic unsigned char *)&chunk_data->block_light_levels[q]);
+  *light_level = (*tmp >> (r * 4)) & ((1 << 4) - 1);
+}
+
+bool chunk_data_set_block_light_level_atomic(struct chunk_data *chunk_data, ivec3_t position, unsigned *light_level, unsigned char *tmp)
+{
+  check_position(position);
+
+  const size_t offset = position.z * CHUNK_WIDTH * CHUNK_WIDTH + position.y * CHUNK_WIDTH + position.x;
+  const size_t q = offset / (CHAR_BIT / 4);
+  const size_t r = offset % (CHAR_BIT / 4);
+
+  unsigned char desired = *tmp;
+  desired &= ~(((1 << 4) - 1) << (r * 4));
+  desired |= *light_level << (r * 4);
+  if(!atomic_compare_exchange_strong((_Atomic unsigned char *)&chunk_data->block_light_levels[q], tmp, desired))
+  {
+    *light_level = (*tmp >> (r * 4)) & ((1 << 4) - 1);
+    return false;
+  }
+
+  atomic_store((_Atomic unsigned char *)&chunk_data->dirty, true);
+  return true;
+}
+
 void chunk_data_set_block(struct chunk_data *chunk_data, ivec3_t position, block_id_t id)
 {
   const struct block_info *info = query_block_info(id);

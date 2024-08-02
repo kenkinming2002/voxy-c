@@ -119,3 +119,12 @@ void cursor_set_block_light_level(struct cursor cursor, unsigned light_level)
   chunk_set_block_light_level(cursor.chunk, cursor_get_local_position(cursor), light_level);
 }
 
+void cursor_get_block_light_level_atomic(struct cursor cursor, unsigned *light_level, unsigned char *tmp)
+{
+  chunk_get_block_light_level_atomic(cursor.chunk, cursor_get_local_position(cursor), light_level, tmp);
+}
+
+bool cursor_set_block_light_level_atomic(struct cursor cursor, unsigned *light_level, unsigned char *tmp)
+{
+  return chunk_set_block_light_level_atomic(cursor.chunk, cursor_get_local_position(cursor), light_level, tmp);
+}

@@ -19,7 +19,7 @@ struct chunk_data
   /// Dirty flag .
   ///
   /// If chunk data need to be written back onto the disk.
-  bool dirty : 1;
+  bool dirty;
 
   block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
   unsigned char block_light_levels[CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 4)];
@@ -41,6 +41,10 @@ void chunk_data_set_block_id(struct chunk_data *chunk_data, ivec3_t position, bl
 /// Get/set block light level.
 unsigned chunk_data_get_block_light_level(const struct chunk_data *chunk_data, ivec3_t position);
 void chunk_data_set_block_light_level(struct chunk_data *chunk_data, ivec3_t position, unsigned light_level);
+
+/// Get/set block light level atomically.
+void chunk_data_get_block_light_level_atomic(const struct chunk_data *chunk_data, ivec3_t position, unsigned *light_level, unsigned char *tmp);
+bool chunk_data_set_block_light_level_atomic(struct chunk_data *chunk_data, ivec3_t position, unsigned *light_level, unsigned char *tmp);
 
 /// Convenient helper to set block given its id where light level are set
 /// according block info from query_block_info().

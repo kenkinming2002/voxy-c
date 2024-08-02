@@ -82,6 +82,10 @@ unsigned chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position
 unsigned chunk_get_block_light_level_ex(const struct chunk *chunk, ivec3_t position);
 void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned light_level);
 
+/// Get/set block light level atomically.
+void chunk_get_block_light_level_atomic(const struct chunk *chunk, ivec3_t position, unsigned *light_level, unsigned char *tmp);
+bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, unsigned *light_level, unsigned char *tmp);
+
 /// Convenient helper to set block given its id where light level are set
 /// according block info from query_block_info(). This also take care of
 /// triggering lighting update if necessary.

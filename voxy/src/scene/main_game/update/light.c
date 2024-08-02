@@ -154,25 +154,29 @@ static void update_light_creation(void)
           if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
           {
             const unsigned light_level = cursor_get_block_light_level(cursor);
-            const unsigned neighbour_light_level = cursor_get_block_light_level(neighbour_cursor);
 
+            unsigned neighbour_light_level;
+            unsigned char tmp;
+            cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
+
+retry:;
             bool propagate = false;
-            unsigned new_neighbour_light_level;
-
             if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level < 15)
             {
               propagate = true;
-              new_neighbour_light_level = 15;
+              neighbour_light_level = 15;
             }
-            else if(light_level > neighbour_light_level + 1)
+            else if(light_level > 0 && light_level > neighbour_light_level + 1)
             {
               propagate = true;
-              new_neighbour_light_level = light_level - 1;
+              neighbour_light_level = light_level - 1;
             }
 
             if(propagate)
             {
-              cursor_set_block_light_level(neighbour_cursor, new_neighbour_light_level);
+              if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
+                goto retry;
+
               enqueue_light_create_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
             }
           }
@@ -225,22 +229,39 @@ static void update_light_destruction(void)
           if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
           {
             const unsigned light_level = light_destruction.light_level;
-            const unsigned neighbour_light_level = cursor_get_block_light_level(neighbour_cursor);
 
+            unsigned old_neighbour_light_level;
+            unsigned neighbour_light_level;
+            unsigned char tmp;
+            cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
+
+retry:;
             bool propagate = false;
-
             if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level == 15)
+            {
               propagate = true;
+              old_neighbour_light_level = neighbour_light_level;
+              neighbour_light_level = 0;
+            }
             else if(light_level == neighbour_light_level + 1)
+            {
               propagate = true;
+              old_neighbour_light_level = neighbour_light_level;
+              neighbour_light_level = 0;
+            }
 
             if(propagate)
             {
-              cursor_set_block_light_level(neighbour_cursor, 0);
-              enqueue_light_destroy_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, neighbour_light_level);
+              if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
+                goto retry;
+
+              enqueue_light_destroy_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, old_neighbour_light_level);
             }
             else if(neighbour_light_level != 0)
+            {
+              // This techincally does not prevent duplicates light create update from being enqueued
               enqueue_light_create_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
+            }
           }
         }
       }

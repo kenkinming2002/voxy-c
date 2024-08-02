@@ -87,107 +87,85 @@ void enqueue_light_destroy_update(struct chunk *chunk, unsigned x, unsigned y, u
   DYNAMIC_ARRAY_APPEND(light_destructions, light_destruction);
 }
 
-static void enqueue_light_create_update_unsafe(struct chunk *chunk, unsigned x, unsigned y, unsigned z)
-{
-#ifdef PARALLEL_LIGHT
-  // We are relying on the fact that alignment of size_t and _Atomic size_t are
-  // probably the same to do the cast.
-  const size_t i = atomic_fetch_add_explicit((_Atomic size_t *)&light_creations.item_count, 1, memory_order_relaxed);
-  assert(i < light_creations.item_capacity);
-  light_creations.items[i].chunk = chunk;
-  light_creations.items[i].x = x;
-  light_creations.items[i].y = y;
-  light_creations.items[i].z = z;
-#else
-  enqueue_light_create_update(chunk, x, y, z);
-#endif
-}
-
-static void enqueue_light_destroy_update_unsafe(struct chunk *chunk, unsigned x, unsigned y, unsigned z, unsigned light_level)
-{
-#ifdef PARALLEL_LIGHT
-  // We are relying on the fact that alignment of size_t and _Atomic size_t are
-  // probably the same to do the cast.
-  const size_t i = atomic_fetch_add_explicit((_Atomic size_t *)&light_destructions.item_count, 1, memory_order_relaxed);
-  assert(i < light_destructions.item_capacity);
-  light_destructions.items[i].chunk = chunk;
-  light_destructions.items[i].x = x;
-  light_destructions.items[i].y = y;
-  light_destructions.items[i].z = z;
-  light_destructions.items[i].light_level = light_level;
-#else
-  enqueue_light_destroy_update(chunk, x, y, z, light_level);
-#endif
-}
-
-
 static void update_light_creation(void)
 {
   size_t count = 0;
   clock_t begin = clock();
 
-  struct light_creations curr_light_creations = {0};
   while(light_creations.item_count != 0)
   {
-    SWAP(curr_light_creations, light_creations);
-#ifdef PARALLEL_LIGHT
-    DYNAMIC_ARRAY_RESERVE(light_creations, curr_light_creations.item_count * DIRECTION_COUNT);
-#pragma omp parallel for
-#endif
-    for(size_t i=0; i<curr_light_creations.item_count; ++i)
+    #pragma omp parallel
     {
-      const struct light_creation light_creation = curr_light_creations.items[i];
+      struct light_creations new_light_creations = {0};
 
-      // Esentially, we want to do is the following:
-      //   1. Loop through each adjacent block
-      //   2. Check we can propagate light to each of them i.e. it is both
-      //     1. Not opaque
-      //     2. Have a lower light level strictly lower than what we could propagate
-      //   3. Propagate if that is the case
-      struct cursor cursor = light_creation_cursor(light_creation);
-      for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+      #pragma omp for
+      for(size_t i=0; i<light_creations.item_count; ++i)
       {
-        struct cursor neighbour_cursor = light_creation_cursor(light_creation);
-        if(cursor_move(&neighbour_cursor, direction))
+        const struct light_creation light_creation = light_creations.items[i];
+
+        // Esentially, we want to do is the following:
+        //   1. Loop through each adjacent block
+        //   2. Check we can propagate light to each of them i.e. it is both
+        //     1. Not opaque
+        //     2. Have a lower light level strictly lower than what we could propagate
+        //   3. Propagate if that is the case
+        struct cursor cursor = light_creation_cursor(light_creation);
+        for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         {
-          const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-          if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
+          struct cursor neighbour_cursor = light_creation_cursor(light_creation);
+          if(cursor_move(&neighbour_cursor, direction))
           {
-            const unsigned light_level = cursor_get_block_light_level(cursor);
-
-            unsigned neighbour_light_level;
-            unsigned char tmp;
-            cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
-
-retry:;
-            bool propagate = false;
-            if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level < 15)
+            const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
+            if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
             {
-              propagate = true;
-              neighbour_light_level = 15;
-            }
-            else if(light_level > 0 && light_level > neighbour_light_level + 1)
-            {
-              propagate = true;
-              neighbour_light_level = light_level - 1;
-            }
+              const unsigned light_level = cursor_get_block_light_level(cursor);
 
-            if(propagate)
-            {
-              if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
-                goto retry;
+              unsigned neighbour_light_level;
+              unsigned char tmp;
+              cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
 
-              enqueue_light_create_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
+            retry:;
+              bool propagate = false;
+              if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level < 15)
+              {
+                propagate = true;
+                neighbour_light_level = 15;
+              }
+              else if(light_level > 0 && light_level > neighbour_light_level + 1)
+              {
+                propagate = true;
+                neighbour_light_level = light_level - 1;
+              }
+
+              if(propagate)
+              {
+                if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
+                  goto retry;
+
+                struct light_creation new_light_creation;
+                new_light_creation.chunk = neighbour_cursor.chunk;
+                new_light_creation.x = neighbour_cursor.x;
+                new_light_creation.y = neighbour_cursor.y;
+                new_light_creation.z = neighbour_cursor.z;
+                DYNAMIC_ARRAY_APPEND(new_light_creations, new_light_creation);
+              }
             }
           }
         }
       }
+
+      #pragma omp single
+      {
+        count += light_creations.item_count;
+        light_creations.item_count = 0;
+      }
+
+      #pragma omp critical
+      DYNAMIC_ARRAY_APPEND_MANY(light_creations, new_light_creations.items, new_light_creations.item_count);
+      DYNAMIC_ARRAY_CLEAR(new_light_creations);
     }
-    count += curr_light_creations.item_count;
-    curr_light_creations.item_count = 0;
   }
   DYNAMIC_ARRAY_CLEAR(light_creations);
-  DYNAMIC_ARRAY_CLEAR(curr_light_creations);
 
   clock_t end = clock();
   if(count != 0)
@@ -199,78 +177,101 @@ static void update_light_destruction(void)
   size_t count = 0;
   clock_t begin = clock();
 
-  struct light_destructions curr_light_destructions = {0};
   while(light_destructions.item_count != 0)
   {
-    SWAP(curr_light_destructions, light_destructions);
-#ifdef PARALLEL_LIGHT
-    DYNAMIC_ARRAY_RESERVE(light_creations, light_creations.item_count + curr_light_destructions.item_count * DIRECTION_COUNT);
-    DYNAMIC_ARRAY_RESERVE(light_destructions, curr_light_destructions.item_count * DIRECTION_COUNT);
-#pragma omp parallel for
-#endif
-    for(size_t i=0; i<curr_light_destructions.item_count; ++i)
+    #pragma omp parallel
     {
-      const struct light_destruction light_destruction = curr_light_destructions.items[i];
+      struct light_creations new_light_creations = {0};
+      struct light_destructions new_light_destructions = {0};
 
-      // Esentially, we want to do is the following:
-      //   1. Loop through each adjacent block
-      //   2. Check we may have propagated light to each of them i.e. it is both
-      //     1. Not opaque
-      //     2. Have a lower light level lower than or equal to what we could propagate
-      //     3: Non-zero ***
-      //   3. Propagate if that is the case
-      //   4. Otherwise, we would need to redo light propagation from them ***
-      for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+      #pragma omp parallel for
+      for(size_t i=0; i<light_destructions.item_count; ++i)
       {
-        struct cursor neighbour_cursor = light_destruction_cursor(light_destruction);
-        if(cursor_move(&neighbour_cursor, direction))
+        const struct light_destruction light_destruction = light_destructions.items[i];
+
+        // Esentially, we want to do is the following:
+        //   1. Loop through each adjacent block
+        //   2. Check we may have propagated light to each of them i.e. it is both
+        //     1. Not opaque
+        //     2. Have a lower light level lower than or equal to what we could propagate
+        //     3: Non-zero ***
+        //   3. Propagate if that is the case
+        //   4. Otherwise, we would need to redo light propagation from them ***
+        for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         {
-          const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-          if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
+          struct cursor neighbour_cursor = light_destruction_cursor(light_destruction);
+          if(cursor_move(&neighbour_cursor, direction))
           {
-            const unsigned light_level = light_destruction.light_level;
-
-            unsigned old_neighbour_light_level;
-            unsigned neighbour_light_level;
-            unsigned char tmp;
-            cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
-
-retry:;
-            bool propagate = false;
-            if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level == 15)
+            const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
+            if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
             {
-              propagate = true;
-              old_neighbour_light_level = neighbour_light_level;
-              neighbour_light_level = 0;
-            }
-            else if(light_level == neighbour_light_level + 1)
-            {
-              propagate = true;
-              old_neighbour_light_level = neighbour_light_level;
-              neighbour_light_level = 0;
-            }
+              const unsigned light_level = light_destruction.light_level;
 
-            if(propagate)
-            {
-              if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
-                goto retry;
+              unsigned old_neighbour_light_level;
+              unsigned neighbour_light_level;
+              unsigned char tmp;
+              cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
 
-              enqueue_light_destroy_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z, old_neighbour_light_level);
-            }
-            else if(neighbour_light_level != 0)
-            {
-              // This techincally does not prevent duplicates light create update from being enqueued
-              enqueue_light_create_update_unsafe(neighbour_cursor.chunk, neighbour_cursor.x, neighbour_cursor.y, neighbour_cursor.z);
+            retry:;
+
+              bool propagate = false;
+              if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level == 15)
+              {
+                propagate = true;
+                old_neighbour_light_level = neighbour_light_level;
+                neighbour_light_level = 0;
+              }
+              else if(light_level == neighbour_light_level + 1)
+              {
+                propagate = true;
+                old_neighbour_light_level = neighbour_light_level;
+                neighbour_light_level = 0;
+              }
+
+              if(propagate)
+              {
+                if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
+                  goto retry;
+
+                struct light_destruction new_light_destruction;
+                new_light_destruction.chunk = neighbour_cursor.chunk;
+                new_light_destruction.x = neighbour_cursor.x;
+                new_light_destruction.y = neighbour_cursor.y;
+                new_light_destruction.z = neighbour_cursor.z;
+                new_light_destruction.light_level = old_neighbour_light_level;
+                DYNAMIC_ARRAY_APPEND(new_light_destructions, new_light_destruction);
+              }
+              else if(neighbour_light_level != 0)
+              {
+                // This techincally does not prevent duplicates light create update from being enqueued
+                struct light_creation new_light_creation;
+                new_light_creation.chunk = neighbour_cursor.chunk;
+                new_light_creation.x = neighbour_cursor.x;
+                new_light_creation.y = neighbour_cursor.y;
+                new_light_creation.z = neighbour_cursor.z;
+                DYNAMIC_ARRAY_APPEND(new_light_creations, new_light_creation);
+              }
             }
           }
         }
       }
+
+      #pragma omp single
+      {
+        count += light_destructions.item_count;
+        light_destructions.item_count = 0;
+      }
+
+      #pragma omp critical
+      DYNAMIC_ARRAY_APPEND_MANY(light_creations, new_light_creations.items, new_light_creations.item_count);
+      DYNAMIC_ARRAY_CLEAR(new_light_creations);
+
+      #pragma omp critical
+      DYNAMIC_ARRAY_APPEND_MANY(light_destructions, new_light_destructions.items, new_light_destructions.item_count);
+      DYNAMIC_ARRAY_CLEAR(new_light_destructions);
     }
-    count += curr_light_destructions.item_count;
-    curr_light_destructions.item_count = 0;
   }
   DYNAMIC_ARRAY_CLEAR(light_destructions);
-  DYNAMIC_ARRAY_CLEAR(curr_light_destructions);
 
   clock_t end = clock();
   if(count != 0)

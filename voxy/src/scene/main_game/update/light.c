@@ -176,7 +176,7 @@ retry:;
           old_neighbour_light_level = neighbour_light_level;
           neighbour_light_level = 0;
         }
-        else if(light_level == neighbour_light_level + 1)
+        else if(neighbour_light_level > 0 &&  light_level == neighbour_light_level + 1)
         {
           propagate = true;
           old_neighbour_light_level = neighbour_light_level;

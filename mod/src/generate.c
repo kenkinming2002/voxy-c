@@ -103,8 +103,11 @@ static inline block_id_t get_block(seed_t seed, ivec3_t position, float height)
   int height1 = floorf(height);
   int height2 = height1 + 1;
 
+  if(position.z < height2 && get_cave(seed, position))
+    return BLOCK_ID_EMPTY;
+
   if(position.z < height1)
-    return get_cave(seed, position) ? BLOCK_ID_EMPTY : BLOCK_ID_STONE;
+    return BLOCK_ID_STONE;
 
   if(position.z < height2)
     return BLOCK_ID_GRASS;

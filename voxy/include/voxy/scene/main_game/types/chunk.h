@@ -46,11 +46,7 @@ struct chunk
   struct chunk_data *_Atomic new_data;
 
   /// If we are in the singly-linked list of invalidated chunks.
-#ifdef PARALLEL_LIGHT
   bool _Atomic mesh_invalidated;
-#else
-  bool mesh_invalidated;
-#endif
 
   /// Render info for the chunk.
   ///

@@ -1,6 +1,7 @@
 #include "ids.h"
 #include "generate.h"
 #include "update/spawn_player.h"
+#include "update/spawn_weird.h"
 
 #include "entity/item/item.h"
 #include "entity/player/player.h"
@@ -159,5 +160,6 @@ void mod_leave(void)
 void mod_update(void)
 {
   spawn_player_update();
+  spawn_weird_update();
 }
 

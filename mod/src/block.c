@@ -34,7 +34,7 @@ void block_on_destroy(struct entity *entity, struct chunk *chunk, ivec3_t positi
   (void)entity;
 
   struct entity item_entity;
-  item_entity.position = ivec3_as_fvec3(local_position_to_global_position(position, chunk->position));
+  item_entity.position = ivec3_as_fvec3(local_position_to_global_position_i(position, chunk->position));
   item_entity.velocity = fvec3_zero();
   item_entity.rotation = fvec3_zero();
   item_entity.grounded = false;

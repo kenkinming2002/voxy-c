@@ -5,7 +5,6 @@
 #include "chunk_loader.h"
 #include "controls.h"
 #include "inventory.h"
-#include "spawn_weird.h"
 
 #include <voxy/scene/main_game/render/debug.h>
 #include <voxy/core/window.h>
@@ -126,7 +125,6 @@ void player_entity_update(struct entity *entity, float dt)
   player_entity_update_chunk_loader(entity);
   player_entity_update_controls(entity, dt);
   player_entity_update_inventory(entity);
-  player_entity_update_spawn_weird(entity, dt);
 
   // Miscellenous controls
   // FIXME: That should not probably not be here

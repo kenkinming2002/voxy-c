@@ -37,7 +37,7 @@ ivec3_t cursor_get_local_position(struct cursor cursor)
 
 ivec3_t cursor_get_global_position(struct cursor cursor)
 {
-  return local_position_to_global_position(cursor_get_local_position(cursor), cursor_get_chunk_position(cursor));
+  return local_position_to_global_position_i(cursor_get_local_position(cursor), cursor_get_chunk_position(cursor));
 }
 
 bool cursor_move(struct cursor *cursor, direction_t direction)

@@ -93,7 +93,7 @@ static void main_game_update_fixed(float dt)
           for(size_t i=0; i<chunk->data->entities.item_count; ++i)
           {
             struct entity *entity = &chunk->data->entities.items[i];
-            if(!ivec3_eql(chunk->position, get_chunk_position(fvec3_as_ivec3_round(entity->position))) && world_add_entity_raw(*entity))
+            if(!ivec3_eql(chunk->position, get_chunk_position_f(entity->position)) && world_add_entity_raw(*entity))
               continue;
 
             chunk->data->entities.items[new_item_count++] = chunk->data->entities.items[i];

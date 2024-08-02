@@ -73,6 +73,7 @@ MOD_SRCS += mod/src/entity/player/spawn_weird.c
 MOD_SRCS += mod/src/entity/weird/weird.c
 
 MOD_SRCS += mod/src/update/spawn_player.c
+MOD_SRCS += mod/src/update/spawn_weird.c
 
 voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -fno-semantic-interposition
 voxy/voxy: LIBS   += -lm

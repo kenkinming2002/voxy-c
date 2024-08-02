@@ -26,9 +26,14 @@ extern struct chunk_hash_table world_chunks;
 /// Coordinate conversions.
 ///
 /// FIXME: This probably should be moved to some other module.
-ivec3_t get_chunk_position(ivec3_t position);
-ivec3_t global_position_to_local_position(ivec3_t position);
-ivec3_t local_position_to_global_position(ivec3_t position, ivec3_t chunk_position);
+ivec3_t get_chunk_position_i(ivec3_t position);
+ivec3_t get_chunk_position_f(fvec3_t position);
+
+ivec3_t global_position_to_local_position_i(ivec3_t position);
+fvec3_t global_position_to_local_position_f(fvec3_t position);
+
+ivec3_t local_position_to_global_position_i(ivec3_t position, ivec3_t chunk_position);
+fvec3_t local_position_to_global_position_f(fvec3_t position, ivec3_t chunk_position);
 
 /// Get a pointer to a chunk at position, which is specified by chunk position.
 ///

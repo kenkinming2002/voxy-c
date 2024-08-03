@@ -4,7 +4,6 @@
 #include <voxy/scene/main_game/config.h>
 
 #include <voxy/scene/main_game/types/chunk_data.h>
-#include <voxy/scene/main_game/types/chunk_render_info.h>
 
 #include <voxy/math/vector.h>
 

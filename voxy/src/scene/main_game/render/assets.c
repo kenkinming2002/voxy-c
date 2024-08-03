@@ -12,7 +12,7 @@
 
 struct block_array_texture_info
 {
-  uint32_t indices[BLOCK_FACE_COUNT];
+  uint32_t indices[DIRECTION_COUNT];
 };
 
 static struct gl_texture_2d            item_textures[ITEM_MAX];
@@ -45,17 +45,17 @@ static void ensure_block_array_texture(void)
     for(item_id_t block_id=0; block_id<BLOCK_MAX; ++block_id)
     {
       const struct block_info *block_info = query_block_info(block_id);
-      for(unsigned face=0; face<BLOCK_FACE_COUNT; ++face)
-        if(block_info->textures[face])
+      for(unsigned direction=0; direction<DIRECTION_COUNT; ++direction)
+        if(block_info->textures[direction])
         {
           size_t i;
           for(i=0; i<textures.item_count; ++i)
-            if(strcmp(block_info->textures[face], textures.items[i]) == 0)
+            if(strcmp(block_info->textures[direction], textures.items[i]) == 0)
               break;
 
-          block_array_texture_info[block_id].indices[face] = i;
+          block_array_texture_info[block_id].indices[direction] = i;
           if(i == textures.item_count)
-            DYNAMIC_ARRAY_APPEND(textures, block_info->textures[face]);
+            DYNAMIC_ARRAY_APPEND(textures, block_info->textures[direction]);
         }
     }
 
@@ -122,11 +122,11 @@ struct gl_array_texture_2d assets_get_block_texture_array(void)
   return block_array_texture;
 }
 
-uint32_t assets_get_block_texture_array_index(block_id_t block_id, enum block_face block_face)
+uint32_t assets_get_block_texture_array_index(block_id_t block_id, direction_t direction)
 {
   assert(block_id != BLOCK_NONE);
   ensure_block_array_texture();
-  return block_array_texture_info[block_id].indices[block_face];
+  return block_array_texture_info[block_id].indices[direction];
 }
 
 const struct gl_texture_2d *assets_get_entity_texture(entity_id_t id)

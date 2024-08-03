@@ -2,23 +2,23 @@
 
 #include <math.h>
 
-fmat4_t camera_translation_matrix(struct camera *camera)
+fmat4_t camera_translation_matrix(const struct camera *camera)
 {
   return fmat4_translate_inverse(camera->transform.translation);
 }
 
-fmat4_t camera_rotation_matrix(struct camera *camera)
+fmat4_t camera_rotation_matrix(const struct camera *camera)
 {
   return fmat4_rotate_inverse(camera->transform.rotation);
 }
 
-fmat4_t camera_view_matrix(struct camera *camera)
+fmat4_t camera_view_matrix(const struct camera *camera)
 {
   // Who need matrix inverse?
   return transform_matrix_inverse(camera->transform);
 }
 
-fmat4_t camera_projection_matrix(struct camera *camera)
+fmat4_t camera_projection_matrix(const struct camera *camera)
 {
   fmat4_t result = fmat4_identity();
   fmat4_t tmp;

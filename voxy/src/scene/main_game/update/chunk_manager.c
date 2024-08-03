@@ -35,14 +35,6 @@ ivec3_t ivec3_key(struct ivec3_node *node)
   return node->value;
 }
 
-int ivec3_compare(ivec3_t position1, ivec3_t position2)
-{
-  if(position1.x != position2.x) return position1.x - position2.x;
-  if(position1.y != position2.y) return position1.y - position2.y;
-  if(position1.z != position2.z) return position1.z - position2.z;
-  return 0;
-}
-
 void ivec3_dispose(struct ivec3_node *node)
 {
   free(node);

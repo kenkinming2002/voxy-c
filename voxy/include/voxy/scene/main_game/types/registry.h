@@ -2,6 +2,7 @@
 #define VOXY_SCENE_MAIN_GAME_TYPES_REGISTRY_H
 
 #include <voxy/math/vector.h>
+#include <voxy/math/direction.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -32,17 +33,6 @@ enum block_type
   BLOCK_TYPE_OPAQUE,
 };
 
-enum block_face
-{
-  BLOCK_FACE_LEFT   = 0,
-  BLOCK_FACE_RIGHT  = 1,
-  BLOCK_FACE_BACK   = 2,
-  BLOCK_FACE_FRONT  = 3,
-  BLOCK_FACE_BOTTOM = 4,
-  BLOCK_FACE_TOP    = 5,
-  BLOCK_FACE_COUNT
-};
-
 struct block_info
 {
   const char *mod;
@@ -52,7 +42,7 @@ struct block_info
 
   uint8_t light_level : 4;
 
-  const char *textures[BLOCK_FACE_COUNT];
+  const char *textures[DIRECTION_COUNT];
 
   void(*on_create)(struct entity *entity, struct chunk *chunk, ivec3_t position);
   void(*on_destroy)(struct entity *entity, struct chunk *chunk, ivec3_t position);

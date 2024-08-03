@@ -52,7 +52,11 @@ VOXY_SRCS += voxy/src/scene/main_game/update/physics/swept.c
 VOXY_SRCS += voxy/src/scene/main_game/render/render.c
 VOXY_SRCS += voxy/src/scene/main_game/render/debug.c
 VOXY_SRCS += voxy/src/scene/main_game/render/assets.c
+
 VOXY_SRCS += voxy/src/scene/main_game/render/blocks.c
+VOXY_SRCS += voxy/src/scene/main_game/render/blocks_render_info.c
+VOXY_SRCS += voxy/src/scene/main_game/render/blocks_mesh.c
+
 VOXY_SRCS += voxy/src/scene/main_game/render/entities.c
 
 MOD_SRCS += mod/src/mod.c

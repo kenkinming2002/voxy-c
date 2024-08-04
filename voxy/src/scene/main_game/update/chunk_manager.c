@@ -65,7 +65,7 @@ void sync_active_chunks(void)
   // Save/Discard chunk
   world_for_each_chunk(chunk)
   {
-    if(chunk->data && chunk_is_dirty(chunk) && save_chunk_data(chunk->position, chunk->data))
+    if(chunk->data && chunk_should_save(chunk) && save_chunk_data(chunk->position, chunk->data))
     {
       chunk->data->dirty = false;
       save_count += 1;
@@ -144,6 +144,20 @@ void sync_active_chunks(void)
 
   if(save_count != 0)
     LOG_INFO("Chunk Manager: Saved %d chunks", save_count);
+}
+
+void flush_active_chunks(void)
+{
+  size_t flush_count = 0;
+  world_for_each_chunk(chunk)
+    if(chunk->data && chunk_is_dirty(chunk) && save_chunk_data(chunk->position, chunk->data))
+    {
+      chunk->data->dirty = false;
+      flush_count += 1;
+    }
+
+  if(flush_count != 0)
+    LOG_INFO("Chunk Manager: Flushed %zu chunks", flush_count);
 }
 
 void save_active_chunks(void)

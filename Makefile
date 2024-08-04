@@ -11,6 +11,7 @@ VOXY_SRCS += voxy/src/core/window.c
 VOXY_SRCS += voxy/src/core/thread_pool.c
 VOXY_SRCS += voxy/src/core/delta_time.c
 VOXY_SRCS += voxy/src/core/fs.c
+VOXY_SRCS += voxy/src/core/time.c
 
 VOXY_SRCS += voxy/src/graphics/gl.c
 VOXY_SRCS += voxy/src/graphics/font_set.c

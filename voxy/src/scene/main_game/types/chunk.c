@@ -8,6 +8,11 @@ bool chunk_is_dirty(const struct chunk *chunk)
   return chunk_data_is_dirty(chunk->data);
 }
 
+bool chunk_should_save(const struct chunk *chunk)
+{
+  return chunk_data_should_save(chunk->data);
+}
+
 static void chunk_traverse(const struct chunk **chunk, ivec3_t *position)
 {
   while(*chunk)

@@ -57,6 +57,11 @@ struct chunk
 /// Return if chunk is dirty.
 bool chunk_is_dirty(const struct chunk *chunk);
 
+/// Return if chunk should be written back on to the disk i.e.
+///  - It is dirty.
+///  - There has been sufficient time elapsed since last write back.
+bool chunk_should_save(const struct chunk *chunk);
+
 /// Invalidate mesh at position so that any necessary remeshing is done. This
 /// also takes care of also invalidating mesh of adjacent chunk if necessary.
 void chunk_invalidate_mesh_at(struct chunk *chunk, ivec3_t position);

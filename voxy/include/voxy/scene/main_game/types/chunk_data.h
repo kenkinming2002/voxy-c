@@ -9,6 +9,8 @@
 
 #include <stdatomic.h>
 
+#define SAVE_INTERVAL 60.0f
+
 DYNAMIC_ARRAY_DEFINE(entities, struct entity);
 
 /// Chunk data.
@@ -20,6 +22,11 @@ struct chunk_data
   ///
   /// If chunk data need to be written back onto the disk.
   bool dirty;
+
+  /// Last time chunk data is written back onto the disk.
+  ///
+  /// This allows us to throttle write back to disk.
+  float last_save_time;
 
   block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
   unsigned char block_light_levels[CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 4)];
@@ -33,6 +40,11 @@ void chunk_data_destroy(struct chunk_data *chunk_data);
 
 /// Return if chunk data is dirtied i.e. need to be written back to disk.
 bool chunk_data_is_dirty(const struct chunk_data *chunk_data);
+
+/// Return if chunk data should be written back on to the disk i.e.
+///  - It is dirty.
+///  - There has been sufficient time elapsed since last write back.
+bool chunk_data_should_save(const struct chunk_data *chunk_data);
 
 /// Get/set block id.
 block_id_t chunk_data_get_block_id(const struct chunk_data *chunk_data, ivec3_t position);

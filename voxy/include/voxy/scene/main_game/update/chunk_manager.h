@@ -19,6 +19,11 @@ void activate_chunk(ivec3_t position);
 /// as specified by load_chunk().
 void sync_active_chunks(void);
 
+/// Flush all dirtied active chunks onto the disk regardless of whether we have
+/// just save them or not. This need to be called before we exit main game or
+/// else we have data loss.
+void flush_active_chunks(void);
+
 /// Save list of activated chunks.
 void save_active_chunks(void);
 

@@ -53,6 +53,7 @@ void main_game_enter()
 void main_game_leave()
 {
   mod_leave();
+  flush_active_chunks();
   save_active_chunks();
   save_world_seed();
   window_show_cursor(true);

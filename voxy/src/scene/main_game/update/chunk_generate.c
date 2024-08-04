@@ -5,6 +5,7 @@
 
 #include <voxy/core/thread_pool.h>
 #include <voxy/core/log.h>
+#include <voxy/core/time.h>
 
 #include <voxy/utils.h>
 
@@ -12,6 +13,7 @@ static struct chunk_data *chunk_data_generate(ivec3_t position)
 {
   struct chunk_data *chunk_data = malloc(sizeof *chunk_data);
   chunk_data->dirty = true;
+  chunk_data->last_save_time = get_time();
 
   block_id_t blocks[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
   generate_chunk_blocks(world_seed_get(), position, blocks);

@@ -1,6 +1,8 @@
 #include <voxy/scene/main_game/types/chunk_data.h>
 #include <voxy/scene/main_game/types/registry.h>
 
+#include <voxy/core/time.h>
+
 #include <assert.h>
 #include <stdlib.h>
 
@@ -26,6 +28,11 @@ void chunk_data_destroy(struct chunk_data *chunk_data)
 bool chunk_data_is_dirty(const struct chunk_data *chunk_data)
 {
   return chunk_data->dirty;
+}
+
+bool chunk_data_should_save(const struct chunk_data *chunk_data)
+{
+  return chunk_data->dirty && get_time() >= chunk_data->last_save_time + SAVE_INTERVAL;
 }
 
 static inline void check_position(ivec3_t position)

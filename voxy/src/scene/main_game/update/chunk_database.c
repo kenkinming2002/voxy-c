@@ -3,6 +3,7 @@
 
 #include <voxy/core/log.h>
 #include <voxy/core/fs.h>
+#include <voxy/core/time.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -16,6 +17,7 @@ struct chunk_data *load_chunk_data(ivec3_t position)
 {
   struct chunk_data *chunk_data = malloc(sizeof *chunk_data);
   chunk_data->dirty = false;
+  chunk_data->last_save_time = get_time();
 
   char buffer[LITERAL_LENGTH(WORLD_DIRPATH) + (1 + LITERAL_LENGTH("chunks")) + (1 + INT_LENGTH) * 3 + 1 + MAX(LITERAL_LENGTH("blocks"), LITERAL_LENGTH("entities")) + 1];
   int n = snprintf(buffer, sizeof buffer, "%s%c%s%c%d%c%d%c%d", WORLD_DIRPATH, DIRECTORY_SEPARATOR, "chunks", DIRECTORY_SEPARATOR, position.x, DIRECTORY_SEPARATOR, position.y, DIRECTORY_SEPARATOR, position.z);
@@ -136,6 +138,7 @@ bool save_chunk_data(ivec3_t position, struct chunk_data *chunk_data)
     fclose(f);
   }
 
+  chunk_data->last_save_time = get_time();
   return true;
 }
 

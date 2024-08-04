@@ -106,10 +106,11 @@ static void process_light_creation(struct light_creation light_creation, struct 
       const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
       if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
       {
-        const unsigned light_level = cursor_get_block_light_level(cursor);
-
+        unsigned light_level;
         unsigned neighbour_light_level;
         unsigned char tmp;
+
+        cursor_get_block_light_level_atomic(cursor, &light_level, &tmp);
         cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
 
 retry:;

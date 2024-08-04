@@ -38,7 +38,6 @@ static void *thread_pool_func()
 
     pthread_mutex_unlock(&mutex);
     job->invoke(job);
-    job->destroy(job);
   }
 }
 

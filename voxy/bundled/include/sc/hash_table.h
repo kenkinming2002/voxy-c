@@ -26,10 +26,6 @@
   for(size_t i=0; i<(hash_table).bucket_count; ++i) \
     for(name = (hash_table).buckets[i].head; name; name = name->next)
 
-#define SC_HASH_TABLE_FOREACH_P(hash_table, name) \
-  for(size_t i=0; i<(hash_table).bucket_count; ++i) \
-    for(name = &(hash_table).buckets[i].head; *name; name = &(*name)->next)
-
 #ifdef SC_HASH_TABLE_INTERFACE
 #include <stddef.h>
 

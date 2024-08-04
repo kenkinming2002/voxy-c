@@ -63,24 +63,27 @@ void sync_active_chunks(void)
 
   // Save/Discard Chunk
   {
-    struct chunk **chunk;
-    SC_HASH_TABLE_FOREACH_P(world_chunks, chunk)
+    for(size_t i=0; i<world_chunks.bucket_count; ++i)
     {
-      if(chunk_should_save(*chunk) && save_chunk(*chunk))
+      struct chunk **chunk = &world_chunks.buckets[i].head;
+      while(*chunk)
       {
-        (*chunk)->dirty = false;
-        save_count += 1;
-      }
+        if(chunk_should_save(*chunk) && save_chunk(*chunk))
+        {
+          (*chunk)->dirty = false;
+          save_count += 1;
+        }
 
-      if(!chunk_is_dirty(*chunk) && !ivec3_hash_table_lookup(&active_chunk_positions, (*chunk)->position))
-      {
-        struct chunk *old_chunk = *chunk;
-        *chunk = (*chunk)->next;
-        world_chunks.load -= 1;
-        chunk_destroy(old_chunk);
-        discard_count += 1;
-        if(!*chunk)
-          break;
+        if(!chunk_is_dirty(*chunk) && !ivec3_hash_table_lookup(&active_chunk_positions, (*chunk)->position))
+        {
+          struct chunk *old_chunk = *chunk;
+          *chunk = (*chunk)->next;
+          world_chunks.load -= 1;
+          chunk_destroy(old_chunk);
+          discard_count += 1;
+        }
+        else
+          chunk = &(*chunk)->next;
       }
     }
   }
@@ -141,11 +144,11 @@ void sync_active_chunks(void)
 void flush_active_chunks(void)
 {
   size_t flush_count = 0;
-  struct chunk **chunk;
-  SC_HASH_TABLE_FOREACH_P(world_chunks, chunk)
-    if(chunk_is_dirty(*chunk) && save_chunk(*chunk))
+  struct chunk *chunk;
+  SC_HASH_TABLE_FOREACH(world_chunks, chunk)
+    if(chunk_is_dirty(chunk) && save_chunk(chunk))
     {
-      (*chunk)->dirty = false;
+      chunk->dirty = false;
       flush_count += 1;
     }
 

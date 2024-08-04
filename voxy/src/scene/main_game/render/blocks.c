@@ -20,20 +20,23 @@ static struct blocks_render_info_hash_table blocks_render_infos;
 /// Dispose of render info for chunks that are outside of render distance.
 static void dispose_render_infos(ivec3_t center, int distance)
 {
-  struct blocks_render_info **blocks_render_info;
-  SC_HASH_TABLE_FOREACH_P(blocks_render_infos, blocks_render_info)
+  for(size_t i=0; i<blocks_render_infos.bucket_count; ++i)
   {
-    const ivec3_t position = (*blocks_render_info)->position;
-    if(position.z < center.z - distance + 1 || position.z > center.z + distance - 1 ||
-       position.y < center.y - distance + 1 || position.y > center.y + distance - 1 ||
-       position.x < center.x - distance + 1 || position.x > center.x + distance - 1)
+    struct blocks_render_info **blocks_render_info = &blocks_render_infos.buckets[i].head;
+    while(*blocks_render_info)
     {
-      struct blocks_render_info *old_render_info = *blocks_render_info;
-      *blocks_render_info = old_render_info->next;
-      blocks_render_infos.load -= 1;
-      blocks_render_info_destroy(old_render_info);
-      if(!*blocks_render_info)
-        break;
+      const ivec3_t position = (*blocks_render_info)->position;
+      if(position.z < center.z - distance + 1 || position.z > center.z + distance - 1 ||
+         position.y < center.y - distance + 1 || position.y > center.y + distance - 1 ||
+         position.x < center.x - distance + 1 || position.x > center.x + distance - 1)
+      {
+        struct blocks_render_info *old_render_info = *blocks_render_info;
+        *blocks_render_info = (*blocks_render_info)->next;
+        blocks_render_infos.load -= 1;
+        blocks_render_info_destroy(old_render_info);
+      }
+      else
+        blocks_render_info = &(*blocks_render_info)->next;
     }
   }
 }

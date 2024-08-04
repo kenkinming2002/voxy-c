@@ -10,9 +10,7 @@
 #define WATER_HEIGHT 2
 
 static inline float get_river_factor(seed_t seed, ivec2_t position)
-{
-  const size_t n = 3;
-
+{ const size_t n = 3;
   float rivers[n];
   for(size_t i=0; i<n; ++i)
   {

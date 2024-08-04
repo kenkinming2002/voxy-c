@@ -46,12 +46,6 @@ struct chunk
 
   /// If we are in the singly-linked list of invalidated chunks.
   bool _Atomic mesh_invalidated;
-
-  /// Render info for the chunk.
-  ///
-  /// If this is NULL, there is no render info for the current chunk probably
-  /// because we are not inside the view distance.
-  struct chunk_render_info *render_info;
 };
 
 /// Return if chunk is dirty.

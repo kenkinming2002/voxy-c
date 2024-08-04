@@ -13,23 +13,22 @@ static float randf(float a, float b)
 void spawn_weird_update(void)
 {
   world_for_each_chunk(chunk)
-    if(chunk->data)
-      if(randf(0.0f, 1.0f) < 1e-6)
-      {
-        fvec3_t local_position;
-        local_position.x = randf(0.0f, CHUNK_WIDTH);
-        local_position.y = randf(0.0f, CHUNK_WIDTH);
-        local_position.z = randf(0.0f, CHUNK_WIDTH);
+    if(randf(0.0f, 1.0f) < 1e-6)
+    {
+      fvec3_t local_position;
+      local_position.x = randf(0.0f, CHUNK_WIDTH);
+      local_position.y = randf(0.0f, CHUNK_WIDTH);
+      local_position.z = randf(0.0f, CHUNK_WIDTH);
 
-        fvec3_t position = local_position_to_global_position_f(local_position, chunk->position);
+      fvec3_t position = local_position_to_global_position_f(local_position, chunk->position);
 
-        struct entity entity;
-        entity.position = position;
-        entity.velocity = fvec3_zero();
-        entity.rotation = fvec3_zero();
-        entity.grounded = false;
-        weird_entity_init(&entity);
-        chunk_add_entity(chunk, entity);
-        return;
-      }
+      struct entity entity;
+      entity.position = position;
+      entity.velocity = fvec3_zero();
+      entity.rotation = fvec3_zero();
+      entity.grounded = false;
+      weird_entity_init(&entity);
+      chunk_add_entity(chunk, entity);
+      return;
+    }
 }

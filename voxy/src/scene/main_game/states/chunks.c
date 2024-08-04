@@ -10,28 +10,26 @@ struct chunk_hash_table world_chunks;
 
 struct chunk *world_get_chunk(ivec3_t position)
 {
-  struct chunk *chunk = chunk_hash_table_lookup(&world_chunks, position);
-  if(!chunk)
-  {
-    chunk = calloc(sizeof *chunk, 1);
-    chunk->position = position;
-    chunk_hash_table_insert_unchecked(&world_chunks, chunk);
+  return chunk_hash_table_lookup(&world_chunks, position);
+}
 
-    chunk->left   = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
-    chunk->right  = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0)));
-    chunk->back   = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0)));
-    chunk->front  = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0)));
-    chunk->bottom = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1)));
-    chunk->top    = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1)));
+void world_insert_chunk(struct chunk *chunk)
+{
+  chunk_hash_table_insert(&world_chunks, chunk);
 
-    if(chunk->left)   chunk->left->right = chunk;
-    if(chunk->right)  chunk->right->left = chunk;
-    if(chunk->back)   chunk->back->front = chunk;
-    if(chunk->front)  chunk->front->back = chunk;
-    if(chunk->bottom) chunk->bottom->top = chunk;
-    if(chunk->top)    chunk->top->bottom = chunk;
-  }
-  return chunk;
+  chunk->left   = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3(-1,  0,  0)));
+  chunk->right  = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 1,  0,  0)));
+  chunk->back   = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0, -1,  0)));
+  chunk->front  = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0,  1,  0)));
+  chunk->bottom = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0,  0, -1)));
+  chunk->top    = chunk_hash_table_lookup(&world_chunks, ivec3_add(chunk->position, ivec3( 0,  0,  1)));
+
+  if(chunk->left)   chunk->left->right = chunk;
+  if(chunk->right)  chunk->right->left = chunk;
+  if(chunk->back)   chunk->back->front = chunk;
+  if(chunk->front)  chunk->front->back = chunk;
+  if(chunk->bottom) chunk->bottom->top = chunk;
+  if(chunk->top)    chunk->top->bottom = chunk;
 }
 
 ivec3_t get_chunk_position_i(ivec3_t position)
@@ -79,70 +77,66 @@ fvec3_t global_position_to_local_position_f(fvec3_t position)
 void world_invalidate_mesh_at(ivec3_t position)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position_i(position));
-  if(chunk && chunk->data)
+  if(chunk)
     chunk_invalidate_mesh_at(chunk, global_position_to_local_position_i(position));
 }
 
 block_id_t world_get_block_id(ivec3_t position)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position_i(position));
-  if(chunk && chunk->data)
-    return chunk_get_block_id(chunk, global_position_to_local_position_i(position));
-  else
-    return BLOCK_NONE;
+  if(!chunk)
+    return -1;
+
+  return chunk_get_block_id(chunk, global_position_to_local_position_i(position));
 }
 
 unsigned world_get_block_light_level(ivec3_t position)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position_i(position));
-  if(chunk && chunk->data)
-    return chunk_get_block_light_level(chunk, global_position_to_local_position_i(position));
-  else
+  if(!chunk)
     return -1;
+
+  return chunk_get_block_light_level(chunk, global_position_to_local_position_i(position));
 }
 
 void world_set_block(ivec3_t position, block_id_t id, struct entity *entity)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position_i(position));
-  if(chunk && chunk->data)
+  if(!chunk)
+    return;
+
   {
-    {
-      const block_id_t block_id = chunk_get_block_id(chunk, global_position_to_local_position_i(position));
-      const struct block_info *block_info = query_block_info(block_id);
-      if(block_info->on_destroy)
-        block_info->on_destroy(entity, chunk, global_position_to_local_position_i(position));
-    }
-    chunk_set_block(chunk, global_position_to_local_position_i(position), id);
-    {
-      const block_id_t block_id = chunk_get_block_id(chunk, global_position_to_local_position_i(position));
-      const struct block_info *block_info = query_block_info(block_id);
-      if(block_info->on_create)
-        block_info->on_create(entity, chunk, global_position_to_local_position_i(position));
-    }
+    const block_id_t block_id = chunk_get_block_id(chunk, global_position_to_local_position_i(position));
+    const struct block_info *block_info = query_block_info(block_id);
+    if(block_info->on_destroy)
+      block_info->on_destroy(entity, chunk, global_position_to_local_position_i(position));
+  }
+  chunk_set_block(chunk, global_position_to_local_position_i(position), id);
+  {
+    const block_id_t block_id = chunk_get_block_id(chunk, global_position_to_local_position_i(position));
+    const struct block_info *block_info = query_block_info(block_id);
+    if(block_info->on_create)
+      block_info->on_create(entity, chunk, global_position_to_local_position_i(position));
   }
 }
 
 bool world_add_entity_raw(struct entity entity)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position_f(entity.position));
-  if(chunk && chunk->data)
-  {
-    chunk_add_entity_raw(chunk, entity);
-    return true;
-  }
-  else
+  if(!chunk)
     return false;
+
+  chunk_add_entity_raw(chunk, entity);
+  return true;
 }
 
 bool world_add_entity(struct entity entity)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position_f(entity.position));
-  if(chunk && chunk->data)
-  {
-    chunk_add_entity(chunk, entity);
-    return true;
-  }
-  else
+  if(!chunk)
     return false;
+
+  chunk_add_entity(chunk, entity);
+  return true;
 }
 

@@ -1,10 +1,11 @@
 #ifndef VOXY_SCENE_MAIN_GAME_TYPES_ENTITY_H
 #define VOXY_SCENE_MAIN_GAME_TYPES_ENTITY_H
 
+#include <voxy/scene/main_game/types/registry.h>
+
 #include <voxy/math/vector.h>
 #include <voxy/math/transform.h>
-
-#include <voxy/scene/main_game/types/registry.h>
+#include <voxy/dynamic_array.h>
 
 #include <stdbool.h>
 
@@ -20,6 +21,7 @@ struct entity
 
   void *opaque;
 };
+DYNAMIC_ARRAY_DEFINE(entities, struct entity);
 
 transform_t entity_transform(struct entity *entity);
 

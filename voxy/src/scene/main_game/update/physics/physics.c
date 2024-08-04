@@ -99,12 +99,11 @@ static void entity_update_physics(struct entity *entity, float dt)
 void update_physics(float dt)
 {
   world_for_each_chunk(chunk)
-    if(chunk->data)
-    {
-      for(size_t i=0; i<chunk->data->entities.item_count; ++i)
-        entity_update_physics(&chunk->data->entities.items[i], dt);
+  {
+    for(size_t i=0; i<chunk->entities.item_count; ++i)
+      entity_update_physics(&chunk->entities.items[i], dt);
 
-      if(chunk->data->entities.item_count != 0)
-        chunk->data->dirty = true;
-    }
+    if(chunk->entities.item_count != 0)
+      chunk_invalidate_data(chunk);
+  }
 }

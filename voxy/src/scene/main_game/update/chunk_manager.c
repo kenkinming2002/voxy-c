@@ -7,7 +7,6 @@
 #include <voxy/scene/main_game/states/chunks.h>
 
 #include <voxy/scene/main_game/types/chunk.h>
-#include <voxy/scene/main_game/types/chunk_data.h>
 
 #include <voxy/core/log.h>
 #include <voxy/core/fs.h>
@@ -62,61 +61,53 @@ void sync_active_chunks(void)
   int generate_count = 0;
   int discard_count = 0;
 
-  // Save/Discard chunk
-  world_for_each_chunk(chunk)
+  // Save/Discard Chunk
   {
-    if(chunk->data && chunk_should_save(chunk) && save_chunk_data(chunk->position, chunk->data))
+    struct chunk **chunk;
+    SC_HASH_TABLE_FOREACH_P(world_chunks, chunk)
     {
-      chunk->data->dirty = false;
-      save_count += 1;
-    }
+      if(chunk_should_save(*chunk) && save_chunk(*chunk))
+      {
+        (*chunk)->dirty = false;
+        save_count += 1;
+      }
 
-    if(chunk->data && !chunk_is_dirty(chunk) && !ivec3_hash_table_lookup(&active_chunk_positions, chunk->position))
-    {
-      chunk_data_destroy(chunk->data);
-      chunk->data = NULL;
-      discard_count += 1;
+      if(!chunk_is_dirty(*chunk) && !ivec3_hash_table_lookup(&active_chunk_positions, (*chunk)->position))
+      {
+        struct chunk *old_chunk = *chunk;
+        *chunk = (*chunk)->next;
+        world_chunks.load -= 1;
+        chunk_destroy(old_chunk);
+        discard_count += 1;
+        if(!*chunk)
+          break;
+      }
     }
   }
 
-  // Load/Generate chunks
-  for(size_t i=0; i<active_chunk_positions.bucket_count; ++i)
-    for(struct ivec3_node *node = active_chunk_positions.buckets[i].head; node; node = node->next)
+  // Load/Generate chunk
+  {
+    struct ivec3_node *node;
+    SC_HASH_TABLE_FOREACH(active_chunk_positions, node)
     {
       const ivec3_t chunk_position = node->value;
       struct chunk *chunk = world_get_chunk(chunk_position);
+      if(chunk)
+        continue;
 
-      if(!chunk->data && !chunk->busy)
+      if(!is_chunk_generating(chunk_position) && (chunk = load_chunk(chunk_position)))
       {
+        world_insert_chunk(chunk);
+        chunk_invalidate_mesh(chunk);
+
         load_count += 1;
-        chunk->data = load_chunk_data(chunk->position);
-        if(chunk->data)
-        {
-          chunk->mesh_invalidated = true;
-          if(chunk->left) chunk->left->mesh_invalidated = true;
-          if(chunk->right) chunk->right->mesh_invalidated = true;
-          if(chunk->back) chunk->back->mesh_invalidated = true;
-          if(chunk->front) chunk->front->mesh_invalidated = true;
-          if(chunk->bottom) chunk->bottom->mesh_invalidated = true;
-          if(chunk->top) chunk->top->mesh_invalidated = true;
-        }
+        continue;
       }
 
-      if(!chunk->data && !chunk->busy && enqueue_generate_chunk(chunk))
-        chunk->busy = true;
-
-      if(chunk->busy && (chunk->data = atomic_exchange_explicit(&chunk->new_data, NULL, memory_order_acquire)))
+      if((chunk = generate_chunk(chunk_position)))
       {
-        chunk->busy = false;
-
-        chunk->mesh_invalidated = true;
-        if(chunk->left) chunk->left->mesh_invalidated = true;
-        if(chunk->right) chunk->right->mesh_invalidated = true;
-        if(chunk->back) chunk->back->mesh_invalidated = true;
-        if(chunk->front) chunk->front->mesh_invalidated = true;
-        if(chunk->bottom) chunk->bottom->mesh_invalidated = true;
-        if(chunk->top) chunk->top->mesh_invalidated = true;
-
+        world_insert_chunk(chunk);
+        chunk_invalidate_mesh(chunk);
         for(int z = 0; z<CHUNK_WIDTH; ++z)
           for(int y = 0; y<CHUNK_WIDTH; ++y)
             for(int x = 0; x<CHUNK_WIDTH; ++x)
@@ -129,9 +120,10 @@ void sync_active_chunks(void)
             }
 
         generate_count += 1;
+        continue;
       }
-
     }
+  }
 
   if(generate_count != 0)
     LOG_INFO("Chunk Manager: Generarted %d chunks in background", generate_count);
@@ -149,10 +141,11 @@ void sync_active_chunks(void)
 void flush_active_chunks(void)
 {
   size_t flush_count = 0;
-  world_for_each_chunk(chunk)
-    if(chunk->data && chunk_is_dirty(chunk) && save_chunk_data(chunk->position, chunk->data))
+  struct chunk **chunk;
+  SC_HASH_TABLE_FOREACH_P(world_chunks, chunk)
+    if(chunk_is_dirty(*chunk) && save_chunk(*chunk))
     {
-      chunk->data->dirty = false;
+      (*chunk)->dirty = false;
       flush_count += 1;
     }
 

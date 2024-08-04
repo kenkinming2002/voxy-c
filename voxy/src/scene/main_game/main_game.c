@@ -71,36 +71,33 @@ static void main_game_update_fixed(float dt)
       mod_update();
 
       world_for_each_chunk(chunk)
-        if(chunk->data)
-          for(size_t i=0; i<chunk->data->entities.item_count; ++i)
-          {
-            struct entity *entity = &chunk->data->entities.items[i];
-            const struct entity_info *entity_info = query_entity_info(entity->id);
-            if(entity_info->on_update)
-              entity_info->on_update(&chunk->data->entities.items[i], dt);
-          }
+        for(size_t i=0; i<chunk->entities.item_count; ++i)
+        {
+          struct entity *entity = &chunk->entities.items[i];
+          const struct entity_info *entity_info = query_entity_info(entity->id);
+          if(entity_info->on_update)
+            entity_info->on_update(&chunk->entities.items[i], dt);
+        }
 
       update_light();
       update_physics(dt);
 
       world_for_each_chunk(chunk)
-        if(chunk->data)
-          chunk_commit_add_entities(chunk);
+        chunk_commit_add_entities(chunk);
 
       world_for_each_chunk(chunk)
-        if(chunk->data)
+      {
+        size_t new_item_count = 0;
+        for(size_t i=0; i<chunk->entities.item_count; ++i)
         {
-          size_t new_item_count = 0;
-          for(size_t i=0; i<chunk->data->entities.item_count; ++i)
-          {
-            struct entity *entity = &chunk->data->entities.items[i];
-            if(!ivec3_eql(chunk->position, get_chunk_position_f(entity->position)) && world_add_entity_raw(*entity))
-              continue;
+          struct entity *entity = &chunk->entities.items[i];
+          if(!ivec3_eql(chunk->position, get_chunk_position_f(entity->position)) && world_add_entity_raw(*entity))
+            continue;
 
-            chunk->data->entities.items[new_item_count++] = chunk->data->entities.items[i];
-          }
-          chunk->data->entities.item_count = new_item_count;
+          chunk->entities.items[new_item_count++] = chunk->entities.items[i];
         }
+        chunk->entities.item_count = new_item_count;
+      }
     }
   }
 

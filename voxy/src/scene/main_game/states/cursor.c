@@ -22,7 +22,7 @@ bool cursor_at(ivec3_t position, struct cursor *cursor)
   cursor->x = block_position.x;
   cursor->y = block_position.y;
   cursor->z = block_position.z;
-  return cursor->chunk && cursor->chunk->data;
+  return cursor->chunk;
 }
 
 ivec3_t cursor_get_chunk_position(struct cursor cursor)
@@ -96,7 +96,7 @@ bool cursor_move(struct cursor *cursor, direction_t direction)
   cursor->x = new_position.x;
   cursor->y = new_position.y;
   cursor->z = new_position.z;
-  return cursor->chunk && cursor->chunk->data;
+  return cursor->chunk;
 }
 
 block_id_t cursor_get_block_id(struct cursor cursor)

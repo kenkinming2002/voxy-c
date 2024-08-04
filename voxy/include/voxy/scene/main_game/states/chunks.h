@@ -35,11 +35,11 @@ fvec3_t global_position_to_local_position_f(fvec3_t position);
 ivec3_t local_position_to_global_position_i(ivec3_t position, ivec3_t chunk_position);
 fvec3_t local_position_to_global_position_f(fvec3_t position, ivec3_t chunk_position);
 
-/// Get a pointer to a chunk at position, which is specified by chunk position.
-///
-/// This will *create* the chunk if it does not exist yet but none of its
-/// internal states would be initialized. This may change in the future.
+/// Get the chunk at position.
 struct chunk *world_get_chunk(ivec3_t position);
+
+/// Insert chunk and taking care of linking up neighbouring chunks.
+void world_insert_chunk(struct chunk *chunk);
 
 /// Invalidate mesh at position so that any necessary remeshing is done.
 void world_invalidate_mesh_at(ivec3_t position);

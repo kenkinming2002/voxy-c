@@ -3,7 +3,8 @@
 
 #include <voxy/scene/main_game/config.h>
 
-#include <voxy/scene/main_game/types/chunk_data.h>
+#include <voxy/scene/main_game/types/registry.h>
+#include <voxy/scene/main_game/types/entity.h>
 
 #include <voxy/math/vector.h>
 
@@ -29,24 +30,36 @@ struct chunk
   struct chunk *left;
   struct chunk *right;
 
-  /// Pointer to chunk data.
+  /// Remesh flag.
   ///
-  /// If this is NULL, we are either not yet generated or not loaded.
-  struct chunk_data *data;
-
-  /// Busy flag.
+  /// If chunk need to be remeshed.
   ///
-  /// Indicate if the chunk is currently being generated.
-  bool busy : 1;
+  /// The only reason it is atomic is because of our lighting system.
+  atomic_bool remesh;
 
-  /// Atomic pointer to new data.
+  /// Dirty flag .
   ///
-  /// This is how we can obtain newly generated chunk data.
-  struct chunk_data *_Atomic new_data;
+  /// If chunk need to be written back onto the disk.
+  ///
+  /// The only reason it is atomic is because of our lighting system.
+  atomic_bool dirty;
 
-  /// If we are in the singly-linked list of invalidated chunks.
-  bool _Atomic mesh_invalidated;
+  /// Last time chunk data is written back onto the disk.
+  ///
+  /// This allows us to throttle write back to disk.
+  float last_save_time;
+
+  /// Block.
+  block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
+  unsigned char block_light_levels[CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 4)];
+
+  /// Entities.
+  struct entities entities;
+  struct entities new_entities;
 };
+
+/// Destroy chunk.
+void chunk_destroy(struct chunk *chunk);
 
 /// Return if chunk is dirty.
 bool chunk_is_dirty(const struct chunk *chunk);
@@ -56,9 +69,22 @@ bool chunk_is_dirty(const struct chunk *chunk);
 ///  - There has been sufficient time elapsed since last write back.
 bool chunk_should_save(const struct chunk *chunk);
 
-/// Invalidate mesh at position so that any necessary remeshing is done. This
-/// also takes care of also invalidating mesh of adjacent chunk if necessary.
+/// Invalidate mesh so that any necessary remeshing is done. This also takes
+/// care of also invalidating mesh of adjacent chunk if necessary.
+///
+/// The *_at() variant take an additional position indicating which blocks have
+/// been changed, so that only neighbouring chunk adjacent to that block has its
+/// mesh invalidated.
+void chunk_invalidate_mesh(struct chunk *chunk);
 void chunk_invalidate_mesh_at(struct chunk *chunk, ivec3_t position);
+
+/// Invalidate data so that disk write back may happen.
+///
+/// The *_at() variant take an additional position indicating which blocks have
+/// been changed. This is for consistency with the API for mesh invalidation but
+/// otherwise serves no purpose.
+void chunk_invalidate_data(struct chunk *chunk);
+void chunk_invalidate_data_at(struct chunk *chunk, ivec3_t position);
 
 /// Get/set block id.
 ///
@@ -66,6 +92,7 @@ void chunk_invalidate_mesh_at(struct chunk *chunk, ivec3_t position);
 /// neighbour chunk have not been generated, BLOCK_NONE is returned.
 block_id_t chunk_get_block_id(const struct chunk *chunk, ivec3_t position);
 block_id_t chunk_get_block_id_ex(const struct chunk *chunk, ivec3_t position);
+void chunk_set_block_id_raw(struct chunk *chunk, ivec3_t position, block_id_t id);
 void chunk_set_block_id(struct chunk *chunk, ivec3_t position, block_id_t id);
 
 /// Get/set block light level.
@@ -74,11 +101,16 @@ void chunk_set_block_id(struct chunk *chunk, ivec3_t position, block_id_t id);
 /// neighbour chunk have not been generated, (unsigned)-1 is returned.
 unsigned chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position);
 unsigned chunk_get_block_light_level_ex(const struct chunk *chunk, ivec3_t position);
+void chunk_set_block_light_level_raw(struct chunk *chunk, ivec3_t position, unsigned light_level);
 void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, unsigned light_level);
 
 /// Get/set block light level atomically.
 void chunk_get_block_light_level_atomic(const struct chunk *chunk, ivec3_t position, unsigned *light_level, unsigned char *tmp);
 bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, unsigned *light_level, unsigned char *tmp);
+
+/// Convenient helper to set block given its id where light level are set
+/// according block info from query_block_info().
+void chunk_set_block_raw(struct chunk *chunk, ivec3_t position, block_id_t id);
 
 /// Convenient helper to set block given its id where light level are set
 /// according block info from query_block_info(). This also take care of

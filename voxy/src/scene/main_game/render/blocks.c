@@ -48,26 +48,26 @@ static void update_render_infos(ivec3_t center, int distance, size_t *count)
       {
         const ivec3_t chunk_position = ivec3(x, y, z);
         struct chunk *chunk = chunk_hash_table_lookup(&world_chunks, chunk_position);
-        if(chunk && chunk->data)
+        if(!chunk)
+          continue;
+
+        struct blocks_render_info *blocks_render_info = blocks_render_info_hash_table_lookup(&blocks_render_infos, chunk_position);
+        if(!blocks_render_info)
         {
-          struct blocks_render_info *blocks_render_info = blocks_render_info_hash_table_lookup(&blocks_render_infos, chunk_position);
-          if(!blocks_render_info)
-          {
-            blocks_render_info = blocks_render_info_create();
-            blocks_render_info->position = chunk_position;
-            blocks_render_info_hash_table_insert(&blocks_render_infos, blocks_render_info);
-            blocks_render_info_update(blocks_render_info, chunk, &g_digger);
+          blocks_render_info = blocks_render_info_create();
+          blocks_render_info->position = chunk_position;
+          blocks_render_info_hash_table_insert(&blocks_render_infos, blocks_render_info);
+          blocks_render_info_update(blocks_render_info, chunk, &g_digger);
 
-            *count += 1;
-            chunk->mesh_invalidated = false;
-          }
-          else if(chunk->mesh_invalidated)
-          {
-            blocks_render_info_update(blocks_render_info, chunk, &g_digger);
+          *count += 1;
+          *(bool *)&chunk->remesh = false;
+        }
+        else if(*(bool *)&chunk->remesh)
+        {
+          blocks_render_info_update(blocks_render_info, chunk, &g_digger);
 
-            *count += 1;
-            chunk->mesh_invalidated = false;
-          }
+          *count += 1;
+          *(bool *)&chunk->remesh = false;
         }
       }
 }

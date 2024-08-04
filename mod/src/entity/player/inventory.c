@@ -268,35 +268,34 @@ void player_entity_update_inventory(struct entity *entity)
     //             lookup entities with specific ids. Something like an entity
     //             component system.
     world_for_each_chunk(chunk)
-      if(chunk->data)
-        for(size_t i=0; i<chunk->data->entities.item_count; ++i)
+      for(size_t i=0; i<chunk->entities.item_count; ++i)
+      {
+        struct entity *other_entity = &chunk->entities.items[i];
+        if(entity == other_entity)
+          continue;
+
+        if(!entity_intersect(entity, other_entity))
+          continue;
+
+        if(other_entity->id != item_entity_id_get())
+          continue;
+
+        struct item_opaque *other_opaque = other_entity->opaque;
+
+        for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
+          item_merge(&opaque->hotbar[i], &other_opaque->item);
+
+        for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
+          for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
+            item_merge(&opaque->inventory[j][i], &other_opaque->item);
+
+        if(other_opaque->item.id == ITEM_NONE)
         {
-          struct entity *other_entity = &chunk->data->entities.items[i];
-          if(entity == other_entity)
-            continue;
-
-          if(!entity_intersect(entity, other_entity))
-            continue;
-
-          if(other_entity->id != item_entity_id_get())
-            continue;
-
-          struct item_opaque *other_opaque = other_entity->opaque;
-
-          for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
-            item_merge(&opaque->hotbar[i], &other_opaque->item);
-
-          for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
-            for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
-              item_merge(&opaque->inventory[j][i], &other_opaque->item);
-
-          if(other_opaque->item.id == ITEM_NONE)
-          {
-            // FIXME: May be we should not be modifying the entities array
-            //        during iteration.
-            item_entity_fini(other_entity);
-            *other_entity = chunk->data->entities.items[--chunk->data->entities.item_count];
-          }
+          // FIXME: May be we should not be modifying the entities array
+          //        during iteration.
+          item_entity_fini(other_entity);
+          *other_entity = chunk->entities.items[--chunk->entities.item_count];
         }
+      }
   }
 }

@@ -32,6 +32,6 @@ void digger_set_position(struct digger *digger, ivec3_t position);
 
 /// Actually Dig. This will destroy the block at previously set position if
 /// accumulated damage is greater than 1.0.
-void digger_dig(struct digger *digger, float damage, struct entity *entity);
+bool digger_dig(struct digger *digger, float damage);
 
 #endif // VOXY_SCENE_MAIN_GAME_STATES_DIGGER_H

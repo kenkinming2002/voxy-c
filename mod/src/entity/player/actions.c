@@ -1,4 +1,5 @@
 #include "actions.h"
+#include "block/empty/empty.h"
 
 #include <voxy/scene/main_game/states/digger.h>
 #include <voxy/scene/main_game/states/chunks.h>
@@ -20,7 +21,8 @@ void player_entity_update_actions(struct entity *entity, float dt)
       if(entity_ray_cast(entity, 20.0f, &position, &normal))
       {
         digger_set_position(&g_digger, position);
-        digger_dig(&g_digger, dt * PLAYER_DIG_SPEED, entity);
+        if(digger_dig(&g_digger, dt * PLAYER_DIG_SPEED))
+          world_set_block(g_digger.position, empty_block_id_get(), entity);
       }
     }
     else

@@ -26,10 +26,9 @@ void digger_set_position(struct digger *digger, ivec3_t position)
   }
 }
 
-void digger_dig(struct digger *digger, float damage, struct entity *entity)
+bool digger_dig(struct digger *digger, float damage)
 {
   world_invalidate_mesh_at(digger->position);
   digger->damage += damage;
-  if(digger->damage >= 1.0f)
-    world_set_block(digger->position, 0, entity); // FIXME: We are hardcoding the fact that empty block have id 0
+  return digger->damage >= 1.0f;
 }

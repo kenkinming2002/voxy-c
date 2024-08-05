@@ -59,11 +59,24 @@ VOXY_SRCS += voxy/src/scene/main_game/render/blocks_mesh.c
 VOXY_SRCS += voxy/src/scene/main_game/render/entities.c
 
 MOD_SRCS += mod/src/mod.c
-MOD_SRCS += mod/src/ids.c
 MOD_SRCS += mod/src/generate.c
 
-MOD_SRCS += mod/src/block.c
-MOD_SRCS += mod/src/on_use_block_item.c
+MOD_SRCS += mod/src/block/block.c
+MOD_SRCS += mod/src/block/empty/empty.c
+MOD_SRCS += mod/src/block/ether/ether.c
+MOD_SRCS += mod/src/block/grass/grass.c
+MOD_SRCS += mod/src/block/lamp/lamp.c
+MOD_SRCS += mod/src/block/leave/leave.c
+MOD_SRCS += mod/src/block/log/log.c
+MOD_SRCS += mod/src/block/stone/stone.c
+MOD_SRCS += mod/src/block/water/water.c
+
+MOD_SRCS += mod/src/item/item.c
+MOD_SRCS += mod/src/item/grass/grass.c
+MOD_SRCS += mod/src/item/lamp/lamp.c
+MOD_SRCS += mod/src/item/leave/leave.c
+MOD_SRCS += mod/src/item/log/log.c
+MOD_SRCS += mod/src/item/stone/stone.c
 
 MOD_SRCS += mod/src/entity/item/item.c
 MOD_SRCS += mod/src/entity/player/actions.c
@@ -84,7 +97,7 @@ voxy/voxy: LDFLAGS += -rdynamic
 voxy/voxy: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
 voxy/voxy: LIBS   += $(shell pkg-config --libs   glfw3 fontconfig freetype2)
 
-mod/mod.so: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src
+mod/mod.so: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -Imod/src
 mod/mod.so: CFLAGS  += -fPIC
 mod/mod.so: LDFLAGS += -shared
 

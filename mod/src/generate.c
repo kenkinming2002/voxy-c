@@ -1,4 +1,10 @@
-#include "ids.h"
+#include "block/empty/empty.h"
+#include "block/ether/ether.h"
+#include "block/grass/grass.h"
+#include "block/leave/leave.h"
+#include "block/log/log.h"
+#include "block/stone/stone.h"
+#include "block/water/water.h"
 
 #include <voxy/scene/main_game/config.h>
 #include <voxy/math/noise.h>
@@ -102,21 +108,21 @@ static inline block_id_t get_block(seed_t seed, ivec3_t position, float height)
   int height2 = height1 + 1;
 
   if(position.z < height2 && get_cave(seed, position))
-    return BLOCK_ID_EMPTY;
+    return empty_block_id_get();
 
   if(position.z < height1)
-    return BLOCK_ID_STONE;
+    return stone_block_id_get();
 
   if(position.z < height2)
-    return BLOCK_ID_GRASS;
+    return grass_block_id_get();
 
   if(position.z < WATER_HEIGHT)
-    return BLOCK_ID_WATER;
+    return water_block_id_get();
 
   if(position.z >= ETHER_HEIGHT)
-    return BLOCK_ID_ETHER;
+    return ether_block_id_get();
 
-  return BLOCK_ID_EMPTY;
+  return empty_block_id_get();
 }
 
 static void place_block(block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH], ivec3_t position, block_id_t block)
@@ -131,53 +137,53 @@ static void place_tree(block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDT
 {
   const block_id_t TREE[6][5][5] = {
   {
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_LOG,   BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), log_block_id_get(),   empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
   },
   {
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_LOG,   BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), log_block_id_get(),   empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
   },
   {
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_LOG,   BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), log_block_id_get(),   empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
   },
   {
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LOG,   BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), log_block_id_get(),   leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
   },
   {
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LOG,   BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
-    {BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), log_block_id_get(),   leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
+    {leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), },
   },
   {
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_LEAVE, BLOCK_ID_EMPTY, },
-    {BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, BLOCK_ID_EMPTY, },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), leave_block_id_get(), leave_block_id_get(), leave_block_id_get(), empty_block_id_get(), },
+    {empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), empty_block_id_get(), },
   },
 };
 
   for(int z=0; z<6; ++z)
     for(int y=0; y<5; ++y)
       for(int x=0; x<5; ++x)
-        if(TREE[z][y][x] != BLOCK_ID_EMPTY)
+        if(TREE[z][y][x] != empty_block_id_get())
           place_block(block_ids, ivec3_add(position, ivec3(x-2, y-2, z)), TREE[z][y][x]);
 }
 

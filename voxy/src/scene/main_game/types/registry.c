@@ -30,13 +30,15 @@ block_id_t register_block_info(struct block_info block_info)
       LOG_INFO("  name           = %s", block_info.name);
       LOG_INFO("  type           = %s", block_type_as_str(block_info.type));
       LOG_INFO("  light level    = %u", block_info.light_level);
-      LOG_INFO("  texture left   = %s", block_info.textures[DIRECTION_LEFT]);
-      LOG_INFO("  texture right  = %s", block_info.textures[DIRECTION_RIGHT]);
-      LOG_INFO("  texture back   = %s", block_info.textures[DIRECTION_BACK]);
-      LOG_INFO("  texture front  = %s", block_info.textures[DIRECTION_FRONT]);
-      LOG_INFO("  texture bottom = %s", block_info.textures[DIRECTION_BOTTOM]);
-      LOG_INFO("  texture top    = %s", block_info.textures[DIRECTION_TOP]);
-
+      if(block_info.type != BLOCK_TYPE_INVISIBLE)
+      {
+        LOG_INFO("  texture left   = %s", block_info.textures[DIRECTION_LEFT]);
+        LOG_INFO("  texture right  = %s", block_info.textures[DIRECTION_RIGHT]);
+        LOG_INFO("  texture back   = %s", block_info.textures[DIRECTION_BACK]);
+        LOG_INFO("  texture front  = %s", block_info.textures[DIRECTION_FRONT]);
+        LOG_INFO("  texture bottom = %s", block_info.textures[DIRECTION_BOTTOM]);
+        LOG_INFO("  texture top    = %s", block_info.textures[DIRECTION_TOP]);
+      }
       block_infos[i] = block_info;
       return i;
     }

@@ -1,3 +1,4 @@
+#include "mod.h"
 #include "player.h"
 
 #include "actions.h"
@@ -18,7 +19,7 @@ void player_entity_register(void)
 {
   struct entity_info entity_info;
 
-  entity_info.mod = "main";
+  entity_info.mod = MOD;
   entity_info.name = "player";
 
   entity_info.mesh = NULL;

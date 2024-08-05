@@ -1,3 +1,4 @@
+#include "mod.h"
 #include "weird.h"
 
 #include <stdlib.h>
@@ -13,7 +14,7 @@ void weird_entity_register(void)
 {
   struct entity_info entity_info;
 
-  entity_info.mod = "main";
+  entity_info.mod = MOD;
   entity_info.name = "weird";
 
   entity_info.mesh = "assets/models/pig.obj";

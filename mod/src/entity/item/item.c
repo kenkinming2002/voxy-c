@@ -1,3 +1,4 @@
+#include "mod.h"
 #include "item.h"
 
 #include <stdlib.h>
@@ -8,7 +9,7 @@ void item_entity_register(void)
 {
   struct entity_info entity_info;
 
-  entity_info.mod = "main";
+  entity_info.mod = MOD;
   entity_info.name = "item";
 
   entity_info.mesh = NULL;

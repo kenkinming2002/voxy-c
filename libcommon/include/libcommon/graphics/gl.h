@@ -31,7 +31,7 @@ void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d);
     if(instance.id == 0)                                                                            \
     {                                                                                               \
       GLenum      targets[]   = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};                             \
-      const char *filepaths[] = {"assets/shaders/" #name ".vert", "assets/shaders/" #name ".frag"}; \
+      const char *filepaths[] = {#name ".vert", #name ".frag"}; \
       if(gl_program_load(&instance, 2, targets, filepaths) != 0)                                    \
       {                                                                                             \
         LOG_ERROR("Failed to load %s shader", #name);                                               \

@@ -15,12 +15,12 @@ void lamp_block_register(void)
   block_info.type = BLOCK_TYPE_OPAQUE;
   block_info.light_level = 14;
 
-  block_info.textures[DIRECTION_LEFT]   = "assets/textures/lamp.png";
-  block_info.textures[DIRECTION_RIGHT]  = "assets/textures/lamp.png";
-  block_info.textures[DIRECTION_BACK]   = "assets/textures/lamp.png";
-  block_info.textures[DIRECTION_FRONT]  = "assets/textures/lamp.png";
-  block_info.textures[DIRECTION_BOTTOM] = "assets/textures/lamp.png";
-  block_info.textures[DIRECTION_TOP]    = "assets/textures/lamp.png";
+  block_info.textures[DIRECTION_LEFT]   = "mod/assets/textures/lamp.png";
+  block_info.textures[DIRECTION_RIGHT]  = "mod/assets/textures/lamp.png";
+  block_info.textures[DIRECTION_BACK]   = "mod/assets/textures/lamp.png";
+  block_info.textures[DIRECTION_FRONT]  = "mod/assets/textures/lamp.png";
+  block_info.textures[DIRECTION_BOTTOM] = "mod/assets/textures/lamp.png";
+  block_info.textures[DIRECTION_TOP]    = "mod/assets/textures/lamp.png";
 
   block_info.on_create = lamp_block_on_create;
   block_info.on_destroy = lamp_block_on_destroy;

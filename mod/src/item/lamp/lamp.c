@@ -12,7 +12,7 @@ void lamp_item_register(void)
 
   item_info.mod = MOD;
   item_info.name = "lamp";
-  item_info.texture = "assets/textures/lamp_item.png";
+  item_info.texture = "mod/assets/textures/lamp_item.png";
   item_info.on_use = lamp_item_on_use;
 
   lamp_item_id = register_item_info(item_info);

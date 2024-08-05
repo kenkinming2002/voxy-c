@@ -17,8 +17,8 @@ void weird_entity_register(void)
   entity_info.mod = MOD;
   entity_info.name = "weird";
 
-  entity_info.mesh = "assets/models/pig.obj";
-  entity_info.texture = "assets/models/pig.png";
+  entity_info.mesh = "mod/assets/models/pig.obj";
+  entity_info.texture = "mod/assets/models/pig.png";
 
   entity_info.hitbox_dimension = fvec3(1.0f, 1.0f, 1.0f);
   entity_info.hitbox_offset = fvec3(0.0f, 0.0f, -0.5f);

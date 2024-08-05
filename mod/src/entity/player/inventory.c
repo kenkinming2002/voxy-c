@@ -219,7 +219,7 @@ void player_entity_update_inventory(struct entity *entity)
       static struct gl_texture_2d cursor;
       if(!cursor_loaded)
       {
-        gl_texture_2d_load(&cursor, "assets/textures/cursor.png");
+        gl_texture_2d_load(&cursor, "mod/assets/textures/cursor.png");
         cursor_loaded = true;
       }
 

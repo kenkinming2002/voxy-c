@@ -12,7 +12,7 @@ void leave_item_register(void)
 
   item_info.mod = MOD;
   item_info.name = "leave";
-  item_info.texture =  "assets/textures/leave_item.png";
+  item_info.texture =  "mod/assets/textures/leave_item.png";
   item_info.on_use = leave_item_on_use;
 
   leave_item_id = register_item_info(item_info);

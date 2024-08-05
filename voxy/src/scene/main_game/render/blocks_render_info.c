@@ -175,7 +175,7 @@ void blocks_render_info_render_begin(const struct camera *camera)
   fmat4_t V = fmat4_identity();
   V = fmat4_mul(camera_view_matrix(camera), V);
 
-  struct gl_program program = GL_PROGRAM_LOAD(world/blocks);
+  struct gl_program program = GL_PROGRAM_LOAD(voxy/assets/shaders/world/blocks);
   glUseProgram(program.id);
   glUniformMatrix4fv(glGetUniformLocation(program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
   glUniformMatrix4fv(glGetUniformLocation(program.id, "V"),  1, GL_TRUE, (const float *)&V);

@@ -18,7 +18,7 @@ void main_game_render_entities(void)
     VP = fmat4_mul(camera_view_matrix(&world_camera),       VP);
     VP = fmat4_mul(camera_projection_matrix(&world_camera), VP);
 
-    struct gl_program program = GL_PROGRAM_LOAD(outline);
+    struct gl_program program = GL_PROGRAM_LOAD(voxy/assets/shaders/outline);
     glUseProgram(program.id);
     glUniformMatrix4fv(glGetUniformLocation(program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
 
@@ -41,7 +41,7 @@ void main_game_render_entities(void)
   }
 
   {
-    struct gl_program program = GL_PROGRAM_LOAD(world/entities);
+    struct gl_program program = GL_PROGRAM_LOAD(voxy/assets/shaders/world/entities);
     glUseProgram(program.id);
 
     world_for_each_chunk(chunk)

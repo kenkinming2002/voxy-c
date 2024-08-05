@@ -15,12 +15,12 @@ void leave_block_register(void)
   block_info.type = BLOCK_TYPE_OPAQUE;
   block_info.light_level = 0;
 
-  block_info.textures[DIRECTION_LEFT]   = "assets/textures/leave.png";
-  block_info.textures[DIRECTION_RIGHT]  = "assets/textures/leave.png";
-  block_info.textures[DIRECTION_BACK]   = "assets/textures/leave.png";
-  block_info.textures[DIRECTION_FRONT]  = "assets/textures/leave.png";
-  block_info.textures[DIRECTION_BOTTOM] = "assets/textures/leave.png";
-  block_info.textures[DIRECTION_TOP]    = "assets/textures/leave.png";
+  block_info.textures[DIRECTION_LEFT]   = "mod/assets/textures/leave.png";
+  block_info.textures[DIRECTION_RIGHT]  = "mod/assets/textures/leave.png";
+  block_info.textures[DIRECTION_BACK]   = "mod/assets/textures/leave.png";
+  block_info.textures[DIRECTION_FRONT]  = "mod/assets/textures/leave.png";
+  block_info.textures[DIRECTION_BOTTOM] = "mod/assets/textures/leave.png";
+  block_info.textures[DIRECTION_TOP]    = "mod/assets/textures/leave.png";
 
   block_info.on_create = leave_block_on_create;
   block_info.on_destroy = leave_block_on_destroy;

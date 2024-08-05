@@ -13,12 +13,12 @@ void water_block_register(void)
   block_info.type = BLOCK_TYPE_TRANSPARENT;
   block_info.light_level = 0;
 
-  block_info.textures[DIRECTION_LEFT]   = "assets/textures/water.png";
-  block_info.textures[DIRECTION_RIGHT]  = "assets/textures/water.png";
-  block_info.textures[DIRECTION_BACK]   = "assets/textures/water.png";
-  block_info.textures[DIRECTION_FRONT]  = "assets/textures/water.png";
-  block_info.textures[DIRECTION_BOTTOM] = "assets/textures/water.png";
-  block_info.textures[DIRECTION_TOP]    = "assets/textures/water.png";
+  block_info.textures[DIRECTION_LEFT]   = "mod/assets/textures/water.png";
+  block_info.textures[DIRECTION_RIGHT]  = "mod/assets/textures/water.png";
+  block_info.textures[DIRECTION_BACK]   = "mod/assets/textures/water.png";
+  block_info.textures[DIRECTION_FRONT]  = "mod/assets/textures/water.png";
+  block_info.textures[DIRECTION_BOTTOM] = "mod/assets/textures/water.png";
+  block_info.textures[DIRECTION_TOP]    = "mod/assets/textures/water.png";
 
   block_info.on_create = water_block_on_create;
   block_info.on_destroy = water_block_on_destroy;

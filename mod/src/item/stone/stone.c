@@ -12,7 +12,7 @@ void stone_item_register(void)
 
   item_info.mod = MOD;
   item_info.name = "stone";
-  item_info.texture =  "assets/textures/stone_item.png";
+  item_info.texture =  "mod/assets/textures/stone_item.png";
   item_info.on_use = stone_item_on_use;
 
   stone_item_id = register_item_info(item_info);

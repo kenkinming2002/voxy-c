@@ -12,7 +12,7 @@ void grass_item_register(void)
 
   item_info.mod = MOD;
   item_info.name = "grass";
-  item_info.texture =  "assets/textures/grass_item.png";
+  item_info.texture =  "mod/assets/textures/grass_item.png";
   item_info.on_use = grass_item_on_use;
 
   grass_item_id = register_item_info(item_info);

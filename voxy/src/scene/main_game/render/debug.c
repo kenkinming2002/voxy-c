@@ -27,7 +27,7 @@ void main_game_render_debug(void)
     VP = fmat4_mul(camera_view_matrix(&world_camera),       VP);
     VP = fmat4_mul(camera_projection_matrix(&world_camera), VP);
 
-    struct gl_program program = GL_PROGRAM_LOAD(outline);
+    struct gl_program program = GL_PROGRAM_LOAD(voxy/assets/shaders/outline);
     glUseProgram(program.id);
     glUniformMatrix4fv(glGetUniformLocation(program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
 

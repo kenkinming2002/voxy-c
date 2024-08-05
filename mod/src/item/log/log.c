@@ -12,7 +12,7 @@ void log_item_register(void)
 
   item_info.mod = MOD;
   item_info.name = "log";
-  item_info.texture =  "assets/textures/log_item.png";
+  item_info.texture =  "mod/assets/textures/log_item.png";
   item_info.on_use = log_item_on_use;
 
   log_item_id = register_item_info(item_info);

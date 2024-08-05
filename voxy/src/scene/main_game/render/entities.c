@@ -41,7 +41,7 @@ void main_game_render_entities(void)
   }
 
   {
-    struct gl_program program = GL_PROGRAM_LOAD(mesh);
+    struct gl_program program = GL_PROGRAM_LOAD(world/entities);
     glUseProgram(program.id);
 
     world_for_each_chunk(chunk)

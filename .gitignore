@@ -1,4 +1,5 @@
 /libcommon/libcommon.a
+/render_block/render_block
 /voxy/voxy
 /mod/mod.so
 /world

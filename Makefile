@@ -19,6 +19,8 @@ LIBCOMMON_SRCS += libcommon/src/graphics/mesh.c
 LIBCOMMON_SRCS += libcommon/src/graphics/ui.c
 LIBCOMMON_SRCS += libcommon/src/graphics/camera.c
 
+RENDER_BLOCK_SRCS += render_block/src/render_block.c
+
 VOXY_SRCS += voxy/src/voxy.c
 
 VOXY_SRCS += voxy/src/scene/scene.c
@@ -94,6 +96,14 @@ libcommon/libcommon.a: CFLAGS += -Ilibcommon/bundled/include
 libcommon/libcommon.a: CFLAGS += -Ilibcommon/include
 libcommon/libcommon.a: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
 
+render_block/render_block: CFLAGS += -Ilibcommon/bundled/include
+render_block/render_block: CFLAGS += -Ilibcommon/include
+render_block/render_block: CFLAGS += $(shell pkg-config --cflags glfw3 libpng)
+render_block/render_block: LIBS   += $(shell pkg-config --libs   glfw3 libpng)
+render_block/render_block: LIBS   += -lm
+
+render_block/render_block: CFLAGS  += -Irender_block/include
+
 voxy/voxy: CFLAGS += -Ilibcommon/bundled/include
 voxy/voxy: CFLAGS += -Ilibcommon/include
 voxy/voxy: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
@@ -113,10 +123,13 @@ mod/mod.so: LDFLAGS += -shared
 
 .PHONY: clean depclean
 
-all: voxy/voxy mod/mod.so
+all: voxy/voxy render_block/render_block mod/mod.so
 
 libcommon/libcommon.a: $(LIBCOMMON_SRCS:.c=.o)
 	ar $(ARFLAGS) $@ $(LIBCOMMON_SRCS:.c=.o)
+
+render_block/render_block: $(RENDER_BLOCK_SRCS:.c=.o) libcommon/libcommon.a
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(RENDER_BLOCK_SRCS:.c=.o) $(LIBS) -Llibcommon -lcommon
 
 voxy/voxy: $(VOXY_SRCS:.c=.o) libcommon/libcommon.a
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS) -Llibcommon -lcommon
@@ -129,14 +142,17 @@ clean: depclean
 	- rm -f voxy/voxy
 	- rm -f mod/mod.so
 	- rm -f $(LIBCOMMON_SRCS:.c=.o)
+	- rm -f $(RENDER_BLOCK_SRCS:.c=.o)
 	- rm -f $(VOXY_SRCS:.c=.o)
 	- rm -f $(MOD_SRCS:.c=.o)
 
 depclean:
 	- rm -f $(LIBCOMMON_SRCS:.c=.d)
+	- rm -f $(RENDER_BLOCK_SRCS:.c=.d)
 	- rm -f $(VOXY_SRCS:.c=.d)
 	- rm -f $(MOD_SRCS:.c=.d)
 
 -include $(LIBCOMMON_SRCS:.c=.d)
+-include $(RENDER_BLOCK_SRCS:.c=.d)
 -include $(VOXY_SRCS:.c=.d)
 -include $(MOD_SRCS:.c=.d)

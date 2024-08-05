@@ -14,7 +14,7 @@ static char *read_file(const char *filepath)
 
   if(!(file = fopen(filepath, "r")))
   {
-    LOG_WARN("Failed to open file %s: %s", filepath, strerror(errno));
+    LOG_ERROR("Failed to open file %s: %s", filepath, strerror(errno));
     goto error;
   }
 
@@ -25,7 +25,7 @@ static char *read_file(const char *filepath)
   buffer = malloc(size+1);
   if(fread(buffer, size, 1, file) != 1)
   {
-    LOG_WARN("Failed to read from file %s", filepath);
+    LOG_ERROR("Failed to read from file %s", filepath);
     goto error;
   }
   buffer[size] = '\0';
@@ -61,7 +61,7 @@ int gl_shader_load(struct gl_shader *shader, GLenum target, const char *filepath
     info_log = malloc(info_log_length);
     glGetShaderInfoLog(shader->id, info_log_length, NULL, info_log);
 
-    LOG_WARN("Failed to compile shader: %s", info_log);
+    LOG_ERROR("Failed to compile shader: %s", info_log);
     free(info_log);
 
     glDeleteShader(shader->id);
@@ -116,7 +116,7 @@ int gl_program_link(struct gl_program *program, size_t count, struct gl_shader s
     info_log = malloc(info_log_length);
     glGetProgramInfoLog(program->id, info_log_length, NULL, info_log);
 
-    LOG_WARN("Failed to link program: %s", info_log);
+    LOG_ERROR("Failed to link program: %s", info_log);
     free(info_log);
 
     glDeleteProgram(program->id);
@@ -139,7 +139,7 @@ int gl_texture_2d_load(struct gl_texture_2d *texture_2d, const char *filepath)
   unsigned char *bytes = stbi_load(filepath, &x, &y, &n, 4);
   if(!bytes)
   {
-    LOG_WARN("Failed to load image for texture from %s: %s", filepath, stbi_failure_reason());
+    LOG_ERROR("Failed to load image for texture from %s: %s", filepath, stbi_failure_reason());
     stbi_image_free(bytes);
     return -1;
   }
@@ -175,7 +175,7 @@ int gl_array_texture_2d_load(struct gl_array_texture_2d *array_texture_2d, size_
     unsigned char *bytes = stbi_load(filepaths[i], &x, &y, &n, 4);
     if(!bytes)
     {
-      LOG_WARN("Failed to load image for array texture from %s: %s", filepaths[i], stbi_failure_reason());
+      LOG_ERROR("Failed to load image for array texture from %s: %s", filepaths[i], stbi_failure_reason());
 
       free(texels);
       stbi_image_free(bytes);
@@ -191,7 +191,7 @@ int gl_array_texture_2d_load(struct gl_array_texture_2d *array_texture_2d, size_
 
     if(width != x || height != y)
     {
-      LOG_WARN("Array texture must be comprised of images of same dimension: Expected %dx%d: Got %dx%d from %s", width, height, x, y, filepaths[i]);
+      LOG_ERROR("Array texture must be comprised of images of same dimension: Expected %dx%d: Got %dx%d from %s", width, height, x, y, filepaths[i]);
 
       free(texels);
       stbi_image_free(bytes);

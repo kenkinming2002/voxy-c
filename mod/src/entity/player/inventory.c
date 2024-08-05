@@ -4,6 +4,7 @@
 #include <voxy/core/window.h>
 #include <voxy/graphics/gl.h>
 #include <voxy/graphics/ui.h>
+#include <voxy/math/aabb.h>
 #include <voxy/scene/main_game/render/assets.h>
 #include <voxy/scene/main_game/states/chunks.h>
 
@@ -256,46 +257,53 @@ void player_entity_update_inventory(struct entity *entity)
 
   // Item Pickup
   {
-    // FIXME: This is horrible because we are eseentially looping over every
-    //        single entities in every single chunks asking questions:
-    //          1. Are you an item entity?
-    //          2. Am I close enough to pick it up?
-    //        We need to
-    //          1. Stop iterating through every single chunk - we should only
-    //             iterate chunks that are near us.
-    //          2. Stop iterating through every single entities - we need a
-    //             better way to store entities in chunk so that we can simply
-    //             lookup entities with specific ids. Something like an entity
-    //             component system.
-    world_for_each_chunk(chunk)
-      for(size_t i=0; i<chunk->entities.item_count; ++i)
-      {
-        struct entity *other_entity = &chunk->entities.items[i];
-        if(entity == other_entity)
-          continue;
+    const struct entity_info *player_entity_info = query_entity_info(player_entity_id_get());
+    const struct entity_info *item_entity_info = query_entity_info(item_entity_id_get());
 
-        if(!entity_intersect(entity, other_entity))
-          continue;
+    aabb3_t hitbox;
+    hitbox.center = fvec3_add(entity->position, fvec3_sub(player_entity_info->hitbox_offset, item_entity_info->hitbox_offset));
+    hitbox.dimension = fvec3_sub(player_entity_info->hitbox_dimension, item_entity_info->hitbox_dimension);
 
-        if(other_entity->id != item_entity_id_get())
-          continue;
-
-        struct item_opaque *other_opaque = other_entity->opaque;
-
-        for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
-          item_merge(&opaque->hotbar[i], &other_opaque->item);
-
-        for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
-          for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
-            item_merge(&opaque->inventory[j][i], &other_opaque->item);
-
-        if(other_opaque->item.id == ITEM_NONE)
+    const ivec3_t chunk_position_min = get_chunk_position_f(aabb3_min_corner(hitbox));
+    const ivec3_t chunk_position_max = get_chunk_position_f(aabb3_max_corner(hitbox));
+    for(int z=chunk_position_min.z; z<=chunk_position_max.z; ++z)
+      for(int y=chunk_position_min.y; y<=chunk_position_max.y; ++y)
+        for(int x=chunk_position_min.x; x<=chunk_position_max.x; ++x)
         {
-          // FIXME: May be we should not be modifying the entities array
-          //        during iteration.
-          item_entity_fini(other_entity);
-          *other_entity = chunk->entities.items[--chunk->entities.item_count];
+          const ivec3_t chunk_position = ivec3(x, y, z);
+          struct chunk *chunk = world_get_chunk(chunk_position);
+          if(!chunk)
+            continue;
+
+          for(size_t i=0; i<chunk->entities.item_count; ++i)
+          {
+            struct entity *other_entity = &chunk->entities.items[i];
+            if(entity == other_entity)
+              continue;
+
+            if(!entity_intersect(entity, other_entity))
+              continue;
+
+            if(other_entity->id != item_entity_id_get())
+              continue;
+
+            struct item_opaque *other_opaque = other_entity->opaque;
+
+            for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
+              item_merge(&opaque->hotbar[i], &other_opaque->item);
+
+            for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
+              for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
+                item_merge(&opaque->inventory[j][i], &other_opaque->item);
+
+            if(other_opaque->item.id == ITEM_NONE)
+            {
+              // FIXME: May be we should not be modifying the entities array
+              //        during iteration.
+              item_entity_fini(other_entity);
+              *other_entity = chunk->entities.items[--chunk->entities.item_count];
+            }
+          }
         }
-      }
   }
 }

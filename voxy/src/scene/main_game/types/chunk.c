@@ -1,9 +1,8 @@
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/update/light.h>
 
-#include <voxy/core/log.h>
-
-#include <voxy/core/time.h>
+#include <libcommon/core/log.h>
+#include <libcommon/core/time.h>
 
 #include <assert.h>
 #include <stdlib.h>

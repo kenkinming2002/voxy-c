@@ -1,9 +1,9 @@
 #include <voxy/scene/main_game/render/blocks_render_info.h>
 #include <voxy/scene/main_game/render/assets.h>
-
 #include <voxy/scene/main_game/types/registry.h>
-#include <voxy/math/direction.h>
-#include <voxy/graphics/gl.h>
+
+#include <libcommon/math/direction.h>
+#include <libcommon/graphics/gl.h>
 
 #include <stdlib.h>
 

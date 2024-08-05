@@ -1,7 +1,7 @@
 #include <voxy/scene/scene.h>
-#include <voxy/core/window.h>
 
-#include <voxy/graphics/mesh.h>
+#include <libcommon/core/window.h>
+#include <libcommon/graphics/mesh.h>
 
 #define WINDOW_WIDTH  1024
 #define WINDOW_HEIGHT 720

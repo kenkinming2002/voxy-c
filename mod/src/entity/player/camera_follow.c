@@ -2,8 +2,8 @@
 
 #include <voxy/scene/main_game/states/camera.h>
 
-#include <voxy/graphics/camera.h>
-#include <voxy/core/window.h>
+#include <libcommon/graphics/camera.h>
+#include <libcommon/core/window.h>
 
 void player_entity_update_camera_follow(struct entity *entity, float dt)
 {

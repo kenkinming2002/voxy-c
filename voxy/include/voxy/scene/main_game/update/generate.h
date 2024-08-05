@@ -4,7 +4,7 @@
 #include <voxy/scene/main_game/config.h>
 #include <voxy/scene/main_game/types/registry.h>
 
-#include <voxy/math/vector.h>
+#include <libcommon/math/vector.h>
 
 // FIXME: Come up with a better interface that allows possibly multiple mods to
 //        control the procedural generation such as concept of biomes,

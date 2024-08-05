@@ -7,9 +7,8 @@
 
 #include <voxy/scene/main_game/mod.h>
 
-#include <voxy/math/transform.h>
-
-#include <voxy/math/ray_cast.h>
+#include <libcommon/math/transform.h>
+#include <libcommon/math/ray_cast.h>
 
 transform_t entity_transform(struct entity *entity)
 {

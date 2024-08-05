@@ -5,9 +5,9 @@
 #include <voxy/scene/main_game/states/chunks.h>
 #include <voxy/scene/main_game/render/assets.h>
 
-#include <voxy/graphics/camera.h>
-#include <voxy/graphics/mesh.h>
-#include <voxy/graphics/gl.h>
+#include <libcommon/graphics/camera.h>
+#include <libcommon/graphics/mesh.h>
+#include <libcommon/graphics/gl.h>
 
 void main_game_render_entities(void)
 {

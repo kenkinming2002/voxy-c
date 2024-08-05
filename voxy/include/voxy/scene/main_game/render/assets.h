@@ -2,7 +2,8 @@
 #define VOXY_SCENE_MAIN_GAME_RENDER_ASSETS_H
 
 #include <voxy/scene/main_game/types/registry.h>
-#include <voxy/math/direction.h>
+
+#include <libcommon/math/direction.h>
 
 #include <stdint.h>
 

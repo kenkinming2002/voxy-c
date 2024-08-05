@@ -1,8 +1,8 @@
 #ifndef VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H
 #define VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H
 
-#include <voxy/math/vector.h>
-#include <voxy/dynamic_array.h>
+#include <libcommon/math/vector.h>
+#include <libcommon/utils/dynamic_array.h>
 #include <glad/glad.h>
 
 struct vertex

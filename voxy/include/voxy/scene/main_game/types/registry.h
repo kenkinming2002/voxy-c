@@ -1,8 +1,8 @@
 #ifndef VOXY_SCENE_MAIN_GAME_TYPES_REGISTRY_H
 #define VOXY_SCENE_MAIN_GAME_TYPES_REGISTRY_H
 
-#include <voxy/math/vector.h>
-#include <voxy/math/direction.h>
+#include <libcommon/math/vector.h>
+#include <libcommon/math/direction.h>
 
 #include <stddef.h>
 #include <stdint.h>

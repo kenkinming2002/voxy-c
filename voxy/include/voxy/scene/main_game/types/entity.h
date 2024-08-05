@@ -3,9 +3,9 @@
 
 #include <voxy/scene/main_game/types/registry.h>
 
-#include <voxy/math/vector.h>
-#include <voxy/math/transform.h>
-#include <voxy/dynamic_array.h>
+#include <libcommon/math/vector.h>
+#include <libcommon/math/transform.h>
+#include <libcommon/utils/dynamic_array.h>
 
 #include <stdbool.h>
 

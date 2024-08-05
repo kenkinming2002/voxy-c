@@ -1,8 +1,8 @@
 #include <voxy/scene/main_game/states/seed.h>
 #include <voxy/scene/main_game/config.h>
 
-#include <voxy/core/log.h>
-#include <voxy/core/fs.h>
+#include <libcommon/core/log.h>
+#include <libcommon/core/fs.h>
 
 #include <errno.h>
 #include <stdio.h>

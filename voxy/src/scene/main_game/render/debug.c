@@ -3,8 +3,8 @@
 #include <voxy/scene/main_game/states/camera.h>
 #include <voxy/scene/main_game/states/chunks.h>
 
-#include <voxy/graphics/camera.h>
-#include <voxy/graphics/gl.h>
+#include <libcommon/graphics/camera.h>
+#include <libcommon/graphics/gl.h>
 
 static bool g_debug;
 

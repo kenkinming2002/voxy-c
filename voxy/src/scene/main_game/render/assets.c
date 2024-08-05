@@ -1,9 +1,9 @@
 #include <voxy/scene/main_game/render/assets.h>
 
-#include <voxy/core/log.h>
-#include <voxy/graphics/gl.h>
-#include <voxy/graphics/mesh.h>
-#include <voxy/dynamic_array.h>
+#include <libcommon/graphics/gl.h>
+#include <libcommon/graphics/mesh.h>
+#include <libcommon/core/log.h>
+#include <libcommon/utils/dynamic_array.h>
 
 #include <assert.h>
 #include <stdbool.h>

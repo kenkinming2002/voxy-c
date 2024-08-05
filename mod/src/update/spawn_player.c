@@ -8,8 +8,8 @@
 #include <voxy/scene/main_game/types/entity.h>
 #include <voxy/scene/main_game/update/chunk_manager.h>
 
-#include <voxy/core/log.h>
-#include <voxy/core/fs.h>
+#include <libcommon/core/log.h>
+#include <libcommon/core/fs.h>
 
 #include <errno.h>
 #include <stdbool.h>

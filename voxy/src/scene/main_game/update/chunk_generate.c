@@ -3,11 +3,10 @@
 #include <voxy/scene/main_game/states/seed.h>
 #include <voxy/scene/main_game/update/generate.h>
 
-#include <voxy/core/thread_pool.h>
-#include <voxy/core/log.h>
-#include <voxy/core/time.h>
-
-#include <voxy/utils.h>
+#include <libcommon/core/thread_pool.h>
+#include <libcommon/core/log.h>
+#include <libcommon/core/time.h>
+#include <libcommon/utils/utils.h>
 
 #include <stdatomic.h>
 

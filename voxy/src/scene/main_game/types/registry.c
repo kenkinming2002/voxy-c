@@ -1,6 +1,6 @@
 #include <voxy/scene/main_game/types/registry.h>
 
-#include <voxy/core/log.h>
+#include <libcommon/core/log.h>
 
 #include <assert.h>
 #include <stdlib.h>

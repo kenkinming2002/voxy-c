@@ -1,10 +1,11 @@
 #include "chunk_loader.h"
 
-#include <voxy/core/window.h>
-#include <voxy/graphics/camera.h>
 #include <voxy/scene/main_game/states/camera.h>
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/update/chunk_manager.h>
+
+#include <libcommon/core/window.h>
+#include <libcommon/graphics/camera.h>
 
 void player_entity_update_chunk_loader(struct entity *entity)
 {

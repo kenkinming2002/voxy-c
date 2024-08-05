@@ -1,7 +1,7 @@
 #ifndef VOXY_SCENE_MAIN_GAME_UPDATE_CHUNK_MANAGER_H
 #define VOXY_SCENE_MAIN_GAME_UPDATE_CHUNK_MANAGER_H
 
-#include <voxy/math/vector.h>
+#include <libcommon/math/vector.h>
 
 /// Reset list of active chunks.
 ///

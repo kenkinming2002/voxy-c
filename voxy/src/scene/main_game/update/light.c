@@ -4,9 +4,9 @@
 #include <voxy/scene/main_game/states/chunks.h>
 #include <voxy/scene/main_game/states/cursor.h>
 
-#include <voxy/core/log.h>
-#include <voxy/dynamic_array.h>
-#include <voxy/utils.h>
+#include <libcommon/core/log.h>
+#include <libcommon/utils/dynamic_array.h>
+#include <libcommon/utils/utils.h>
 
 #include <string.h>
 #include <time.h>

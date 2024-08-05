@@ -4,8 +4,8 @@
 #include <voxy/scene/main_game/render/entities.h>
 #include <voxy/scene/main_game/render/debug.h>
 
-#include <voxy/core/window.h>
-#include <voxy/graphics/ui.h>
+#include <libcommon/core/window.h>
+#include <libcommon/graphics/ui.h>
 
 void main_game_render(void)
 {

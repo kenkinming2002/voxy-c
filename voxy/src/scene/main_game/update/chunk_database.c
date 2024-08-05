@@ -1,9 +1,9 @@
 #include <voxy/scene/main_game/update/chunk_database.h>
 #include <voxy/scene/main_game/config.h>
 
-#include <voxy/core/log.h>
-#include <voxy/core/fs.h>
-#include <voxy/core/time.h>
+#include <libcommon/core/log.h>
+#include <libcommon/core/fs.h>
+#include <libcommon/core/time.h>
 
 #include <stdio.h>
 #include <string.h>

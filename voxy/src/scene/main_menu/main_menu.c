@@ -2,8 +2,8 @@
 
 #include <voxy/scene/scene.h>
 
-#include <voxy/graphics/ui.h>
-#include <voxy/core/window.h>
+#include <libcommon/graphics/ui.h>
+#include <libcommon/core/window.h>
 
 #include <glad/glad.h>
 

@@ -1,7 +1,7 @@
 #include "controls.h"
 
-#include <voxy/core/window.h>
-#include <voxy/math/direction.h>
+#include <libcommon/core/window.h>
+#include <libcommon/math/direction.h>
 
 static float clampf(float value, float min, float max)
 {

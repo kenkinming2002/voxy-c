@@ -2,7 +2,7 @@
 
 #include <voxy/scene/main_game/update/light.h>
 
-#include <voxy/core/log.h>
+#include <libcommon/core/log.h>
 
 #include <stdlib.h>
 

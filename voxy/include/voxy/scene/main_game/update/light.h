@@ -1,7 +1,7 @@
 #ifndef VOXY_SCENE_MAIN_GAME_UPDATE_LIGHT_H
 #define VOXY_SCENE_MAIN_GAME_UPDATE_LIGHT_H
 
-#include <voxy/math/vector.h>
+#include <libcommon/math/vector.h>
 
 struct chunk;
 

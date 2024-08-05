@@ -8,8 +8,8 @@
 
 #include <voxy/scene/main_game/types/chunk.h>
 
-#include <voxy/core/log.h>
-#include <voxy/core/fs.h>
+#include <libcommon/core/log.h>
+#include <libcommon/core/fs.h>
 
 #include <errno.h>
 #include <stdlib.h>

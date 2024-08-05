@@ -9,10 +9,9 @@
 #include <voxy/scene/main_game/config.h>
 #include <voxy/scene/main_game/mod.h>
 
-#include <voxy/math/aabb.h>
-#include <voxy/math/direction.h>
-
-#include <voxy/core/log.h>
+#include <libcommon/math/aabb.h>
+#include <libcommon/math/direction.h>
+#include <libcommon/core/log.h>
 
 #include <stdbool.h>
 

@@ -1,12 +1,13 @@
 #include "inventory.h"
 #include "../../entity/item/item.h"
 
-#include <voxy/core/window.h>
-#include <voxy/graphics/gl.h>
-#include <voxy/graphics/ui.h>
-#include <voxy/math/aabb.h>
 #include <voxy/scene/main_game/render/assets.h>
 #include <voxy/scene/main_game/states/chunks.h>
+
+#include <libcommon/core/window.h>
+#include <libcommon/graphics/gl.h>
+#include <libcommon/graphics/ui.h>
+#include <libcommon/math/aabb.h>
 
 static inline float minf(float a, float b) { return a < b ? a : b; }
 

@@ -2,22 +2,22 @@ CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
 
-VOXY_SRCS += voxy/bundled/src/glad.c
-VOXY_SRCS += voxy/bundled/src/stb_image.c
+LIBCOMMON_SRCS += libcommon/bundled/src/glad.c
+LIBCOMMON_SRCS += libcommon/bundled/src/stb_image.c
 
-VOXY_SRCS += voxy/src/math/direction.c
+LIBCOMMON_SRCS += libcommon/src/math/direction.c
 
-VOXY_SRCS += voxy/src/core/window.c
-VOXY_SRCS += voxy/src/core/thread_pool.c
-VOXY_SRCS += voxy/src/core/delta_time.c
-VOXY_SRCS += voxy/src/core/fs.c
-VOXY_SRCS += voxy/src/core/time.c
+LIBCOMMON_SRCS += libcommon/src/core/window.c
+LIBCOMMON_SRCS += libcommon/src/core/thread_pool.c
+LIBCOMMON_SRCS += libcommon/src/core/delta_time.c
+LIBCOMMON_SRCS += libcommon/src/core/fs.c
+LIBCOMMON_SRCS += libcommon/src/core/time.c
 
-VOXY_SRCS += voxy/src/graphics/gl.c
-VOXY_SRCS += voxy/src/graphics/font_set.c
-VOXY_SRCS += voxy/src/graphics/mesh.c
-VOXY_SRCS += voxy/src/graphics/ui.c
-VOXY_SRCS += voxy/src/graphics/camera.c
+LIBCOMMON_SRCS += libcommon/src/graphics/gl.c
+LIBCOMMON_SRCS += libcommon/src/graphics/font_set.c
+LIBCOMMON_SRCS += libcommon/src/graphics/mesh.c
+LIBCOMMON_SRCS += libcommon/src/graphics/ui.c
+LIBCOMMON_SRCS += libcommon/src/graphics/camera.c
 
 VOXY_SRCS += voxy/src/voxy.c
 
@@ -90,14 +90,24 @@ MOD_SRCS += mod/src/entity/weird/weird.c
 MOD_SRCS += mod/src/update/spawn_player.c
 MOD_SRCS += mod/src/update/spawn_weird.c
 
-voxy/voxy: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -fno-semantic-interposition
-voxy/voxy: LIBS   += -lm
-voxy/voxy: LDFLAGS += -rdynamic
+libcommon/libcommon.a: CFLAGS += -Ilibcommon/bundled/include
+libcommon/libcommon.a: CFLAGS += -Ilibcommon/include
+libcommon/libcommon.a: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
 
+voxy/voxy: CFLAGS += -Ilibcommon/bundled/include
+voxy/voxy: CFLAGS += -Ilibcommon/include
 voxy/voxy: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
 voxy/voxy: LIBS   += $(shell pkg-config --libs   glfw3 fontconfig freetype2)
+voxy/voxy: LIBS   += -lm
 
-mod/mod.so: CFLAGS += -Ivoxy/bundled/include -Ivoxy/include -Ivoxy/src -Imod/src
+voxy/voxy: CFLAGS  += -Ivoxy/include
+voxy/voxy: LDFLAGS += -rdynamic
+
+mod/mod.so: CFLAGS += -Ilibcommon/bundled/include
+mod/mod.so: CFLAGS += -Ilibcommon/include
+mod/mod.so: CFLAGS += -Ivoxy/include
+mod/mod.so: CFLAGS += -Imod/src
+
 mod/mod.so: CFLAGS  += -fPIC
 mod/mod.so: LDFLAGS += -shared
 
@@ -105,21 +115,28 @@ mod/mod.so: LDFLAGS += -shared
 
 all: voxy/voxy mod/mod.so
 
-voxy/voxy: $(VOXY_SRCS:.c=.o)
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS)
+libcommon/libcommon.a: $(LIBCOMMON_SRCS:.c=.o)
+	ar $(ARFLAGS) $@ $(LIBCOMMON_SRCS:.c=.o)
+
+voxy/voxy: $(VOXY_SRCS:.c=.o) libcommon/libcommon.a
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS) -Llibcommon -lcommon
 
 mod/mod.so: $(MOD_SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(MOD_SRCS:.c=.o) $(LIBS)
 
 clean: depclean
+	- rm -f libcommon/libcommon.a
 	- rm -f voxy/voxy
 	- rm -f mod/mod.so
+	- rm -f $(LIBCOMMON_SRCS:.c=.o)
 	- rm -f $(VOXY_SRCS:.c=.o)
 	- rm -f $(MOD_SRCS:.c=.o)
 
 depclean:
+	- rm -f $(LIBCOMMON_SRCS:.c=.d)
 	- rm -f $(VOXY_SRCS:.c=.d)
 	- rm -f $(MOD_SRCS:.c=.d)
 
+-include $(LIBCOMMON_SRCS:.c=.d)
 -include $(VOXY_SRCS:.c=.d)
 -include $(MOD_SRCS:.c=.d)

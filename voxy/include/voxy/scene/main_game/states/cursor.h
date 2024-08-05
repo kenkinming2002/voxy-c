@@ -3,8 +3,8 @@
 
 #include <voxy/scene/main_game/types/registry.h>
 
-#include <voxy/math/vector.h>
-#include <voxy/math/direction.h>
+#include <libcommon/math/vector.h>
+#include <libcommon/math/direction.h>
 
 #include <stdbool.h>
 #include <stdint.h>

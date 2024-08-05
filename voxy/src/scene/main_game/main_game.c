@@ -14,11 +14,10 @@
 #include <voxy/scene/main_game/update/light.h>
 #include <voxy/scene/main_game/update/physics/physics.h>
 
-#include <voxy/graphics/ui.h>
-
-#include <voxy/core/window.h>
-#include <voxy/core/log.h>
-#include <voxy/core/delta_time.h>
+#include <libcommon/graphics/ui.h>
+#include <libcommon/core/window.h>
+#include <libcommon/core/log.h>
+#include <libcommon/core/delta_time.h>
 
 #include <dlfcn.h>
 

@@ -6,7 +6,7 @@
 #include <voxy/scene/main_game/types/registry.h>
 #include <voxy/scene/main_game/types/entity.h>
 
-#include <voxy/math/vector.h>
+#include <libcommon/math/vector.h>
 
 #include <stdatomic.h>
 #include <stddef.h>

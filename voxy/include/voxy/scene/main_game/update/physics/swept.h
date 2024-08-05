@@ -1,8 +1,8 @@
 #ifndef VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_SWEPT_H
 #define VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_SWEPT_H
 
-#include <voxy/math/aabb.h>
-#include <voxy/math/direction.h>
+#include <libcommon/math/aabb.h>
+#include <libcommon/math/direction.h>
 
 #include <stdbool.h>
 

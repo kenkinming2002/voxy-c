@@ -1,7 +1,7 @@
 #ifndef VOXY_SCENE_MAIN_GAME_STATES_SEED_H
 #define VOXY_SCENE_MAIN_GAME_STATES_SEED_H
 
-#include <voxy/math/random.h>
+#include <libcommon/math/random.h>
 
 void save_world_seed(void);
 void load_world_seed(void);

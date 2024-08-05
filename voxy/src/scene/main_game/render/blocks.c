@@ -8,10 +8,9 @@
 #include <voxy/scene/main_game/states/chunks.h>
 #include <voxy/scene/main_game/states/digger.h>
 
-#include <voxy/graphics/camera.h>
-#include <voxy/graphics/gl.h>
-
-#include <voxy/dynamic_array.h>
+#include <libcommon/graphics/camera.h>
+#include <libcommon/graphics/gl.h>
+#include <libcommon/utils/dynamic_array.h>
 
 #include <time.h>
 

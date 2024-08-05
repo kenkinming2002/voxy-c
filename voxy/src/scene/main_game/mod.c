@@ -1,6 +1,6 @@
 #include <voxy/scene/main_game/mod.h>
 
-#include <voxy/core/log.h>
+#include <libcommon/core/log.h>
 
 #include <dlfcn.h>
 #include <stdlib.h>

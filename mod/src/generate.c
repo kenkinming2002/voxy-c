@@ -7,8 +7,8 @@
 #include "block/water/water.h"
 
 #include <voxy/scene/main_game/config.h>
-#include <voxy/math/noise.h>
-#include <voxy/math/random.h>
+#include <libcommon/math/noise.h>
+#include <libcommon/math/random.h>
 
 #include <stdbool.h>
 

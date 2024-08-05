@@ -4,8 +4,8 @@
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/states/digger.h>
 
-#include <voxy/graphics/camera.h>
-#include <voxy/math/vector.h>
+#include <libcommon/graphics/camera.h>
+#include <libcommon/math/vector.h>
 
 #include "blocks_mesh.h"
 

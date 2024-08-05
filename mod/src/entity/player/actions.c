@@ -3,8 +3,9 @@
 
 #include <voxy/scene/main_game/states/digger.h>
 #include <voxy/scene/main_game/states/chunks.h>
-#include <voxy/core/window.h>
-#include <voxy/math/direction.h>
+
+#include <libcommon/core/window.h>
+#include <libcommon/math/direction.h>
 
 void player_entity_update_actions(struct entity *entity, float dt)
 {

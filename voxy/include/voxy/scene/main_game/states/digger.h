@@ -1,7 +1,7 @@
 #ifndef VOXY_SCENE_MAIN_GAME_STATES_DIGGER_H
 #define VOXY_SCENE_MAIN_GAME_STATES_DIGGER_H
 
-#include <voxy/math/vector.h>
+#include <libcommon/math/vector.h>
 
 /// Maintain state of blocks beging digged. This is more memory efficient than
 /// simply storing digging state in each block since the number of block being

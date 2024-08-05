@@ -8,8 +8,9 @@
 #include "inventory.h"
 
 #include <voxy/scene/main_game/render/debug.h>
-#include <voxy/core/window.h>
-#include <voxy/core/log.h>
+
+#include <libcommon/core/window.h>
+#include <libcommon/core/log.h>
 
 #include <stdlib.h>
 

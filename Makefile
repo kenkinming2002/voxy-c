@@ -28,7 +28,6 @@ VOXY_SRCS += voxy/src/scene/main_menu/main_menu.c
 VOXY_SRCS += voxy/src/scene/main_game/main_game.c
 VOXY_SRCS += voxy/src/scene/main_game/mod.c
 
-VOXY_SRCS += voxy/src/scene/main_game/types/chunk_hash_table.c
 VOXY_SRCS += voxy/src/scene/main_game/types/chunk.c
 VOXY_SRCS += voxy/src/scene/main_game/types/registry.c
 VOXY_SRCS += voxy/src/scene/main_game/types/entity.c

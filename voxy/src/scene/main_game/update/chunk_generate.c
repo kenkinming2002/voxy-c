@@ -2,7 +2,6 @@
 
 #include <voxy/scene/main_game/states/seed.h>
 #include <voxy/scene/main_game/update/generate.h>
-#include <voxy/scene/main_game/types/chunk_hash_table.h>
 
 #include <voxy/core/thread_pool.h>
 #include <voxy/core/log.h>

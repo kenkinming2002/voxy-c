@@ -2,7 +2,6 @@
 #define VOXY_SCENE_MAIN_GAME_STATES_CHUNKS_H
 
 #include <voxy/scene/main_game/types/chunk.h>
-#include <voxy/scene/main_game/types/chunk_hash_table.h>
 
 /// The chunk system, which is at the heart of our voxel game. (Unless you go
 /// with the route of octree).

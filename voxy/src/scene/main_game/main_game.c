@@ -7,7 +7,6 @@
 #include <voxy/scene/main_game/states/chunks.h>
 #include <voxy/scene/main_game/states/seed.h>
 #include <voxy/scene/main_game/types/chunk.h>
-#include <voxy/scene/main_game/types/chunk_hash_table.h>
 #include <voxy/scene/main_game/types/entity.h>
 #include <voxy/scene/main_game/update/chunk_generate.h>
 #include <voxy/scene/main_game/update/chunk_manager.h>

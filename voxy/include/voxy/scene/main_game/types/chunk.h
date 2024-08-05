@@ -131,4 +131,14 @@ void chunk_add_entity(struct chunk *chunk_data, struct entity entity);
 /// Commit adding of entities.
 void chunk_commit_add_entities(struct chunk *chunk);
 
+#define SC_HASH_TABLE_INTERFACE
+#define SC_HASH_TABLE_PREFIX chunk
+#define SC_HASH_TABLE_NODE_TYPE struct chunk
+#define SC_HASH_TABLE_KEY_TYPE ivec3_t
+#include <sc/hash_table.h>
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_INTERFACE
+
 #endif // VOXY_SCENE_MAIN_GAME_TYPES_CHUNK_H

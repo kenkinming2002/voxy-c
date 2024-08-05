@@ -291,3 +291,18 @@ void chunk_commit_add_entities(struct chunk *chunk)
   DYNAMIC_ARRAY_CLEAR(chunk->new_entities);
 }
 
+#define SC_HASH_TABLE_IMPLEMENTATION
+#define SC_HASH_TABLE_PREFIX chunk
+#define SC_HASH_TABLE_NODE_TYPE struct chunk
+#define SC_HASH_TABLE_KEY_TYPE ivec3_t
+#include <sc/hash_table.h>
+#undef SC_HASH_TABLE_PREFIX
+#undef SC_HASH_TABLE_NODE_TYPE
+#undef SC_HASH_TABLE_KEY_TYPE
+#undef SC_HASH_TABLE_IMPLEMENTATION
+
+ivec3_t chunk_key(struct chunk *chunk) { return chunk->position; }
+size_t chunk_hash(ivec3_t position) { return ivec3_hash(position); }
+int chunk_compare(ivec3_t position1, ivec3_t position2) { return ivec3_compare(position1, position2); }
+void chunk_dispose(struct chunk *chunk) { chunk_destroy(chunk); }
+

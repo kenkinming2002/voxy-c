@@ -10,6 +10,10 @@
 #include "block/lamp/lamp.h"
 #include "block/leave/leave.h"
 #include "block/log/log.h"
+#include "block/ore_coal/ore_coal.h"
+#include "block/ore_copper/ore_copper.h"
+#include "block/ore_iron/ore_iron.h"
+#include "block/ore_tin/ore_tin.h"
 #include "block/stone/stone.h"
 #include "block/water/water.h"
 
@@ -17,6 +21,10 @@
 #include "item/lamp/lamp.h"
 #include "item/leave/leave.h"
 #include "item/log/log.h"
+#include "item/ore_coal/ore_coal.h"
+#include "item/ore_copper/ore_copper.h"
+#include "item/ore_iron/ore_iron.h"
+#include "item/ore_tin/ore_tin.h"
 #include "item/stone/stone.h"
 
 #include "update/spawn_player.h"
@@ -39,6 +47,10 @@ void mod_init()
   lamp_block_register();
   leave_block_register();
   log_block_register();
+  ore_coal_block_register();
+  ore_copper_block_register();
+  ore_iron_block_register();
+  ore_tin_block_register();
   stone_block_register();
   water_block_register();
 
@@ -46,6 +58,10 @@ void mod_init()
   lamp_item_register();
   leave_item_register();
   log_item_register();
+  ore_coal_item_register();
+  ore_copper_item_register();
+  ore_iron_item_register();
+  ore_tin_item_register();
   stone_item_register();
 
   register_generate_chunk_blocks(&base_generate_chunk_blocks);

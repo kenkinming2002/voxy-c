@@ -133,7 +133,7 @@ void player_entity_update(struct entity *entity, float dt)
     main_game_render_set_debug(!main_game_render_get_debug());
 
   main_game_debug_overlay_printf("Position: %f %f %f", entity->position.x, entity->position.y, entity->position.z);
-  main_game_debug_overlay_printf("Rotation: %f %f (Yaw Pitch)", entity->position.yaw, entity->position.pitch);
+  main_game_debug_overlay_printf("Rotation: %f %f (Yaw Pitch)", entity->rotation.yaw, entity->rotation.pitch);
 }
 
 void player_entity_render(const struct entity *entity, const struct camera *camera)

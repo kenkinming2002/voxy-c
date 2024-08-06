@@ -41,7 +41,7 @@ static float text_margin(void)
 
 static float text_height(void)
 {
-  return text_factor() * 0.03f;
+  return text_factor() * 0.02f;
 }
 
 void main_game_render_debug_overlay(void)
@@ -52,12 +52,12 @@ void main_game_render_debug_overlay(void)
   const float margin = text_margin();
   const float height = text_height();
 
-  float y = margin;
+  float y = (float)window_size.y - margin - height;
   for(size_t i=0; i<messages.item_count; ++i)
   {
     ui_text(fvec2(margin, y), height, messages.items[i]);
-    y += height;
-    y += margin;
+    y -= height;
+    y -= margin;
   }
 }
 

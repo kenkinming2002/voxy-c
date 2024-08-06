@@ -1,9 +1,15 @@
 #include "mod.h"
 #include "item.h"
 
+#include "voxy/scene/main_game/render/assets.h"
+
+#include <libcommon/graphics/gl.h>
+#include <libcommon/graphics/render.h>
+
 #include <stdlib.h>
 
 static entity_id_t item_entity_id = ENTITY_NONE;
+static struct mesh item_entity_mesh;
 
 void item_entity_register(void)
 {
@@ -12,7 +18,7 @@ void item_entity_register(void)
   entity_info.mod = MOD;
   entity_info.name = "item";
 
-  entity_info.hitbox_dimension = fvec3(0.1f, 0.1f, 0.1f);
+  entity_info.hitbox_dimension = fvec3(0.4f, 0.4f, 0.4f);
   entity_info.hitbox_offset = fvec3_zero();
 
   entity_info.on_dispose = NULL;
@@ -24,6 +30,12 @@ void item_entity_register(void)
   entity_info.on_render = item_entity_render;
 
   item_entity_id = register_entity_info(entity_info);
+
+  if(mesh_load(&item_entity_mesh, "mod/assets/models/item.obj") != 0)
+  {
+    LOG_ERROR("Failed to load mesh for item entity");
+    exit(EXIT_FAILURE);
+  }
 }
 
 entity_id_t item_entity_id_get(void)
@@ -64,8 +76,24 @@ void item_entity_update(struct entity *entity, float dt)
   (void)dt;
 }
 
+static fvec3_t normal_to_rotation(fvec3_t normal)
+{
+  fvec3_t result;
+  result.yaw = atan2(-normal.x, normal.y);
+  result.pitch = atan2(normal.z,sqrtf(normal.x*normal.x+normal.y*normal.y));
+  result.roll = 0.0f;
+  return result;
+}
+
 void item_entity_render(const struct entity *entity, const struct camera *camera)
 {
-  (void)entity;
-  (void)camera;
+  transform_t transform = entity_transform(entity);
+  transform.rotation = normal_to_rotation(fvec3_neg(transform_forward(camera->transform)));
+
+  const struct item_opaque *opaque = entity->opaque;
+  const struct gl_texture_2d texture = assets_get_item_texture(opaque->item.id);
+
+  glDisable(GL_CULL_FACE);
+  render_model(*camera, transform, item_entity_mesh, texture);
+  glEnable(GL_CULL_FACE);
 }

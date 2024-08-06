@@ -7,7 +7,7 @@
 
 #include <assert.h>
 
-#define MAX_QUADS 512
+#define MAX_QUADS 1024
 
 struct colored_quad
 {
@@ -73,7 +73,7 @@ static void font_set_ensure(void)
   if(!font_set.fonts)
   {
     font_set_load(&font_set, "libcommon/assets/fonts/arial.ttf");
-    font_set_load(&font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
+    //font_set_load(&font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
     font_set_load_system(&font_set);
     atexit(font_set_atexit);
   }
@@ -129,23 +129,33 @@ float ui_text_width(unsigned height, const char *str)
   int c;
   while((c = utf8_next((const unsigned char **)&str)))
   {
-    struct glyph *glyph = font_set_get_glyph(&font_set, c, height);
+    struct glyph *glyph = font_set_get_glyph(&font_set, c, height, 1);
     width += glyph->advance;
   }
   return width;
 }
 
-void ui_text(fvec2_t position, unsigned height, const char *str)
+void ui_text(fvec2_t position, unsigned height, unsigned outline, const char *str)
 {
   font_set_ensure();
 
   int c;
   while((c = utf8_next((const unsigned char **)&str)))
   {
-    struct glyph *glyph = font_set_get_glyph(&font_set, c, height);
-    fvec2_t current_position  = fvec2_add(position, glyph->bearing);
-    fvec2_t current_dimension = fvec2_mul(glyph->dimension, fvec2(1.0f, -1.0f));
-    ui_rect_textured(current_position, current_dimension, 0.0f, glyph->texture);
+    struct glyph *glyph = font_set_get_glyph(&font_set, c, height, outline);
+
+    {
+      fvec2_t current_position  = fvec2_add(position, glyph->outline_bearing);
+      fvec2_t current_dimension = fvec2_mul(glyph->outline_dimension, fvec2(1.0f, -1.0f));
+      ui_rect_textured(current_position, current_dimension, 0.0f, glyph->outline_texture);
+    }
+
+    {
+      fvec2_t current_position  = fvec2_add(position, glyph->interior_bearing);
+      fvec2_t current_dimension = fvec2_mul(glyph->interior_dimension, fvec2(1.0f, -1.0f));
+      ui_rect_textured(current_position, current_dimension, 0.0f, glyph->interior_texture);
+    }
+
     position.x += glyph->advance;
   }
 }

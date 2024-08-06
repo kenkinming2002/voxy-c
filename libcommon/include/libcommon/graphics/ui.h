@@ -31,7 +31,7 @@ void ui_rect_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuin
  * compute the proper position to center the text if desired.
  */
 float ui_text_width(unsigned height, const char *str);
-void ui_text(fvec2_t position, unsigned height, const char *str);
+void ui_text(fvec2_t position, unsigned height, unsigned outline, const char *str);
 
 /*
  * Render the current UI State. This is when OpenGL draw calls are actually

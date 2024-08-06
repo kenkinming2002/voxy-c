@@ -7,10 +7,14 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <freetype/ftglyph.h>
+#include <freetype/ftstroke.h>
+
 struct glyph_key
 {
   unsigned c;
   unsigned height;
+  unsigned outline;
 };
 
 struct glyph
@@ -19,10 +23,16 @@ struct glyph
   size_t        hash;
 
   struct glyph_key key;
-  fvec2_t      dimension;
-  fvec2_t      bearing;
-  float            advance;
-  GLuint           texture;
+
+  GLuint outline_texture;
+  fvec2_t outline_dimension;
+  fvec2_t outline_bearing;
+
+  GLuint interior_texture;
+  fvec2_t interior_dimension;
+  fvec2_t interior_bearing;
+
+  float advance;
 };
 
 #define SC_HASH_TABLE_INTERFACE
@@ -58,6 +68,6 @@ void font_set_fini(struct font_set *font_set);
 int font_set_load(struct font_set *font_set, const char *filepath);
 int font_set_load_system(struct font_set *font_set);
 
-struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height);
+struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height, unsigned outline);
 
 #endif // LIBCOMMON_GRAPHICS_FONT_SET_H

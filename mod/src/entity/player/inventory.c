@@ -40,7 +40,7 @@ static void cell_widget_render_item(const struct cell_widget *cell)
 
   char buffer[4];
   snprintf(buffer, sizeof buffer, "%u", cell->item->count);
-  ui_text(cell->position, PLAYER_UI_TEXT_SIZE_ITEM_COUNT, buffer);
+  ui_text(cell->position, PLAYER_UI_TEXT_SIZE_ITEM_COUNT, 1, buffer);
 }
 
 static void cell_widget_update(const struct cell_widget *cell)
@@ -107,7 +107,7 @@ static void label_widget_render(const struct label_widget *label)
   float   width    = ui_text_width(label->height, label->text);
   fvec2_t position = label->position;
   position.x -= width * 0.5f;
-  ui_text(position, label->height, label->text);
+  ui_text(position, label->height, 1, label->text);
 }
 
 

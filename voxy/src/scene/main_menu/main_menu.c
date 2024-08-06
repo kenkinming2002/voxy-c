@@ -42,7 +42,7 @@ void main_menu_update(void)
   if(result & UI_BUTTON_RESULT_HOVERED)
     ui_quad_colored(position1, dimension1, 0.1f, fvec4(0.3f, 0.3f, 0.3f, 1.0f));
 
-  ui_text(position1, height, text1);
+  ui_text(position1, height, 1, text1);
   if(result & UI_BUTTON_RESULT_CLICK_LEFT)
     scene_switch(SCENE_EXIT);
 
@@ -50,7 +50,7 @@ void main_menu_update(void)
   if(result & UI_BUTTON_RESULT_HOVERED)
     ui_quad_colored(position2, dimension2, 0.1f, fvec4(0.3f, 0.3f, 0.3f, 1.0f));
 
-  ui_text(position2, height, text2);
+  ui_text(position2, height, 1, text2);
   if(result & UI_BUTTON_RESULT_CLICK_LEFT)
     scene_switch(SCENE_MAIN_GAME);
 }

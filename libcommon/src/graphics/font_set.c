@@ -24,7 +24,7 @@ struct glyph_key glyph_key(struct glyph *glyph)
 
 size_t glyph_hash(struct glyph_key key)
 {
-  return key.c * 13 + key.height * 19;
+  return key.c * 13 + key.height * 19 + key.outline * 31;
 }
 
 int glyph_compare(struct glyph_key key1, struct glyph_key key2)
@@ -35,36 +35,58 @@ int glyph_compare(struct glyph_key key1, struct glyph_key key2)
   if(key1.height < key2.height) return -1;
   if(key1.height > key2.height) return +1;
 
+  if(key1.outline < key2.outline) return -1;
+  if(key1.outline > key2.outline) return +1;
+
   return 0;
 }
 
 void glyph_dispose(struct glyph *glyph)
 {
-  glDeleteTextures(1, &glyph->texture);
+  glDeleteTextures(1, &glyph->interior_texture);
+  glDeleteTextures(1, &glyph->outline_texture);
   free(glyph);
 }
 
 /////////////////
 /// Free Type ///
 /////////////////
-static FT_Library ft;
+static FT_Library _ft_library;
 
-static void ft_atexit()
+static void ft_library_atexit()
 {
-  FT_Done_FreeType(ft);
+  FT_Done_FreeType(_ft_library);
 }
 
-static FT_Library ft_handle()
+static FT_Library ft_library(void)
 {
-  if(!ft)
+  if(!_ft_library)
   {
-    FT_Init_FreeType(&ft);
-    atexit(ft_atexit);
+    FT_Init_FreeType(&_ft_library);
+    atexit(ft_library_atexit);
   }
-  return ft;
+  return _ft_library;
 }
 
-#define FT_HANDLE ft_handle()
+static FT_Stroker _ft_stroker;
+
+static void ft_stroker_atexit()
+{
+  FT_Stroker_Done(_ft_stroker);
+}
+
+static FT_Stroker ft_stroker(void)
+{
+  if(!_ft_stroker)
+  {
+    FT_Stroker_New(ft_library(), &_ft_stroker);
+    atexit(ft_stroker_atexit);
+  }
+  return _ft_stroker;
+}
+
+#define FT_LIBRARY ft_library()
+#define FT_STROKER ft_stroker()
 
 static const char *ft_strerror(FT_Error error)
 {
@@ -118,7 +140,7 @@ int font_set_load(struct font_set *font_set, const char *filepath)
 
   struct font font;
   font.filepath = strdup(filepath); // FIXME: Non-POSIX platforms
-  if((error = FT_New_Face(FT_HANDLE, filepath, 0, &font.face)) != 0)
+  if((error = FT_New_Face(FT_LIBRARY, filepath, 0, &font.face)) != 0)
   {
     LOG_WARN("Failed to load font from %s: %s", filepath, ft_strerror(error));
     return -1;
@@ -159,47 +181,103 @@ int font_set_load_system(struct font_set *font_set)
 /////////////
 /// Glyph ///
 /////////////
-struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height)
+struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height, unsigned outline)
 {
-  struct glyph_key glyph_key = { .c = c, .height = height};
+  struct glyph_key glyph_key = { .c = c, .height = height, .outline = outline, };
   struct glyph *glyph = glyph_hash_table_lookup(&font_set->glyphs, glyph_key);
-  if(!glyph)
-    for(size_t i=0; i<font_set->font_count; ++i)
+  if(glyph)
+    return glyph;
+
+  glyph = malloc(sizeof *glyph);
+  glyph->key = glyph_key;
+
+  for(size_t i=0; i<font_set->font_count; ++i)
+  {
+    FT_Error error;
+
+    // TODO: Use FT_Set_Char_Size and handle DPI scaling
+    if((error = FT_Set_Pixel_Sizes(font_set->fonts[i].face, 0, height)) != 0)
     {
-      FT_UInt char_index;
-      if((char_index = FT_Get_Char_Index(font_set->fonts[i].face, c)) == 0)
-        continue;
+      LOG_WARN("Failed to set pixel size: Font %s: %s", font_set->fonts[i].filepath, ft_strerror(error));
+      continue;
+    }
 
-      FT_Error error;
+    if((error = FT_Load_Char(font_set->fonts[i].face, c, FT_LOAD_TARGET_NORMAL | FT_LOAD_NO_BITMAP)) != 0)
+    {
+      LOG_WARN("Failed to load character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
+      continue;
+    }
 
-      // TODO: Use FT_Set_Char_Size and handle DPI scaling
-      if((error = FT_Set_Pixel_Sizes(font_set->fonts[i].face, 0, height)) != 0)
+    // Render the outline
+    {
+      FT_Glyph ft_glyph;
+      if((error = FT_Get_Glyph(font_set->fonts[i].face->glyph, &ft_glyph)) != 0)
       {
-        LOG_WARN("Failed to set pixel size: Font %s: %s", font_set->fonts[i].filepath, ft_strerror(error));
+        LOG_WARN("Failed to get glyph for character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
         continue;
       }
 
-      if((error = FT_Load_Glyph(font_set->fonts[i].face, char_index, FT_LOAD_RENDER)) != 0)
+      FT_Stroker_Set(FT_STROKER, (FT_Fixed)outline << 6, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
+      if((error = FT_Glyph_Stroke(&ft_glyph, FT_STROKER, true)) != 0)
       {
-        LOG_WARN("Failed to load character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
+        LOG_WARN("Failed to get glyph for character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
+        FT_Done_Glyph(ft_glyph);
         continue;
       }
 
-      if((long)font_set->fonts[i].face->glyph->bitmap.width != (long)font_set->fonts[i].face->glyph->bitmap.pitch)
+      if((error = FT_Glyph_To_Bitmap(&ft_glyph, FT_RENDER_MODE_NORMAL, NULL, true)) != 0)
       {
-        LOG_WARN("Bitmap is not tightly packed for character %c: Font %s", c, font_set->fonts[i].filepath);
+        LOG_WARN("Failed to get glyph for character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
+        FT_Done_Glyph(ft_glyph);
         continue;
       }
 
-      glyph = malloc(sizeof *glyph);
-      glyph->key = glyph_key;
+      FT_BitmapGlyph ft_bitmap_glyph = (FT_BitmapGlyph)ft_glyph;
+      FT_Bitmap *ft_bitmap = &ft_bitmap_glyph->bitmap;
 
-      glyph->dimension = fvec2(font_set->fonts[i].face->glyph->bitmap.width, font_set->fonts[i].face->glyph->bitmap.rows);
-      glyph->bearing   = fvec2(font_set->fonts[i].face->glyph->bitmap_left, font_set->fonts[i].face->glyph->bitmap_top);
-      glyph->advance   = font_set->fonts[i].face->glyph->advance.x / 64.0f;
+      glGenTextures(1, &glyph->outline_texture);
+      glBindTexture(GL_TEXTURE_2D, glyph->outline_texture);
 
-      glGenTextures(1, &glyph->texture);
-      glBindTexture(GL_TEXTURE_2D, glyph->texture);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_ZERO);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_ZERO);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_ZERO);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
+
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, ft_bitmap->width, ft_bitmap->rows, 0, GL_RED, GL_UNSIGNED_BYTE, ft_bitmap->buffer);
+
+      glyph->outline_dimension = fvec2(ft_bitmap->width, ft_bitmap->rows);
+      glyph->outline_bearing = fvec2(ft_bitmap_glyph->left, ft_bitmap_glyph->top);
+
+      FT_Done_Glyph(ft_glyph);
+    }
+
+    // Render the interior
+    {
+      FT_Glyph ft_glyph;
+      if((error = FT_Get_Glyph(font_set->fonts[i].face->glyph, &ft_glyph)) != 0)
+      {
+        LOG_WARN("Failed to get glyph for character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
+        continue;
+      }
+
+      if((error = FT_Glyph_To_Bitmap(&ft_glyph, FT_RENDER_MODE_NORMAL, NULL, true)) != 0)
+      {
+        LOG_WARN("Failed to get glyph for character %c: Font %s: %s", c, font_set->fonts[i].filepath, ft_strerror(error));
+        FT_Done_Glyph(ft_glyph);
+        continue;
+      }
+
+      FT_BitmapGlyph ft_bitmap_glyph = (FT_BitmapGlyph)ft_glyph;
+      FT_Bitmap *ft_bitmap = &ft_bitmap_glyph->bitmap;
+
+      glGenTextures(1, &glyph->interior_texture);
+      glBindTexture(GL_TEXTURE_2D, glyph->interior_texture);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -212,18 +290,24 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
 
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, font_set->fonts[i].face->glyph->bitmap.width, font_set->fonts[i].face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, font_set->fonts[i].face->glyph->bitmap.buffer);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, ft_bitmap->width, ft_bitmap->rows, 0, GL_RED, GL_UNSIGNED_BYTE, ft_bitmap->buffer);
 
-      glyph_hash_table_insert_unchecked(&font_set->glyphs, glyph);
-      break;
+      glyph->interior_dimension = fvec2(ft_bitmap->width, ft_bitmap->rows);
+      glyph->interior_bearing = fvec2(ft_bitmap_glyph->left, ft_bitmap_glyph->top);
+
+      // It would be nice if somebody to point to the documentation in freetype that say that it is in 16.16 format.
+      glyph->advance = ft_glyph->advance.x / (float)(1 << 16);
+
+      FT_Done_Glyph(ft_glyph);
     }
 
-  if(!glyph)
-  {
-    LOG_WARN("No font found for character %c", c);
-    return NULL;
+    /// Cache the rendered glpyh and return
+    glyph_hash_table_insert_unchecked(&font_set->glyphs, glyph);
+    return glyph;
   }
 
-  return glyph;
+  LOG_WARN("No font found for character %c", c);
+  free(glyph);
+  return NULL;
 }
 

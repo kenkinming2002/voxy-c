@@ -55,7 +55,7 @@ void main_game_render_debug_overlay(void)
   float y = (float)window_size.y - margin - height;
   for(size_t i=0; i<messages.item_count; ++i)
   {
-    ui_text(fvec2(margin, y), height, messages.items[i]);
+    ui_text(fvec2(margin, y), height, 1.0f, messages.items[i]);
     y -= height;
     y -= margin;
   }

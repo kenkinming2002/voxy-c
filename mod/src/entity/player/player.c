@@ -132,8 +132,8 @@ void player_entity_update(struct entity *entity, float dt)
   if(input_press(KEY_P))
     main_game_render_set_debug(!main_game_render_get_debug());
 
-  main_game_debug_overlay_printf("Hello from player");
-  main_game_debug_overlay_printf("Goodbye from player");
+  main_game_debug_overlay_printf("Position: %f %f %f", entity->position.x, entity->position.y, entity->position.z);
+  main_game_debug_overlay_printf("Rotation: %f %f (Yaw Pitch)", entity->position.yaw, entity->position.pitch);
 }
 
 void player_entity_render(const struct entity *entity, const struct camera *camera)

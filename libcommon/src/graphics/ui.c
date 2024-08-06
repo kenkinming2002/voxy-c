@@ -7,7 +7,7 @@
 
 #include <assert.h>
 
-#define MAX_QUADS 256
+#define MAX_QUADS 512
 
 struct colored_quad
 {

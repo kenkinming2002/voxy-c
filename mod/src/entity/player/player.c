@@ -8,6 +8,7 @@
 #include "inventory.h"
 
 #include <voxy/scene/main_game/render/debug.h>
+#include <voxy/scene/main_game/render/debug_overlay.h>
 
 #include <libcommon/core/window.h>
 #include <libcommon/core/log.h>
@@ -130,6 +131,9 @@ void player_entity_update(struct entity *entity, float dt)
   // FIXME: That should not probably not be here
   if(input_press(KEY_P))
     main_game_render_set_debug(!main_game_render_get_debug());
+
+  main_game_debug_overlay_printf("Hello from player");
+  main_game_debug_overlay_printf("Goodbye from player");
 }
 
 void player_entity_render(const struct entity *entity, const struct camera *camera)

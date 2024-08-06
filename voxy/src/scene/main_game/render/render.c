@@ -3,6 +3,7 @@
 #include <voxy/scene/main_game/render/blocks.h>
 #include <voxy/scene/main_game/render/entities.h>
 #include <voxy/scene/main_game/render/debug.h>
+#include <voxy/scene/main_game/render/debug_overlay.h>
 
 #include <libcommon/core/window.h>
 #include <libcommon/graphics/ui.h>
@@ -24,6 +25,7 @@ void main_game_render(void)
   main_game_render_blocks();
   main_game_render_entities();
   main_game_render_debug();
+  main_game_render_debug_overlay();
 
   ui_render();
 }

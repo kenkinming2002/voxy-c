@@ -56,10 +56,10 @@ void player_entity_init(struct entity *entity)
     }
 
   for(int i=0; i<PLAYER_HOTBAR_SIZE; ++i)
-    if(i < 5)
+    if(i < 9)
     {
       opaque->hotbar[i].id = i;
-      opaque->hotbar[i].count = 8 * (i + 1);
+      opaque->hotbar[i].count = 4 * (i + 1);
     }
     else
     {

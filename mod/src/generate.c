@@ -3,6 +3,10 @@
 #include "block/grass/grass.h"
 #include "block/leave/leave.h"
 #include "block/log/log.h"
+#include "block/ore_coal/ore_coal.h"
+#include "block/ore_copper/ore_copper.h"
+#include "block/ore_iron/ore_iron.h"
+#include "block/ore_tin/ore_tin.h"
 #include "block/stone/stone.h"
 #include "block/water/water.h"
 
@@ -14,6 +18,25 @@
 
 #define ETHER_HEIGHT 128
 #define WATER_HEIGHT 2
+
+static float minf(float a, float b)
+{
+  return a < b ? a : b;
+}
+
+static float maxf(float a, float b)
+{
+  return a > b ? a : b;
+}
+
+static float clampf(float value, float min, float max)
+{
+  if(value < min)
+    value = min;
+  else if(value > max)
+    value = max;
+  return value;
+}
 
 static inline float get_river_factor(seed_t seed, ivec2_t position)
 { const size_t n = 3;
@@ -102,6 +125,16 @@ static inline bool get_cave(seed_t seed, ivec3_t position)
   return true;
 }
 
+static block_id_t get_stone(seed_t seed, ivec3_t position)
+{
+  const float factor = maxf(1.0f - expf(0.0001 * position.z), 0.0f);
+  seed_next(&seed); if(noise_random3i(seed, position) < 0.8f * factor) return ore_coal_block_id_get();
+  seed_next(&seed); if(noise_random3i(seed, position) < 0.2f * factor) return ore_tin_block_id_get();
+  seed_next(&seed); if(noise_random3i(seed, position) < 0.2f * factor) return ore_copper_block_id_get();
+  seed_next(&seed); if(noise_random3i(seed, position) < 0.1f * factor) return ore_iron_block_id_get();
+  return stone_block_id_get();
+}
+
 static inline block_id_t get_block(seed_t seed, ivec3_t position, float height)
 {
   int height1 = floorf(height);
@@ -111,7 +144,7 @@ static inline block_id_t get_block(seed_t seed, ivec3_t position, float height)
     return empty_block_id_get();
 
   if(position.z < height1)
-    return stone_block_id_get();
+    return get_stone(seed, position);
 
   if(position.z < height2)
     return grass_block_id_get();

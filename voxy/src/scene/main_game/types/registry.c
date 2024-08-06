@@ -74,8 +74,6 @@ entity_id_t register_entity_info(struct entity_info entity_info)
       LOG_INFO("Registered entity: id = %d:", i);
       LOG_INFO("  mod              = %s", entity_info.mod);
       LOG_INFO("  name             = %s", entity_info.name);
-      LOG_INFO("  mesh             = %s", entity_info.mesh);
-      LOG_INFO("  texture          = %s", entity_info.texture);
       LOG_INFO("  hitbox offset    = %f %f %f", entity_info.hitbox_offset.x, entity_info.hitbox_offset.y, entity_info.hitbox_offset.z);
       LOG_INFO("  hitbox dimension = %f %f %f", entity_info.hitbox_dimension.x, entity_info.hitbox_dimension.y, entity_info.hitbox_dimension.z);
 

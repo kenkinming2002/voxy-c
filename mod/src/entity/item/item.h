@@ -19,5 +19,6 @@ bool item_entity_save(const struct entity *entity, FILE *file);
 bool item_entity_load(struct entity *entity, FILE *file);
 
 void item_entity_update(struct entity *entity, float dt);
+void item_entity_render(const struct entity *entity, const struct camera *camera);
 
 #endif // ENTITY_ITEM_ITEM_H

@@ -23,9 +23,6 @@ void player_entity_register(void)
   entity_info.mod = MOD;
   entity_info.name = "player";
 
-  entity_info.mesh = NULL;
-  entity_info.texture = NULL;
-
   entity_info.hitbox_dimension = fvec3(0.8f, 0.8f, 2.0f);
   entity_info.hitbox_offset = fvec3(0.0f, 0.0f, -0.5f);
 
@@ -35,6 +32,7 @@ void player_entity_register(void)
   entity_info.on_load = player_entity_load;
 
   entity_info.on_update = player_entity_update;
+  entity_info.on_render = player_entity_render;
 
   player_entity_id = register_entity_info(entity_info);
 }
@@ -133,3 +131,10 @@ void player_entity_update(struct entity *entity, float dt)
   if(input_press(KEY_P))
     main_game_render_set_debug(!main_game_render_get_debug());
 }
+
+void player_entity_render(const struct entity *entity, const struct camera *camera)
+{
+  (void)entity;
+  (void)camera;
+}
+

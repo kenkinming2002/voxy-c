@@ -10,5 +10,6 @@ void weird_entity_init(struct entity *entity);
 void weird_entity_fini(struct entity *entity);
 
 void weird_entity_update(struct entity *entity, float dt);
+void weird_entity_render(const struct entity *entity, const struct camera *camera);
 
 #endif // ENTITY_WEIRD_WEIRD_H

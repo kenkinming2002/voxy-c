@@ -10,7 +10,7 @@
 #include <libcommon/math/transform.h>
 #include <libcommon/math/ray_cast.h>
 
-transform_t entity_transform(struct entity *entity)
+transform_t entity_transform(const struct entity *entity)
 {
   transform_t transform;
   transform.translation = entity->position;

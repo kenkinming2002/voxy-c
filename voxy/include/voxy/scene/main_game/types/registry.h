@@ -3,6 +3,7 @@
 
 #include <libcommon/math/vector.h>
 #include <libcommon/math/direction.h>
+#include <libcommon/graphics/camera.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -63,15 +64,13 @@ struct entity_info
   const char *mod;
   const char *name;
 
-  const char *mesh;
-  const char *texture;
-
   fvec3_t hitbox_offset;
   fvec3_t hitbox_dimension;
 
   void(*on_dispose)(struct entity *entity);
 
   void(*on_update)(struct entity *entity, float dt);
+  void(*on_render)(const struct entity *entity, const struct camera *camera);
 
   bool(*on_save)(const struct entity *entity, FILE *file);
   bool(*on_load)(struct entity *entity, FILE *file);

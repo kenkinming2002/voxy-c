@@ -18,6 +18,7 @@ LIBCOMMON_SRCS += libcommon/src/graphics/font_set.c
 LIBCOMMON_SRCS += libcommon/src/graphics/mesh.c
 LIBCOMMON_SRCS += libcommon/src/graphics/ui.c
 LIBCOMMON_SRCS += libcommon/src/graphics/camera.c
+LIBCOMMON_SRCS += libcommon/src/graphics/render.c
 
 RENDER_BLOCK_SRCS += render_block/src/render_block.c
 
@@ -140,7 +141,7 @@ render_block/render_block: $(RENDER_BLOCK_SRCS:.c=.o) libcommon/libcommon.a
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(RENDER_BLOCK_SRCS:.c=.o) $(LIBS) -Llibcommon -lcommon
 
 voxy/voxy: $(VOXY_SRCS:.c=.o) libcommon/libcommon.a
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS) -Llibcommon -lcommon
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS) -Llibcommon -Wl,--whole-archive -lcommon -Wl,--no-whole-archive
 
 mod/mod.so: $(MOD_SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(MOD_SRCS:.c=.o) $(LIBS)

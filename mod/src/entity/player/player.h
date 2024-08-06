@@ -33,5 +33,6 @@ bool player_entity_save(const struct entity *entity, FILE *file);
 bool player_entity_load(struct entity *entity, FILE *file);
 
 void player_entity_update(struct entity *entity, float dt);
+void player_entity_render(const struct entity *entity, const struct camera *camera);
 
 #endif // ENTITY_PLAYER_PLAYER_H

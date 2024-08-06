@@ -12,9 +12,6 @@ void item_entity_register(void)
   entity_info.mod = MOD;
   entity_info.name = "item";
 
-  entity_info.mesh = NULL;
-  entity_info.texture = NULL;
-
   entity_info.hitbox_dimension = fvec3(0.1f, 0.1f, 0.1f);
   entity_info.hitbox_offset = fvec3_zero();
 
@@ -24,6 +21,7 @@ void item_entity_register(void)
   entity_info.on_load = item_entity_load;
 
   entity_info.on_update = item_entity_update;
+  entity_info.on_render = item_entity_render;
 
   item_entity_id = register_entity_info(entity_info);
 }
@@ -66,3 +64,8 @@ void item_entity_update(struct entity *entity, float dt)
   (void)dt;
 }
 
+void item_entity_render(const struct entity *entity, const struct camera *camera)
+{
+  (void)entity;
+  (void)camera;
+}

@@ -23,7 +23,7 @@ struct entity
 };
 DYNAMIC_ARRAY_DEFINE(entities, struct entity);
 
-transform_t entity_transform(struct entity *entity);
+transform_t entity_transform(const struct entity *entity);
 
 fvec3_t entity_local_to_global(struct entity *entity, fvec3_t vec);
 

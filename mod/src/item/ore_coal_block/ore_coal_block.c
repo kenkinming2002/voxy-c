@@ -11,7 +11,7 @@ void ore_coal_block_item_register(void)
   struct item_info item_info;
 
   item_info.mod = MOD;
-  item_info.name = "ore_coal_block";
+  item_info.name = "coal ore block";
   item_info.texture =  "mod/assets/textures/ore_coal_block_item.png";
   item_info.on_use = ore_coal_block_item_on_use;
 

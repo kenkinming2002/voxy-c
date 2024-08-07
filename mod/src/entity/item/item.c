@@ -92,8 +92,5 @@ void item_entity_render(const struct entity *entity, const struct camera *camera
 
   const struct item_opaque *opaque = entity->opaque;
   const struct gl_texture_2d texture = assets_get_item_texture(opaque->item.id);
-
-  glDisable(GL_CULL_FACE);
   render_model(*camera, transform, item_entity_mesh, texture);
-  glEnable(GL_CULL_FACE);
 }

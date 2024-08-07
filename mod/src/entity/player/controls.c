@@ -40,7 +40,7 @@ void player_entity_update_controls(struct entity *entity, float dt)
 
   // Move
   {
-    float speed = entity->grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_GROUND;
+    float speed = entity->grounded ? PLAYER_MOVE_SPEED_GROUND : PLAYER_MOVE_SPEED_AIR;
 
     fvec2_t axis = fvec2_zero();
     if(input_state(KEY_A)) { axis.x -= 1.0f; }

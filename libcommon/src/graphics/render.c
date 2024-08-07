@@ -1,6 +1,6 @@
 #include <libcommon/graphics/render.h>
 
-void render_model(struct camera camera, transform_t transform, struct mesh mesh, struct gl_texture_2d texture)
+void render_model(struct camera camera, transform_t transform, struct mesh mesh, struct gl_texture_2d texture, float light)
 {
   struct gl_program program = GL_PROGRAM_LOAD(libcommon/assets/shaders/model);
   glUseProgram(program.id);
@@ -13,6 +13,8 @@ void render_model(struct camera camera, transform_t transform, struct mesh mesh,
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture.id);
+
+  glUniform1f(glGetUniformLocation(program.id, "light"), light);
 
   glBindVertexArray(mesh.vao);
   glDrawArrays(GL_TRIANGLES, 0, mesh.count);

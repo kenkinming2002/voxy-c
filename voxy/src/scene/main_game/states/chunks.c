@@ -99,6 +99,39 @@ unsigned world_get_block_light_level(ivec3_t position)
   return chunk_get_block_light_level(chunk, global_position_to_local_position_i(position));
 }
 
+float world_get_average_block_light_factor(fvec3_t center, float radius)
+{
+  float total_value = 0.0f;
+  float total_weight = 0.0f;
+
+  const ivec3_t i_center = fvec3_as_ivec3_round(center);
+  const int i_radius = ceilf(radius);
+
+  for(int z=-i_radius; z<=i_radius; ++z)
+    for(int y=-i_radius; y<=i_radius; ++y)
+      for(int x=-i_radius; x<=i_radius; ++x)
+      {
+        const ivec3_t position = ivec3_add(i_center, ivec3(x, y, z));
+        const fvec3_t offset = fvec3_sub(ivec3_as_fvec3(position), center);
+        if(fvec3_length_squared(offset) > radius * radius)
+          continue;
+
+        const block_id_t block_id = world_get_block_id(position);
+        const unsigned block_light_level = world_get_block_light_level(position);
+
+        if(block_id != BLOCK_NONE && query_block_info(block_id)->type == BLOCK_TYPE_OPAQUE)
+          continue;
+
+        const float value = block_light_level != (unsigned)-1 ? block_light_level / 15.0f : 15.0f;
+        const float weight = 1.0f / (fvec3_length_squared(offset) + 1.0f);
+
+        total_value += value * weight;
+        total_weight += weight;
+      }
+
+  return total_value / total_weight;
+}
+
 void world_set_block(ivec3_t position, block_id_t id, struct entity *entity)
 {
   struct chunk *chunk = world_get_chunk(get_chunk_position_i(position));

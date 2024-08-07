@@ -1,7 +1,8 @@
 #include "mod.h"
 #include "item.h"
 
-#include "voxy/scene/main_game/render/assets.h"
+#include <voxy/scene/main_game/states/chunks.h>
+#include <voxy/scene/main_game/render/assets.h>
 
 #include <libcommon/graphics/gl.h>
 #include <libcommon/graphics/render.h>
@@ -92,5 +93,7 @@ void item_entity_render(const struct entity *entity, const struct camera *camera
 
   const struct item_opaque *opaque = entity->opaque;
   const struct gl_texture_2d texture = assets_get_item_texture(opaque->item.id);
-  render_model(*camera, transform, item_entity_mesh, texture);
+
+  const float light = world_get_average_block_light_factor(entity->position, 3.0f);
+  render_model(*camera, transform, item_entity_mesh, texture, light);
 }

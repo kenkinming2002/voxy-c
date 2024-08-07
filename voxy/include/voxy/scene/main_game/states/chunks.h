@@ -58,6 +58,13 @@ void world_invalidate_mesh_at(ivec3_t position);
 block_id_t world_get_block_id(ivec3_t position);
 unsigned world_get_block_light_level(ivec3_t position);
 
+/// Compute some sort of average light factor (between 0.0 and 1.0f) around a
+/// position.
+///
+/// The exact formula is not specified but the intention is to for the resulting
+/// light factor to be used for shading entities.
+float world_get_average_block_light_factor(fvec3_t center, float radius);
+
 /// Set a block at position by its id.
 ///
 /// This takes of sending invalidation events to all relevant systems, and

@@ -1,5 +1,8 @@
 #include "mod.h"
 #include "weird.h"
+#include "entity/player/player.h"
+
+#include <voxy/scene/main_game/states/entity_query.h>
 
 #include <libcommon/graphics/mesh.h>
 #include <libcommon/graphics/gl.h>
@@ -67,10 +70,69 @@ void weird_entity_fini(struct entity *entity)
   (void)entity;
 }
 
+static fvec3_t normal_to_rotation(fvec3_t normal)
+{
+  fvec3_t result;
+  result.yaw = atan2(-normal.x, normal.y);
+  result.pitch = 0.0f;
+  result.roll = 0.0f;
+  return result;
+}
+
+static fvec3_t simple_rotate(fvec3_t v)
+{
+  float x = v.x;
+  float y = v.y;
+  v.x = -y;
+  v.y = x;
+  return v;
+}
+
 void weird_entity_update(struct entity *entity, float dt)
 {
+  const aabb3_t region = aabb3(entity->position, fvec3(100.0f, 100.0f, 100.0f));
+
+  struct entity **entities;
+  size_t entity_count;
+  world_query_entity(region, &entities, &entity_count);
+
+  fvec3_t impulse = fvec3_zero();
+  for(size_t i=0; i<entity_count; ++i)
+  {
+    if(entities[i] == entity)
+      continue;
+
+    if(entities[i]->id == player_entity_id_get())
+    {
+      const fvec3_t offset = fvec3_sub(entities[i]->position, entity->position);
+      const float factor = fvec3_length_squared(offset);
+      if(factor >= 5.0f)
+      {
+        impulse = fvec3_add(impulse, fvec3_mul_scalar(fvec3_div_scalar(offset, factor), 10.0f));
+        impulse = fvec3_add(impulse, simple_rotate(fvec3_mul_scalar(fvec3_div_scalar(offset, factor), 3.0f)));
+      }
+
+    }
+    else if(entities[i]->id == weird_entity_id_get())
+    {
+      const fvec3_t offset = fvec3_sub(entities[i]->position, entity->position);
+      const float factor = fvec3_length_squared(offset);
+      if(factor > 0.2f && factor <= 25.0f)
+        impulse = fvec3_sub(impulse, fvec3_mul_scalar(fvec3_div_scalar(offset, factor), 3.0f));
+    }
+  }
+
+  impulse.z = 0.0f;
+  impulse = fvec3_normalize(impulse);
+  impulse = fvec3_mul_scalar(impulse, 5.0f);
+  impulse = fvec3_mul_scalar(impulse, dt);
+
+  entity_apply_impulse(entity, impulse);
+
+  entity->rotation = normal_to_rotation(impulse);
+
   entity_jump(entity, 10.0f);
-  entity_move(entity, fvec2(randf(-1.0f, 1.0f), randf(-1.0f, 1.0f)), 30.0f, dt);
+
 }
 
 void weird_entity_render(const struct entity *entity, const struct camera *camera)

@@ -26,6 +26,7 @@ void spawn_weird_update(void)
       entity.position = position;
       entity.velocity = fvec3_zero();
       entity.rotation = fvec3_zero();
+      entity.remove = false;
       entity.grounded = false;
       weird_entity_init(&entity);
       chunk_add_entity(chunk, entity);

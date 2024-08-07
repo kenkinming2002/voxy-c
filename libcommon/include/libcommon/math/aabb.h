@@ -109,6 +109,74 @@ static inline aabb4_t aabb4_expand(aabb4_t aabb, fvec4_t direction)
   return result;
 }
 
+/// Return if two aabbs intersect with each other.
+static inline bool aabb1_intersect(aabb3_t aabb1, aabb3_t aabb2)
+{
+  for(int i=0; i<1; ++i)
+  {
+    const float begin1 = aabb1.center.values[i] - aabb1.dimension.values[i] * 0.5f;
+    const float end1   = aabb1.center.values[i] + aabb1.dimension.values[i] * 0.5f;
+
+    const float begin2 = aabb2.center.values[i] - aabb2.dimension.values[i] * 0.5f;
+    const float end2   = aabb2.center.values[i] + aabb2.dimension.values[i] * 0.5f;
+
+    if(end1 <= begin2 || end2 <= begin1)
+      return false;
+  }
+  return true;
+}
+
+/// Return if two aabbs intersect with each other.
+static inline bool aabb2_intersect(aabb3_t aabb1, aabb3_t aabb2)
+{
+  for(int i=0; i<2; ++i)
+  {
+    const float begin1 = aabb1.center.values[i] - aabb1.dimension.values[i] * 0.5f;
+    const float end1   = aabb1.center.values[i] + aabb1.dimension.values[i] * 0.5f;
+
+    const float begin2 = aabb2.center.values[i] - aabb2.dimension.values[i] * 0.5f;
+    const float end2   = aabb2.center.values[i] + aabb2.dimension.values[i] * 0.5f;
+
+    if(end1 <= begin2 || end2 <= begin1)
+      return false;
+  }
+  return true;
+}
+
+/// Return if two aabbs intersect with each other.
+static inline bool aabb3_intersect(aabb3_t aabb1, aabb3_t aabb2)
+{
+  for(int i=0; i<3; ++i)
+  {
+    const float begin1 = aabb1.center.values[i] - aabb1.dimension.values[i] * 0.5f;
+    const float end1   = aabb1.center.values[i] + aabb1.dimension.values[i] * 0.5f;
+
+    const float begin2 = aabb2.center.values[i] - aabb2.dimension.values[i] * 0.5f;
+    const float end2   = aabb2.center.values[i] + aabb2.dimension.values[i] * 0.5f;
+
+    if(end1 <= begin2 || end2 <= begin1)
+      return false;
+  }
+  return true;
+}
+
+/// Return if two aabbs intersect with each other.
+static inline bool aabb4_intersect(aabb3_t aabb1, aabb3_t aabb2)
+{
+  for(int i=0; i<4; ++i)
+  {
+    const float begin1 = aabb1.center.values[i] - aabb1.dimension.values[i] * 0.5f;
+    const float end1   = aabb1.center.values[i] + aabb1.dimension.values[i] * 0.5f;
+
+    const float begin2 = aabb2.center.values[i] - aabb2.dimension.values[i] * 0.5f;
+    const float end2   = aabb2.center.values[i] + aabb2.dimension.values[i] * 0.5f;
+
+    if(end1 <= begin2 || end2 <= begin1)
+      return false;
+  }
+  return true;
+}
+
 static inline aabb3_t aabb3_face(aabb3_t aabb, direction_t direction)
 {
   const unsigned axis = direction_axis(direction);

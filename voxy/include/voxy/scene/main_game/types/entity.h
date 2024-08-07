@@ -5,6 +5,7 @@
 
 #include <libcommon/math/vector.h>
 #include <libcommon/math/transform.h>
+#include <libcommon/math/aabb.h>
 #include <libcommon/utils/dynamic_array.h>
 
 #include <stdbool.h>
@@ -17,6 +18,7 @@ struct entity
   fvec3_t velocity;
   fvec3_t rotation;
 
+  bool remove;
   bool grounded;
 
   void *opaque;
@@ -24,6 +26,7 @@ struct entity
 DYNAMIC_ARRAY_DEFINE(entities, struct entity);
 
 transform_t entity_transform(const struct entity *entity);
+aabb3_t entity_hitbox(const struct entity *entity);
 
 fvec3_t entity_local_to_global(struct entity *entity, fvec3_t vec);
 
@@ -32,8 +35,5 @@ void entity_move(struct entity *entity, fvec2_t direction, float speed, float dt
 void entity_jump(struct entity *entity, float strength);
 
 bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal);
-
-// Check if two entity collision box intersect.
-bool entity_intersect(struct entity *entity1, struct entity *entity2);
 
 #endif // VOXY_SCENE_MAIN_GAME_TYPES_ENTITY_H

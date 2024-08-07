@@ -42,6 +42,9 @@ VOXY_SRCS += voxy/src/scene/main_game/states/digger.c
 VOXY_SRCS += voxy/src/scene/main_game/states/seed.c
 VOXY_SRCS += voxy/src/scene/main_game/states/cursor.c
 
+VOXY_SRCS += voxy/src/scene/main_game/states/entity_query.c
+VOXY_SRCS += voxy/src/scene/main_game/states/entity_query_info.c
+
 VOXY_SRCS += voxy/src/scene/main_game/update/chunk_database.c
 VOXY_SRCS += voxy/src/scene/main_game/update/chunk_generate.c
 VOXY_SRCS += voxy/src/scene/main_game/update/chunk_manager.c

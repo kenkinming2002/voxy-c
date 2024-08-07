@@ -75,6 +75,7 @@ void spawn_player_update(void)
     entity.position = spawn_position;
     entity.velocity = fvec3_zero();
     entity.rotation = fvec3_zero();
+    entity.remove = false;
     entity.grounded = false;
     player_entity_init(&entity);
     if(!world_add_entity(entity))

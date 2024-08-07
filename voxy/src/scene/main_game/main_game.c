@@ -3,12 +3,17 @@
 #include <voxy/scene/scene.h>
 
 #include <voxy/scene/main_game/mod.h>
+
 #include <voxy/scene/main_game/render/render.h>
 #include <voxy/scene/main_game/render/debug_overlay.h>
-#include <voxy/scene/main_game/states/chunks.h>
+
 #include <voxy/scene/main_game/states/seed.h>
+#include <voxy/scene/main_game/states/chunks.h>
+#include <voxy/scene/main_game/states/entity_query.h>
+
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/types/entity.h>
+
 #include <voxy/scene/main_game/update/chunk_generate.h>
 #include <voxy/scene/main_game/update/chunk_manager.h>
 #include <voxy/scene/main_game/update/generate.h>
@@ -68,19 +73,25 @@ static void main_game_update_fixed(float dt)
     sync_active_chunks();
     reset_active_chunks();
     {
-      mod_update();
-
-      world_for_each_chunk(chunk)
-        for(size_t i=0; i<chunk->entities.item_count; ++i)
-        {
-          struct entity *entity = &chunk->entities.items[i];
-          const struct entity_info *entity_info = query_entity_info(entity->id);
-          if(entity_info->on_update)
-            entity_info->on_update(&chunk->entities.items[i], dt);
-        }
+      world_query_entity_begin();
+      {
+        mod_update();
+        world_for_each_chunk(chunk)
+          for(size_t i=0; i<chunk->entities.item_count; ++i)
+          {
+            struct entity *entity = &chunk->entities.items[i];
+            const struct entity_info *entity_info = query_entity_info(entity->id);
+            if(entity_info->on_update)
+              entity_info->on_update(&chunk->entities.items[i], dt);
+          }
+      }
+      world_query_entity_end();
 
       update_light();
       update_physics(dt);
+
+      world_for_each_chunk(chunk)
+        chunk_commit_remove_entities(chunk);
 
       world_for_each_chunk(chunk)
         chunk_commit_add_entities(chunk);

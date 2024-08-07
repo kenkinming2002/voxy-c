@@ -3,6 +3,7 @@
 
 #include <voxy/scene/main_game/render/assets.h>
 #include <voxy/scene/main_game/states/chunks.h>
+#include <voxy/scene/main_game/states/entity_query.h>
 
 #include <libcommon/core/window.h>
 #include <libcommon/graphics/gl.h>
@@ -256,55 +257,27 @@ void player_entity_update_inventory(struct entity *entity)
     }
   }
 
-  // Item Pickup
-  {
-    const struct entity_info *player_entity_info = query_entity_info(player_entity_id_get());
-    const struct entity_info *item_entity_info = query_entity_info(item_entity_id_get());
+  const aabb3_t hitbox = entity_hitbox(entity);
 
-    aabb3_t hitbox;
-    hitbox.center = fvec3_add(entity->position, fvec3_sub(player_entity_info->hitbox_offset, item_entity_info->hitbox_offset));
-    hitbox.dimension = fvec3_sub(player_entity_info->hitbox_dimension, item_entity_info->hitbox_dimension);
+  struct entity **entities;
+  size_t entity_count;
+  world_query_entity(hitbox, &entities, &entity_count);
 
-    const ivec3_t chunk_position_min = get_chunk_position_f(aabb3_min_corner(hitbox));
-    const ivec3_t chunk_position_max = get_chunk_position_f(aabb3_max_corner(hitbox));
-    for(int z=chunk_position_min.z; z<=chunk_position_max.z; ++z)
-      for(int y=chunk_position_min.y; y<=chunk_position_max.y; ++y)
-        for(int x=chunk_position_min.x; x<=chunk_position_max.x; ++x)
-        {
-          const ivec3_t chunk_position = ivec3(x, y, z);
-          struct chunk *chunk = world_get_chunk(chunk_position);
-          if(!chunk)
-            continue;
+  for(size_t i=0; i<entity_count; ++i)
+    if(entities[i]->id == item_entity_id_get())
+    {
+      struct item_opaque *other_opaque = entities[i]->opaque;
 
-          for(size_t i=0; i<chunk->entities.item_count; ++i)
-          {
-            struct entity *other_entity = &chunk->entities.items[i];
-            if(entity == other_entity)
-              continue;
+      for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
+        item_merge(&opaque->hotbar[i], &other_opaque->item);
 
-            if(!entity_intersect(entity, other_entity))
-              continue;
+      for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
+        for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
+          item_merge(&opaque->inventory[j][i], &other_opaque->item);
 
-            if(other_entity->id != item_entity_id_get())
-              continue;
+      if(other_opaque->item.id == ITEM_NONE)
+        entities[i]->remove = true;
+    }
 
-            struct item_opaque *other_opaque = other_entity->opaque;
-
-            for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
-              item_merge(&opaque->hotbar[i], &other_opaque->item);
-
-            for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
-              for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
-                item_merge(&opaque->inventory[j][i], &other_opaque->item);
-
-            if(other_opaque->item.id == ITEM_NONE)
-            {
-              // FIXME: May be we should not be modifying the entities array
-              //        during iteration.
-              item_entity_fini(other_entity);
-              *other_entity = chunk->entities.items[--chunk->entities.item_count];
-            }
-          }
-        }
-  }
+  free(entities);
 }

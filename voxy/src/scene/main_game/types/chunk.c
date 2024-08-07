@@ -274,6 +274,22 @@ void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id)
     enqueue_light_destroy_update(chunk, position.x, position.y, position.z, old_block_light_level);
 }
 
+void chunk_commit_remove_entities(struct chunk *chunk)
+{
+  size_t j=0;
+  for(size_t i=0; i<chunk->entities.item_count; ++i)
+    if(chunk->entities.items[i].remove)
+    {
+      const struct entity_info *entity_info = query_entity_info(chunk->entities.items[i].id);
+      if(entity_info->on_dispose)
+        entity_info->on_dispose(&chunk->entities.items[i]);
+    }
+    else
+      chunk->entities.items[j++] = chunk->entities.items[i];
+
+  chunk->entities.item_count = j;
+}
+
 void chunk_add_entity_raw(struct chunk *chunk, struct entity entity)
 {
   DYNAMIC_ARRAY_APPEND(chunk->entities, entity);

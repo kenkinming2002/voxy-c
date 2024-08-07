@@ -117,6 +117,11 @@ void chunk_set_block_raw(struct chunk *chunk, ivec3_t position, block_id_t id);
 /// triggering lighting update if necessary.
 void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id);
 
+/// Commit removal of entities.
+///
+/// An entity is removed only if its remove field is set to true.
+void chunk_commit_remove_entities(struct chunk *chunk);
+
 /// Add an entity.
 ///
 /// Same as chunk_add_entity() except entity is added directly and there is no

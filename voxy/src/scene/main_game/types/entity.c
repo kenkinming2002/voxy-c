@@ -18,6 +18,16 @@ transform_t entity_transform(const struct entity *entity)
   return transform;
 }
 
+aabb3_t entity_hitbox(const struct entity *entity)
+{
+  const struct entity_info *info = query_entity_info(entity->id);
+
+  aabb3_t hitbox;
+  hitbox.center = fvec3_add(entity->position, info->hitbox_offset);
+  hitbox.dimension = info->hitbox_dimension;
+  return hitbox;
+}
+
 fvec3_t entity_local_to_global(struct entity *entity, fvec3_t vec)
 {
   fvec4_t result;
@@ -76,36 +86,3 @@ bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, i
   return false;
 }
 
-struct hitbox
-{
-  fvec3_t position;
-  fvec3_t dimension;
-};
-
-static struct hitbox entity_get_hitbox(struct entity *entity)
-{
-  const struct entity_info *entity_info = query_entity_info(entity->id);
-
-  struct hitbox hitbox;
-  hitbox.position = fvec3_add(entity->position, entity_info->hitbox_offset);
-  hitbox.dimension = entity_info->hitbox_dimension;
-  return hitbox;
-}
-
-bool entity_intersect(struct entity *entity1, struct entity *entity2)
-{
-  const struct hitbox hitbox1 = entity_get_hitbox(entity1);
-  const struct hitbox hitbox2 = entity_get_hitbox(entity2);
-  for(int i=0; i<3; ++i)
-  {
-    const float begin1 = hitbox1.position.values[i] - hitbox1.dimension.values[i] * 0.5f;
-    const float end1   = hitbox1.position.values[i] + hitbox1.dimension.values[i] * 0.5f;
-
-    const float begin2 = hitbox2.position.values[i] - hitbox2.dimension.values[i] * 0.5f;
-    const float end2   = hitbox2.position.values[i] + hitbox2.dimension.values[i] * 0.5f;
-
-    if(end1 < begin2 || end2 < begin1)
-      return false;
-  }
-  return true;
-}

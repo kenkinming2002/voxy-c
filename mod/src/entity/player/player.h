@@ -10,8 +10,10 @@
 
 struct player_opaque
 {
-  struct item inventory[PLAYER_INVENTORY_SIZE_VERTICAL][PLAYER_INVENTORY_SIZE_HORIZONTAL];
   struct item hotbar[PLAYER_HOTBAR_SIZE];
+  struct item inventory[PLAYER_INVENTORY_SIZE_VERTICAL][PLAYER_INVENTORY_SIZE_HORIZONTAL];
+  struct item crafting_inputs[3][3];
+
   struct item hand;
 
   bool inventory_opened;

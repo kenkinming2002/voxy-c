@@ -65,6 +65,9 @@ VOXY_SRCS += voxy/src/scene/main_game/render/blocks_mesh.c
 
 VOXY_SRCS += voxy/src/scene/main_game/render/entities.c
 
+VOXY_SRCS += voxy/src/scene/main_game/crafting/crafting.c
+VOXY_SRCS += voxy/src/scene/main_game/crafting/recipe.c
+
 MOD_SRCS += mod/src/mod.c
 MOD_SRCS += mod/src/generate.c
 

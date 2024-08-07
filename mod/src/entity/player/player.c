@@ -47,13 +47,6 @@ void player_entity_init(struct entity *entity)
 {
   struct player_opaque *opaque = malloc(sizeof *opaque);
 
-  for(int j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
-    for(int i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
-    {
-      opaque->inventory[j][i].id = ITEM_NONE;
-      opaque->inventory[j][i].count = 0;
-    }
-
   for(int i=0; i<PLAYER_HOTBAR_SIZE; ++i)
     if(i < 9)
     {
@@ -64,6 +57,20 @@ void player_entity_init(struct entity *entity)
     {
       opaque->hotbar[i].id = ITEM_NONE;
       opaque->hotbar[i].count = 0;
+    }
+
+  for(int j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
+    for(int i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
+    {
+      opaque->inventory[j][i].id = ITEM_NONE;
+      opaque->inventory[j][i].count = 0;
+    }
+
+  for(int j=0; j<3; ++j)
+    for(int i=0; i<3; ++i)
+    {
+      opaque->crafting_inputs[j][i].id = ITEM_NONE;
+      opaque->crafting_inputs[j][i].count = 0;
     }
 
   opaque->hand.id = ITEM_NONE;
@@ -88,8 +95,9 @@ bool player_entity_save(const struct entity *entity, FILE *file)
   const struct player_opaque *opaque = entity->opaque;
 
 #define SAVE(x) if(fwrite(&x, sizeof x, 1, file) != 1) return false;
-  SAVE(opaque->inventory);
   SAVE(opaque->hotbar);
+  SAVE(opaque->inventory);
+  SAVE(opaque->crafting_inputs);
   SAVE(opaque->hand);
   SAVE(opaque->hotbar_selection);
   SAVE(opaque->cooldown);
@@ -108,8 +116,9 @@ bool player_entity_load(struct entity *entity, FILE *file)
   opaque->third_person = false;
 
 #define LOAD(x) if(fread(&x, sizeof x, 1, file) != 1) return false;
-  LOAD(opaque->inventory);
   LOAD(opaque->hotbar);
+  LOAD(opaque->inventory);
+  LOAD(opaque->crafting_inputs);
   LOAD(opaque->hand);
   LOAD(opaque->hotbar_selection);
   LOAD(opaque->cooldown);

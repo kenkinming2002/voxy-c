@@ -32,6 +32,7 @@
 
 #include <voxy/scene/main_game/types/registry.h>
 #include <voxy/scene/main_game/update/generate.h>
+#include <voxy/scene/main_game/crafting/crafting.h>
 
 #include <stdbool.h>
 
@@ -66,6 +67,22 @@ void mod_init()
 
   register_generate_chunk_blocks(&base_generate_chunk_blocks);
   register_generate_player_spawn(&base_generate_player_spawn);
+
+  struct recipe recipe;
+  for(int j=0; j<3; ++j)
+    for(int i=0; i<3; ++i)
+    {
+      recipe.inputs[j][i].id = ITEM_NONE;
+      recipe.inputs[j][i].count = 0;
+    }
+
+  recipe.inputs[0][0].id = ore_coal_block_item_id_get();
+  recipe.inputs[0][0].count = 1;
+
+  recipe.output.id = lamp_item_id_get();
+  recipe.output.count = 4;
+
+  crafting_add_recipe(recipe);
 }
 
 void mod_enter(void)

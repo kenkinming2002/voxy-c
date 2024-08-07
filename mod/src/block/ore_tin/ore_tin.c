@@ -2,7 +2,7 @@
 #include "mod.h"
 
 #include "block/block.h"
-#include "item/ore_tin/ore_tin.h"
+#include "item/ore_tin_block/ore_tin_block.h"
 
 static block_id_t ore_tin_block_id;
 
@@ -43,6 +43,6 @@ void ore_tin_block_on_create(struct entity *entity, struct chunk *chunk, ivec3_t
 void ore_tin_block_on_destroy(struct entity *entity, struct chunk *chunk, ivec3_t position)
 {
   (void)entity;
-  block_on_destroy_spawn_item(chunk, position, ore_tin_item_id_get());
+  block_on_destroy_spawn_item(chunk, position, ore_tin_block_item_id_get());
 }
 

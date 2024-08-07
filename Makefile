@@ -87,10 +87,10 @@ MOD_SRCS += mod/src/item/grass/grass.c
 MOD_SRCS += mod/src/item/lamp/lamp.c
 MOD_SRCS += mod/src/item/leave/leave.c
 MOD_SRCS += mod/src/item/log/log.c
-MOD_SRCS += mod/src/item/ore_coal/ore_coal.c
-MOD_SRCS += mod/src/item/ore_copper/ore_copper.c
-MOD_SRCS += mod/src/item/ore_iron/ore_iron.c
-MOD_SRCS += mod/src/item/ore_tin/ore_tin.c
+MOD_SRCS += mod/src/item/ore_coal_block/ore_coal_block.c
+MOD_SRCS += mod/src/item/ore_copper_block/ore_copper_block.c
+MOD_SRCS += mod/src/item/ore_iron_block/ore_iron_block.c
+MOD_SRCS += mod/src/item/ore_tin_block/ore_tin_block.c
 MOD_SRCS += mod/src/item/stone/stone.c
 
 MOD_SRCS += mod/src/entity/item/item.c

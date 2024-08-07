@@ -2,7 +2,7 @@
 #include "mod.h"
 
 #include "block/block.h"
-#include "item/ore_copper/ore_copper.h"
+#include "item/ore_copper_block/ore_copper_block.h"
 
 static block_id_t ore_copper_block_id;
 
@@ -43,6 +43,6 @@ void ore_copper_block_on_create(struct entity *entity, struct chunk *chunk, ivec
 void ore_copper_block_on_destroy(struct entity *entity, struct chunk *chunk, ivec3_t position)
 {
   (void)entity;
-  block_on_destroy_spawn_item(chunk, position, ore_copper_item_id_get());
+  block_on_destroy_spawn_item(chunk, position, ore_copper_block_item_id_get());
 }
 

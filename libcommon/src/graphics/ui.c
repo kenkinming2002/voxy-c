@@ -2,12 +2,10 @@
 
 #include <libcommon/graphics/gl.h>
 #include <libcommon/graphics/font_set.h>
-
 #include <libcommon/core/window.h>
+#include <libcommon/utils/dynamic_array.h>
 
 #include <assert.h>
-
-#define MAX_QUADS 1024
 
 struct colored_quad
 {
@@ -25,40 +23,33 @@ struct textured_quad
   GLuint  texture;
 };
 
-static struct colored_quad colored_quads[MAX_QUADS];
-static size_t              colored_quad_count;
-
-static struct textured_quad textured_quads[MAX_QUADS];
-static size_t               textured_quad_count;
+static DYNAMIC_ARRAY_DECLARE(colored_quads, struct colored_quad);
+static DYNAMIC_ARRAY_DECLARE(textured_quads, struct textured_quad);
 
 void ui_reset(void)
 {
-  colored_quad_count  = 0;
-  textured_quad_count = 0;
+  colored_quads.item_count = 0;
+  textured_quads.item_count = 0;
 }
 
 void ui_quad_colored(fvec2_t position, fvec2_t dimension, float rounding, fvec4_t color)
 {
-  assert(colored_quad_count < MAX_QUADS);
-
-  colored_quads[colored_quad_count].position  = position;
-  colored_quads[colored_quad_count].dimension = dimension;
-  colored_quads[colored_quad_count].rounding  = rounding;
-  colored_quads[colored_quad_count].color     = color;
-
-  colored_quad_count += 1;
+  struct colored_quad colored_quad;
+  colored_quad.position = position;
+  colored_quad.dimension = dimension;
+  colored_quad.rounding = rounding;
+  colored_quad.color = color;
+  DYNAMIC_ARRAY_APPEND(colored_quads, colored_quad);
 }
 
 void ui_rect_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuint texture)
 {
-  assert(textured_quad_count < MAX_QUADS);
-
-  textured_quads[textured_quad_count].position  = position;
-  textured_quads[textured_quad_count].dimension = dimension;
-  textured_quads[textured_quad_count].rounding  = rounding;
-  textured_quads[textured_quad_count].texture   = texture;
-
-  textured_quad_count += 1;
+  struct textured_quad textured_quad;
+  textured_quad.position = position;
+  textured_quad.dimension = dimension;
+  textured_quad.rounding = rounding;
+  textured_quad.texture = texture;
+  DYNAMIC_ARRAY_APPEND(textured_quads, textured_quad);
 }
 
 static struct font_set font_set;
@@ -190,9 +181,9 @@ void ui_render(void)
     struct gl_program program = GL_PROGRAM_LOAD(libcommon/assets/shaders/ui/quad_rounded);
     glUseProgram(program.id);
     glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
-    for(size_t i=0; i<colored_quad_count; ++i)
+    for(size_t i=0; i<colored_quads.item_count; ++i)
     {
-      struct colored_quad quad = colored_quads[i];
+      struct colored_quad quad = colored_quads.items[i];
 
       glUniform2f(glGetUniformLocation(program.id, "position"), quad.position.x, quad.position.y);
       glUniform2f(glGetUniformLocation(program.id, "dimension"), quad.dimension.x, quad.dimension.y);
@@ -207,9 +198,9 @@ void ui_render(void)
     struct gl_program program = GL_PROGRAM_LOAD(libcommon/assets/shaders/ui/quad_textured);
     glUseProgram(program.id);
     glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
-    for(size_t i=0; i<textured_quad_count; ++i)
+    for(size_t i=0; i<textured_quads.item_count; ++i)
     {
-      struct textured_quad quad = textured_quads[i];
+      struct textured_quad quad = textured_quads.items[i];
 
       glUniform2f(glGetUniformLocation(program.id, "position"), quad.position.x, quad.position.y);
       glUniform2f(glGetUniformLocation(program.id, "dimension"), quad.dimension.x, quad.dimension.y);

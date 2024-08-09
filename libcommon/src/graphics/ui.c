@@ -73,7 +73,6 @@ static void font_set_ensure(void)
   if(!font_set.fonts)
   {
     font_set_load(&font_set, "libcommon/assets/fonts/arial.ttf");
-    //font_set_load(&font_set, "/usr/share/fonts/noto/NotoColorEmoji.ttf");
     font_set_load_system(&font_set);
     atexit(font_set_atexit);
   }

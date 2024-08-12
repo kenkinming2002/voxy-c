@@ -256,6 +256,7 @@ void player_entity_update_inventory(struct entity *entity, struct player_ui_layo
   }
 
   // Item pickup
+  if(entity->health > 0.0f)
   {
     const aabb3_t hitbox = entity_hitbox(entity);
 

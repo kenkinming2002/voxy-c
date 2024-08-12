@@ -12,8 +12,12 @@
 #include <libcommon/math/aabb.h>
 #include <libcommon/math/direction.h>
 #include <libcommon/core/log.h>
+#include <libcommon/utils/utils.h>
 
 #include <stdbool.h>
+
+#define FALL_DAMAGE_TOLERANCE 2.0f
+#define FALL_DAMAGE_FACTOR 0.5f
 
 static void entity_physics_apply_law(struct entity *entity, float dt)
 {
@@ -23,7 +27,7 @@ static void entity_physics_apply_law(struct entity *entity, float dt)
 
 static void entity_physics_update(struct entity *entity, float dt)
 {
-  entity->grounded = false;
+  bool grounded = false;
   for(;;)
   {
     bool hit = false;
@@ -76,10 +80,19 @@ static void entity_physics_update(struct entity *entity, float dt)
     {
       entity->velocity.values[direction_axis(min_direction)] *= min_t;
       if(min_direction == DIRECTION_TOP)
-        entity->grounded = true;
+        grounded = true;
     }
     else
       break;
+  }
+
+  if(!entity->grounded && grounded)
+  {
+    const float fall_distance = MAX(entity->max_height - entity->position.z - FALL_DAMAGE_TOLERANCE, 0.0f);
+    entity->health -= fall_distance * FALL_DAMAGE_FACTOR;
+    entity->health = MAX(entity->health, 0.0f);
+    entity->grounded = true;
+    entity->max_height = entity->position.z;
   }
 }
 
@@ -90,6 +103,7 @@ static void entity_physics_integrate(struct entity *entity, float dt)
 
 static void entity_update_physics(struct entity *entity, float dt)
 {
+  entity->max_height = MAX(entity->max_height, entity->position.z);
   entity_physics_apply_law(entity, dt);
   entity_physics_update(entity, dt);
   entity_physics_integrate(entity, dt);

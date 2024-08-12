@@ -21,8 +21,10 @@ struct entity
   float max_health;
   float health;
 
-  bool remove;
+  float max_height;
   bool grounded;
+
+  bool remove;
 
   void *opaque;
 };

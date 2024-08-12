@@ -28,6 +28,7 @@ void spawn_weird_update(void)
       entity.rotation = fvec3_zero();
       entity.remove = false;
       entity.grounded = false;
+      entity.max_height = -INFINITY;
       weird_entity_init(&entity);
       chunk_add_entity(chunk, entity);
       return;

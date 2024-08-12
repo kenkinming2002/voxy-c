@@ -33,7 +33,7 @@ static struct gl_texture_2d get_heart_empty_texture(void)
 void player_entity_update_health_ui(struct entity *entity)
 {
   const unsigned i_max_health = floorf(entity->max_health);
-  const unsigned i_health = floorf(entity->max_health);
+  const unsigned i_health = floorf(entity->health);
 
   const float base = MIN(window_size.x, window_size.y);
   const float margin = base * 0.008f;

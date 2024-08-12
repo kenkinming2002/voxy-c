@@ -77,6 +77,7 @@ void spawn_player_update(void)
     entity.rotation = fvec3_zero();
     entity.remove = false;
     entity.grounded = false;
+    entity.max_height = -INFINITY;
     player_entity_init(&entity);
     if(!world_add_entity(entity))
       player_entity_fini(&entity);

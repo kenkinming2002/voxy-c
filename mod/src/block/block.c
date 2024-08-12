@@ -29,13 +29,11 @@ static inline fvec3_t random_velocity(void)
 
 void block_on_destroy_spawn_item(struct chunk *chunk, ivec3_t position, item_id_t item_id)
 {
+  const fvec3_t spawn_position = ivec3_as_fvec3(local_position_to_global_position_i(position, chunk->position));
+  const fvec3_t spawn_velocity = random_velocity();
+
   struct entity item_entity;
-  item_entity.position = ivec3_as_fvec3(local_position_to_global_position_i(position, chunk->position));
-  item_entity.velocity = random_velocity();
-  item_entity.rotation = fvec3_zero();
-  item_entity.remove = false;
-  item_entity.grounded = false;
-  item_entity.max_height = -INFINITY;
+  entity_init(&item_entity, spawn_position, spawn_velocity, INFINITY, INFINITY);
   item_entity_init(&item_entity, (struct item) { .id = item_id, .count = 1 });
   world_add_entity(item_entity);
 }

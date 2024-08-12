@@ -10,6 +10,21 @@
 #include <libcommon/math/transform.h>
 #include <libcommon/math/ray_cast.h>
 
+void entity_init(struct entity *entity, fvec3_t position, fvec3_t rotation, float max_health, float health)
+{
+  entity->position = position;
+  entity->rotation = rotation;
+  entity->velocity = fvec3_zero();
+
+  entity->max_health = max_health;
+  entity->health = health;
+
+  entity->grounded = false;
+  entity->max_height = entity->position.z;
+
+  entity->remove = false;
+}
+
 transform_t entity_transform(const struct entity *entity)
 {
   transform_t transform;

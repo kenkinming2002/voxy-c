@@ -80,11 +80,7 @@ void player_entity_update_health_ui(struct entity *entity)
     ui_text(position, height, 1, text);
     if(result & UI_BUTTON_RESULT_CLICK_LEFT)
     {
-      entity->position = opaque->spawn_position;
-      entity->rotation = fvec3_zero();
-      entity->health = entity->max_health;
-      entity->grounded = false;
-      entity->max_height = entity->position.z;
+      entity_init(entity, opaque->spawn_position, fvec3_zero(), 10.0f, 10.0f);
       window_show_cursor(false);
     }
   }

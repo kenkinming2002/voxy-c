@@ -30,6 +30,8 @@ struct entity
 };
 DYNAMIC_ARRAY_DEFINE(entities, struct entity);
 
+void entity_init(struct entity *entity, fvec3_t position, fvec3_t rotation, float max_health, float health);
+
 transform_t entity_transform(const struct entity *entity);
 aabb3_t entity_hitbox(const struct entity *entity);
 

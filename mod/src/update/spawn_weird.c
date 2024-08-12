@@ -23,12 +23,7 @@ void spawn_weird_update(void)
       fvec3_t position = local_position_to_global_position_f(local_position, chunk->position);
 
       struct entity entity;
-      entity.position = position;
-      entity.velocity = fvec3_zero();
-      entity.rotation = fvec3_zero();
-      entity.remove = false;
-      entity.grounded = false;
-      entity.max_height = -INFINITY;
+      entity_init(&entity, position, fvec3_zero(), 10.0f, 10.0f);
       weird_entity_init(&entity);
       chunk_add_entity(chunk, entity);
       return;

@@ -9,6 +9,9 @@
 
 void player_entity_update_actions(struct entity *entity, float dt)
 {
+  if(entity->health <= 0.0f)
+    return;
+
   struct player_opaque *opaque = entity->opaque;
   if(opaque->inventory_opened)
     return;

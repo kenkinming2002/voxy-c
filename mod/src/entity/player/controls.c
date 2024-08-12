@@ -20,6 +20,9 @@ static float degree_to_radian(float value)
 
 void player_entity_update_controls(struct entity *entity, float dt)
 {
+  if(entity->health <= 0.0f)
+    return;
+
   struct player_opaque *opaque = entity->opaque;
   if(opaque->inventory_opened)
     return;

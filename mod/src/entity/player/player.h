@@ -10,6 +10,8 @@
 
 struct player_opaque
 {
+  fvec3_t spawn_position;
+
   struct item hotbar[PLAYER_HOTBAR_SIZE];
   struct item inventory[PLAYER_INVENTORY_SIZE_VERTICAL][PLAYER_INVENTORY_SIZE_HORIZONTAL];
   struct item crafting_inputs[3][3];

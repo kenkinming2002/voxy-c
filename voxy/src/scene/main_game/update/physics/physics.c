@@ -90,7 +90,6 @@ static void entity_physics_update(struct entity *entity, float dt)
   {
     const float fall_distance = MAX(entity->max_height - entity->position.z - FALL_DAMAGE_TOLERANCE, 0.0f);
     entity->health -= fall_distance * FALL_DAMAGE_FACTOR;
-    entity->health = MAX(entity->health, 0.0f);
     entity->grounded = true;
     entity->max_height = entity->position.z;
   }

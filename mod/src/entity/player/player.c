@@ -48,6 +48,8 @@ void player_entity_init(struct entity *entity)
 {
   struct player_opaque *opaque = malloc(sizeof *opaque);
 
+  opaque->spawn_position = entity->position;
+
   for(int i=0; i<PLAYER_HOTBAR_SIZE; ++i)
     if(i < 9)
     {
@@ -98,6 +100,7 @@ bool player_entity_save(const struct entity *entity, FILE *file)
   const struct player_opaque *opaque = entity->opaque;
 
 #define SAVE(x) if(fwrite(&x, sizeof x, 1, file) != 1) return false;
+  SAVE(opaque->spawn_position);
   SAVE(opaque->hotbar);
   SAVE(opaque->inventory);
   SAVE(opaque->crafting_inputs);
@@ -119,6 +122,7 @@ bool player_entity_load(struct entity *entity, FILE *file)
   opaque->third_person = false;
 
 #define LOAD(x) if(fread(&x, sizeof x, 1, file) != 1) return false;
+  LOAD(opaque->spawn_position);
   LOAD(opaque->hotbar);
   LOAD(opaque->inventory);
   LOAD(opaque->crafting_inputs);

@@ -63,6 +63,8 @@ entity_id_t weird_entity_id_get(void)
 void weird_entity_init(struct entity *entity)
 {
   entity->id = weird_entity_id;
+  entity->health = 10.0f;
+  entity->max_health = 10.0f;
   entity->opaque = NULL;
 }
 

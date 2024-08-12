@@ -50,6 +50,8 @@ void item_entity_init(struct entity *entity, struct item item)
   opaque->item = item;
 
   entity->id = item_entity_id;
+  entity->health = INFINITY;
+  entity->max_health = INFINITY;
   entity->opaque = opaque;
 }
 

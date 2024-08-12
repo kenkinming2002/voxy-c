@@ -85,6 +85,8 @@ void player_entity_init(struct entity *entity)
   opaque->cooldown_weird = 0.0f;
 
   entity->id = player_entity_id;
+  entity->health = 10.0f;
+  entity->max_health = 10.0f;
   entity->opaque = opaque;
 }
 

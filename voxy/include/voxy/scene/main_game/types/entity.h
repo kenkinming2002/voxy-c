@@ -18,6 +18,9 @@ struct entity
   fvec3_t velocity;
   fvec3_t rotation;
 
+  float max_health;
+  float health;
+
   bool remove;
   bool grounded;
 

@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_GRAPHICS_UI_H
-#define LIBCOMMON_GRAPHICS_UI_H
+#ifndef LIBCOMMON_UI_UI_H
+#define LIBCOMMON_UI_UI_H
 
 #include <libcommon/math/vector.h>
 #include <glad/glad.h>
@@ -32,6 +32,7 @@ void ui_rect_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuin
  */
 float ui_text_width(unsigned height, const char *str);
 void ui_text(fvec2_t position, unsigned height, unsigned outline, const char *str);
+void ui_text_centered(float y, unsigned height, unsigned outline, const char *str);
 
 /*
  * Render the current UI State. This is when OpenGL draw calls are actually
@@ -52,4 +53,4 @@ enum ui_button_result
 };
 int ui_button(fvec2_t position, fvec2_t dimension);
 
-#endif // LIBCOMMON_GRAPHICS_UI_H
+#endif // LIBCOMMON_UI_UI_H

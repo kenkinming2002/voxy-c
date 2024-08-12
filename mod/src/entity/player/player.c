@@ -1,6 +1,8 @@
 #include "mod.h"
 #include "player.h"
 
+#include "ui/layout.h"
+
 #include "actions.h"
 #include "camera_follow.h"
 #include "chunk_loader.h"
@@ -137,12 +139,14 @@ bool player_entity_load(struct entity *entity, FILE *file)
 
 void player_entity_update(struct entity *entity, float dt)
 {
+  const struct player_ui_layout ui_layout = compute_player_ui_layout();
+
   player_entity_update_actions(entity, dt);
   player_entity_update_camera_follow(entity, dt);
   player_entity_update_chunk_loader(entity);
   player_entity_update_controls(entity, dt);
-  player_entity_update_inventory(entity);
-  player_entity_update_health_ui(entity);
+  player_entity_update_inventory(entity, ui_layout);
+  player_entity_update_health_ui(entity, ui_layout);
 
   // Miscellenous controls
   // FIXME: That should not probably not be here

@@ -1,4 +1,4 @@
-#include <libcommon/graphics/ui.h>
+#include <libcommon/ui/ui.h>
 
 #include <libcommon/graphics/gl.h>
 #include <libcommon/graphics/font_set.h>
@@ -148,6 +148,14 @@ void ui_text(fvec2_t position, unsigned height, unsigned outline, const char *st
 
     position.x += glyph->advance;
   }
+}
+
+void ui_text_centered(float y, unsigned height, unsigned outline, const char *str)
+{
+  fvec2_t position;
+  position.x = (window_size.x - ui_text_width(height, str)) * 0.5f;
+  position.y = y;
+  ui_text(position, height, outline, str);
 }
 
 static GLuint vao_instance;

@@ -20,7 +20,7 @@
 #include <voxy/scene/main_game/update/light.h>
 #include <voxy/scene/main_game/update/physics/physics.h>
 
-#include <libcommon/graphics/ui.h>
+#include <libcommon/ui/ui.h>
 #include <libcommon/core/window.h>
 #include <libcommon/core/log.h>
 #include <libcommon/core/delta_time.h>

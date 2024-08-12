@@ -16,9 +16,10 @@ LIBCOMMON_SRCS += libcommon/src/core/time.c
 LIBCOMMON_SRCS += libcommon/src/graphics/gl.c
 LIBCOMMON_SRCS += libcommon/src/graphics/font_set.c
 LIBCOMMON_SRCS += libcommon/src/graphics/mesh.c
-LIBCOMMON_SRCS += libcommon/src/graphics/ui.c
 LIBCOMMON_SRCS += libcommon/src/graphics/camera.c
 LIBCOMMON_SRCS += libcommon/src/graphics/render.c
+
+LIBCOMMON_SRCS += libcommon/src/ui/ui.c
 
 RENDER_BLOCK_SRCS += render_block/src/render_block.c
 
@@ -97,6 +98,8 @@ MOD_SRCS += mod/src/item/ore_tin_block/ore_tin_block.c
 MOD_SRCS += mod/src/item/stone/stone.c
 
 MOD_SRCS += mod/src/entity/item/item.c
+
+MOD_SRCS += mod/src/entity/player/ui/layout.c
 MOD_SRCS += mod/src/entity/player/actions.c
 MOD_SRCS += mod/src/entity/player/camera_follow.c
 MOD_SRCS += mod/src/entity/player/chunk_loader.c
@@ -104,6 +107,7 @@ MOD_SRCS += mod/src/entity/player/controls.c
 MOD_SRCS += mod/src/entity/player/inventory.c
 MOD_SRCS += mod/src/entity/player/player.c
 MOD_SRCS += mod/src/entity/player/health_ui.c
+
 MOD_SRCS += mod/src/entity/weird/weird.c
 
 MOD_SRCS += mod/src/update/spawn_player.c

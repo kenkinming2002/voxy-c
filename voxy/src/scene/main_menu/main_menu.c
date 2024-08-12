@@ -2,7 +2,7 @@
 
 #include <voxy/scene/scene.h>
 
-#include <libcommon/graphics/ui.h>
+#include <libcommon/ui/ui.h>
 #include <libcommon/core/window.h>
 
 #include <glad/glad.h>

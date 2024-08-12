@@ -2,7 +2,7 @@
 #include <voxy/scene/main_game/render/debug.h>
 
 #include <libcommon/utils/dynamic_array.h>
-#include <libcommon/graphics/ui.h>
+#include <libcommon/ui/ui.h>
 #include <libcommon/core/window.h>
 
 #include <stdarg.h>

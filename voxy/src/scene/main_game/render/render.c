@@ -6,7 +6,7 @@
 #include <voxy/scene/main_game/render/debug_overlay.h>
 
 #include <libcommon/core/window.h>
-#include <libcommon/graphics/ui.h>
+#include <libcommon/ui/ui.h>
 
 void main_game_render(void)
 {

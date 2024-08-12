@@ -72,7 +72,7 @@ void spawn_player_update(void)
           activate_chunk(ivec3_add(center, ivec3(dx, dy, dz)));
 
     struct entity entity;
-    entity_init(&entity, spawn_position, fvec3_zero(), 10.0f, 10.0f);
+    entity_init(&entity, spawn_position, fvec3_zero(), fvec3_zero(), 10.0f, 10.0f);
     player_entity_init(&entity);
     if(!world_add_entity(entity))
       player_entity_fini(&entity);

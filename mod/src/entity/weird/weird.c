@@ -93,6 +93,12 @@ static fvec3_t simple_rotate(fvec3_t v)
 
 void weird_entity_update(struct entity *entity, float dt)
 {
+  if(entity->health <= 0.0f)
+  {
+    entity->remove = true;
+    return;
+  }
+
   const aabb3_t region = aabb3(entity->position, fvec3(100.0f, 100.0f, 100.0f));
 
   struct entity **entities;

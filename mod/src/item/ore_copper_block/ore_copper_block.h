@@ -1,5 +1,5 @@
-#ifndef ITEM_ORE_COPPER_ORE_COPPER_H
-#define ITEM_ORE_COPPER_ORE_COPPER_H
+#ifndef ITEM_ORE_COPPER_BLOCK_ORE_COPPER_BLOCK_H
+#define ITEM_ORE_COPPER_BLOCK_ORE_COPPER_BLOCK_H
 
 #include <voxy/scene/main_game/types/registry.h>
 
@@ -8,4 +8,4 @@ item_id_t ore_copper_block_item_id_get(void);
 
 void ore_copper_block_item_on_use(struct entity *entity, struct item *item);
 
-#endif // ITEM_ORE_COPPER_ORE_COPPER_H
+#endif // ITEM_ORE_COPPER_BLOCK_ORE_COPPER_BLOCK_H

@@ -103,6 +103,7 @@ MOD_SRCS += mod/src/entity/player/chunk_loader.c
 MOD_SRCS += mod/src/entity/player/controls.c
 MOD_SRCS += mod/src/entity/player/inventory.c
 MOD_SRCS += mod/src/entity/player/player.c
+MOD_SRCS += mod/src/entity/player/health_ui.c
 MOD_SRCS += mod/src/entity/weird/weird.c
 
 MOD_SRCS += mod/src/update/spawn_player.c

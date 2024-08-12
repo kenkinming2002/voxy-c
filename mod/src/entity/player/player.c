@@ -6,6 +6,7 @@
 #include "chunk_loader.h"
 #include "controls.h"
 #include "inventory.h"
+#include "health_ui.h"
 
 #include <voxy/scene/main_game/render/debug.h>
 #include <voxy/scene/main_game/render/debug_overlay.h>
@@ -137,6 +138,7 @@ void player_entity_update(struct entity *entity, float dt)
   player_entity_update_chunk_loader(entity);
   player_entity_update_controls(entity, dt);
   player_entity_update_inventory(entity);
+  player_entity_update_health_ui(entity);
 
   // Miscellenous controls
   // FIXME: That should not probably not be here

@@ -164,9 +164,10 @@ void player_entity_update_inventory(struct entity *entity)
     const fvec2_t crafting_output_position  = fvec2((window_size.x - crafting_output_width) * 0.5f + 2 * (cell_sep + cell_width), (window_size.y + inventory_height) * 0.5f + 2 * (cell_sep + cell_width));
     const fvec2_t crafting_output_dimension = fvec2(crafting_output_width, crafting_output_height);
 
+    const fvec2_t heart_dimension = fvec2(base * 0.025f, base * 0.025f);
     const fvec2_t cell_dimension = fvec2(cell_width, cell_width);
 
-    const fvec2_t selected_item_label_position = fvec2(window_size.x * 0.5f, hotbar_position.y + hotbar_dimension.y + margin);
+    const fvec2_t selected_item_label_position = fvec2(window_size.x * 0.5f, hotbar_position.y + hotbar_dimension.y + margin + heart_dimension.y);
     const fvec2_t target_block_label_position  = fvec2(window_size.x * 0.5f, window_size.y - margin - PLAYER_UI_TEXT_SIZE);
 
     /********************************************

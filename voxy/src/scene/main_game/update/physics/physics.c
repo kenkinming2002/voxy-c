@@ -102,6 +102,9 @@ static void entity_physics_integrate(struct entity *entity, float dt)
 
 static void entity_update_physics(struct entity *entity, float dt)
 {
+  if(entity->health <= 0.0f)
+    return;
+
   entity->max_height = MAX(entity->max_height, entity->position.z);
   entity_physics_apply_law(entity, dt);
   entity_physics_update(entity, dt);

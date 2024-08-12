@@ -70,10 +70,7 @@ void entity_move(struct entity *entity, fvec2_t direction, float speed, float dt
 void entity_jump(struct entity *entity, float strength)
 {
   if(entity->grounded)
-  {
-    entity->grounded = false;
     entity_apply_impulse(entity, fvec3(0.0f, 0.0f, strength));
-  }
 }
 
 bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal)

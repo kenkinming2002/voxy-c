@@ -25,9 +25,8 @@ static void entity_physics_apply_law(struct entity *entity, float dt)
   entity->velocity = fvec3_mul_scalar(entity->velocity, expf(-dt * (entity->grounded ? PHYSICS_DRAG_GROUND : PHYSICS_DRAG_AIR))); // Drag
 }
 
-static void entity_physics_update(struct entity *entity, float dt)
+static void entity_physics_resolve_collision(struct entity *entity, float dt)
 {
-  bool grounded = false;
   for(;;)
   {
     bool hit = false;
@@ -77,27 +76,50 @@ static void entity_physics_update(struct entity *entity, float dt)
     // sure that we are actually updating something and not get stuck in an
     // infinite loop.
     if(hit && entity->velocity.values[direction_axis(min_direction)] != 0.0f)
-    {
       entity->velocity.values[direction_axis(min_direction)] *= min_t;
-      if(min_direction == DIRECTION_TOP)
-        grounded = true;
-    }
     else
       break;
-  }
-
-  if(!entity->grounded && grounded)
-  {
-    const float fall_distance = MAX(entity->max_height - entity->position.z - FALL_DAMAGE_TOLERANCE, 0.0f);
-    entity->health -= fall_distance * FALL_DAMAGE_FACTOR;
-    entity->grounded = true;
-    entity->max_height = entity->position.z;
   }
 }
 
 static void entity_physics_integrate(struct entity *entity, float dt)
 {
   entity->position = fvec3_add(entity->position, fvec3_mul_scalar(entity->velocity, dt));
+}
+
+static bool entity_is_grounded(struct entity *entity)
+{
+  const struct entity_info *entity_info = query_entity_info(entity->id);
+  aabb3_t entity_hitbox = aabb3(fvec3_add(entity->position, entity_info->hitbox_offset), entity_info->hitbox_dimension);
+  entity_hitbox.dimension.x *= 0.999f;
+  entity_hitbox.dimension.y *= 0.999f;
+  entity_hitbox.center.z -= 0.001f;
+
+  const ivec3_t block_position_min = fvec3_as_ivec3_round(aabb3_min_corner(entity_hitbox));
+  const ivec3_t block_position_max = fvec3_as_ivec3_round(aabb3_max_corner(entity_hitbox));
+  for(int z=block_position_min.z; z<=block_position_max.z; ++z)
+    for(int y=block_position_min.y; y<=block_position_max.y; ++y)
+      for(int x=block_position_min.x; x<=block_position_max.x; ++x)
+      {
+        const ivec3_t block_position = ivec3(x, y, z);
+        const block_id_t block_id = world_get_block_id(block_position);
+        if(block_id != BLOCK_NONE && query_block_info(block_id)->type == BLOCK_TYPE_OPAQUE)
+          return true;
+      }
+
+  return false;
+}
+
+static void entity_physics_update_grounded(struct entity *entity)
+{
+  const bool grounded = entity_is_grounded(entity);
+  if(!entity->grounded && grounded)
+  {
+    const float fall_distance = MAX(entity->max_height - entity->position.z - FALL_DAMAGE_TOLERANCE, 0.0f);
+    entity->health -= fall_distance * FALL_DAMAGE_FACTOR;
+    entity->max_height = entity->position.z;
+  }
+  entity->grounded = grounded;
 }
 
 static void entity_update_physics(struct entity *entity, float dt)
@@ -107,8 +129,9 @@ static void entity_update_physics(struct entity *entity, float dt)
 
   entity->max_height = MAX(entity->max_height, entity->position.z);
   entity_physics_apply_law(entity, dt);
-  entity_physics_update(entity, dt);
+  entity_physics_resolve_collision(entity, dt);
   entity_physics_integrate(entity, dt);
+  entity_physics_update_grounded(entity);
 }
 
 void update_physics(float dt)

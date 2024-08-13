@@ -13,7 +13,7 @@
 
 static inline float rand_range(float a, float b)
 {
-  return a + ((float)rand() / RAND_MAX) * (b - a);
+  return a + ((float)rand() / (float)RAND_MAX) * (b - a);
 }
 
 static inline fvec3_t random_velocity(void)

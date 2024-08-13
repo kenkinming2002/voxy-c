@@ -3,6 +3,6 @@
 
 #include "player.h"
 
-void player_entity_update_camera_follow(struct entity *entity, float dt);
+void player_entity_update_camera_follow(struct entity *entity);
 
 #endif // ENTITY_PLAYER_CAMERA_FOLLOW_H

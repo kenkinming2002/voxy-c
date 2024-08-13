@@ -142,7 +142,7 @@ void player_entity_update(struct entity *entity, float dt)
   const struct player_ui_layout ui_layout = compute_player_ui_layout();
 
   player_entity_update_actions(entity, dt);
-  player_entity_update_camera_follow(entity, dt);
+  player_entity_update_camera_follow(entity);
   player_entity_update_chunk_loader(entity);
   player_entity_update_controls(entity, dt);
   player_entity_update_inventory(entity, ui_layout);

@@ -11,32 +11,15 @@
 #include "block/water/water.h"
 
 #include <voxy/scene/main_game/config.h>
+
 #include <libcommon/math/noise.h>
 #include <libcommon/math/random.h>
+#include <libcommon/utils/utils.h>
 
 #include <stdbool.h>
 
 #define ETHER_HEIGHT 128
 #define WATER_HEIGHT 2
-
-static float minf(float a, float b)
-{
-  return a < b ? a : b;
-}
-
-static float maxf(float a, float b)
-{
-  return a > b ? a : b;
-}
-
-static float clampf(float value, float min, float max)
-{
-  if(value < min)
-    value = min;
-  else if(value > max)
-    value = max;
-  return value;
-}
 
 static inline float get_river_factor(seed_t seed, ivec2_t position)
 { const size_t n = 3;
@@ -127,7 +110,7 @@ static inline bool get_cave(seed_t seed, ivec3_t position)
 
 static block_id_t get_stone(seed_t seed, ivec3_t position)
 {
-  const float factor = maxf(1.0f - expf(0.0001 * position.z), 0.0f);
+  const float factor = MAX(1.0f - expf(0.0001 * position.z), 0.0f);
   seed_next(&seed); if(noise_random3i(seed, position) < 0.8f * factor) return ore_coal_block_id_get();
   seed_next(&seed); if(noise_random3i(seed, position) < 0.2f * factor) return ore_tin_block_id_get();
   seed_next(&seed); if(noise_random3i(seed, position) < 0.2f * factor) return ore_copper_block_id_get();

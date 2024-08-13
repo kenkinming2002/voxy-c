@@ -13,11 +13,6 @@
 
 #include <stdlib.h>
 
-static float randf(float low, float high)
-{
-  return low + (float)rand() / (float)RAND_MAX * (high - low);
-}
-
 static entity_id_t weird_entity_id = ENTITY_NONE;
 static struct mesh weird_entity_mesh;
 static struct gl_texture_2d weird_entity_texture;

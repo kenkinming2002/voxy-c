@@ -5,7 +5,7 @@
 #include <libcommon/graphics/camera.h>
 #include <libcommon/core/window.h>
 
-void player_entity_update_camera_follow(struct entity *entity, float dt)
+void player_entity_update_camera_follow(struct entity *entity)
 {
   struct player_opaque *opaque = entity->opaque;
 

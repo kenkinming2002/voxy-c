@@ -19,9 +19,6 @@ static struct gl_texture_2d            item_textures[ITEM_MAX];
 static struct gl_array_texture_2d      block_array_texture;
 static struct block_array_texture_info block_array_texture_info[BLOCK_MAX];
 
-static struct gl_texture_2d entity_textures[ENTITY_MAX];
-static struct mesh          entity_meshes[ENTITY_MAX];
-
 static void ensure_item_texture(item_id_t item_id)
 {
   if(item_textures[item_id].id == 0)

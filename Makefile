@@ -100,6 +100,7 @@ MOD_SRCS += mod/src/item/mysterious_food/mysterious_food.c
 MOD_SRCS += mod/src/item/dynamite/dynamite.c
 
 MOD_SRCS += mod/src/entity/item/item.c
+MOD_SRCS += mod/src/entity/dynamite/dynamite.c
 
 MOD_SRCS += mod/src/entity/player/ui/layout.c
 MOD_SRCS += mod/src/entity/player/actions.c

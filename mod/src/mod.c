@@ -1,6 +1,7 @@
 #include "generate.h"
 
 #include "entity/item/item.h"
+#include "entity/dynamite/dynamite.h"
 #include "entity/player/player.h"
 #include "entity/weird/weird.h"
 
@@ -43,6 +44,7 @@ void mod_init()
   item_entity_register();
   player_entity_register();
   weird_entity_register();
+  dynamite_entity_register();
 
   empty_block_register();
   ether_block_register();

@@ -96,6 +96,7 @@ MOD_SRCS += mod/src/item/ore_copper_block/ore_copper_block.c
 MOD_SRCS += mod/src/item/ore_iron_block/ore_iron_block.c
 MOD_SRCS += mod/src/item/ore_tin_block/ore_tin_block.c
 MOD_SRCS += mod/src/item/stone/stone.c
+MOD_SRCS += mod/src/item/mysterious_food/mysterious_food.c
 
 MOD_SRCS += mod/src/entity/item/item.c
 

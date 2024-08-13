@@ -56,7 +56,7 @@ struct item_info
 
   const char *texture;
 
-  void(*on_use)(struct entity *entity, struct item *item);
+  bool(*on_use)(struct entity *entity, struct item *item);
 };
 
 struct entity_info

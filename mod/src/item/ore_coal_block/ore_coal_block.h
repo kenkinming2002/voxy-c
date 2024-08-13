@@ -6,6 +6,6 @@
 void ore_coal_block_item_register(void);
 item_id_t ore_coal_block_item_id_get(void);
 
-void ore_coal_block_item_on_use(struct entity *entity, struct item *item);
+bool ore_coal_block_item_on_use(struct entity *entity, struct item *item);
 
 #endif // ITEM_ORE_COAL_BLOCK_ORE_COAL_BLOCK_H

@@ -43,9 +43,9 @@ void player_entity_update_actions(struct entity *entity, float dt)
       {
         const struct item_info *item_info = query_item_info(item->id);
         if(item_info->on_use)
-          item_info->on_use(entity, item);
+          if(item_info->on_use(entity, item))
+            opaque->cooldown = 0.0f;
       }
-      opaque->cooldown = 0.0f;
     }
   }
 }

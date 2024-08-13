@@ -23,8 +23,8 @@ item_id_t grass_item_id_get(void)
   return grass_item_id;
 }
 
-void grass_item_on_use(struct entity *entity, struct item *item)
+bool grass_item_on_use(struct entity *entity, struct item *item)
 {
-  item_on_use_place_block(entity, item, grass_block_id_get());
+  return item_on_use_place_block(entity, item, grass_block_id_get());
 }
 

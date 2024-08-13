@@ -23,8 +23,8 @@ item_id_t ore_tin_block_item_id_get(void)
   return ore_tin_block_item_id;
 }
 
-void ore_tin_block_item_on_use(struct entity *entity, struct item *item)
+bool ore_tin_block_item_on_use(struct entity *entity, struct item *item)
 {
-  item_on_use_place_block(entity, item, ore_tin_block_id_get());
+  return item_on_use_place_block(entity, item, ore_tin_block_id_get());
 }
 

@@ -5,6 +5,6 @@
 #include <voxy/scene/main_game/types/entity.h>
 #include <voxy/scene/main_game/types/item.h>
 
-void item_on_use_place_block(struct entity *entity, struct item *item, block_id_t block_id);
+bool item_on_use_place_block(struct entity *entity, struct item *item, block_id_t block_id);
 
 #endif // ITEM_ITEM_H

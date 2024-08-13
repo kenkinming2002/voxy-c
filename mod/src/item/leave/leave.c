@@ -23,8 +23,8 @@ item_id_t leave_item_id_get(void)
   return leave_item_id;
 }
 
-void leave_item_on_use(struct entity *entity, struct item *item)
+bool leave_item_on_use(struct entity *entity, struct item *item)
 {
-  item_on_use_place_block(entity, item, leave_block_id_get());
+  return item_on_use_place_block(entity, item, leave_block_id_get());
 }
 

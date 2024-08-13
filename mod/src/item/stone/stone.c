@@ -23,8 +23,8 @@ item_id_t stone_item_id_get(void)
   return stone_item_id;
 }
 
-void stone_item_on_use(struct entity *entity, struct item *item)
+bool stone_item_on_use(struct entity *entity, struct item *item)
 {
-  item_on_use_place_block(entity, item, stone_block_id_get());
+  return item_on_use_place_block(entity, item, stone_block_id_get());
 }
 

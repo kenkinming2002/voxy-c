@@ -23,8 +23,8 @@ item_id_t log_item_id_get(void)
   return log_item_id;
 }
 
-void log_item_on_use(struct entity *entity, struct item *item)
+bool log_item_on_use(struct entity *entity, struct item *item)
 {
-  item_on_use_place_block(entity, item, log_block_id_get());
+  return item_on_use_place_block(entity, item, log_block_id_get());
 }
 

@@ -23,8 +23,8 @@ item_id_t lamp_item_id_get(void)
   return lamp_item_id;
 }
 
-void lamp_item_on_use(struct entity *entity, struct item *item)
+bool lamp_item_on_use(struct entity *entity, struct item *item)
 {
-  item_on_use_place_block(entity, item, lamp_block_id_get());
+  return item_on_use_place_block(entity, item, lamp_block_id_get());
 }
 

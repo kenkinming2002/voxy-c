@@ -6,6 +6,6 @@
 void log_item_register(void);
 item_id_t log_item_id_get(void);
 
-void log_item_on_use(struct entity *entity, struct item *item);
+bool log_item_on_use(struct entity *entity, struct item *item);
 
 #endif // ITEM_LOG_LOG_H

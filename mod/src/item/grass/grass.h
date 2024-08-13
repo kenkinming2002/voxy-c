@@ -6,6 +6,6 @@
 void grass_item_register(void);
 item_id_t grass_item_id_get(void);
 
-void grass_item_on_use(struct entity *entity, struct item *item);
+bool grass_item_on_use(struct entity *entity, struct item *item);
 
 #endif // ITEM_GRASS_GRASS_H

@@ -6,6 +6,6 @@
 void leave_item_register(void);
 item_id_t leave_item_id_get(void);
 
-void leave_item_on_use(struct entity *entity, struct item *item);
+bool leave_item_on_use(struct entity *entity, struct item *item);
 
 #endif // ITEM_LEAVE_LEAVE_H

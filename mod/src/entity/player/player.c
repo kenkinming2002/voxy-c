@@ -27,7 +27,7 @@ void player_entity_register(void)
   entity_info.mod = MOD;
   entity_info.name = "player";
 
-  entity_info.hitbox_dimension = fvec3(0.8f, 0.8f, 2.0f);
+  entity_info.hitbox_dimension = fvec3(0.8f, 0.8f, 1.9f);
   entity_info.hitbox_offset = fvec3(0.0f, 0.0f, -0.5f);
 
   entity_info.on_dispose = player_entity_fini;

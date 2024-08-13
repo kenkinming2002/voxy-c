@@ -119,7 +119,7 @@ float world_get_average_block_light_factor(fvec3_t center, float radius)
         const block_id_t block_id = world_get_block_id(position);
         const unsigned block_light_level = world_get_block_light_level(position);
 
-        if(block_id != BLOCK_NONE && query_block_info(block_id)->type == BLOCK_TYPE_OPAQUE)
+        if(block_id != BLOCK_NONE && query_block_info(block_id)->render_type == BLOCK_RENDER_TYPE_OPAQUE)
           continue;
 
         const float value = block_light_level != (unsigned)-1 ? block_light_level / 15.0f : 15.0f;

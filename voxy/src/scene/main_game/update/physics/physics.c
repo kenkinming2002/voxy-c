@@ -48,7 +48,7 @@ static void entity_physics_resolve_collision(struct entity *entity, float dt)
         {
           const ivec3_t block_position = ivec3(x, y, z);
           const block_id_t block_id = world_get_block_id(block_position);
-          if(block_id != BLOCK_NONE && query_block_info(block_id)->type == BLOCK_TYPE_OPAQUE)
+          if(block_id != BLOCK_NONE && query_block_info(block_id)->physics_type == BLOCK_PHYSICS_TYPE_CUBE)
           {
             const aabb3_t block_hitbox = aabb3(ivec3_as_fvec3(block_position), fvec3(1.0f, 1.0f, 1.0f));
 
@@ -103,7 +103,7 @@ static bool entity_is_grounded(struct entity *entity)
       {
         const ivec3_t block_position = ivec3(x, y, z);
         const block_id_t block_id = world_get_block_id(block_position);
-        if(block_id != BLOCK_NONE && query_block_info(block_id)->type == BLOCK_TYPE_OPAQUE)
+        if(block_id != BLOCK_NONE && query_block_info(block_id)->physics_type == BLOCK_PHYSICS_TYPE_CUBE)
           return true;
       }
 

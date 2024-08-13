@@ -27,11 +27,33 @@ typedef uint8_t entity_id_t;
 #define ITEM_NONE  (item_id_t) (-1)
 #define ENTITY_NONE (entity_id_t) (-1)
 
-enum block_type
+/// Types of block with respect to the light system.
+///
+/// Passable means that light can passes through while opaque means that light
+/// cannot passes through.
+enum block_light_type
 {
-  BLOCK_TYPE_INVISIBLE,
-  BLOCK_TYPE_TRANSPARENT,
-  BLOCK_TYPE_OPAQUE,
+  BLOCK_LIGHT_TYPE_PASSABLE,
+  BLOCK_LIGHT_TYPE_OPAQUE,
+};
+
+/// Types of block with respect to the rendering system.
+///
+/// Invisible blocks are skipped during rendering.
+enum block_render_type
+{
+  BLOCK_RENDER_TYPE_INVISIBLE,
+  BLOCK_RENDER_TYPE_TRANSPARENT,
+  BLOCK_RENDER_TYPE_OPAQUE,
+};
+
+/// Types of block with respect to the physics system.
+///
+/// Invisible blocks have no colliders.
+enum block_physics_type
+{
+  BLOCK_PHYSICS_TYPE_INVISIBLE,
+  BLOCK_PHYSICS_TYPE_CUBE,
 };
 
 struct block_info
@@ -39,7 +61,9 @@ struct block_info
   const char *mod;
   const char *name;
 
-  enum block_type type;
+  enum block_light_type light_type;
+  enum block_render_type render_type;
+  enum block_physics_type physics_type;
 
   uint8_t light_level : 4;
 
@@ -76,7 +100,9 @@ struct entity_info
   bool(*on_load)(struct entity *entity, FILE *file);
 };
 
-const char *block_type_as_str(enum block_type block_type);
+const char *block_light_type_as_str(enum block_light_type block_type);
+const char *block_render_type_as_str(enum block_render_type block_type);
+const char *block_physics_type_as_str(enum block_physics_type block_type);
 
 block_id_t register_block_info(struct block_info block_info);
 item_id_t  register_item_info(struct item_info item_info);

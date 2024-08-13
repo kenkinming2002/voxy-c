@@ -104,7 +104,7 @@ static void process_light_creation(struct light_creation light_creation, struct 
     if(cursor_move(&neighbour_cursor, direction))
     {
       const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-      if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
+      if(neighbour_block_info->light_type == BLOCK_LIGHT_TYPE_PASSABLE)
       {
         unsigned light_level;
         unsigned neighbour_light_level;
@@ -160,7 +160,7 @@ static void process_light_destruction(struct light_destruction light_destruction
     if(cursor_move(&neighbour_cursor, direction))
     {
       const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-      if(neighbour_block_info->type != BLOCK_TYPE_OPAQUE)
+      if(neighbour_block_info->light_type == BLOCK_LIGHT_TYPE_PASSABLE)
       {
         const unsigned light_level = light_destruction.light_level;
 

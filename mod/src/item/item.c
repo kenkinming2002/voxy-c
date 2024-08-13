@@ -14,8 +14,10 @@ bool item_on_use_place_block(struct entity *entity, struct item *item, block_id_
     {
       const ivec3_t target_position = ivec3_add(position, normal);
 
+      // FIXME: Figure out a better heristics for whether we can place a block,
+      //        and overwrites another block.
       const struct block_info *block_info = query_block_info(world_get_block_id(target_position));
-      if(block_info->type == BLOCK_TYPE_OPAQUE)
+      if(block_info->physics_type != BLOCK_PHYSICS_TYPE_INVISIBLE)
         return false;
 
       struct entity **entities;

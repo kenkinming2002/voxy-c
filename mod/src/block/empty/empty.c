@@ -10,7 +10,10 @@ void empty_block_register(void)
   block_info.mod = MOD;
   block_info.name = "empty";
 
-  block_info.type = BLOCK_TYPE_INVISIBLE;
+  block_info.light_type = BLOCK_LIGHT_TYPE_PASSABLE;
+  block_info.render_type = BLOCK_RENDER_TYPE_INVISIBLE;
+  block_info.physics_type = BLOCK_PHYSICS_TYPE_INVISIBLE;
+
   block_info.light_level = 0;
 
   block_info.on_create = empty_block_on_create;

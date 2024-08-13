@@ -43,7 +43,7 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
   for(int z = -1; z<CHUNK_WIDTH+1; ++z)
     for(int y = -1; y<CHUNK_WIDTH+1; ++y)
       for(int x = -1; x<CHUNK_WIDTH+1; ++x)
-        block_types[z+1][y+1][x+1] = block_ids[z+1][y+1][x+1] != BLOCK_NONE ? query_block_info(block_ids[z+1][y+1][x+1])->type : BLOCK_TYPE_OPAQUE;
+        block_types[z+1][y+1][x+1] = block_ids[z+1][y+1][x+1] != BLOCK_NONE ? query_block_info(block_ids[z+1][y+1][x+1])->render_type : BLOCK_RENDER_TYPE_OPAQUE;
 
   /// Compute occlusion
   uint8_t occlusions[CHUNK_WIDTH+1][CHUNK_WIDTH+1][CHUNK_WIDTH+1];
@@ -55,7 +55,7 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
         for(int dz = 0; dz<2; ++dz)
           for(int dy = 0; dy<2; ++dy)
             for(int dx = 0; dx<2; ++dx)
-              if(block_types[z+dz][y+dy][x+dx] == BLOCK_TYPE_OPAQUE)
+              if(block_types[z+dz][y+dy][x+dx] == BLOCK_RENDER_TYPE_OPAQUE)
                 occlusions[z][y][x] += 1;
       }
 
@@ -70,7 +70,7 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
         const ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk->position, CHUNK_WIDTH), local_position);
 
         const block_id_t block_id = block_ids[z+1][y+1][x+1];
-        const enum block_type block_type = block_types[z+1][y+1][x+1];
+        const enum block_render_type block_type = block_types[z+1][y+1][x+1];
 
         const float damage = ivec3_eql(digger->position, global_position) ? digger->damage : 0.0f;
 
@@ -79,18 +79,18 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
           const ivec3_t normal = direction_as_ivec(direction);
 
           const uint8_t neighbour_block_light_level = block_light_levels[z+normal.z+1][y+normal.y+1][x+normal.x+1];
-          const enum block_type neighbour_block_type = block_types[z+normal.z+1][y+normal.y+1][x+normal.x+1];
+          const enum block_render_type neighbour_block_type = block_types[z+normal.z+1][y+normal.y+1][x+normal.x+1];
 
-          if(block_type != BLOCK_TYPE_OPAQUE && block_type != BLOCK_TYPE_TRANSPARENT)
+          if(block_type != BLOCK_RENDER_TYPE_OPAQUE && block_type != BLOCK_RENDER_TYPE_TRANSPARENT)
             continue;
 
-          if(block_type == BLOCK_TYPE_OPAQUE && neighbour_block_type == BLOCK_TYPE_OPAQUE)
+          if(block_type == BLOCK_RENDER_TYPE_OPAQUE && neighbour_block_type == BLOCK_RENDER_TYPE_OPAQUE)
             continue;
 
-          if(block_type == BLOCK_TYPE_TRANSPARENT && neighbour_block_type == BLOCK_TYPE_TRANSPARENT)
+          if(block_type == BLOCK_RENDER_TYPE_TRANSPARENT && neighbour_block_type == BLOCK_RENDER_TYPE_TRANSPARENT)
             continue;
 
-          if(block_type == BLOCK_TYPE_TRANSPARENT && neighbour_block_type == BLOCK_TYPE_OPAQUE)
+          if(block_type == BLOCK_RENDER_TYPE_TRANSPARENT && neighbour_block_type == BLOCK_RENDER_TYPE_OPAQUE)
             continue;
 
           const ivec3_t center = global_position;
@@ -130,8 +130,8 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
 
           switch(block_type)
           {
-          case BLOCK_TYPE_OPAQUE:      DYNAMIC_ARRAY_APPEND(opaque_vertices, vertex);      break;
-          case BLOCK_TYPE_TRANSPARENT: DYNAMIC_ARRAY_APPEND(transparent_vertices, vertex); break;
+          case BLOCK_RENDER_TYPE_OPAQUE:      DYNAMIC_ARRAY_APPEND(opaque_vertices, vertex);      break;
+          case BLOCK_RENDER_TYPE_TRANSPARENT: DYNAMIC_ARRAY_APPEND(transparent_vertices, vertex); break;
           default: assert(0 && "Unreachable");
           }
         }

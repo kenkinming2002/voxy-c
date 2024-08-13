@@ -12,7 +12,11 @@ void lamp_block_register(void)
 
   block_info.mod = MOD;
   block_info.name = "lamp";
-  block_info.type = BLOCK_TYPE_OPAQUE;
+
+  block_info.light_type = BLOCK_LIGHT_TYPE_OPAQUE;
+  block_info.render_type = BLOCK_RENDER_TYPE_OPAQUE;
+  block_info.physics_type = BLOCK_PHYSICS_TYPE_CUBE;
+
   block_info.light_level = 14;
 
   block_info.textures[DIRECTION_LEFT]   = "mod/assets/textures/lamp.png";

@@ -9,14 +9,34 @@ static struct block_info block_infos[BLOCK_MAX];
 static struct item_info  item_infos[ITEM_MAX];
 static struct entity_info entity_infos[ENTITY_MAX];
 
-const char *block_type_as_str(enum block_type block_type)
+const char *block_light_type_as_str(enum block_light_type type)
 {
-  switch(block_type)
+  switch(type)
   {
-  case BLOCK_TYPE_INVISIBLE:   return "invisible";
-  case BLOCK_TYPE_TRANSPARENT: return "transparent";
-  case BLOCK_TYPE_OPAQUE:      return "opaque";
-  default:                     return "unknown";
+  case BLOCK_LIGHT_TYPE_PASSABLE: return "passable";
+  case BLOCK_LIGHT_TYPE_OPAQUE:   return "opaque";
+  default:                        return "unknown";
+  }
+}
+
+const char *block_render_type_as_str(enum block_render_type type)
+{
+  switch(type)
+  {
+  case BLOCK_RENDER_TYPE_INVISIBLE:   return "invisible";
+  case BLOCK_RENDER_TYPE_TRANSPARENT: return "transparent";
+  case BLOCK_RENDER_TYPE_OPAQUE:      return "opaque";
+  default:                            return "unknown";
+  }
+}
+
+const char *block_physics_type_as_str(enum block_physics_type type)
+{
+  switch(type)
+  {
+  case BLOCK_PHYSICS_TYPE_INVISIBLE: return "invisible";
+  case BLOCK_PHYSICS_TYPE_CUBE:      return "cube";
+  default:                           return "unknown";
   }
 }
 
@@ -26,11 +46,13 @@ block_id_t register_block_info(struct block_info block_info)
     if(!block_infos[i].mod  && !block_infos[i].name)
     {
       LOG_INFO("Registered block: id = %d:", i);
-      LOG_INFO("  mod            = %s", block_info.mod);
-      LOG_INFO("  name           = %s", block_info.name);
-      LOG_INFO("  type           = %s", block_type_as_str(block_info.type));
-      LOG_INFO("  light level    = %u", block_info.light_level);
-      if(block_info.type != BLOCK_TYPE_INVISIBLE)
+      LOG_INFO("  mod          = %s", block_info.mod);
+      LOG_INFO("  name         = %s", block_info.name);
+      LOG_INFO("  light type   = %s", block_light_type_as_str(block_info.light_type));
+      LOG_INFO("  render type  = %s", block_render_type_as_str(block_info.render_type));
+      LOG_INFO("  physics type = %s", block_physics_type_as_str(block_info.physics_type));
+      LOG_INFO("  light level  = %u", block_info.light_level);
+      if(block_info.render_type != BLOCK_PHYSICS_TYPE_INVISIBLE)
       {
         LOG_INFO("  texture left   = %s", block_info.textures[DIRECTION_LEFT]);
         LOG_INFO("  texture right  = %s", block_info.textures[DIRECTION_RIGHT]);

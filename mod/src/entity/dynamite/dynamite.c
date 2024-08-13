@@ -1,6 +1,8 @@
 #include "mod.h"
 #include "dynamite.h"
 
+#include "block/empty/empty.h"
+
 #include <voxy/scene/main_game/states/chunks.h>
 #include <voxy/scene/main_game/render/assets.h>
 
@@ -72,8 +74,28 @@ bool dynamite_entity_load(struct entity *entity, FILE *file)
 
 void dynamite_entity_update(struct entity *entity, float dt)
 {
-  (void)entity;
-  (void)dt;
+  struct dynamite_opaque *opaque = entity->opaque;
+  opaque->fuse -= dt;
+  if(opaque->fuse < 0.0f)
+  {
+    const fvec3_t center = entity->position;
+    const float radius = 5.0f;
+
+    const ivec3_t i_center = fvec3_as_ivec3_round(center);
+    const int i_radius = ceilf(radius);
+
+    for(int z=-i_radius; z<=i_radius; ++z)
+      for(int y=-i_radius; y<=i_radius; ++y)
+        for(int x=-i_radius; x<=i_radius; ++x)
+        {
+          const ivec3_t position = ivec3_add(i_center, ivec3(x, y, z));
+          const fvec3_t offset = fvec3_sub(ivec3_as_fvec3(position), center);
+          if(fvec3_length_squared(offset) <= radius * radius)
+            world_set_block(position, empty_block_id_get(), entity);
+        }
+
+    entity->remove = true;
+  }
 }
 
 static fvec3_t normal_to_rotation(fvec3_t normal)

@@ -10,7 +10,7 @@
 
 static DYNAMIC_ARRAY_DECLARE(messages, char *);
 
-void main_game_debug_overlay_reset(void)
+void main_game_reset_debug_overlay(void)
 {
   for(size_t i=0; i<messages.item_count; ++i)
     free(messages.items[i]);

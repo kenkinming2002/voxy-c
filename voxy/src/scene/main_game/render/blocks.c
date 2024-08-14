@@ -1,5 +1,5 @@
-#include <voxy/scene/main_game/render/blocks.h>
-#include <voxy/scene/main_game/render/blocks_render_info.h>
+#include "blocks.h"
+#include "blocks_render_info.h"
 
 #include <voxy/scene/main_game/render/assets.h>
 #include <voxy/scene/main_game/render/debug.h>

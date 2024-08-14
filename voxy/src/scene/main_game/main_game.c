@@ -4,8 +4,10 @@
 
 #include <voxy/scene/main_game/mod.h>
 
-#include <voxy/scene/main_game/render/render.h>
 #include <voxy/scene/main_game/render/debug_overlay.h>
+
+#include "render/render.h"
+#include "render/debug_overlay.h"
 
 #include <voxy/scene/main_game/states/seed.h>
 #include <voxy/scene/main_game/states/chunks.h>
@@ -66,7 +68,7 @@ void main_game_leave()
 static void main_game_update_fixed(float dt)
 {
   ui_reset();
-  main_game_debug_overlay_reset();
+  main_game_reset_debug_overlay();
 
   // Update World
   {

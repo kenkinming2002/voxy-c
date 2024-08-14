@@ -1,4 +1,4 @@
-#include <voxy/scene/main_game/render/blocks_mesh.h>
+#include "blocks_mesh.h"
 
 void blocks_mesh_init(struct blocks_mesh *blocks_mesh)
 {

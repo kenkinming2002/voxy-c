@@ -1,6 +1,0 @@
-#ifndef VOXY_SCENE_MAIN_GAME_RENDER_ENTITIES_H
-#define VOXY_SCENE_MAIN_GAME_RENDER_ENTITIES_H
-
-void main_game_render_entities(void);
-
-#endif // VOXY_SCENE_MAIN_GAME_RENDER_ENTITIES_H

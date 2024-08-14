@@ -1,5 +1,5 @@
-#ifndef VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H
-#define VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H
+#ifndef SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H
+#define SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H
 
 #include <libcommon/math/vector.h>
 #include <libcommon/utils/dynamic_array.h>
@@ -37,4 +37,4 @@ void blocks_mesh_fini(struct blocks_mesh *blocks_mesh);
 void blocks_mesh_update(struct blocks_mesh *blocks_mesh, struct vertices vertices);
 void blocks_mesh_render(const struct blocks_mesh *blocks_mesh);
 
-#endif // VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H
+#endif // SCENE_MAIN_GAME_RENDER_BLOCKS_MESH_H

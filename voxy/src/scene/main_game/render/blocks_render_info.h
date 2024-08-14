@@ -1,5 +1,5 @@
-#ifndef VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_RENDER_INFO_H
-#define VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_RENDER_INFO_H
+#ifndef SCENE_MAIN_GAME_RENDER_BLOCKS_RENDER_INFO_H
+#define SCENE_MAIN_GAME_RENDER_BLOCKS_RENDER_INFO_H
 
 #include <voxy/scene/main_game/types/chunk.h>
 #include <voxy/scene/main_game/states/digger.h>
@@ -46,4 +46,4 @@ size_t blocks_render_info_hash(ivec3_t position);
 int blocks_render_info_compare(ivec3_t position1, ivec3_t position2);
 void blocks_render_info_dispose(struct blocks_render_info *blocks_render_info);
 
-#endif // VOXY_SCENE_MAIN_GAME_RENDER_BLOCKS_RENDER_INFO_H
+#endif // SCENE_MAIN_GAME_RENDER_BLOCKS_RENDER_INFO_H

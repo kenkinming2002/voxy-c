@@ -141,7 +141,7 @@ void player_entity_update(struct entity *entity, float dt)
   player_entity_update_camera_follow(entity);
   player_entity_update_chunk_loader(entity);
   player_entity_update_controls(entity, dt);
-  player_entity_update_inventory(entity, ui_layout);
+  player_entity_update_inventory(entity, dt, ui_layout);
   player_entity_update_health_ui(entity, ui_layout);
 
   // Miscellenous controls

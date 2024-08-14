@@ -1,5 +1,6 @@
 #include "inventory.h"
-#include "../../entity/item/item.h"
+#include "config.h"
+#include "entity/item/item.h"
 
 #include <voxy/scene/main_game/render/assets.h>
 #include <voxy/scene/main_game/states/chunks.h>
@@ -116,7 +117,7 @@ static inline struct gl_texture_2d get_cursor_texture(void)
   return texture;
 }
 
-void player_entity_update_inventory(struct entity *entity, struct player_ui_layout ui_layout)
+void player_entity_update_inventory(struct entity *entity, float dt, struct player_ui_layout ui_layout)
 {
   struct player_opaque *opaque = entity->opaque;
 
@@ -255,31 +256,56 @@ void player_entity_update_inventory(struct entity *entity, struct player_ui_layo
     }
   }
 
-  // Item pickup
   if(entity->health > 0.0f)
   {
-    const aabb3_t hitbox = entity_hitbox(entity);
+    // Item Attraction
+    {
+      aabb3_t hitbox = entity_hitbox(entity);
+      hitbox.dimension = fvec3_add_scalar(hitbox.dimension, PLAYER_ITEM_ATTRACTION_RADIUS);
 
-    struct entity **entities;
-    size_t entity_count;
-    world_query_entity(hitbox, &entities, &entity_count);
+      struct entity **entities;
+      size_t entity_count;
+      world_query_entity(hitbox, &entities, &entity_count);
 
-    for(size_t i=0; i<entity_count; ++i)
-      if(entities[i]->id == item_entity_id_get())
-      {
-        struct item_opaque *other_opaque = entities[i]->opaque;
+      for(size_t i=0; i<entity_count; ++i)
+        if(entities[i]->id == item_entity_id_get())
+        {
+          const fvec3_t displacement = fvec3_sub(entity->position, entities[i]->position);
+          const float distance = fvec3_length(displacement);
 
-        for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
-          item_merge(&opaque->hotbar[i], &other_opaque->item);
+          const float attenuation = (1.0f + distance) * (1.0f + distance) * (1.0f + distance);
+          const fvec3_t impulse = fvec3_mul_scalar(displacement, PLAYER_ITEM_ATTRACTION_STRENGTH * dt / attenuation);
+          entity_apply_impulse(entities[i], impulse);
+        }
 
-        for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
-          for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
-            item_merge(&opaque->inventory[j][i], &other_opaque->item);
+      free(entities);
+    }
 
-        if(other_opaque->item.id == ITEM_NONE)
-          entities[i]->remove = true;
-      }
+    // Item pickup
+    {
+      const aabb3_t hitbox = entity_hitbox(entity);
 
-    free(entities);
+      struct entity **entities;
+      size_t entity_count;
+      world_query_entity(hitbox, &entities, &entity_count);
+
+      for(size_t i=0; i<entity_count; ++i)
+        if(entities[i]->id == item_entity_id_get())
+        {
+          struct item_opaque *other_opaque = entities[i]->opaque;
+
+          for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
+            item_merge(&opaque->hotbar[i], &other_opaque->item);
+
+          for(unsigned j=0; j<PLAYER_INVENTORY_SIZE_VERTICAL; ++j)
+            for(unsigned i=0; i<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++i)
+              item_merge(&opaque->inventory[j][i], &other_opaque->item);
+
+          if(other_opaque->item.id == ITEM_NONE)
+            entities[i]->remove = true;
+        }
+
+      free(entities);
+    }
   }
 }

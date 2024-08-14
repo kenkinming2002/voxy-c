@@ -3,6 +3,7 @@
 
 #include <libcommon/math/vector.h>
 #include <libcommon/math/direction.h>
+#include <libcommon/core/serde.h>
 #include <libcommon/graphics/camera.h>
 
 #include <stddef.h>
@@ -96,8 +97,8 @@ struct entity_info
   void(*on_update)(struct entity *entity, float dt);
   void(*on_render)(const struct entity *entity, const struct camera *camera);
 
-  bool(*on_save)(const struct entity *entity, FILE *file);
-  bool(*on_load)(struct entity *entity, FILE *file);
+  int(*serialize)(const struct entity *entity, struct serializer *serializer);
+  int(*deserialize)(struct entity *entity, struct deserializer *deserializer);
 };
 
 const char *block_light_type_as_str(enum block_light_type block_type);

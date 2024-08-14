@@ -14,8 +14,8 @@ entity_id_t dynamite_entity_id_get(void);
 void dynamite_entity_init(struct entity *entity, float fuse);
 void dynamite_entity_fini(struct entity *entity);
 
-bool dynamite_entity_save(const struct entity *entity, FILE *file);
-bool dynamite_entity_load(struct entity *entity, FILE *file);
+int dynamite_entity_serialize(const struct entity *entity, struct serializer *serializer);
+int dynamite_entity_deserialize(struct entity *entity, struct deserializer *deserializer);
 
 void dynamite_entity_update(struct entity *entity, float dt);
 void dynamite_entity_render(const struct entity *entity, const struct camera *camera);

@@ -15,8 +15,8 @@ entity_id_t item_entity_id_get(void);
 void item_entity_init(struct entity *entity, struct item item);
 void item_entity_fini(struct entity *entity);
 
-bool item_entity_save(const struct entity *entity, FILE *file);
-bool item_entity_load(struct entity *entity, FILE *file);
+int item_entity_serialize(const struct entity *entity, struct serializer *serializer);
+int item_entity_deserialize(struct entity *entity, struct deserializer *deserializer);
 
 void item_entity_update(struct entity *entity, float dt);
 void item_entity_render(const struct entity *entity, const struct camera *camera);

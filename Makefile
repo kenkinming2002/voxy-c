@@ -12,6 +12,7 @@ LIBCOMMON_SRCS += libcommon/src/core/thread_pool.c
 LIBCOMMON_SRCS += libcommon/src/core/delta_time.c
 LIBCOMMON_SRCS += libcommon/src/core/fs.c
 LIBCOMMON_SRCS += libcommon/src/core/time.c
+LIBCOMMON_SRCS += libcommon/src/core/serde.c
 
 LIBCOMMON_SRCS += libcommon/src/graphics/gl.c
 LIBCOMMON_SRCS += libcommon/src/graphics/font_set.c
@@ -35,6 +36,7 @@ VOXY_SRCS += voxy/src/scene/main_game/mod.c
 VOXY_SRCS += voxy/src/scene/main_game/types/chunk.c
 VOXY_SRCS += voxy/src/scene/main_game/types/registry.c
 VOXY_SRCS += voxy/src/scene/main_game/types/entity.c
+VOXY_SRCS += voxy/src/scene/main_game/types/entities.c
 VOXY_SRCS += voxy/src/scene/main_game/types/item.c
 
 VOXY_SRCS += voxy/src/scene/main_game/states/camera.c

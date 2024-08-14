@@ -9,18 +9,6 @@
 
 #define SAVE_INTERVAL 60.0f
 
-static void entities_destroy(struct entities *entities)
-{
-  for(size_t i=0; i<entities->item_count; ++i)
-  {
-    struct entity *entity = &entities->items[i];
-    const struct entity_info *entity_info = query_entity_info(entity->id);
-    if(entity_info->on_dispose)
-      entity_info->on_dispose(entity);
-  }
-  DYNAMIC_ARRAY_CLEAR(*entities);
-}
-
 void chunk_destroy(struct chunk *chunk)
 {
   if(chunk->left)   chunk->left->right = NULL;
@@ -30,8 +18,8 @@ void chunk_destroy(struct chunk *chunk)
   if(chunk->bottom) chunk->bottom->top = NULL;
   if(chunk->top)    chunk->top->bottom = NULL;
 
-  entities_destroy(&chunk->entities);
-  entities_destroy(&chunk->new_entities);
+  entities_fini(&chunk->entities);
+  entities_fini(&chunk->new_entities);
   free(chunk);
 }
 

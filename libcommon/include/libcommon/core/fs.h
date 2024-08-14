@@ -12,4 +12,10 @@
 /// success. On error, -1 is returned and errno is set to indicate the error.
 int mkdir_recursive(char *dir);
 
+/// Return parent directory of dir.
+///
+/// This literally just search for the last directory separator and return a
+/// duplicate of the substring up to that not including the separator.
+char *parent(const char *dir);
+
 #endif // LIBCOMMON_CORE_FS_H

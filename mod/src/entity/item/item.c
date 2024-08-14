@@ -24,8 +24,8 @@ void item_entity_register(void)
 
   entity_info.on_dispose = NULL;
 
-  entity_info.on_save = item_entity_save;
-  entity_info.on_load = item_entity_load;
+  entity_info.serialize = item_entity_serialize;
+  entity_info.deserialize = item_entity_deserialize;
 
   entity_info.on_update = item_entity_update;
   entity_info.on_render = item_entity_render;
@@ -60,17 +60,19 @@ void item_entity_fini(struct entity *entity)
   free(entity->opaque);
 }
 
-bool item_entity_save(const struct entity *entity, FILE *file)
+int item_entity_serialize(const struct entity *entity, struct serializer *serializer)
 {
   const struct item_opaque *opaque = entity->opaque;
-  return fwrite(opaque, sizeof *opaque, 1, file) == 1;
+  SERIALIZE(serializer, opaque->item);
+  return 0;
 }
 
-bool item_entity_load(struct entity *entity, FILE *file)
+int item_entity_deserialize(struct entity *entity, struct deserializer *deserializer)
 {
   struct item_opaque *opaque = malloc(sizeof *opaque);
   entity->opaque = opaque;
-  return fread(opaque, sizeof *opaque, 1, file) == 1;
+  DESERIALIZE(deserializer, opaque->item);
+  return 0;
 }
 
 void item_entity_update(struct entity *entity, float dt)

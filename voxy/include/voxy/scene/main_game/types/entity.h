@@ -28,9 +28,9 @@ struct entity
 
   void *opaque;
 };
-DYNAMIC_ARRAY_DEFINE(entities, struct entity);
 
 void entity_init(struct entity *entity, fvec3_t position, fvec3_t rotation, fvec3_t velocity, float max_health, float health);
+void entity_fini(struct entity *entity);
 
 transform_t entity_transform(const struct entity *entity);
 aabb3_t entity_hitbox(const struct entity *entity);

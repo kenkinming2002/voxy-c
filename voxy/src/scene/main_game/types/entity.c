@@ -25,6 +25,13 @@ void entity_init(struct entity *entity, fvec3_t position, fvec3_t rotation, fvec
   entity->remove = false;
 }
 
+void entity_fini(struct entity *entity)
+{
+  const struct entity_info *info = query_entity_info(entity->id);
+  if(info->on_dispose)
+    info->on_dispose(entity);
+}
+
 transform_t entity_transform(const struct entity *entity)
 {
   transform_t transform;

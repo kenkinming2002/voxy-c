@@ -26,8 +26,8 @@ void dynamite_entity_register(void)
 
   entity_info.on_dispose = NULL;
 
-  entity_info.on_save = dynamite_entity_save;
-  entity_info.on_load = dynamite_entity_load;
+  entity_info.serialize = dynamite_entity_serialize;
+  entity_info.deserialize = dynamite_entity_deserialize;
 
   entity_info.on_update = dynamite_entity_update;
   entity_info.on_render = dynamite_entity_render;
@@ -59,17 +59,19 @@ void dynamite_entity_fini(struct entity *entity)
   free(entity->opaque);
 }
 
-bool dynamite_entity_save(const struct entity *entity, FILE *file)
+int dynamite_entity_serialize(const struct entity *entity, struct serializer *serializer)
 {
   const struct dynamite_opaque *opaque = entity->opaque;
-  return fwrite(opaque, sizeof *opaque, 1, file) == 1;
+  SERIALIZE(serializer, opaque->fuse);
+  return 0;
 }
 
-bool dynamite_entity_load(struct entity *entity, FILE *file)
+int dynamite_entity_deserialize(struct entity *entity, struct deserializer *deserializer)
 {
   struct dynamite_opaque *opaque = malloc(sizeof *opaque);
   entity->opaque = opaque;
-  return fread(opaque, sizeof *opaque, 1, file) == 1;
+  DESERIALIZE(deserializer, opaque->fuse);
+  return 0;
 }
 
 void dynamite_entity_update(struct entity *entity, float dt)

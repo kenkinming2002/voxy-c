@@ -29,8 +29,8 @@ void weird_entity_register(void)
 
   entity_info.on_dispose = NULL;
 
-  entity_info.on_save = NULL;
-  entity_info.on_load = NULL;
+  entity_info.serialize = NULL;
+  entity_info.deserialize = NULL;
 
   entity_info.on_update = weird_entity_update;
   entity_info.on_render = weird_entity_render;

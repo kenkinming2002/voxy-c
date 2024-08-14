@@ -1,7 +1,11 @@
 #include <libcommon/core/fs.h>
 
-#include <sys/stat.h>
 #include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#include <sys/stat.h>
 
 /// Recursive mkdir.
 ///
@@ -25,3 +29,15 @@ int mkdir_recursive(char *dir)
   return 0;
 }
 
+char *parent(const char *dir)
+{
+  size_t n = 0;
+  for(size_t i = 0; dir[i] != '\0'; ++i)
+    if(dir[i] == DIRECTORY_SEPARATOR)
+      n = i;
+
+  char *parent = malloc(n+1);
+  memcpy(parent, dir, n);
+  parent[n] = '\0';
+  return parent;
+}

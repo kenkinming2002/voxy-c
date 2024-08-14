@@ -32,8 +32,8 @@ void player_entity_register(void)
 
   entity_info.on_dispose = player_entity_fini;
 
-  entity_info.on_save = player_entity_save;
-  entity_info.on_load = player_entity_load;
+  entity_info.serialize = player_entity_serialize;
+  entity_info.deserialize = player_entity_deserialize;
 
   entity_info.on_update = player_entity_update;
   entity_info.on_render = player_entity_render;
@@ -97,44 +97,40 @@ void player_entity_init(struct entity *entity)
 
 void player_entity_fini(struct entity *entity) { free(entity->opaque); }
 
-bool player_entity_save(const struct entity *entity, FILE *file)
+int player_entity_serialize(const struct entity *entity, struct serializer *serializer)
 {
   const struct player_opaque *opaque = entity->opaque;
 
-#define SAVE(x) if(fwrite(&x, sizeof x, 1, file) != 1) return false;
-  SAVE(opaque->spawn_position);
-  SAVE(opaque->hotbar);
-  SAVE(opaque->inventory);
-  SAVE(opaque->crafting_inputs);
-  SAVE(opaque->hand);
-  SAVE(opaque->hotbar_selection);
-  SAVE(opaque->cooldown);
-  SAVE(opaque->cooldown_weird);
-#undef SAVE
+  SERIALIZE(serializer, opaque->spawn_position);
+  SERIALIZE(serializer, opaque->hotbar);
+  SERIALIZE(serializer, opaque->inventory);
+  SERIALIZE(serializer, opaque->crafting_inputs);
+  SERIALIZE(serializer, opaque->hand);
+  SERIALIZE(serializer, opaque->hotbar_selection);
+  SERIALIZE(serializer, opaque->cooldown);
+  SERIALIZE(serializer, opaque->cooldown_weird);
 
-  return true;
+  return 0;
 }
 
-bool player_entity_load(struct entity *entity, FILE *file)
+int player_entity_deserialize(struct entity *entity, struct deserializer *deserializer)
 {
   struct player_opaque *opaque = malloc(sizeof *opaque);
   entity->opaque = opaque;
 
+  DESERIALIZE(deserializer, opaque->spawn_position);
+  DESERIALIZE(deserializer, opaque->hotbar);
+  DESERIALIZE(deserializer, opaque->inventory);
+  DESERIALIZE(deserializer, opaque->crafting_inputs);
+  DESERIALIZE(deserializer, opaque->hand);
+  DESERIALIZE(deserializer, opaque->hotbar_selection);
+  DESERIALIZE(deserializer, opaque->cooldown);
+  DESERIALIZE(deserializer, opaque->cooldown_weird);
+
   opaque->inventory_opened = false;
   opaque->third_person = false;
 
-#define LOAD(x) if(fread(&x, sizeof x, 1, file) != 1) return false;
-  LOAD(opaque->spawn_position);
-  LOAD(opaque->hotbar);
-  LOAD(opaque->inventory);
-  LOAD(opaque->crafting_inputs);
-  LOAD(opaque->hand);
-  LOAD(opaque->hotbar_selection);
-  LOAD(opaque->cooldown);
-  LOAD(opaque->cooldown_weird);
-#undef LOAD
-
-  return true;
+  return 0;
 }
 
 void player_entity_update(struct entity *entity, float dt)

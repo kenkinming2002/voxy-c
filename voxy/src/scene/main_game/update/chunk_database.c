@@ -4,6 +4,7 @@
 #include <libcommon/core/log.h>
 #include <libcommon/core/fs.h>
 #include <libcommon/core/time.h>
+#include <libcommon/core/serde.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -13,6 +14,102 @@
 
 #define INT_LENGTH 11
 
+static int entity_deserialize(struct entity *entity, struct deserializer *deserializer)
+{
+  DESERIALIZE(deserializer, entity->id);
+
+  DESERIALIZE(deserializer, entity->position);
+  DESERIALIZE(deserializer, entity->rotation);
+  DESERIALIZE(deserializer, entity->velocity);
+
+  DESERIALIZE(deserializer, entity->health);
+  DESERIALIZE(deserializer, entity->max_health);
+
+  DESERIALIZE(deserializer, entity->max_height);
+  DESERIALIZE(deserializer, entity->grounded);
+
+  entity->remove = false;
+
+  const struct entity_info *entity_info = query_entity_info(entity->id);;
+  if(entity_info->deserialize)
+    entity_info->deserialize(entity, deserializer);
+
+  return 0;
+}
+
+static int entity_serialize(const struct entity *entity, struct serializer *serializer)
+{
+  SERIALIZE(serializer, entity->id);
+
+  SERIALIZE(serializer, entity->position);
+  SERIALIZE(serializer, entity->rotation);
+  SERIALIZE(serializer, entity->velocity);
+
+  SERIALIZE(serializer, entity->health);
+  SERIALIZE(serializer, entity->max_health);
+
+  SERIALIZE(serializer, entity->max_height);
+  SERIALIZE(serializer, entity->grounded);
+
+  const struct entity_info *entity_info = query_entity_info(entity->id);;
+  if(entity_info->serialize)
+    entity_info->serialize(entity, serializer);
+
+  return 0;
+}
+
+static int entities_deserialize(struct entities *entities, struct deserializer *deserializer)
+{
+  size_t item_count;
+  DESERIALIZE(deserializer, item_count);
+
+  entities_init(entities);
+  for(size_t i=0; i<item_count; ++i)
+  {
+    struct entity entity;
+    if(entity_deserialize(&entity, deserializer) != 0)
+    {
+      entities_fini(entities);
+      return -1;
+    }
+    entities_append(entities, entity);
+  }
+
+  return 0;
+}
+
+static int entities_serialize(struct entities *entities, struct serializer *serializer)
+{
+  SERIALIZE(serializer, entities->item_count);
+  for(size_t i=0; i<entities->item_count; ++i)
+    entity_serialize(&entities->items[i], serializer);
+
+  return 0;
+}
+
+static int chunk_deserialize(struct chunk *chunk, struct deserializer *deserializer)
+{
+  DESERIALIZE(deserializer, chunk->block_ids);
+  DESERIALIZE(deserializer, chunk->block_light_levels);
+
+  if(entities_deserialize(&chunk->entities, deserializer) != 0)
+    return -1;
+
+  entities_init(&chunk->new_entities);
+  return 0;
+}
+
+static int chunk_serialize(struct chunk *chunk, struct serializer *serializer)
+{
+  SERIALIZE(serializer, chunk->block_ids);
+  SERIALIZE(serializer, chunk->block_light_levels);
+
+  if(entities_serialize(&chunk->entities, serializer) != 0)
+    return -1;
+
+  return 0;
+}
+
 struct chunk *load_chunk(ivec3_t position)
 {
   struct chunk *chunk = malloc(sizeof *chunk);
@@ -20,126 +117,39 @@ struct chunk *load_chunk(ivec3_t position)
   chunk->dirty = false;
   chunk->last_save_time = get_time();
 
-  char buffer[LITERAL_LENGTH(WORLD_DIRPATH) + (1 + LITERAL_LENGTH("chunks")) + (1 + INT_LENGTH) * 3 + 1 + MAX(LITERAL_LENGTH("blocks"), LITERAL_LENGTH("entities")) + 1];
-  int n = snprintf(buffer, sizeof buffer, "%s%c%s%c%d%c%d%c%d", WORLD_DIRPATH, DIRECTORY_SEPARATOR, "chunks", DIRECTORY_SEPARATOR, chunk->position.x, DIRECTORY_SEPARATOR, chunk->position.y, DIRECTORY_SEPARATOR, chunk->position.z);
+  char buffer[LITERAL_LENGTH(WORLD_DIRPATH) + (1 + LITERAL_LENGTH("chunks")) + (1 + INT_LENGTH) * 3 + 1 + LITERAL_LENGTH("data") + 1];
+  snprintf(buffer, sizeof buffer, "%s%c%s%c%d%c%d%c%d%cdata", WORLD_DIRPATH, DIRECTORY_SEPARATOR, "chunks", DIRECTORY_SEPARATOR, chunk->position.x, DIRECTORY_SEPARATOR, chunk->position.y, DIRECTORY_SEPARATOR, chunk->position.z, DIRECTORY_SEPARATOR);
 
-  buffer[n] = DIRECTORY_SEPARATOR;
+  struct deserializer deserializer;
+  if(deserializer_init(&deserializer, buffer) != 0)
+    return NULL;
 
-  strcpy(&buffer[n+1], "blocks");
+  if(chunk_deserialize(chunk, &deserializer) != 0)
   {
-    FILE *f = fopen(buffer, "rb");
-    if(!f)
-      return NULL;
-
-    if(fread(&chunk->block_ids, sizeof chunk->block_ids, 1, f) != 1)
-    {
-      fclose(f);
-      return NULL;
-    }
-
-    if(fread(&chunk->block_light_levels, sizeof chunk->block_light_levels, 1, f) != 1)
-    {
-      fclose(f);
-      return NULL;
-    }
-
-    fclose(f);
+    deserializer_fini(&deserializer);
+    return NULL;
   }
 
-  strcpy(&buffer[n+1], "entities");
-  {
-    FILE *f = fopen(buffer, "rb");
-    if(!f)
-      return NULL;
-
-    DYNAMIC_ARRAY_INIT(chunk->entities);
-    DYNAMIC_ARRAY_INIT(chunk->new_entities);
-
-    for(;;)
-    {
-      struct entity entity = {0};
-      if(fread(&entity, offsetof(struct entity, opaque), 1, f) != 1)
-        break;
-
-      const struct entity_info *entity_info = query_entity_info(entity.id);
-      if(entity_info->on_load && !entity_info->on_load(&entity, f))
-      {
-        fclose(f);
-        return false;
-      }
-
-      DYNAMIC_ARRAY_APPEND(chunk->entities, entity);
-    }
-
-    if(!feof(f))
-    {
-      fclose(f);
-      return false;
-    }
-
-    fclose(f);
-  }
-
+  deserializer_fini(&deserializer);
   return chunk;
 }
 
 bool save_chunk(struct chunk *chunk)
 {
-  char buffer[LITERAL_LENGTH(WORLD_DIRPATH) + (1 + INT_LENGTH) * 3 + 1 + MAX(LITERAL_LENGTH("blocks"), LITERAL_LENGTH("entities")) + 1];
-  int n = snprintf(buffer, sizeof buffer, "%s%c%s%c%d%c%d%c%d", WORLD_DIRPATH, DIRECTORY_SEPARATOR, "chunks", DIRECTORY_SEPARATOR, chunk->position.x, DIRECTORY_SEPARATOR, chunk->position.y, DIRECTORY_SEPARATOR, chunk->position.z);
-  mkdir_recursive(buffer);
+  char buffer[LITERAL_LENGTH(WORLD_DIRPATH) + (1 + LITERAL_LENGTH("chunks")) + (1 + INT_LENGTH) * 3 + 1 + LITERAL_LENGTH("data") + 1];
+  snprintf(buffer, sizeof buffer, "%s%c%s%c%d%c%d%c%d%cdata", WORLD_DIRPATH, DIRECTORY_SEPARATOR, "chunks", DIRECTORY_SEPARATOR, chunk->position.x, DIRECTORY_SEPARATOR, chunk->position.y, DIRECTORY_SEPARATOR, chunk->position.z, DIRECTORY_SEPARATOR);
 
-  buffer[n] = DIRECTORY_SEPARATOR;
+  struct serializer serializer;
+  if(serializer_init(&serializer, buffer) != 0)
+    return false;
 
-  strcpy(&buffer[n+1], "blocks");
+  if(chunk_serialize(chunk, &serializer) != 0)
   {
-    FILE *f = fopen(buffer, "wb");
-    if(!f)
-      return false;
-
-    if(fwrite(&chunk->block_ids, sizeof chunk->block_ids, 1, f) != 1)
-    {
-      fclose(f);
-      return false;
-    }
-
-    if(fwrite(&chunk->block_light_levels, sizeof chunk->block_light_levels, 1, f) != 1)
-    {
-      fclose(f);
-      return false;
-    }
-
-    fclose(f);
+    serializer_fini(&serializer);
+    return false;
   }
 
-  strcpy(&buffer[n+1], "entities");
-  {
-    FILE *f = fopen(buffer, "wb");
-    if(!f)
-      return false;
-
-    for(size_t i=0; i<chunk->entities.item_count; ++i)
-    {
-      const struct entity entity = chunk->entities.items[i];
-      const struct entity_info *entity_info = query_entity_info(entity.id);
-
-      if(fwrite(&entity, offsetof(struct entity, opaque), 1, f) != 1)
-      {
-        fclose(f);
-        return false;
-      }
-
-      if(entity_info->on_save && !entity_info->on_save(&entity, f))
-      {
-        fclose(f);
-        return false;
-      }
-    }
-
-    fclose(f);
-  }
-
-  chunk->last_save_time = get_time();
+  serializer_fini(&serializer);
   return true;
 }
 

@@ -75,14 +75,7 @@ void player_entity_update_controls(struct entity *entity, float dt)
 
   // Jump
   {
-    if(entity->grounded && input_state(KEY_SPACE))
-    {
-      fvec3_t impulse;
-      impulse = direction_as_fvec(DIRECTION_TOP);
-      impulse = fvec3_mul_scalar(impulse, PLAYER_JUMP_STRENGTH);
-      entity_apply_impulse(entity, impulse);
-
-      entity->grounded = false;
-    }
+    if(input_state(KEY_SPACE))
+      entity_jump(entity, PLAYER_JUMP_STRENGTH);
   }
 }

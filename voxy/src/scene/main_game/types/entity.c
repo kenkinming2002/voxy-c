@@ -9,6 +9,7 @@
 
 #include <libcommon/math/transform.h>
 #include <libcommon/math/ray_cast.h>
+#include <libcommon/core/log.h>
 
 void entity_init(struct entity *entity, fvec3_t position, fvec3_t rotation, fvec3_t velocity, float max_health, float health)
 {
@@ -77,7 +78,7 @@ void entity_move(struct entity *entity, fvec2_t direction, float speed, float dt
 void entity_jump(struct entity *entity, float strength)
 {
   if(entity->grounded)
-    entity_apply_impulse(entity, fvec3(0.0f, 0.0f, strength));
+    entity->velocity.z = strength;
 }
 
 bool entity_ray_cast(struct entity *entity, float distance, ivec3_t *position, ivec3_t *normal)

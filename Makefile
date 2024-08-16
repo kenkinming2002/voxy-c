@@ -54,8 +54,8 @@ VOXY_SRCS += voxy/src/scene/main_game/update/chunk_manager.c
 VOXY_SRCS += voxy/src/scene/main_game/update/generate.c
 VOXY_SRCS += voxy/src/scene/main_game/update/light.c
 
-VOXY_SRCS += voxy/src/scene/main_game/update/physics/physics.c
-VOXY_SRCS += voxy/src/scene/main_game/update/physics/swept.c
+VOXY_SRCS += voxy/src/scene/main_game/physics/physics.c
+VOXY_SRCS += voxy/src/scene/main_game/physics/swept.c
 
 VOXY_SRCS += voxy/src/scene/main_game/render/assets.c
 VOXY_SRCS += voxy/src/scene/main_game/render/render.c

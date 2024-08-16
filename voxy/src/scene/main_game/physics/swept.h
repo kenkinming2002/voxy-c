@@ -1,5 +1,5 @@
-#ifndef VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_SWEPT_H
-#define VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_SWEPT_H
+#ifndef SCENE_MAIN_GAME_PHYSICS_SWEPT_H
+#define SCENE_MAIN_GAME_PHYSICS_SWEPT_H
 
 #include <libcommon/math/aabb.h>
 #include <libcommon/math/direction.h>
@@ -41,4 +41,4 @@ int contact3_compare(struct contact3 contact1, struct contact3 contact2);
 ///// We prioritize collision with largest contact area.
 bool swept_aabb3(aabb3_t aabb1, aabb3_t aabb2, fvec3_t offset, struct contact3 *contact1, struct contact3 *contact2);
 
-#endif // VOXY_SCENE_MAIN_GAME_UPDATE_PHYSICS_SWEPT_H
+#endif // SCENE_MAIN_GAME_PHYSICS_SWEPT_H

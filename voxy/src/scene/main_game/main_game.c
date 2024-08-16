@@ -9,6 +9,8 @@
 #include "render/render.h"
 #include "render/debug_overlay.h"
 
+#include "physics/physics.h"
+
 #include <voxy/scene/main_game/states/seed.h>
 #include <voxy/scene/main_game/states/chunks.h>
 #include <voxy/scene/main_game/states/entity_query.h>
@@ -20,7 +22,6 @@
 #include <voxy/scene/main_game/update/chunk_manager.h>
 #include <voxy/scene/main_game/update/generate.h>
 #include <voxy/scene/main_game/update/light.h>
-#include <voxy/scene/main_game/update/physics/physics.h>
 
 #include <libcommon/ui/ui.h>
 #include <libcommon/core/window.h>

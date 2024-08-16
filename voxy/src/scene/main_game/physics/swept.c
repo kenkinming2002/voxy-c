@@ -1,4 +1,4 @@
-#include <voxy/scene/main_game/update/physics/swept.h>
+#include "swept.h"
 
 #include <libcommon/utils/utils.h>
 #include <libcommon/core/log.h>

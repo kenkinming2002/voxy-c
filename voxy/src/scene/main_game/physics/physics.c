@@ -1,5 +1,5 @@
-#include <voxy/scene/main_game/update/physics/physics.h>
-#include <voxy/scene/main_game/update/physics/swept.h>
+#include "physics.h"
+#include "swept.h"
 
 #include <voxy/scene/main_game/types/block.h>
 #include <voxy/scene/main_game/types/entity.h>

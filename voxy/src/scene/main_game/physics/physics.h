@@ -1,0 +1,6 @@
+#ifndef SCENE_MAIN_GAME_PHYSICS_PHYSICS_H
+#define SCENE_MAIN_GAME_PHYSICS_PHYSICS_H
+
+void update_physics(float dt);
+
+#endif // SCENE_MAIN_GAME_PHYSICS_PHYSICS_H

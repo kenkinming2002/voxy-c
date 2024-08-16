@@ -72,6 +72,7 @@ void sync_active_chunks(void)
         if(chunk_should_save(*chunk) && save_chunk(*chunk))
         {
           (*chunk)->dirty = false;
+          (*chunk)->last_save_time = get_time();
           save_count += 1;
         }
 

@@ -10,6 +10,7 @@
 
 #include <libcommon/core/log.h>
 #include <libcommon/core/fs.h>
+#include <libcommon/core/time.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -149,6 +150,7 @@ void flush_active_chunks(void)
     if(chunk_is_dirty(chunk) && save_chunk(chunk))
     {
       chunk->dirty = false;
+      chunk->last_save_time = get_time();
       flush_count += 1;
     }
 

@@ -160,17 +160,18 @@ static void process_light_destruction(struct light_destruction light_destruction
     if(cursor_move(&neighbour_cursor, direction))
     {
       const struct block_info *neighbour_block_info = query_block_info(cursor_get_block_id(neighbour_cursor));
-      if(neighbour_block_info->light_type == BLOCK_LIGHT_TYPE_PASSABLE)
-      {
-        const unsigned light_level = light_destruction.light_level;
 
-        unsigned old_neighbour_light_level;
-        unsigned neighbour_light_level;
-        unsigned char tmp;
-        cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
+      const unsigned light_level = light_destruction.light_level;
+
+      unsigned old_neighbour_light_level;
+      unsigned neighbour_light_level;
+      unsigned char tmp;
+      cursor_get_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp);
 
 retry:;
-        bool propagate = false;
+      bool propagate = false;
+      if(neighbour_block_info->light_type == BLOCK_LIGHT_TYPE_PASSABLE)
+      {
         if(direction == DIRECTION_BOTTOM && light_level == 15 && neighbour_light_level == 15)
         {
           propagate = true;
@@ -183,30 +184,30 @@ retry:;
           old_neighbour_light_level = neighbour_light_level;
           neighbour_light_level = 0;
         }
+      }
 
-        if(propagate)
-        {
-          if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
-            goto retry;
+      if(propagate)
+      {
+        if(!cursor_set_block_light_level_atomic(neighbour_cursor, &neighbour_light_level, &tmp))
+          goto retry;
 
-          struct light_destruction new_light_destruction;
-          new_light_destruction.chunk = neighbour_cursor.chunk;
-          new_light_destruction.x = neighbour_cursor.x;
-          new_light_destruction.y = neighbour_cursor.y;
-          new_light_destruction.z = neighbour_cursor.z;
-          new_light_destruction.light_level = old_neighbour_light_level;
-          DYNAMIC_ARRAY_APPEND(*new_light_destructions, new_light_destruction);
-        }
-        else if(neighbour_light_level != 0)
-        {
-          // This techincally does not prevent duplicates light create update from being enqueued
-          struct light_creation new_light_creation;
-          new_light_creation.chunk = neighbour_cursor.chunk;
-          new_light_creation.x = neighbour_cursor.x;
-          new_light_creation.y = neighbour_cursor.y;
-          new_light_creation.z = neighbour_cursor.z;
-          DYNAMIC_ARRAY_APPEND(*new_light_creations, new_light_creation);
-        }
+        struct light_destruction new_light_destruction;
+        new_light_destruction.chunk = neighbour_cursor.chunk;
+        new_light_destruction.x = neighbour_cursor.x;
+        new_light_destruction.y = neighbour_cursor.y;
+        new_light_destruction.z = neighbour_cursor.z;
+        new_light_destruction.light_level = old_neighbour_light_level;
+        DYNAMIC_ARRAY_APPEND(*new_light_destructions, new_light_destruction);
+      }
+      else if(neighbour_light_level != 0)
+      {
+        // This techincally does not prevent duplicates light create update from being enqueued
+        struct light_creation new_light_creation;
+        new_light_creation.chunk = neighbour_cursor.chunk;
+        new_light_creation.x = neighbour_cursor.x;
+        new_light_creation.y = neighbour_cursor.y;
+        new_light_creation.z = neighbour_cursor.z;
+        DYNAMIC_ARRAY_APPEND(*new_light_creations, new_light_creation);
       }
     }
   }

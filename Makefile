@@ -89,6 +89,7 @@ MOD_SRCS += mod/src/block/ore_iron/ore_iron.c
 MOD_SRCS += mod/src/block/ore_tin/ore_tin.c
 MOD_SRCS += mod/src/block/stone/stone.c
 MOD_SRCS += mod/src/block/water/water.c
+MOD_SRCS += mod/src/block/plank/plank.c
 
 MOD_SRCS += mod/src/item/item.c
 MOD_SRCS += mod/src/item/grass/grass.c
@@ -102,6 +103,7 @@ MOD_SRCS += mod/src/item/ore_tin_block/ore_tin_block.c
 MOD_SRCS += mod/src/item/stone/stone.c
 MOD_SRCS += mod/src/item/mysterious_food/mysterious_food.c
 MOD_SRCS += mod/src/item/dynamite/dynamite.c
+MOD_SRCS += mod/src/item/plank/plank.c
 
 MOD_SRCS += mod/src/entity/item/item.c
 MOD_SRCS += mod/src/entity/dynamite/dynamite.c

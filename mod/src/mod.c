@@ -17,6 +17,7 @@
 #include "block/ore_tin/ore_tin.h"
 #include "block/stone/stone.h"
 #include "block/water/water.h"
+#include "block/plank/plank.h"
 
 #include "item/grass/grass.h"
 #include "item/lamp/lamp.h"
@@ -29,6 +30,7 @@
 #include "item/stone/stone.h"
 #include "item/mysterious_food/mysterious_food.h"
 #include "item/dynamite/dynamite.h"
+#include "item/plank/plank.h"
 
 #include "update/spawn_player.h"
 #include "update/spawn_weird.h"
@@ -58,6 +60,7 @@ void mod_init()
   ore_tin_block_register();
   stone_block_register();
   water_block_register();
+  plank_block_register();
 
   grass_item_register();
   lamp_item_register();
@@ -70,6 +73,7 @@ void mod_init()
   stone_item_register();
   mysterious_food_item_register();
   dynamite_item_register();
+  plank_item_register();
 
   register_generate_chunk_blocks(&base_generate_chunk_blocks);
   register_generate_player_spawn(&base_generate_player_spawn);
@@ -135,6 +139,24 @@ void mod_init()
 
     recipe.output.id = dynamite_item_id_get();
     recipe.output.count = 1;
+
+    crafting_add_recipe(recipe);
+  }
+
+  // Plank
+  {
+    for(int j=0; j<3; ++j)
+      for(int i=0; i<3; ++i)
+      {
+        recipe.inputs[j][i].id = ITEM_NONE;
+        recipe.inputs[j][i].count = 0;
+      }
+
+    recipe.inputs[0][0].id = log_item_id_get();
+    recipe.inputs[0][0].count = 1;
+
+    recipe.output.id = plank_item_id_get();
+    recipe.output.count = 4;
 
     crafting_add_recipe(recipe);
   }

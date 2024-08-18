@@ -192,6 +192,56 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
     }
   }
 
+
+  // Update drop items
+  if(opaque->inventory_opened && opaque->hand.id != ITEM_NONE)
+  {
+    // Hot bar
+    {
+      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.hot_bar);
+      if(ui_button(rect.position, rect.dimension))
+        goto out;
+    }
+
+    // Inventory
+    {
+      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.inventory);
+      if(ui_button(rect.position, rect.dimension))
+        goto out;
+    }
+
+    // Crafting inputs
+    {
+      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.crafting_inputs);
+      if(ui_button(rect.position, rect.dimension))
+        goto out;
+    }
+
+    // Crafting output
+    {
+      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.crafting_output);
+      if(ui_button(rect.position, rect.dimension))
+        goto out;
+    }
+
+    if(input_press(BUTTON_LEFT))
+    {
+      const fvec3_t spawn_position = entity->position;
+      const fvec3_t spawn_roation = fvec3_zero();
+      const fvec3_t spawn_velocity = fvec3_zero();
+
+      struct entity item_entity;
+      entity_init(&item_entity, spawn_position, spawn_roation, spawn_velocity, INFINITY, INFINITY);
+      item_entity_init(&item_entity, opaque->hand);
+      world_add_entity(item_entity);
+
+      opaque->hand.id = ITEM_NONE;
+      opaque->hand.count = 0;
+    }
+
+out:;
+  }
+
   // Rendering.
   {
     // Hot bar

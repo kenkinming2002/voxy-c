@@ -90,7 +90,7 @@ static inline void render_item(struct ui_rect rect, struct item item)
     char buffer[4];
     snprintf(buffer, sizeof buffer, "%u", item.count);
 
-    ui_rect_textured(rect.position, rect.dimension, rect.rounding, assets_get_item_texture(item.id).id);
+    ui_rect_textured(rect.position, rect.dimension, rect.rounding, assets_get_item_texture(item.id)->id);
     ui_text(rect.position, PLAYER_UI_TEXT_SIZE_ITEM_COUNT, 1, buffer);
   }
 }

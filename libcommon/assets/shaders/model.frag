@@ -1,9 +1,9 @@
 #version 460 core
 in vec2 f_uv;
+in float f_light;
 
 out vec4 out_color;
 
-uniform float light;
 uniform sampler2D sampler;
 
 void main()
@@ -12,7 +12,7 @@ void main()
   if(color.a <= 0.0f)
     discard;
 
-  float factor = mix(light, 1.0, 0.01);
-  out_color = vec4(vec3(color) * light, 1.0);
+  float factor = mix(f_light, 1.0, 0.01);
+  out_color = vec4(vec3(color) * f_light, 1.0);
 }
 

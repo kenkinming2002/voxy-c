@@ -34,6 +34,12 @@ void dynamite_entity_register(void)
 
   dynamite_entity_id = register_entity_info(entity_info);
 
+  if(mesh_init(&dynamite_entity_mesh) != 0)
+  {
+    LOG_ERROR("Failed to initialize mesh for dynamite entity");
+    exit(EXIT_FAILURE);
+  }
+
   if(mesh_load(&dynamite_entity_mesh, "mod/assets/models/item.obj") != 0)
   {
     LOG_ERROR("Failed to load mesh for dynamite entity");
@@ -109,7 +115,7 @@ static fvec3_t normal_to_rotation(fvec3_t normal)
   return result;
 }
 
-static struct gl_texture_2d get_dynamite_texture(void)
+static struct gl_texture_2d *get_dynamite_texture(void)
 {
   static bool initialized;
   static struct gl_texture_2d texture;
@@ -118,7 +124,7 @@ static struct gl_texture_2d get_dynamite_texture(void)
     gl_texture_2d_load(&texture, "mod/assets/textures/dynamite_item.png");
     initialized = true;
   }
-  return texture;
+  return &texture;
 }
 
 void dynamite_entity_render(const struct entity *entity, const struct camera *camera)
@@ -126,7 +132,7 @@ void dynamite_entity_render(const struct entity *entity, const struct camera *ca
   transform_t transform = entity_transform(entity);
   transform.rotation = normal_to_rotation(fvec3_neg(transform_forward(camera->transform)));
 
-  const struct gl_texture_2d texture = get_dynamite_texture();
+  const struct gl_texture_2d *texture = get_dynamite_texture();
   const float light = world_get_average_block_light_factor(entity->position, 3.0f);
-  render_model(*camera, transform, dynamite_entity_mesh, texture, light);
+  render(camera, &dynamite_entity_mesh, texture, transform, light);
 }

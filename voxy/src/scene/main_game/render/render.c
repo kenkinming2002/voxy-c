@@ -1,10 +1,9 @@
-#include "render.h"
-
 #include "blocks.h"
 #include "entities.h"
 #include "debug.h"
 
 #include <libcommon/core/window.h>
+#include <libcommon/graphics/render.h>
 #include <libcommon/ui/ui.h>
 
 void main_game_render(void)
@@ -25,6 +24,7 @@ void main_game_render(void)
   main_game_render_entities();
   main_game_render_debug();
 
+  render_end();
   ui_render();
 }
 

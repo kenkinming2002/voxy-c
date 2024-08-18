@@ -5,7 +5,7 @@
 #include <libcommon/utils/dynamic_array.h>
 #include <glad/glad.h>
 
-struct vertex
+struct mesh_vertices
 {
   ivec3_t center;
 
@@ -22,7 +22,7 @@ struct vertex
 
   float damage;
 };
-DYNAMIC_ARRAY_DEFINE(vertices, struct vertex);
+DYNAMIC_ARRAY_DEFINE(vertices, struct mesh_vertices);
 
 struct blocks_mesh
 {

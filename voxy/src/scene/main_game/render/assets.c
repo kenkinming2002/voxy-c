@@ -69,11 +69,11 @@ static void ensure_block_array_texture(void)
   }
 }
 
-struct gl_texture_2d assets_get_item_texture(item_id_t item_id)
+const struct gl_texture_2d *assets_get_item_texture(item_id_t item_id)
 {
   assert(item_id != ITEM_NONE);
   ensure_item_texture(item_id);
-  return item_textures[item_id];
+  return &item_textures[item_id];
 }
 
 struct gl_array_texture_2d assets_get_block_texture_array(void)

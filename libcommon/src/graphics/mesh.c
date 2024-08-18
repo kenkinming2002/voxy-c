@@ -9,6 +9,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int mesh_init(struct mesh *mesh)
+{
+  glGenVertexArrays(1, &mesh->vao);
+  glBindVertexArray(mesh->vao);
+
+  glGenBuffers(1, &mesh->vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+
+  glEnableVertexAttribArray(0); glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex), (void *)offsetof(struct mesh_vertex, position));
+  glEnableVertexAttribArray(1); glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex), (void *)offsetof(struct mesh_vertex, normal));
+  glEnableVertexAttribArray(2); glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex), (void *)offsetof(struct mesh_vertex, uv));
+
+  glGenBuffers(1, &mesh->vbo_instanced);
+  glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_instanced);
+
+  glEnableVertexAttribArray(3); glVertexAttribDivisor(3, 1); glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex_instanced), (void *)(offsetof(struct mesh_vertex_instanced, transform) + 0  * sizeof(float)));
+  glEnableVertexAttribArray(4); glVertexAttribDivisor(4, 1); glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex_instanced), (void *)(offsetof(struct mesh_vertex_instanced, transform) + 4  * sizeof(float)));
+  glEnableVertexAttribArray(5); glVertexAttribDivisor(5, 1); glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex_instanced), (void *)(offsetof(struct mesh_vertex_instanced, transform) + 8  * sizeof(float)));
+  glEnableVertexAttribArray(6); glVertexAttribDivisor(6, 1); glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex_instanced), (void *)(offsetof(struct mesh_vertex_instanced, transform) + 12 * sizeof(float)));
+  glEnableVertexAttribArray(7); glVertexAttribDivisor(7, 1); glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, sizeof(struct mesh_vertex_instanced), (void *)offsetof(struct mesh_vertex_instanced, light));
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+
+  return 0;
+}
+
+void mesh_fini(struct mesh *mesh)
+{
+  glDeleteBuffers(1, &mesh->vbo);
+  glDeleteBuffers(1, &mesh->vbo_instanced);
+  glDeleteVertexArrays(1, &mesh->vao);
+}
+
+void mesh_update(struct mesh *mesh, const struct mesh_vertex *vertices, size_t vertex_count)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+  glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof *vertices, vertices, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  mesh->count = vertex_count;
+}
+
+void mesh_update_instanced(const struct mesh *mesh, const struct mesh_vertex_instanced *vertices, size_t vertex_count)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_instanced);
+  glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof *vertices, vertices, GL_STREAM_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 int mesh_load(struct mesh *mesh, const char *filepath)
 {
   FILE *f = fopen(filepath, "r");
@@ -20,17 +69,7 @@ int mesh_load(struct mesh *mesh, const char *filepath)
 
   int result = 0;
 
-  // We make the simplifying assumption that our mesh are formed from vertices
-  // of 3d position, 3d normal and 2d texture coordinates.
-  struct vertex
-  {
-    fvec3_t position;
-    fvec3_t normal;
-    fvec2_t uv;
-  };
-
-  DYNAMIC_ARRAY_DECLARE(vertices, struct vertex);
-
+  DYNAMIC_ARRAY_DECLARE(vertices, struct mesh_vertex);
   DYNAMIC_ARRAY_DECLARE(positions, fvec3_t);
   DYNAMIC_ARRAY_DECLARE(normals, fvec3_t);
   DYNAMIC_ARRAY_DECLARE(uvs, fvec2_t);
@@ -95,7 +134,7 @@ int mesh_load(struct mesh *mesh, const char *filepath)
           goto out;
         }
 
-        struct vertex vertex;
+        struct mesh_vertex vertex;
         vertex.position = positions.items[position_indices[j]-1];
         vertex.normal   = normals  .items[normal_indices  [j]-1];
         vertex.uv       = uvs      .items[uv_indices      [j]-1];
@@ -117,22 +156,7 @@ int mesh_load(struct mesh *mesh, const char *filepath)
     goto out;
   }
 
-  glGenVertexArrays(1, &mesh->vao);
-  glBindVertexArray(mesh->vao);
-
-  glGenBuffers(1, &mesh->vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-  glBufferData(GL_ARRAY_BUFFER, vertices.item_count * sizeof *vertices.items, vertices.items, GL_STATIC_DRAW);
-
-  glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
-  glEnableVertexAttribArray(2);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, position));
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, normal));
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(struct vertex), (void *)offsetof(struct vertex, uv));
-
-  mesh->count = vertices.item_count;
+  mesh_update(mesh, vertices.items, vertices.item_count);
 
 out:
   free(positions.items);
@@ -142,8 +166,3 @@ out:
   return result;
 }
 
-void mesh_unload(struct mesh *mesh)
-{
-  glDeleteBuffers(1, &mesh->vbo);
-  glDeleteVertexArrays(1, &mesh->vao);
-}

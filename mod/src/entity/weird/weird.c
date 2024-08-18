@@ -37,6 +37,12 @@ void weird_entity_register(void)
 
   weird_entity_id = register_entity_info(entity_info);
 
+  if(mesh_init(&weird_entity_mesh) != 0)
+  {
+    LOG_ERROR("Failed to initialize mesh for weird entity");
+    exit(EXIT_FAILURE);
+  }
+
   if(mesh_load(&weird_entity_mesh, "mod/assets/models/pig.obj") != 0)
   {
     LOG_ERROR("Failed to load mesh for weird entity");
@@ -142,6 +148,6 @@ void weird_entity_update(struct entity *entity, float dt)
 void weird_entity_render(const struct entity *entity, const struct camera *camera)
 {
   const float light = world_get_average_block_light_factor(entity->position, 3.0f);
-  render_model(*camera, entity_transform(entity), weird_entity_mesh, weird_entity_texture, light);
+  render(camera, &weird_entity_mesh, &weird_entity_texture, entity_transform(entity), light);
 }
 

@@ -119,7 +119,7 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
               occlusion_counts[v][u] = occlusions[position.z][position.y][position.x];
             }
 
-          struct vertex vertex;
+          struct mesh_vertices vertex;
           vertex.center = center;
           vertex.normal_index_and_texture_index = normal_index | texture_index << 3;
           vertex.light_level_and_occlusion_counts = light_level;

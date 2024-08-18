@@ -32,6 +32,12 @@ void item_entity_register(void)
 
   item_entity_id = register_entity_info(entity_info);
 
+  if(mesh_init(&item_entity_mesh) != 0)
+  {
+    LOG_ERROR("Failed to initialize mesh for item entity");
+    exit(EXIT_FAILURE);
+  }
+
   if(mesh_load(&item_entity_mesh, "mod/assets/models/item.obj") != 0)
   {
     LOG_ERROR("Failed to load mesh for item entity");
@@ -96,8 +102,8 @@ void item_entity_render(const struct entity *entity, const struct camera *camera
   transform.rotation = normal_to_rotation(fvec3_neg(transform_forward(camera->transform)));
 
   const struct item_opaque *opaque = entity->opaque;
-  const struct gl_texture_2d texture = assets_get_item_texture(opaque->item.id);
+  const struct gl_texture_2d *texture = assets_get_item_texture(opaque->item.id);
 
   const float light = world_get_average_block_light_factor(entity->position, 3.0f);
-  render_model(*camera, transform, item_entity_mesh, texture, light);
+  render(camera, &item_entity_mesh, texture, transform, light);
 }

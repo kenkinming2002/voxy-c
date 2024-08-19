@@ -39,12 +39,12 @@ void player_entity_update_actions(struct entity *entity, float dt)
 
   // Right click
   {
-    if(input_state(BUTTON_RIGHT))
+    if(input_state(BUTTON_RIGHT) && opaque->cooldown >= PLAYER_ACTION_COOLDOWN)
     {
       // Use item
       {
         struct item *item = &opaque->hotbar[opaque->hotbar_selection];
-        if(item->id != ITEM_NONE && opaque->cooldown >= PLAYER_ACTION_COOLDOWN)
+        if(item->id != ITEM_NONE)
         {
           const struct item_info *item_info = query_item_info(item->id);
           if(item_info->on_use)
@@ -73,7 +73,10 @@ void player_entity_update_actions(struct entity *entity, float dt)
             const struct block_info *info = query_block_info(id);
             if(info->on_use)
               if(info->on_use(entity, chunk, local_position))
+              {
+                opaque->cooldown = 0.0f;
                 return;
+              }
           }
         }
       }

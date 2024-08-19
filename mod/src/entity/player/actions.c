@@ -41,21 +41,6 @@ void player_entity_update_actions(struct entity *entity, float dt)
   {
     if(input_state(BUTTON_RIGHT) && opaque->cooldown >= PLAYER_ACTION_COOLDOWN)
     {
-      // Use item
-      {
-        struct item *item = &opaque->hotbar[opaque->hotbar_selection];
-        if(item->id != ITEM_NONE)
-        {
-          const struct item_info *item_info = query_item_info(item->id);
-          if(item_info->on_use)
-            if(item_info->on_use(entity, item))
-            {
-              opaque->cooldown = 0.0f;
-              return;
-            }
-        }
-      }
-
       // Use block
       {
         ivec3_t position;
@@ -80,6 +65,22 @@ void player_entity_update_actions(struct entity *entity, float dt)
           }
         }
       }
+
+      // Use item
+      {
+        struct item *item = &opaque->hotbar[opaque->hotbar_selection];
+        if(item->id != ITEM_NONE)
+        {
+          const struct item_info *item_info = query_item_info(item->id);
+          if(item_info->on_use)
+            if(item_info->on_use(entity, item))
+            {
+              opaque->cooldown = 0.0f;
+              return;
+            }
+        }
+      }
+
     }
   }
 }

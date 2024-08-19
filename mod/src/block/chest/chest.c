@@ -3,9 +3,12 @@
 
 #include "block/block.h"
 #include "item/chest/chest.h"
+#include "entity/player/player.h"
 
 #include <voxy/scene/main_game/types/item.h>
+
 #include <libcommon/core/log.h>
+#include <libcommon/utils/utils.h>
 
 struct chest_block_data
 {
@@ -76,7 +79,16 @@ void chest_block_on_destroy(struct entity *entity, struct chunk *chunk, ivec3_t 
 
 bool chest_block_on_use(struct entity *entity, struct chunk *chunk, ivec3_t position)
 {
-  return false;
+  struct chest_block_data *data = chunk_get_block_data(chunk, position);
+  if(entity->id != player_entity_id_get())
+    return false;
+
+  struct player_opaque *player_opaque = entity->opaque;
+  for(unsigned y=0; y<5; ++y)
+    for(unsigned x=0; x<5; ++x)
+      SWAP(player_opaque->inventory[y][x], data->items[y][x]);
+
+  return true;
 }
 
 int chest_block_serialize(const void *_data, struct serializer *serializer)

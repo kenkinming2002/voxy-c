@@ -87,13 +87,92 @@ static int entities_serialize(struct entities *entities, struct serializer *seri
   return 0;
 }
 
+static int block_data_deserialize(struct chunk *chunk, struct block_data *block_data, struct deserializer *deserializer)
+{
+  const ivec3_t position = block_data_position(block_data);
+  const block_id_t id = chunk_get_block_id(chunk, position);
+  const struct block_info *info = query_block_info(id);
+
+  uint8_t x;
+  uint8_t y;
+  uint8_t z;
+
+  DESERIALIZE(deserializer, x);
+  DESERIALIZE(deserializer, y);
+  DESERIALIZE(deserializer, z);
+
+  block_data->x = x;
+  block_data->y = y;
+  block_data->z = z;
+
+  if(info->deserialize && info->deserialize(chunk, position, deserializer) != 0)
+    return -1;
+
+  return 0;
+}
+
+static int block_data_serialize(const struct chunk *chunk, const struct block_data *block_data, struct serializer *serializer)
+{
+  const ivec3_t position = block_data_position(block_data);
+  const block_id_t id = chunk_get_block_id(chunk, position);
+  const struct block_info *info = query_block_info(id);
+
+  const uint8_t x = position.x;
+  const uint8_t y = position.y;
+  const uint8_t z = position.z;
+
+  SERIALIZE(serializer, x);
+  SERIALIZE(serializer, y);
+  SERIALIZE(serializer, z);
+
+  if(info->serialize && info->serialize(chunk, position, serializer) != 0)
+    return -1;
+
+  return 0;
+}
+
+static int block_datas_deserialize(struct chunk *chunk, struct block_datas *block_datas, struct deserializer *deserializer)
+{
+  size_t item_count;
+  DESERIALIZE(deserializer, item_count);
+
+  block_datas_init(block_datas);
+  for(size_t i=0; i<item_count; ++i)
+  {
+    struct block_data block_data;
+    if(block_data_deserialize(chunk, &block_data, deserializer) != 0)
+    {
+      block_datas_fini(block_datas);
+      return -1;
+    }
+    block_datas_append(block_datas, block_data);
+  }
+
+  return 0;
+}
+
+static int block_datas_serialize(const struct chunk *chunk, struct block_datas *block_datas, struct serializer *serializer)
+{
+  SERIALIZE(serializer, block_datas->item_count);
+  for(size_t i=0; i<block_datas->item_count; ++i)
+    block_data_serialize(chunk, &block_datas->items[i], serializer);
+
+  return 0;
+}
+
 static int chunk_deserialize(struct chunk *chunk, struct deserializer *deserializer)
 {
   DESERIALIZE(deserializer, chunk->block_ids);
   DESERIALIZE(deserializer, chunk->block_light_levels);
 
-  if(entities_deserialize(&chunk->entities, deserializer) != 0)
+  if(block_datas_deserialize(chunk, &chunk->block_datas, deserializer) != 0)
     return -1;
+
+  if(entities_deserialize(&chunk->entities, deserializer) != 0)
+  {
+    block_datas_fini(&chunk->block_datas);
+    return -1;
+  }
 
   entities_init(&chunk->new_entities);
   return 0;
@@ -103,6 +182,9 @@ static int chunk_serialize(struct chunk *chunk, struct serializer *serializer)
 {
   SERIALIZE(serializer, chunk->block_ids);
   SERIALIZE(serializer, chunk->block_light_levels);
+
+  if(block_datas_serialize(chunk, &chunk->block_datas, serializer) != 0)
+    return -1;
 
   if(entities_serialize(&chunk->entities, serializer) != 0)
     return -1;

@@ -35,8 +35,13 @@ VOXY_SRCS += voxy/src/scene/main_game/mod.c
 
 VOXY_SRCS += voxy/src/scene/main_game/types/chunk.c
 VOXY_SRCS += voxy/src/scene/main_game/types/registry.c
+
+VOXY_SRCS += voxy/src/scene/main_game/types/block_data.c
+VOXY_SRCS += voxy/src/scene/main_game/types/block_datas.c
+
 VOXY_SRCS += voxy/src/scene/main_game/types/entity.c
 VOXY_SRCS += voxy/src/scene/main_game/types/entities.c
+
 VOXY_SRCS += voxy/src/scene/main_game/types/item.c
 
 VOXY_SRCS += voxy/src/scene/main_game/states/camera.c

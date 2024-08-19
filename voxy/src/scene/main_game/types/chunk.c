@@ -4,6 +4,8 @@
 #include <libcommon/core/log.h>
 #include <libcommon/core/time.h>
 
+#include <libcommon/utils/utils.h>
+
 #include <assert.h>
 #include <stdlib.h>
 
@@ -260,6 +262,38 @@ void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id)
   //        changes to 0. This happens to be the only possible cases for now.
   if(old_block_light_level >= new_block_light_level)
     enqueue_light_destroy_update(chunk, position.x, position.y, position.z, old_block_light_level);
+}
+
+void chunk_add_block_data(struct chunk *chunk, ivec3_t position, void *data)
+{
+  struct block_data block_data;
+  block_data.x = position.x;
+  block_data.y = position.y;
+  block_data.z = position.z;
+  block_data.data = data;
+  DYNAMIC_ARRAY_APPEND(chunk->block_datas, block_data);
+}
+
+void *chunk_del_block_data(struct chunk *chunk, ivec3_t position)
+{
+  for(size_t i=0; i<chunk->block_datas.item_count; ++i)
+    if(ivec3_eql(block_data_position(&chunk->block_datas.items[i]), position))
+    {
+      void *data = chunk->block_datas.items[i].data;
+      chunk->block_datas.items[i] = chunk->block_datas.items[--chunk->block_datas.item_count];
+      return data;
+    }
+
+  return NULL;
+}
+
+void *chunk_get_block_data(const struct chunk *chunk, ivec3_t position)
+{
+  for(size_t i=0; i<chunk->block_datas.item_count; ++i)
+    if(ivec3_eql(block_data_position(&chunk->block_datas.items[i]), position))
+      return chunk->block_datas.items[i].data;
+
+  return NULL;
 }
 
 void chunk_commit_remove_entities(struct chunk *chunk)

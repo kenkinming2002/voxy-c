@@ -24,8 +24,11 @@ static struct chunk *generate_chunk_impl(ivec3_t position)
       for(int x = 0; x<CHUNK_WIDTH; ++x)
         chunk_set_block_raw(chunk, ivec3(x, y, z), blocks[z][y][x]);
 
+  DYNAMIC_ARRAY_INIT(chunk->block_datas);
+
   DYNAMIC_ARRAY_INIT(chunk->entities);
   DYNAMIC_ARRAY_INIT(chunk->new_entities);
+
   return chunk;
 }
 

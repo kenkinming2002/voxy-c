@@ -4,8 +4,12 @@
 #include <voxy/scene/main_game/config.h>
 
 #include <voxy/scene/main_game/types/registry.h>
+
 #include <voxy/scene/main_game/types/entity.h>
 #include <voxy/scene/main_game/types/entities.h>
+
+#include <voxy/scene/main_game/types/block_data.h>
+#include <voxy/scene/main_game/types/block_datas.h>
 
 #include <libcommon/math/vector.h>
 
@@ -53,6 +57,9 @@ struct chunk
   /// Block.
   block_id_t block_ids[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
   unsigned char block_light_levels[CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH / (CHAR_BIT / 4)];
+
+  /// Block datas
+  struct block_datas block_datas;
 
   /// Entities.
   struct entities entities;
@@ -117,6 +124,11 @@ void chunk_set_block_raw(struct chunk *chunk, ivec3_t position, block_id_t id);
 /// according block info from query_block_info(). This also take care of
 /// triggering lighting update if necessary.
 void chunk_set_block(struct chunk *chunk, ivec3_t position, block_id_t id);
+
+/// Add/del/get block data.
+void chunk_add_block_data(struct chunk *chunk, ivec3_t position, void *data);
+void *chunk_del_block_data(struct chunk *chunk, ivec3_t position);
+void *chunk_get_block_data(const struct chunk *chunk, ivec3_t position);
 
 /// Commit removal of entities.
 ///

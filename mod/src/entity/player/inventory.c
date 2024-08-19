@@ -216,7 +216,7 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
     }
 
     // Drop items.
-    if(opaque->ui_state != PLAYER_UI_STATE_DEFAULT)
+    if(opaque->ui_state != PLAYER_UI_STATE_DEFAULT && opaque->hand.id != ITEM_NONE)
     {
       bool can_drop_item = true;
 

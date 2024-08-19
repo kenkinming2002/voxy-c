@@ -6,7 +6,6 @@
 
 #include <voxy/scene/main_game/render/debug_overlay.h>
 
-#include "render/render.h"
 #include "render/debug_overlay.h"
 
 #include "physics/physics.h"

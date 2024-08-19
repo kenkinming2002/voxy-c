@@ -18,6 +18,7 @@
 #include "block/stone/stone.h"
 #include "block/water/water.h"
 #include "block/plank/plank.h"
+#include "block/chest/chest.h"
 
 #include "item/grass/grass.h"
 #include "item/lamp/lamp.h"
@@ -31,6 +32,7 @@
 #include "item/mysterious_food/mysterious_food.h"
 #include "item/dynamite/dynamite.h"
 #include "item/plank/plank.h"
+#include "item/chest/chest.h"
 
 #include "update/spawn_player.h"
 #include "update/spawn_weird.h"
@@ -61,6 +63,7 @@ void mod_init()
   stone_block_register();
   water_block_register();
   plank_block_register();
+  chest_block_register();
 
   grass_item_register();
   lamp_item_register();
@@ -74,6 +77,7 @@ void mod_init()
   mysterious_food_item_register();
   dynamite_item_register();
   plank_item_register();
+  chest_item_register();
 
   register_generate_chunk_blocks(&base_generate_chunk_blocks);
   register_generate_player_spawn(&base_generate_player_spawn);
@@ -157,6 +161,24 @@ void mod_init()
 
     recipe.output.id = plank_item_id_get();
     recipe.output.count = 4;
+
+    crafting_add_recipe(recipe);
+  }
+
+  // Chest
+  {
+    for(int j=0; j<3; ++j)
+      for(int i=0; i<3; ++i)
+      {
+        recipe.inputs[j][i].id = plank_item_id_get();
+        recipe.inputs[j][i].count = 1;
+      }
+
+    recipe.inputs[1][1].id = ITEM_NONE;
+    recipe.inputs[1][1].count = 0;
+
+    recipe.output.id = chest_item_id_get();
+    recipe.output.count = 1;
 
     crafting_add_recipe(recipe);
   }

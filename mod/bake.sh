@@ -10,3 +10,4 @@
 ./render_block/render_block -o mod/assets/textures/ore_tin_block_item.png -w 512 -h 512 mod/assets/textures/ore_tin.png mod/assets/textures/ore_tin.png mod/assets/textures/ore_tin.png
 ./render_block/render_block -o mod/assets/textures/stone_item.png -w 512 -h 512 mod/assets/textures/stone.png mod/assets/textures/stone.png mod/assets/textures/stone.png
 ./render_block/render_block -o mod/assets/textures/plank_item.png -w 512 -h 512 mod/assets/textures/plank.png mod/assets/textures/plank.png mod/assets/textures/plank.png
+./render_block/render_block -o mod/assets/textures/chest_item.png -w 512 -h 512 mod/assets/textures/chest_other.png mod/assets/textures/chest_front.png mod/assets/textures/chest_other.png

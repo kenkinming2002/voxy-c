@@ -3,9 +3,11 @@
 
 #include "block/block.h"
 #include "item/chest/chest.h"
+#include "entity/item/item.h"
 #include "entity/player/player.h"
 
 #include <voxy/scene/main_game/types/item.h>
+#include <voxy/scene/main_game/states/chunks.h>
 
 #include <libcommon/core/log.h>
 #include <libcommon/utils/utils.h>
@@ -68,11 +70,49 @@ void chest_block_on_create(struct entity *entity, struct chunk *chunk, ivec3_t p
   chunk_add_block_data(chunk, position, data);
 }
 
+static inline float rand_range(float a, float b)
+{
+  return a + ((float)rand() / (float)RAND_MAX) * (b - a);
+}
+
+static inline fvec3_t random_velocity(void)
+{
+  fvec3_t result;
+  do {
+    result.x = rand_range(-1.0f, 1.0f);
+    result.y = rand_range(-1.0f, 1.0f);
+  } while(result.x * result.x + result.y * result.y > 1.0f);
+  result.z = rand_range(0.0f, 1.0f);
+  return fvec3_mul_scalar(result, 1.0f);
+}
+
+static inline void spill_item(ivec3_t position, struct item *item)
+{
+  if(item->id != ITEM_NONE)
+  {
+    const fvec3_t spawn_position = ivec3_as_fvec3(position);
+    const fvec3_t spawn_roation = fvec3_zero();
+    const fvec3_t spawn_velocity = random_velocity();
+
+    struct entity item_entity;
+    entity_init(&item_entity, spawn_position, spawn_roation, spawn_velocity, INFINITY, INFINITY);
+    item_entity_init(&item_entity, *item);
+    world_add_entity(item_entity);
+
+    item->id = ITEM_NONE;
+    item->count = 0;
+  }
+}
+
 void chest_block_on_destroy(struct entity *entity, struct chunk *chunk, ivec3_t position)
 {
   (void)entity;
 
   struct chest_block_data *data = chunk_del_block_data(chunk, position);
+  for(unsigned y=0; y<5; ++y)
+    for(unsigned x=0; x<5; ++x)
+      spill_item(local_position_to_global_position_i(position, chunk->position), &data->items[y][x]);
+
   block_on_destroy_spawn_item(chunk, position, chest_item_id_get());
   free(data);
 }

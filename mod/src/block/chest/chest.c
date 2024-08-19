@@ -7,6 +7,7 @@
 #include "entity/player/player.h"
 
 #include <voxy/scene/main_game/types/item.h>
+#include <voxy/scene/main_game/types/container.h>
 #include <voxy/scene/main_game/states/chunks.h>
 
 #include <libcommon/core/log.h>
@@ -15,6 +16,7 @@
 struct chest_block_data
 {
   struct item items[5][5];
+  struct container *container;
 };
 
 static block_id_t chest_block_id;
@@ -67,6 +69,8 @@ void chest_block_on_create(struct entity *entity, struct chunk *chunk, ivec3_t p
       data->items[y][x].count = 0;
     }
 
+  data->container = container_create(&data->items[0][0], 5, 5);
+
   chunk_add_block_data(chunk, position, data);
 }
 
@@ -106,14 +110,16 @@ static inline void spill_item(ivec3_t position, struct item *item)
 
 void chest_block_on_destroy(struct entity *entity, struct chunk *chunk, ivec3_t position)
 {
-  (void)entity;
-
   struct chest_block_data *data = chunk_del_block_data(chunk, position);
+
+  // Spill items
   for(unsigned y=0; y<5; ++y)
     for(unsigned x=0; x<5; ++x)
       spill_item(local_position_to_global_position_i(position, chunk->position), &data->items[y][x]);
 
   block_on_destroy_spawn_item(chunk, position, chest_item_id_get());
+
+  container_put_strong(&data->container);
   free(data);
 }
 
@@ -125,27 +131,38 @@ bool chest_block_on_use(struct entity *entity, struct chunk *chunk, ivec3_t posi
 
   struct player_opaque *player_opaque = entity->opaque;
   player_opaque->ui_state = PLAYER_UI_STATE_CONTAINER_OPENED;
-  player_opaque->container.items = &data->items[0][0];
-  player_opaque->container.width = 5;
-  player_opaque->container.height = 5;
+  if(player_opaque->container)
+    container_put_weak(&player_opaque->container);
+
+  player_opaque->container = container_get_weak(data->container);
   return true;
 }
 
 int chest_block_serialize(const void *_data, struct serializer *serializer)
 {
   const struct chest_block_data *data = _data;
-  SERIALIZE(serializer, *data);
+  for(unsigned y=0; y<5; ++y)
+    for(unsigned x=0; x<5; ++x)
+      SERIALIZE(serializer, data->items[y][x]);
+
   return 0;
 }
 
 int chest_block_deserialize(void **_data, struct deserializer *deserializer)
 {
-  struct chest_block_data data;
-  DESERIALIZE(deserializer, data);
+  struct item items[5][5];
+  for(unsigned y=0; y<5; ++y)
+    for(unsigned x=0; x<5; ++x)
+      DESERIALIZE(deserializer, items[y][x]);
 
-  struct chest_block_data *tmp = malloc(sizeof *tmp);
-  *tmp = data;
-  *_data = tmp;
+  struct chest_block_data *data = malloc(sizeof *data);
+  for(unsigned y=0; y<5; ++y)
+    for(unsigned x=0; x<5; ++x)
+      data->items[y][x] = items[y][x];
+
+  data->container = container_create(&data->items[0][0], 5, 5);
+
+  *_data = data;
   return 0;
 }
 

@@ -8,13 +8,6 @@
 
 #include <stdbool.h>
 
-struct container
-{
-  struct item *items;
-  size_t height;
-  size_t width;
-};
-
 enum player_ui_state
 {
   PLAYER_UI_STATE_DEFAULT,
@@ -34,7 +27,7 @@ struct player_opaque
   struct item inventory[PLAYER_INVENTORY_SIZE_VERTICAL][PLAYER_INVENTORY_SIZE_HORIZONTAL];
   struct item crafting_inputs[3][3];
 
-  struct container container;
+  struct container *container;
 
   struct item hand;
 

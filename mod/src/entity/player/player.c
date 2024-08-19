@@ -10,6 +10,7 @@
 #include "inventory.h"
 #include "health_ui.h"
 
+#include <voxy/scene/main_game/types/container.h>
 #include <voxy/scene/main_game/render/debug.h>
 #include <voxy/scene/main_game/render/debug_overlay.h>
 
@@ -80,6 +81,8 @@ void player_entity_init(struct entity *entity)
       opaque->crafting_inputs[j][i].count = 0;
     }
 
+  opaque->container = NULL;
+
   opaque->hand.id = ITEM_NONE;
   opaque->hand.count = 0;
 
@@ -96,7 +99,13 @@ void player_entity_init(struct entity *entity)
   entity->opaque = opaque;
 }
 
-void player_entity_fini(struct entity *entity) { free(entity->opaque); }
+void player_entity_fini(struct entity *entity)
+{
+  struct player_opaque *opaque = entity->opaque;
+  if(opaque->container)
+    container_put_weak(&opaque->container);
+  free(opaque);
+}
 
 int player_entity_serialize(const struct entity *entity, struct serializer *serializer)
 {
@@ -129,6 +138,7 @@ int player_entity_deserialize(struct entity *entity, struct deserializer *deseri
   DESERIALIZE(deserializer, opaque->cooldown_weird);
 
   opaque->ui_state = PLAYER_UI_STATE_DEFAULT;
+  opaque->container = NULL;
   opaque->third_person = false;
 
   return 0;

@@ -2,6 +2,7 @@
 #include "config.h"
 #include "entity/item/item.h"
 
+#include <voxy/scene/main_game/types/container.h>
 #include <voxy/scene/main_game/render/assets.h>
 #include <voxy/scene/main_game/states/chunks.h>
 #include <voxy/scene/main_game/states/entity_query.h>
@@ -149,6 +150,20 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
     opaque->hotbar_selection %= 9;
   }
 
+  if(opaque->container)
+  {
+    // Check if container is destroyed.
+    if(opaque->container->strong_count == 0)
+    {
+      container_put_weak(&opaque->container);
+      if(opaque->ui_state == PLAYER_UI_STATE_CONTAINER_OPENED)
+        opaque->ui_state = PLAYER_UI_STATE_DEFAULT;
+    }
+    // Check if our ui state have changed
+    else if(opaque->ui_state != PLAYER_UI_STATE_CONTAINER_OPENED)
+      container_put_weak(&opaque->container);
+  }
+
   // Cursor is shown if either inventory is opened or we are dead.
   // FIXME: Is this a hack?
   window_show_cursor(opaque->ui_state != PLAYER_UI_STATE_DEFAULT || entity->health <= 0.0f);
@@ -195,9 +210,9 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
     if(opaque->ui_state == PLAYER_UI_STATE_CONTAINER_OPENED)
     {
       // Container
-      for(unsigned y=0; y<opaque->container.height; ++y)
-        for(unsigned x=0; x<opaque->container.width; ++x)
-          update_slot(ui_grid_get_rect_at(ui_layout.container, x, y), &opaque->container.items[y * opaque->container.width + x], &opaque->hand);
+      for(unsigned y=0; y<opaque->container->height; ++y)
+        for(unsigned x=0; x<opaque->container->width; ++x)
+          update_slot(ui_grid_get_rect_at(ui_layout.container, x, y), &opaque->container->items[y * opaque->container->width + x], &opaque->hand);
     }
 
     // Drop items.
@@ -299,9 +314,9 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
     {
       // Container
       render_background(ui_grid_get_rect_total(ui_layout.container), PLAYER_INVENTORY_UI_COLOR_BACKGROUND);
-      for(unsigned y=0; y<opaque->container.height; ++y)
-        for(unsigned x=0; x<opaque->container.width; ++x)
-          render_slot(ui_grid_get_rect_at(ui_layout.container, x, y), PLAYER_INVENTORY_UI_COLOR_DEFAULT, PLAYER_INVENTORY_UI_COLOR_HOVER, fvec4_zero(), opaque->container.items[y * opaque->container.width + x], false);
+      for(unsigned y=0; y<opaque->container->height; ++y)
+        for(unsigned x=0; x<opaque->container->width; ++x)
+          render_slot(ui_grid_get_rect_at(ui_layout.container, x, y), PLAYER_INVENTORY_UI_COLOR_DEFAULT, PLAYER_INVENTORY_UI_COLOR_HOVER, fvec4_zero(), opaque->container->items[y * opaque->container->width + x], false);
     }
 
     if(opaque->ui_state == PLAYER_UI_STATE_DEFAULT)

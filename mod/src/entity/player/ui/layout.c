@@ -2,6 +2,8 @@
 #include "../config.h"
 #include "../player.h"
 
+#include <voxy/scene/main_game/types/container.h>
+
 #include <libcommon/core/window.h>
 #include <libcommon/utils/utils.h>
 
@@ -49,11 +51,14 @@ struct player_ui_layout compute_player_ui_layout(struct entity *entity)
   ui_layout.crafting_output.dimension = fvec2(slot_width, slot_width);
   ui_layout.crafting_output.rounding = slot_rounding;
 
-  ui_layout.container.width = opaque->container.width;
-  ui_layout.container.height = opaque->container.height;
-  ui_layout.container.spacing = fvec2(slot_spacing, slot_spacing);
-  ui_layout.container.dimension = fvec2(slot_width, slot_width);
-  ui_layout.container.rounding = slot_rounding;
+  if(opaque->container)
+  {
+    ui_layout.container.width = opaque->container->width;
+    ui_layout.container.height = opaque->container->height;
+    ui_layout.container.spacing = fvec2(slot_spacing, slot_spacing);
+    ui_layout.container.dimension = fvec2(slot_width, slot_width);
+    ui_layout.container.rounding = slot_rounding;
+  }
 
   ui_layout.health_bar.width = -1;
   ui_layout.health_bar.height = 1;

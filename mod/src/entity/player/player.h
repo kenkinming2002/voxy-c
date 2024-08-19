@@ -8,18 +8,35 @@
 
 #include <stdbool.h>
 
+struct container
+{
+  struct item *items;
+  size_t height;
+  size_t width;
+};
+
+enum player_ui_state
+{
+  PLAYER_UI_STATE_DEFAULT,
+  PLAYER_UI_STATE_INVENTORY_OPENED,
+  PLAYER_UI_STATE_CONTAINER_OPENED,
+};
+
 struct player_opaque
 {
   fvec3_t spawn_position;
 
+  enum player_ui_state ui_state;
+
   struct item hotbar[PLAYER_HOTBAR_SIZE];
+  uint8_t     hotbar_selection;
+
   struct item inventory[PLAYER_INVENTORY_SIZE_VERTICAL][PLAYER_INVENTORY_SIZE_HORIZONTAL];
   struct item crafting_inputs[3][3];
 
-  struct item hand;
+  struct container container;
 
-  bool inventory_opened;
-  uint8_t hotbar_selection;
+  struct item hand;
 
   bool third_person;
 

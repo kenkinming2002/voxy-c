@@ -13,7 +13,7 @@ void player_entity_update_actions(struct entity *entity, float dt)
     return;
 
   struct player_opaque *opaque = entity->opaque;
-  if(opaque->inventory_opened)
+  if(opaque->ui_state != PLAYER_UI_STATE_DEFAULT)
     return;
 
   // Cooldown

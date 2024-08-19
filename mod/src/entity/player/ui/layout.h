@@ -1,6 +1,8 @@
 #ifndef ENTITY_PLAYER_UI_LAYOUT_H
 #define ENTITY_PLAYER_UI_LAYOUT_H
 
+#include "../player.h"
+
 #include <libcommon/math/vector.h>
 #include <libcommon/ui/layout.h>
 
@@ -16,6 +18,8 @@ struct player_ui_layout
   struct ui_grid crafting_inputs;
   struct ui_grid crafting_output;
 
+  struct ui_grid container;
+
   struct ui_rect cursor;
 
   float selected_item_y;
@@ -25,6 +29,6 @@ struct player_ui_layout
   float target_block_height;
 };
 
-struct player_ui_layout compute_player_ui_layout(void);
+struct player_ui_layout compute_player_ui_layout(struct entity *entity);
 
 #endif // ENTITY_PLAYER_UI_LAYOUT_H

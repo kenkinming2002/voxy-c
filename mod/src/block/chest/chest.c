@@ -84,10 +84,10 @@ bool chest_block_on_use(struct entity *entity, struct chunk *chunk, ivec3_t posi
     return false;
 
   struct player_opaque *player_opaque = entity->opaque;
-  for(unsigned y=0; y<5; ++y)
-    for(unsigned x=0; x<5; ++x)
-      SWAP(player_opaque->inventory[y][x], data->items[y][x]);
-
+  player_opaque->ui_state = PLAYER_UI_STATE_CONTAINER_OPENED;
+  player_opaque->container.items = &data->items[0][0];
+  player_opaque->container.width = 5;
+  player_opaque->container.height = 5;
   return true;
 }
 

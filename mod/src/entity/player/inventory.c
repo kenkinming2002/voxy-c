@@ -124,13 +124,13 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
   // Force close the inventory to prevent any interaction if we are dead.
   // FIXME: Is this a hack?
   if(entity->health <= 0.0f)
-    opaque->inventory_opened = false;
+    opaque->ui_state = PLAYER_UI_STATE_DEFAULT;
 
   if(entity->health > 0.0f)
   {
     // Open/close inventory.
     if(input_press(KEY_I))
-      opaque->inventory_opened = !opaque->inventory_opened;
+        opaque->ui_state = opaque->ui_state == PLAYER_UI_STATE_DEFAULT ? PLAYER_UI_STATE_INVENTORY_OPENED : PLAYER_UI_STATE_DEFAULT;
 
     // Select items on hot bar via number keys.
     if(input_press(KEY_1)) opaque->hotbar_selection = 0;
@@ -151,11 +151,12 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
 
   // Cursor is shown if either inventory is opened or we are dead.
   // FIXME: Is this a hack?
-  window_show_cursor(opaque->inventory_opened || entity->health <= 0.0f);
+  window_show_cursor(opaque->ui_state != PLAYER_UI_STATE_DEFAULT || entity->health <= 0.0f);
 
-  // Items movement.
+  // Update
+  struct item crafting_output;
   {
-    if(opaque->inventory_opened)
+    if(opaque->ui_state != PLAYER_UI_STATE_DEFAULT)
     {
       // Hot bar
       for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
@@ -165,91 +166,111 @@ void player_entity_update_inventory(struct entity *entity, float dt, struct play
       for(unsigned y=0; y<PLAYER_INVENTORY_SIZE_VERTICAL; ++y)
         for(unsigned x=0; x<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++x)
           update_slot(ui_grid_get_rect_at(ui_layout.inventory, x, y), &opaque->inventory[y][x], &opaque->hand);
+    }
 
+    if(opaque->ui_state == PLAYER_UI_STATE_INVENTORY_OPENED)
+    {
       // Crafting inputs
       for(unsigned y=0; y<3; ++y)
         for(unsigned x=0; x<3; ++x)
           update_slot(ui_grid_get_rect_at(ui_layout.crafting_inputs, x, y), &opaque->crafting_inputs[y][x], &opaque->hand);
+
+      // Update crafting system. While it is possible to store crafting_output
+      // inside opaque struct, it is not necessary since we recompute it every frame
+      // anyway.
+      const struct recipe *recipe = crafting_find_recipe(opaque->crafting_inputs);
+      if(recipe)
+      {
+        crafting_output = recipe->output;
+        if(update_slot_retrive_only(ui_grid_get_rect_at(ui_layout.crafting_output, 0, 0), crafting_output, &opaque->hand))
+          recipe_apply(recipe, opaque->crafting_inputs);
+      }
+      else
+      {
+        crafting_output.id = ITEM_NONE;
+        crafting_output.count = 0;
+      }
+    }
+
+    if(opaque->ui_state == PLAYER_UI_STATE_CONTAINER_OPENED)
+    {
+      // Container
+      for(unsigned y=0; y<opaque->container.height; ++y)
+        for(unsigned x=0; x<opaque->container.width; ++x)
+          update_slot(ui_grid_get_rect_at(ui_layout.container, x, y), &opaque->container.items[y * opaque->container.width + x], &opaque->hand);
+    }
+
+    // Drop items.
+    if(opaque->ui_state != PLAYER_UI_STATE_DEFAULT)
+    {
+      bool can_drop_item = true;
+
+      // Hot bar
+      {
+        struct ui_rect rect = ui_grid_get_rect_total(ui_layout.hot_bar);
+        if(ui_button(rect.position, rect.dimension))
+          can_drop_item = false;
+      }
+
+      // Inventory
+      {
+        struct ui_rect rect = ui_grid_get_rect_total(ui_layout.inventory);
+        if(ui_button(rect.position, rect.dimension))
+          can_drop_item = false;
+      }
+
+      if(opaque->ui_state == PLAYER_UI_STATE_INVENTORY_OPENED)
+      {
+        // Crafting inputs
+        {
+          struct ui_rect rect = ui_grid_get_rect_total(ui_layout.crafting_inputs);
+          if(ui_button(rect.position, rect.dimension))
+            can_drop_item = false;
+        }
+
+        // Crafting output
+        {
+          struct ui_rect rect = ui_grid_get_rect_total(ui_layout.crafting_output);
+          if(ui_button(rect.position, rect.dimension))
+            can_drop_item = false;
+        }
+      }
+
+      if(opaque->ui_state == PLAYER_UI_STATE_CONTAINER_OPENED)
+      {
+        // Container
+        {
+          struct ui_rect rect = ui_grid_get_rect_total(ui_layout.container);
+          if(ui_button(rect.position, rect.dimension))
+            can_drop_item = false;
+        }
+      }
+
+      if(can_drop_item && input_press(BUTTON_LEFT))
+      {
+        const fvec3_t spawn_position = entity->position;
+        const fvec3_t spawn_roation = fvec3_zero();
+        const fvec3_t spawn_velocity = fvec3_zero();
+
+        struct entity item_entity;
+        entity_init(&item_entity, spawn_position, spawn_roation, spawn_velocity, INFINITY, INFINITY);
+        item_entity_init(&item_entity, opaque->hand);
+        world_add_entity(item_entity);
+
+        opaque->hand.id = ITEM_NONE;
+        opaque->hand.count = 0;
+      }
     }
   }
 
-  // Update crafting system. While it is possible to store crafting_output
-  // inside opaque struct, it is not necessary since we recompute it every frame
-  // anyway.
-  struct item crafting_output;
-  {
-    const struct recipe *recipe = crafting_find_recipe(opaque->crafting_inputs);
-    if(recipe)
-    {
-      crafting_output = recipe->output;
-      if(update_slot_retrive_only(ui_grid_get_rect_at(ui_layout.crafting_output, 0, 0), crafting_output, &opaque->hand))
-        recipe_apply(recipe, opaque->crafting_inputs);
-    }
-    else
-    {
-      crafting_output.id = ITEM_NONE;
-      crafting_output.count = 0;
-    }
-  }
-
-
-  // Update drop items
-  if(opaque->inventory_opened && opaque->hand.id != ITEM_NONE)
-  {
-    // Hot bar
-    {
-      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.hot_bar);
-      if(ui_button(rect.position, rect.dimension))
-        goto out;
-    }
-
-    // Inventory
-    {
-      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.inventory);
-      if(ui_button(rect.position, rect.dimension))
-        goto out;
-    }
-
-    // Crafting inputs
-    {
-      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.crafting_inputs);
-      if(ui_button(rect.position, rect.dimension))
-        goto out;
-    }
-
-    // Crafting output
-    {
-      struct ui_rect rect = ui_grid_get_rect_total(ui_layout.crafting_output);
-      if(ui_button(rect.position, rect.dimension))
-        goto out;
-    }
-
-    if(input_press(BUTTON_LEFT))
-    {
-      const fvec3_t spawn_position = entity->position;
-      const fvec3_t spawn_roation = fvec3_zero();
-      const fvec3_t spawn_velocity = fvec3_zero();
-
-      struct entity item_entity;
-      entity_init(&item_entity, spawn_position, spawn_roation, spawn_velocity, INFINITY, INFINITY);
-      item_entity_init(&item_entity, opaque->hand);
-      world_add_entity(item_entity);
-
-      opaque->hand.id = ITEM_NONE;
-      opaque->hand.count = 0;
-    }
-
-out:;
-  }
-
-  // Rendering.
+  // Render
   {
     // Hot bar
     render_background(ui_grid_get_rect_total(ui_layout.hot_bar), PLAYER_HOTBAR_UI_COLOR_BACKGROUND);
     for(unsigned i=0; i<PLAYER_HOTBAR_SIZE; ++i)
       render_slot(ui_grid_get_rect_at(ui_layout.hot_bar, i, 0), PLAYER_HOTBAR_UI_COLOR_DEFAULT, PLAYER_HOTBAR_UI_COLOR_HOVER, PLAYER_HOTBAR_UI_COLOR_SELECTED, opaque->hotbar[i], i == opaque->hotbar_selection);
 
-    if(opaque->inventory_opened)
+    if(opaque->ui_state != PLAYER_UI_STATE_DEFAULT)
     {
       // Inventory
       render_background(ui_grid_get_rect_total(ui_layout.inventory), PLAYER_INVENTORY_UI_COLOR_BACKGROUND);
@@ -257,6 +278,12 @@ out:;
         for(unsigned x=0; x<PLAYER_INVENTORY_SIZE_HORIZONTAL; ++x)
           render_slot(ui_grid_get_rect_at(ui_layout.inventory, x, y), PLAYER_INVENTORY_UI_COLOR_DEFAULT, PLAYER_INVENTORY_UI_COLOR_HOVER, fvec4_zero(), opaque->inventory[y][x], false);
 
+      // Hand
+      render_item(ui_layout.hand, opaque->hand);
+    }
+
+    if(opaque->ui_state == PLAYER_UI_STATE_INVENTORY_OPENED)
+    {
       // Crafting inputs
       render_background(ui_grid_get_rect_total(ui_layout.crafting_inputs), PLAYER_INVENTORY_UI_COLOR_BACKGROUND);
       for(unsigned y=0; y<3; ++y)
@@ -266,12 +293,18 @@ out:;
       // Crafting output
       render_background(ui_grid_get_rect_total(ui_layout.crafting_output), PLAYER_INVENTORY_UI_COLOR_BACKGROUND);
       render_slot(ui_grid_get_rect_at(ui_layout.crafting_output, 0, 0), PLAYER_INVENTORY_UI_COLOR_DEFAULT, PLAYER_INVENTORY_UI_COLOR_HOVER, fvec4_zero(), crafting_output, false);
-
-      // Hand
-      render_item(ui_layout.hand, opaque->hand);
     }
 
-    if(!opaque->inventory_opened)
+    if(opaque->ui_state == PLAYER_UI_STATE_CONTAINER_OPENED)
+    {
+      // Container
+      render_background(ui_grid_get_rect_total(ui_layout.container), PLAYER_INVENTORY_UI_COLOR_BACKGROUND);
+      for(unsigned y=0; y<opaque->container.height; ++y)
+        for(unsigned x=0; x<opaque->container.width; ++x)
+          render_slot(ui_grid_get_rect_at(ui_layout.container, x, y), PLAYER_INVENTORY_UI_COLOR_DEFAULT, PLAYER_INVENTORY_UI_COLOR_HOVER, fvec4_zero(), opaque->container.items[y * opaque->container.width + x], false);
+    }
+
+    if(opaque->ui_state == PLAYER_UI_STATE_DEFAULT)
     {
       // Cursor
       {

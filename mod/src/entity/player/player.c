@@ -52,6 +52,8 @@ void player_entity_init(struct entity *entity)
 
   opaque->spawn_position = entity->position;
 
+  opaque->ui_state = PLAYER_UI_STATE_DEFAULT;
+
   for(int i=0; i<PLAYER_HOTBAR_SIZE; ++i)
     if(i < 9)
     {
@@ -81,7 +83,6 @@ void player_entity_init(struct entity *entity)
   opaque->hand.id = ITEM_NONE;
   opaque->hand.count = 0;
 
-  opaque->inventory_opened = false;
   opaque->hotbar_selection = 0;
 
   opaque->third_person = false;
@@ -127,7 +128,7 @@ int player_entity_deserialize(struct entity *entity, struct deserializer *deseri
   DESERIALIZE(deserializer, opaque->cooldown);
   DESERIALIZE(deserializer, opaque->cooldown_weird);
 
-  opaque->inventory_opened = false;
+  opaque->ui_state = PLAYER_UI_STATE_DEFAULT;
   opaque->third_person = false;
 
   return 0;
@@ -135,7 +136,7 @@ int player_entity_deserialize(struct entity *entity, struct deserializer *deseri
 
 void player_entity_update(struct entity *entity, float dt)
 {
-  const struct player_ui_layout ui_layout = compute_player_ui_layout();
+  const struct player_ui_layout ui_layout = compute_player_ui_layout(entity);
 
   player_entity_update_actions(entity, dt);
   player_entity_update_camera_follow(entity);

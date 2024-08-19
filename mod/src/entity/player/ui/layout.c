@@ -10,8 +10,10 @@ static inline float ui_scale(float factor)
   return factor * MIN(window_size.x, window_size.y);
 }
 
-struct player_ui_layout compute_player_ui_layout(void)
+struct player_ui_layout compute_player_ui_layout(struct entity *entity)
 {
+  struct player_opaque *opaque = entity->opaque;
+
   struct player_ui_layout ui_layout = {0};
 
   const float slot_width = ui_scale(0.05f);
@@ -47,6 +49,12 @@ struct player_ui_layout compute_player_ui_layout(void)
   ui_layout.crafting_output.dimension = fvec2(slot_width, slot_width);
   ui_layout.crafting_output.rounding = slot_rounding;
 
+  ui_layout.container.width = opaque->container.width;
+  ui_layout.container.height = opaque->container.height;
+  ui_layout.container.spacing = fvec2(slot_spacing, slot_spacing);
+  ui_layout.container.dimension = fvec2(slot_width, slot_width);
+  ui_layout.container.rounding = slot_rounding;
+
   ui_layout.health_bar.width = -1;
   ui_layout.health_bar.height = 1;
   ui_layout.health_bar.spacing = fvec2_zero();
@@ -75,6 +83,9 @@ struct player_ui_layout compute_player_ui_layout(void)
 
   ui_grid_set_position_y(&ui_layout.crafting_inputs, UI_ANCHOR_CENTER, ui_rect_top(ui_grid_get_rect_total(ui_layout.inventory)) + margin + crafting_max_height * 0.5f);
   ui_grid_set_position_y(&ui_layout.crafting_output, UI_ANCHOR_CENTER, ui_rect_top(ui_grid_get_rect_total(ui_layout.inventory)) + margin + crafting_max_height * 0.5f);
+
+  ui_grid_set_position_x(&ui_layout.container, UI_ANCHOR_CENTER, window_size.x * 0.5f);
+  ui_grid_set_position_y(&ui_layout.container, UI_ANCHOR_LOW, ui_rect_top(ui_grid_get_rect_total(ui_layout.inventory)) + margin);
 
   ui_layout.target_block_y = window_size.y - PLAYER_UI_TEXT_SIZE - margin;
   ui_layout.target_block_height = PLAYER_UI_TEXT_SIZE;

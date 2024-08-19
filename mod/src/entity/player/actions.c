@@ -16,6 +16,9 @@ void player_entity_update_actions(struct entity *entity, float dt)
   if(opaque->inventory_opened)
     return;
 
+  // Cooldown
+  opaque->cooldown += dt;
+
   // Left click => break blocks
   {
     if(input_state(BUTTON_LEFT))
@@ -28,23 +31,51 @@ void player_entity_update_actions(struct entity *entity, float dt)
         if(digger_dig(&g_digger, dt * PLAYER_DIG_SPEED))
           world_set_block(g_digger.position, empty_block_id_get(), entity);
       }
+      return;
     }
     else
       digger_reset(&g_digger);
   }
 
-  // Right click => place blocks
+  // Right click
   {
-    opaque->cooldown += dt;
-    if(input_state(BUTTON_RIGHT) && opaque->cooldown >= PLAYER_ACTION_COOLDOWN)
+    if(input_state(BUTTON_RIGHT))
     {
-      struct item *item = &opaque->hotbar[opaque->hotbar_selection];
-      if(item->id != ITEM_NONE)
+      // Use item
       {
-        const struct item_info *item_info = query_item_info(item->id);
-        if(item_info->on_use)
-          if(item_info->on_use(entity, item))
-            opaque->cooldown = 0.0f;
+        struct item *item = &opaque->hotbar[opaque->hotbar_selection];
+        if(item->id != ITEM_NONE && opaque->cooldown >= PLAYER_ACTION_COOLDOWN)
+        {
+          const struct item_info *item_info = query_item_info(item->id);
+          if(item_info->on_use)
+            if(item_info->on_use(entity, item))
+            {
+              opaque->cooldown = 0.0f;
+              return;
+            }
+        }
+      }
+
+      // Use block
+      {
+        ivec3_t position;
+        ivec3_t normal;
+        if(entity_ray_cast(entity, 20.0f, &position, &normal))
+        {
+          const ivec3_t global_position = position;
+          const ivec3_t local_position = global_position_to_local_position_i(global_position);
+          const ivec3_t chunk_position = get_chunk_position_i(global_position);
+
+          struct chunk *chunk = world_get_chunk(chunk_position);
+          if(chunk)
+          {
+            const block_id_t id = chunk_get_block_id(chunk, local_position);
+            const struct block_info *info = query_block_info(id);
+            if(info->on_use)
+              if(info->on_use(entity, chunk, local_position))
+                return;
+          }
+        }
       }
     }
   }

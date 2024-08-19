@@ -37,6 +37,8 @@ void chest_block_register(void)
   block_info.on_create = chest_block_on_create;
   block_info.on_destroy = chest_block_on_destroy;
 
+  block_info.on_use = chest_block_on_use;
+
   block_info.serialize = chest_block_serialize;
   block_info.deserialize = chest_block_deserialize;
 
@@ -70,6 +72,11 @@ void chest_block_on_destroy(struct entity *entity, struct chunk *chunk, ivec3_t 
   struct chest_block_data *data = chunk_del_block_data(chunk, position);
   block_on_destroy_spawn_item(chunk, position, chest_item_id_get());
   free(data);
+}
+
+bool chest_block_on_use(struct entity *entity, struct chunk *chunk, ivec3_t position)
+{
+  return false;
 }
 
 int chest_block_serialize(const void *_data, struct serializer *serializer)

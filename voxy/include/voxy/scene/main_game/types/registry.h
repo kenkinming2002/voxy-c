@@ -73,7 +73,7 @@ struct block_info
   void(*on_create)(struct entity *entity, struct chunk *chunk, ivec3_t position);
   void(*on_destroy)(struct entity *entity, struct chunk *chunk, ivec3_t position);
 
-  void(*on_use)(struct entity *entity, struct chunk *chunk, ivec3_t position);
+  bool(*on_use)(struct entity *entity, struct chunk *chunk, ivec3_t position);
 
   int(*serialize)(const void *data, struct serializer *serializer);
   int(*deserialize)(void **data, struct deserializer *deserializer);

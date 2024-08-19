@@ -89,10 +89,6 @@ static int entities_serialize(struct entities *entities, struct serializer *seri
 
 static int block_data_deserialize(struct chunk *chunk, struct block_data *block_data, struct deserializer *deserializer)
 {
-  const ivec3_t position = block_data_position(block_data);
-  const block_id_t id = chunk_get_block_id(chunk, position);
-  const struct block_info *info = query_block_info(id);
-
   uint8_t x;
   uint8_t y;
   uint8_t z;
@@ -105,10 +101,11 @@ static int block_data_deserialize(struct chunk *chunk, struct block_data *block_
   block_data->y = y;
   block_data->z = z;
 
-  if(info->deserialize && info->deserialize(chunk, position, deserializer) != 0)
-    return -1;
+  const ivec3_t position = block_data_position(block_data);
+  const block_id_t id = chunk_get_block_id(chunk, position);
+  const struct block_info *info = query_block_info(id);
 
-  return 0;
+  return info->deserialize(&block_data->data, deserializer);
 }
 
 static int block_data_serialize(const struct chunk *chunk, const struct block_data *block_data, struct serializer *serializer)
@@ -125,10 +122,7 @@ static int block_data_serialize(const struct chunk *chunk, const struct block_da
   SERIALIZE(serializer, y);
   SERIALIZE(serializer, z);
 
-  if(info->serialize && info->serialize(chunk, position, serializer) != 0)
-    return -1;
-
-  return 0;
+  return info->serialize(block_data->data, serializer);
 }
 
 static int block_datas_deserialize(struct chunk *chunk, struct block_datas *block_datas, struct deserializer *deserializer)

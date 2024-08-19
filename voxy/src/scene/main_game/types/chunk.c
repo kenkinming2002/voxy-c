@@ -284,6 +284,7 @@ void *chunk_del_block_data(struct chunk *chunk, ivec3_t position)
       return data;
     }
 
+  assert(false);
   return NULL;
 }
 

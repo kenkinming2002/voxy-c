@@ -75,8 +75,8 @@ struct block_info
 
   void(*on_use)(struct entity *entity, struct chunk *chunk, ivec3_t position);
 
-  int(*serialize)(const struct chunk *chunk, ivec3_t position, struct serializer *serializer);
-  int(*deserialize)(struct chunk *chunk, ivec3_t position, struct deserializer *deserializer);
+  int(*serialize)(const void *data, struct serializer *serializer);
+  int(*deserialize)(void **data, struct deserializer *deserializer);
 };
 
 struct item_info

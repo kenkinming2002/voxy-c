@@ -1,6 +1,7 @@
 CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
+CFLAGS += -fopenmp
 
 CFLAGS += -I../../lib/common/bundled/include
 CFLAGS += -I../../lib/common/include

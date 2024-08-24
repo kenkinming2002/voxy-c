@@ -2,26 +2,6 @@ CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
 
-LIBCOMMON_SRCS += libcommon/bundled/src/glad.c
-LIBCOMMON_SRCS += libcommon/bundled/src/stb_image.c
-
-LIBCOMMON_SRCS += libcommon/src/math/direction.c
-
-LIBCOMMON_SRCS += libcommon/src/core/window.c
-LIBCOMMON_SRCS += libcommon/src/core/thread_pool.c
-LIBCOMMON_SRCS += libcommon/src/core/delta_time.c
-LIBCOMMON_SRCS += libcommon/src/core/fs.c
-LIBCOMMON_SRCS += libcommon/src/core/time.c
-LIBCOMMON_SRCS += libcommon/src/core/serde.c
-
-LIBCOMMON_SRCS += libcommon/src/graphics/gl.c
-LIBCOMMON_SRCS += libcommon/src/graphics/font_set.c
-LIBCOMMON_SRCS += libcommon/src/graphics/mesh.c
-LIBCOMMON_SRCS += libcommon/src/graphics/camera.c
-LIBCOMMON_SRCS += libcommon/src/graphics/render.c
-
-LIBCOMMON_SRCS += libcommon/src/ui/ui.c
-
 RENDER_BLOCK_SRCS += render_block/src/render_block.c
 
 VOXY_SRCS += voxy/src/voxy.c
@@ -130,20 +110,17 @@ MOD_SRCS += mod/src/entity/weird/weird.c
 MOD_SRCS += mod/src/update/spawn_player.c
 MOD_SRCS += mod/src/update/spawn_weird.c
 
-libcommon/libcommon.a: CFLAGS += -Ilibcommon/bundled/include
-libcommon/libcommon.a: CFLAGS += -Ilibcommon/include
-libcommon/libcommon.a: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
-
-render_block/render_block: CFLAGS += -Ilibcommon/bundled/include
-render_block/render_block: CFLAGS += -Ilibcommon/include
+render_block/render_block: CFLAGS += -Ilib/common/bundled/include
+render_block/render_block: CFLAGS += -Ilib/common/include
 render_block/render_block: CFLAGS += $(shell pkg-config --cflags glfw3 libpng)
 render_block/render_block: LIBS   += $(shell pkg-config --libs   glfw3 libpng)
 render_block/render_block: LIBS   += -lm
 
 render_block/render_block: CFLAGS  += -Irender_block/include
 
-voxy/voxy: CFLAGS += -Ilibcommon/bundled/include
-voxy/voxy: CFLAGS += -Ilibcommon/include
+voxy/voxy: CFLAGS += -Ilib/common/bundled/include
+voxy/voxy: CFLAGS += -Ilib/common/include
+
 voxy/voxy: CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
 voxy/voxy: LIBS   += $(shell pkg-config --libs   glfw3 fontconfig freetype2)
 voxy/voxy: LIBS   += -lm
@@ -151,46 +128,45 @@ voxy/voxy: LIBS   += -lm
 voxy/voxy: CFLAGS  += -Ivoxy/include
 voxy/voxy: LDFLAGS += -rdynamic
 
-mod/mod.so: CFLAGS += -Ilibcommon/bundled/include
-mod/mod.so: CFLAGS += -Ilibcommon/include
+mod/mod.so: CFLAGS += -Ilib/common/bundled/include
+mod/mod.so: CFLAGS += -Ilib/common/include
+
 mod/mod.so: CFLAGS += -Ivoxy/include
 mod/mod.so: CFLAGS += -Imod/src
 
 mod/mod.so: CFLAGS  += -fPIC
 mod/mod.so: LDFLAGS += -shared
 
-.PHONY: clean depclean
+.PHONY: lib/common/libcommon.a clean depclean
 
 all: voxy/voxy render_block/render_block mod/mod.so
 
-libcommon/libcommon.a: $(LIBCOMMON_SRCS:.c=.o)
-	ar $(ARFLAGS) $@ $(LIBCOMMON_SRCS:.c=.o)
+lib/common/libcommon.a:
+	$(MAKE) -C lib/common
 
-render_block/render_block: $(RENDER_BLOCK_SRCS:.c=.o) libcommon/libcommon.a
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(RENDER_BLOCK_SRCS:.c=.o) $(LIBS) -Llibcommon -lcommon
+render_block/render_block: $(RENDER_BLOCK_SRCS:.c=.o) lib/common/libcommon.a
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(RENDER_BLOCK_SRCS:.c=.o) $(LIBS) -Llib/common -lcommon
 
-voxy/voxy: $(VOXY_SRCS:.c=.o) libcommon/libcommon.a
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS) -Llibcommon -Wl,--whole-archive -lcommon -Wl,--no-whole-archive
+voxy/voxy: $(VOXY_SRCS:.c=.o) lib/common/libcommon.a
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(VOXY_SRCS:.c=.o) $(LIBS) -Llib/common -Wl,--whole-archive -lcommon -Wl,--no-whole-archive
 
 mod/mod.so: $(MOD_SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(MOD_SRCS:.c=.o) $(LIBS)
 
 clean: depclean
-	- rm -f libcommon/libcommon.a
+	$(MAKE) -C lib/common clean
 	- rm -f voxy/voxy
 	- rm -f mod/mod.so
-	- rm -f $(LIBCOMMON_SRCS:.c=.o)
 	- rm -f $(RENDER_BLOCK_SRCS:.c=.o)
 	- rm -f $(VOXY_SRCS:.c=.o)
 	- rm -f $(MOD_SRCS:.c=.o)
 
 depclean:
-	- rm -f $(LIBCOMMON_SRCS:.c=.d)
+	$(MAKE) -C lib/common depclean
 	- rm -f $(RENDER_BLOCK_SRCS:.c=.d)
 	- rm -f $(VOXY_SRCS:.c=.d)
 	- rm -f $(MOD_SRCS:.c=.d)
 
--include $(LIBCOMMON_SRCS:.c=.d)
 -include $(RENDER_BLOCK_SRCS:.c=.d)
 -include $(VOXY_SRCS:.c=.d)
 -include $(MOD_SRCS:.c=.d)

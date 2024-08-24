@@ -1,6 +1,3 @@
-/render_block/render_block
-/voxy/voxy
-/mod/mod.so
 /world
 *.d
 *.o

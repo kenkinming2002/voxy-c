@@ -1,4 +1,4 @@
-libnet-server.so
-libnet-client.so
-test/server
-test/client
+/libnet-server.so
+/libnet-client.so
+/test/server
+/test/client

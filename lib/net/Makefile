@@ -16,10 +16,10 @@ libnet-server.so: src/server.o
 libnet-client.so: src/client.o
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -shared
 
-test/server: test/server.o
+test/server: test/server.o libnet-server.so
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -Wl,-rpath,./lib/net -L. -lnet-server
 
-test/client: test/client.o
+test/client: test/client.o libnet-client.so
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -Wl,-rpath,./lib/net -L. -lnet-client
 
 clean: depclean

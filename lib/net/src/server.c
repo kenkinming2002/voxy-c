@@ -30,6 +30,7 @@ struct libnet_server
 
   struct libnet_client_proxies client_proxies;
 
+  void *opaque;
   libnet_server_on_client_connected_t on_client_connected;
   libnet_server_on_client_disconnected_t on_client_disconnected;
   libnet_server_on_message_received_t on_message_received;
@@ -103,6 +104,7 @@ libnet_server_t libnet_server_create(const char *service)
     }
 
     LIST_INIT(&server->client_proxies);
+    server->opaque = NULL;
     server->on_client_connected = NULL;
     server->on_client_disconnected = NULL;
     server->on_message_received = NULL;
@@ -126,6 +128,16 @@ void libnet_server_destroy(libnet_server_t server)
 
   close(server->fd);
   free(server);
+}
+
+void libnet_server_set_opaque(libnet_server_t server, void *opaque)
+{
+  server->opaque = opaque;
+}
+
+void *libnet_server_get_opaque(libnet_server_t server)
+{
+  return server->opaque;
 }
 
 void libnet_server_set_on_client_connected(libnet_server_t server, libnet_server_on_client_connected_t cb)

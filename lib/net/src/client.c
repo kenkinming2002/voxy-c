@@ -18,6 +18,8 @@
 struct libnet_client
 {
   struct socket socket;
+
+  void *opaque;
   libnet_client_on_message_received_t on_message_received;
 };
 
@@ -53,6 +55,7 @@ libnet_client_t libnet_client_create(const char *node, const char *service)
 
     libnet_client_t client = malloc(sizeof *client);
     client->socket = socket_create_from_fd(fd);
+    client->opaque = NULL;
     client->on_message_received = NULL;
     return client;
   }
@@ -68,11 +71,20 @@ void libnet_client_destroy(libnet_client_t client)
   free(client);
 }
 
+void libnet_client_set_opaque(libnet_client_t client, void *opaque)
+{
+  client->opaque = opaque;
+}
+
+void *libnet_client_get_opaque(libnet_client_t client)
+{
+  return client->opaque;
+}
+
 void libnet_client_set_on_message_received(libnet_client_t client, libnet_client_on_message_received_t cb)
 {
   client->on_message_received = cb;
 }
-
 
 int libnet_client_update(libnet_client_t client)
 {

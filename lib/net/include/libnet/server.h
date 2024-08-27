@@ -22,6 +22,10 @@ libnet_server_t libnet_server_create(const char *service);
 /// Destroy a libnet server.
 void libnet_server_destroy(libnet_server_t server);
 
+/// Opaque pointer.
+void libnet_server_set_opaque(libnet_server_t server, void *opaque);
+void *libnet_server_get_opaque(libnet_server_t server);
+
 /// Event callbacks.
 typedef void(*libnet_server_on_client_connected_t)(libnet_server_t server, libnet_client_proxy_t client_proxy);
 typedef void(*libnet_server_on_client_disconnected_t)(libnet_server_t server, libnet_client_proxy_t client_proxy);

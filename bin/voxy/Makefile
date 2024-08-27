@@ -69,17 +69,28 @@ SRCS += src/scene/main_game/crafting/crafting.c
 SRCS += src/scene/main_game/crafting/recipe.c
 
 .PHONY: clean depclean
+.PHONY: server client
 
-all: voxy
+all: voxy server client
+
+server:
+	$(MAKE) -C server
+
+client:
+	$(MAKE) -C client
 
 voxy: $(SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(SRCS:.c=.o) $(LIBS) -L../../lib/common -Wl,--whole-archive -lcommon -Wl,--no-whole-archive
 
 clean: depclean
 	- rm -f $(SRCS:.c=.o)
+	$(MAKE) -C server clean
+	$(MAKE) -C client clean
 
 depclean:
 	- rm -f $(SRCS:.c=.d)
+	$(MAKE) -C server depclean
+	$(MAKE) -C client depclean
 
 -include $(SRCS:.c=.d)
 

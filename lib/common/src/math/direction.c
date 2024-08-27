@@ -12,6 +12,11 @@ direction_t direction_from_sign_axis(bool sign, unsigned axis)
   }
 }
 
+direction_t direction_reverse(direction_t direction)
+{
+  return direction_from_sign_axis(!direction_sign(direction), direction_axis(direction));
+}
+
 bool direction_sign(direction_t direction)
 {
   switch(direction)

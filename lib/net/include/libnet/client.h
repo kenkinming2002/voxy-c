@@ -22,6 +22,10 @@ void libnet_client_destroy(libnet_client_t client);
 /// Event callbacks.
 typedef void(*libnet_client_on_message_received_t)(libnet_client_t client, const struct libnet_message *message);
 
+/// Opaque pointer.
+void libnet_client_set_opaque(libnet_client_t client, void *opaque);
+void *libnet_client_get_opaque(libnet_client_t client);
+
 /// Event callbacks setters.
 void libnet_client_set_on_message_received(libnet_client_t client, libnet_client_on_message_received_t cb);
 

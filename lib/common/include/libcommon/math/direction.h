@@ -16,6 +16,9 @@ typedef enum {
 
 direction_t direction_from_sign_axis(bool sign, unsigned axis);
 
+// Get the reverse direction.
+direction_t direction_reverse(direction_t direction);
+
 /// Return sign of direction i.e. true if direction is in the positive direction and false otherwise.
 bool direction_sign(direction_t direction);
 

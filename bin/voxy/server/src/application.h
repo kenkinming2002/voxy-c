@@ -19,7 +19,8 @@ void application_fini(struct application *application);
 /// Run the application.
 void application_run(struct application *application);
 
-/// Network callback.
+/// Callbacks.
+void application_on_update(libnet_server_t server);
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy);
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy);
 void application_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message);

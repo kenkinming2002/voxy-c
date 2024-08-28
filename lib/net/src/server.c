@@ -8,8 +8,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/timerfd.h>
 #include <unistd.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,18 +39,20 @@ void *libnet_client_proxy_get_opaque(libnet_client_proxy_t client_proxy)
 
 struct libnet_server
 {
-  int epoll;
-  int fd;
+  int epoll_fd;
+  int socket_fd;
+  int timer_fd;
 
   struct libnet_client_proxies client_proxies;
 
   void *opaque;
+  libnet_server_on_update on_update;
   libnet_server_on_client_connected_t on_client_connected;
   libnet_server_on_client_disconnected_t on_client_disconnected;
   libnet_server_on_message_received_t on_message_received;
 };
 
-libnet_server_t libnet_server_create(const char *service)
+libnet_server_t libnet_server_create(const char *service, unsigned long long nsec)
 {
   libnet_server_t server = malloc(sizeof *server);
 
@@ -68,49 +72,86 @@ libnet_server_t libnet_server_create(const char *service)
 
   for(struct addrinfo *p = res; p; p = p->ai_next)
   {
-    if((server->fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+    if((server->socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
       continue;
 
-    if(setsockopt(server->fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) == -1)
+    if(setsockopt(server->socket_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) == -1)
     {
       fprintf(stderr, "libnet: Warn: Failed to set socket option: %s\n", strerror(errno));
-      close(server->fd);
+      close(server->socket_fd);
       continue;
     }
 
-    if(bind(server->fd, p->ai_addr, p->ai_addrlen) == -1)
+    if(bind(server->socket_fd, p->ai_addr, p->ai_addrlen) == -1)
     {
       fprintf(stderr, "libnet: Warn: Failed to bind socket: %s\n", strerror(errno));
-      close(server->fd);
+      close(server->socket_fd);
       continue;
     }
 
-    if(listen(server->fd, 4) == -1)
+    if(listen(server->socket_fd, 4) == -1)
     {
       fprintf(stderr, "libnet: Warn: Failed to set socket to listening mode: %s\n", strerror(errno));
-      close(server->fd);
+      close(server->socket_fd);
       continue;
     }
 
-    fcntl(server->fd, F_SETFL, fcntl(server->fd, F_GETFL, 0) | O_NONBLOCK);
+    fcntl(server->socket_fd, F_SETFL, fcntl(server->socket_fd, F_GETFL, 0) | O_NONBLOCK);
     freeaddrinfo(res);
 
-    if((server->epoll = epoll_create1(0)) == -1)
+    if((server->timer_fd = timerfd_create(CLOCK_MONOTONIC, 0)) == -1)
+    {
+      fprintf(stderr, "libnet: Error: Failed to create timer file descriptor: %s\n", strerror(errno));
+      close(server->socket_fd);
+      free(server);
+    }
+
+    fcntl(server->timer_fd, F_SETFL, fcntl(server->timer_fd, F_GETFL, 0) | O_NONBLOCK);
+
+    struct itimerspec itimerspec;
+    itimerspec.it_value.tv_sec = 0;
+    itimerspec.it_value.tv_nsec = nsec;
+    itimerspec.it_interval.tv_sec = 0;
+    itimerspec.it_interval.tv_nsec = nsec;
+    if(timerfd_settime(server->timer_fd, 0, &itimerspec, NULL) == -1)
+    {
+      fprintf(stderr, "libnet: Error: Failed to configure timer file descriptor: %s\n", strerror(errno));
+      close(server->socket_fd);
+      close(server->timer_fd);
+      free(server);
+    }
+
+    if((server->epoll_fd = epoll_create1(0)) == -1)
     {
       fprintf(stderr, "libnet: Error: Failed to create epoll file descriptor: %s\n", strerror(errno));
-      close(server->fd);
+      close(server->socket_fd);
+      close(server->timer_fd);
       free(server);
       return NULL;
     }
 
     struct epoll_event epoll_event;
+
     epoll_event.events = EPOLLIN;
-    epoll_event.data.ptr = server;
-    if(epoll_ctl(server->epoll, EPOLL_CTL_ADD, server->fd, &epoll_event) == -1)
+    epoll_event.data.ptr = &server->socket_fd;
+    if(epoll_ctl(server->epoll_fd, EPOLL_CTL_ADD, server->socket_fd, &epoll_event) == -1)
     {
       fprintf(stderr, "libnet: Error: Failed to add socket to epoll file descriptor: %s\n", strerror(errno));
-      close(server->epoll);
-      close(server->fd);
+      close(server->epoll_fd);
+      close(server->socket_fd);
+      close(server->timer_fd);
+      free(server);
+      return NULL;
+    }
+
+    epoll_event.events = EPOLLIN;
+    epoll_event.data.ptr = &server->timer_fd;
+    if(epoll_ctl(server->epoll_fd, EPOLL_CTL_ADD, server->timer_fd, &epoll_event) == -1)
+    {
+      fprintf(stderr, "libnet: Error: Failed to add socket to epoll file descriptor: %s\n", strerror(errno));
+      close(server->epoll_fd);
+      close(server->socket_fd);
+      close(server->timer_fd);
       free(server);
       return NULL;
     }
@@ -138,7 +179,9 @@ void libnet_server_destroy(libnet_server_t server)
     free(client_proxy);
   }
 
-  close(server->fd);
+  close(server->epoll_fd);
+  close(server->socket_fd);
+  close(server->timer_fd);
   free(server);
 }
 
@@ -150,6 +193,11 @@ void libnet_server_set_opaque(libnet_server_t server, void *opaque)
 void *libnet_server_get_opaque(libnet_server_t server)
 {
   return server->opaque;
+}
+
+void libnet_server_set_on_update(libnet_server_t server, libnet_server_on_update cb)
+{
+  server->on_update = cb;
 }
 
 void libnet_server_set_on_client_connected(libnet_server_t server, libnet_server_on_client_connected_t cb)
@@ -167,30 +215,27 @@ void libnet_server_set_on_message_received(libnet_server_t server, libnet_server
   server->on_message_received = cb;
 }
 
-void libnet_server_update(libnet_server_t server)
+void libnet_server_run(libnet_server_t server)
 {
   for(;;)
   {
     struct epoll_event epoll_events[32];
     int epoll_event_count;
-    if((epoll_event_count = epoll_wait(server->epoll, epoll_events, sizeof epoll_events / sizeof epoll_events[0], 0)) == -1)
+    if((epoll_event_count = epoll_wait(server->epoll_fd, epoll_events, sizeof epoll_events / sizeof epoll_events[0], -1)) == -1)
     {
       fprintf(stderr, "libnet: Warn: Failed to wait on epoll file descriptor: %s\n", strerror(errno));
       return;
     }
 
-    if(epoll_event_count == 0)
-      return;
-
     for(int i=0; i<epoll_event_count; ++i)
     {
       const struct epoll_event epoll_event = epoll_events[i];
-      if(epoll_event.data.ptr == server)
+      if(epoll_event.data.ptr == &server->socket_fd)
       {
         struct sockaddr_storage address;
         socklen_t address_len;
         int fd;
-        while(address_len = sizeof address, (fd = accept(server->fd, (struct sockaddr *)&address, &address_len)) != -1)
+        while(address_len = sizeof address, (fd = accept(server->socket_fd, (struct sockaddr *)&address, &address_len)) != -1)
         {
           // Initialize client proxy.
           libnet_client_proxy_t client_proxy = malloc(sizeof *client_proxy);
@@ -201,7 +246,7 @@ void libnet_server_update(libnet_server_t server)
           struct epoll_event epoll_event;
           epoll_event.events = EPOLLIN;
           epoll_event.data.ptr = client_proxy;
-          if(epoll_ctl(server->epoll, EPOLL_CTL_ADD, fd, &epoll_event) == -1)
+          if(epoll_ctl(server->epoll_fd, EPOLL_CTL_ADD, fd, &epoll_event) == -1)
           {
             fprintf(stderr, "libnet: Warn: Not accepting connection: Failed to add socket to epoll file descriptor: %s\n", strerror(errno));
             socket_destroy(client_proxy->socket);
@@ -219,6 +264,28 @@ void libnet_server_update(libnet_server_t server)
 
         if(errno != EAGAIN && errno != EWOULDBLOCK)
           fprintf(stderr, "libnet: Warn: Failed to accept connection: %s\n", strerror(errno));
+      }
+      else if(epoll_event.data.ptr == &server->timer_fd)
+      {
+        uint64_t count;
+        ssize_t n = read(server->timer_fd, &count, sizeof count);
+
+        if(n == -1)
+        {
+          if(errno != EAGAIN && errno != EWOULDBLOCK)
+            fprintf(stderr, "libnet: Warn: Error from timer: %s\n", strerror(errno));
+
+          continue;
+        }
+
+        if(n != sizeof count)
+        {
+          fprintf(stderr, "libnet: Expected %zu bytes from timer. Got %zu bytes.\n", sizeof count, n);
+          continue;
+        }
+
+        for(uint64_t i=0; i<count; ++i)
+          server->on_update(server);
       }
       else
       {
@@ -249,7 +316,7 @@ void libnet_server_update(libnet_server_t server)
           struct epoll_event epoll_event;
           epoll_event.events = EPOLLIN;
           epoll_event.data.ptr = client_proxy;
-          if(epoll_ctl(server->epoll, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) == -1)
+          if(epoll_ctl(server->epoll_fd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) == -1)
             fprintf(stderr, "libnet: Warn: Failed to change event mask on epoll file descriptor: %s\n", strerror(errno));
         }
 
@@ -264,7 +331,7 @@ void libnet_server_update(libnet_server_t server)
 
           // Remove from epoll fd.
           struct epoll_event epoll_event = {0};
-          if(epoll_ctl(server->epoll, EPOLL_CTL_DEL, client_proxy->socket.fd, &epoll_event) == -1)
+          if(epoll_ctl(server->epoll_fd, EPOLL_CTL_DEL, client_proxy->socket.fd, &epoll_event) == -1)
             fprintf(stderr, "libnet: Warn: Failed to remove socket from epoll file descriptor: %s\n", strerror(errno));
 
           // Destroy client proxy.
@@ -298,7 +365,7 @@ void libnet_server_send_message(libnet_server_t server, libnet_client_proxy_t cl
     struct epoll_event epoll_event;
     epoll_event.events = EPOLLIN | EPOLLOUT;
     epoll_event.data.ptr = client_proxy;
-    if(epoll_ctl(server->epoll, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) == -1)
+    if(epoll_ctl(server->epoll_fd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) == -1)
       fprintf(stderr, "libnet: Warn: Failed to change event mask on epoll file descriptor: %s\n", strerror(errno));
   }
 

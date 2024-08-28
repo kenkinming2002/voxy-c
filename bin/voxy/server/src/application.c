@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#include <unistd.h>
-
 int application_init(struct application *application, int argc, char *argv[])
 {
   if(argc != 2)
@@ -13,7 +11,7 @@ int application_init(struct application *application, int argc, char *argv[])
     return -1;
   }
 
-  if(!(application->server = libnet_server_create(argv[1])))
+  if(!(application->server = libnet_server_create(argv[1], FIXED_DT * 1e9)))
     return -1;
 
   if(chunk_manager_init(&application->chunk_manager) != 0)
@@ -23,6 +21,7 @@ int application_init(struct application *application, int argc, char *argv[])
   }
 
   libnet_server_set_opaque(application->server, application);
+  libnet_server_set_on_update(application->server, application_on_update);
   libnet_server_set_on_client_connected(application->server, application_on_client_connected);
   libnet_server_set_on_client_disconnected(application->server, application_on_client_disconnected);
   libnet_server_set_on_message_received(application->server, application_on_message_received);
@@ -38,14 +37,14 @@ void application_fini(struct application *application)
 
 void application_run(struct application *application)
 {
-  for(;;)
-  {
-    libnet_server_update(application->server);
-    player_manager_update(application->server, FIXED_DT);
-    chunk_manager_update(&application->chunk_manager);
+  libnet_server_run(application->server);
+}
 
-    usleep(FIXED_DT * 1e6);
-  }
+void application_on_update(libnet_server_t server)
+{
+  struct application *application = libnet_server_get_opaque(server);
+  player_manager_update(application->server, FIXED_DT);
+  chunk_manager_update(&application->chunk_manager);
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)

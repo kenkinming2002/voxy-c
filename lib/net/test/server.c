@@ -13,6 +13,10 @@ struct my_message
   char data[];
 };
 
+static void on_update(libnet_server_t server)
+{
+}
+
 static void on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   printf("Client connected %p => %p\n", server, client_proxy);
@@ -40,19 +44,15 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  libnet_server_t server = libnet_server_create(argv[1]);
+  libnet_server_t server = libnet_server_create(argv[1], 1000000000);
   if(!server)
     return EXIT_FAILURE;
 
+  libnet_server_set_on_update(server, on_update);
   libnet_server_set_on_client_connected(server, on_client_connected);
   libnet_server_set_on_client_disconnected(server, on_client_disconnected);
   libnet_server_set_on_message_received(server, on_message_received);
 
-  for(;;)
-  {
-    libnet_server_update(server);
-    sleep(1);
-  }
-
+  libnet_server_run(server);
   libnet_server_destroy(server);
 }

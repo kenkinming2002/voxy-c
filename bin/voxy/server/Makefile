@@ -6,12 +6,17 @@ CFLAGS += -Isrc
 CFLAGS += -I../protocol/include
 CFLAGS += -I../../../lib/net/include
 CFLAGS += -I../../../lib/common/include
+CFLAGS += -I../../../lib/common/bundled/include
 
 LIBS += -L../../../lib/net
 LIBS += -lnet-server
 
+LIBS += -lm
+
 SRCS += src/main.c
 SRCS += src/application.c
+
+SRCS += src/chunk/chunk.c
 SRCS += src/chunk/manager.c
 
 all: voxy-server

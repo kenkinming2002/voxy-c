@@ -1,10 +1,13 @@
 #ifndef CHUNK_MANAGER_H
 #define CHUNK_MANAGER_H
 
+#include "chunk.h"
+
 #include <libnet/server.h>
 
 struct chunk_manager
 {
+  struct chunk_hash_table chunks;
 };
 
 int chunk_manager_init(struct chunk_manager *chunk_manager);

@@ -22,6 +22,9 @@ LIBS   += $(shell pkg-config --libs   glfw3)
 SRCS += src/main.c
 SRCS += src/application.c
 
+SRCS += src/input/manager.c
+SRCS += src/camera/manager.c
+
 SRCS += src/chunk/chunk.c
 SRCS += src/chunk/manager.c
 

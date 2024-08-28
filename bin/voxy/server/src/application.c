@@ -1,6 +1,9 @@
 #include "application.h"
+#include "config.h"
 
 #include <stdio.h>
+
+#include <unistd.h>
 
 int application_init(struct application *application, int argc, char *argv[])
 {
@@ -38,21 +41,28 @@ void application_run(struct application *application)
   for(;;)
   {
     libnet_server_update(application->server);
+    player_manager_update(application->server, FIXED_DT);
     chunk_manager_update(&application->chunk_manager);
+
+    usleep(FIXED_DT * 1e6);
   }
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct application *application = libnet_server_get_opaque(server);
+
+  player_manager_on_client_connected(server, client_proxy);
   chunk_manager_on_client_connected(&application->chunk_manager, server, client_proxy);
 }
 
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
+  player_manager_on_client_disconnected(server, client_proxy);
 }
 
 void application_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
+  player_manager_on_message_received(server, client_proxy, message);
 }
 

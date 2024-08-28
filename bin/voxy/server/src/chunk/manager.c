@@ -1,6 +1,6 @@
 #include "manager.h"
 
-#include <voxy/protocol/protocol.h>
+#include <voxy/protocol/server.h>
 
 #include <libcommon/core/log.h>
 
@@ -46,9 +46,9 @@ void chunk_manager_on_client_connected(struct chunk_manager *chunk_manager, libn
   struct chunk *chunk;
   SC_HASH_TABLE_FOREACH(chunk_manager->chunks, chunk)
   {
-    struct voxy_chunk_update_message message;
+    struct voxy_server_chunk_update_message message;
     message.message.message.size = LIBNET_MESSAGE_SIZE(message);
-    message.message.tag = VOXY_MESSAGE_CHUNK_UPDATE;
+    message.message.tag = VOXY_SERVER_MESSAGE_CHUNK_UPDATE;
     message.position = chunk->position;
     memcpy(&message.block_ids, &chunk->block_ids, sizeof chunk->block_ids);
     memcpy(&message.block_light_levels, &chunk->block_light_levels, sizeof chunk->block_light_levels);

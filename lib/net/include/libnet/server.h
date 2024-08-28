@@ -8,6 +8,10 @@
 /// This represent a client from the server point of view.
 typedef struct libnet_client_proxy *libnet_client_proxy_t;
 
+/// Opaque pointer.
+void libnet_client_proxy_set_opaque(libnet_client_proxy_t client_proxy, void *opaque);
+void *libnet_client_proxy_get_opaque(libnet_client_proxy_t client_proxy);
+
 /// Server type.
 typedef struct libnet_server *libnet_server_t;
 
@@ -38,6 +42,9 @@ void libnet_server_set_on_message_received(libnet_server_t server, libnet_server
 
 /// Handle all pending network events.
 void libnet_server_update(libnet_server_t server);
+
+/// Execute a callback on each currently connected client.
+void libnet_server_foreach_client(libnet_server_t server, void(*cb)(libnet_server_t server, libnet_client_proxy_t client, void *data), void *data);
 
 /// Send a message to all connected clients.
 ///

@@ -2,8 +2,9 @@
 #define APPLICATION_H
 
 #include <libnet/client.h>
-#include <libcommon/graphics/camera.h>
 
+#include "input/manager.h"
+#include "camera/manager.h"
 #include "chunk/manager.h"
 #include "render/world.h"
 
@@ -11,9 +12,10 @@ struct application
 {
   libnet_client_t client;
 
+  struct input_manager input_manager;
+  struct camera_manager camera_manager;
   struct chunk_manager chunk_manager;
 
-  struct camera camera;
   struct world_renderer world_renderer;
 };
 

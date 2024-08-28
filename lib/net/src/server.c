@@ -19,9 +19,21 @@ struct libnet_client_proxy
 {
   LIST_ENTRY(libnet_client_proxy) entry;
   struct socket socket;
+
+  void *opaque;
 };
 
 LIST_HEAD(libnet_client_proxies, libnet_client_proxy);
+
+void libnet_client_proxy_set_opaque(libnet_client_proxy_t client_proxy, void *opaque)
+{
+  client_proxy->opaque = opaque;
+}
+
+void *libnet_client_proxy_get_opaque(libnet_client_proxy_t client_proxy)
+{
+  return client_proxy->opaque;
+}
 
 struct libnet_server
 {
@@ -183,6 +195,7 @@ void libnet_server_update(libnet_server_t server)
           // Initialize client proxy.
           libnet_client_proxy_t client_proxy = malloc(sizeof *client_proxy);
           client_proxy->socket = socket_create_from_fd(fd);
+          client_proxy->opaque = NULL;
 
           // Add to epoll fd.
           struct epoll_event epoll_event;
@@ -261,6 +274,13 @@ void libnet_server_update(libnet_server_t server)
       }
     }
   }
+}
+
+void libnet_server_foreach_client(libnet_server_t server, void(*cb)(libnet_server_t server, libnet_client_proxy_t client, void *data), void *data)
+{
+  libnet_client_proxy_t client_proxy;
+  LIST_FOREACH(client_proxy, &server->client_proxies, entry)
+    cb(server, client_proxy, data);
 }
 
 void libnet_server_send_message_all(libnet_server_t server, const struct libnet_message *message)

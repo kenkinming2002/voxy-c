@@ -1,6 +1,6 @@
 #include "manager.h"
 
-#include <voxy/protocol/protocol.h>
+#include <voxy/protocol/server.h>
 
 #include <libcommon/core/log.h>
 
@@ -24,7 +24,7 @@ void chunk_manager_update(struct chunk_manager *chunk_manager)
 
 void chunk_manager_on_message_received(struct chunk_manager *chunk_manager, libnet_client_t client, const struct libnet_message *message)
 {
-  const struct voxy_chunk_update_message *_message = voxy_get_chunk_update_message(message);
+  const struct voxy_server_chunk_update_message *_message = voxy_get_server_chunk_update_message(message);
   if(!_message)
     return;
 

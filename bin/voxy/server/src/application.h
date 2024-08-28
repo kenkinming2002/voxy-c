@@ -3,6 +3,7 @@
 
 #include <libnet/server.h>
 
+#include "player/manager.h"
 #include "chunk/manager.h"
 
 struct application

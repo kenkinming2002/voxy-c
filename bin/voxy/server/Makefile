@@ -16,6 +16,8 @@ LIBS += -lm
 SRCS += src/main.c
 SRCS += src/application.c
 
+SRCS += src/block/registry.c
+
 SRCS += src/player/player.c
 SRCS += src/player/manager.c
 

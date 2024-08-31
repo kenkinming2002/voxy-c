@@ -11,14 +11,34 @@ int application_init(struct application *application, int argc, char *argv[])
     return -1;
   }
 
+  block_registry_init(&application->block_registry);
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "air",
+  });
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "ether",
+  });
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "stone",
+  });
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "grass",
+  });
+
+
   if(!(application->server = libnet_server_create(argv[1], FIXED_DT * 1e9)))
-    return -1;
+    goto error0;
 
   if(chunk_manager_init(&application->chunk_manager) != 0)
-  {
-    libnet_server_destroy(application->server);
-    return -1;
-  }
+    goto error1;
 
   libnet_server_set_opaque(application->server, application);
   libnet_server_set_on_update(application->server, application_on_update);
@@ -27,12 +47,19 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_server_set_on_message_received(application->server, application_on_message_received);
 
   return 0;
+
+error1:
+  libnet_server_destroy(application->server);
+error0:
+  block_registry_fini(&application->block_registry);
+  return -1;
 }
 
 void application_fini(struct application *application)
 {
   chunk_manager_fini(&application->chunk_manager);
   libnet_server_destroy(application->server);
+  block_registry_fini(&application->block_registry);
 }
 
 void application_run(struct application *application)

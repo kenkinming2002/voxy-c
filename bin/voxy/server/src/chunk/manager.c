@@ -21,7 +21,7 @@ int chunk_manager_init(struct chunk_manager *chunk_manager)
           for(int z=0; z<VOXY_CHUNK_WIDTH; ++z)
             for(int y=0; y<VOXY_CHUNK_WIDTH; ++y)
               for(int x=0; x<VOXY_CHUNK_WIDTH; ++x)
-                chunk->block_ids[z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + y * VOXY_CHUNK_WIDTH + x] = x < 8 && y < 8 && z < 8;
+                chunk->block_ids[z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + y * VOXY_CHUNK_WIDTH + x] = (x < 8 && y < 8 && z < 8) ? (x + y + z) % 4 : 0;
 
           memset(&chunk->block_light_levels, 0xFF, sizeof chunk->block_light_levels);
         }

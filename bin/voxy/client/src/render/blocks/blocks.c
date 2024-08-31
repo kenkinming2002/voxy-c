@@ -2,36 +2,57 @@
 
 #include <libcommon/core/log.h>
 
-int blocks_renderer_init(struct blocks_renderer *blocks_renderer)
+#include <string.h>
+
+int blocks_renderer_init(struct blocks_renderer *blocks_renderer, const struct block_registry *block_registry)
 {
+  DYNAMIC_ARRAY_DECLARE(textures, const char *);
+
   GLenum program_targets[] = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};
   const char *program_filepaths[] = {"bin/voxy/client/src/render/blocks/blocks.vert", "bin/voxy/client/src/render/blocks/blocks.frag"};
   if(gl_program_load(&blocks_renderer->program, 2, program_targets, program_filepaths) != 0)
     goto error0;
 
-  const char *texture_filepaths[] = {
-    "bin/mod/assets/textures/log_top_bottom.png"
-  };
-  if(gl_array_texture_2d_load(&blocks_renderer->texture, sizeof texture_filepaths / sizeof texture_filepaths[0], texture_filepaths) != 0)
+  blocks_renderer->texture_indices = malloc(block_registry->infos.item_count * sizeof *blocks_renderer->texture_indices);
+  for(block_id_t id=0; id<block_registry->infos.item_count; ++id)
+    for(direction_t direction=0; direction<DIRECTION_COUNT; ++direction)
+    {
+      const char *texture = block_registry->infos.items[id].textures[direction];
+      if(texture)
+      {
+        uint32_t i;
+        for(i=0; i<textures.item_count; ++i)
+          if(strcmp(texture, textures.items[i]) == 0)
+            break;
+
+        if(i == textures.item_count)
+          DYNAMIC_ARRAY_APPEND(textures, texture);
+
+        blocks_renderer->texture_indices[id][direction] = i;
+      }
+    }
+
+  if(gl_array_texture_2d_load(&blocks_renderer->texture, textures.item_count, textures.items) != 0)
     goto error1;
 
   blocks_render_info_hash_table_init(&blocks_renderer->render_infos);
   return 0;
 
 error1:
-  gl_array_texture_2d_fini(&blocks_renderer->texture);
+  gl_program_fini(&blocks_renderer->program);
 error0:
+  DYNAMIC_ARRAY_CLEAR(textures);
   return -1;
 }
 
 void blocks_renderer_fini(struct blocks_renderer *blocks_renderer)
 {
-  gl_program_fini(&blocks_renderer->program);
-  gl_array_texture_2d_fini(&blocks_renderer->texture);
   blocks_render_info_hash_table_dispose(&blocks_renderer->render_infos);
+  gl_array_texture_2d_fini(&blocks_renderer->texture);
+  gl_program_fini(&blocks_renderer->program);
 }
 
-void blocks_renderer_update(struct blocks_renderer *blocks_renderer, struct chunk_manager *chunk_manager)
+void blocks_renderer_update(struct blocks_renderer *blocks_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager)
 {
   const ivec3_t center = ivec3_zero();
   const int radius = 8;
@@ -78,7 +99,7 @@ void blocks_renderer_update(struct blocks_renderer *blocks_renderer, struct chun
             render_info = blocks_render_info_create();
             render_info->position = position;
             blocks_render_info_hash_table_insert_unchecked(&blocks_renderer->render_infos, render_info);
-            blocks_render_info_update(render_info, chunk);
+            blocks_render_info_update(render_info, block_registry, blocks_renderer, chunk);
 
             update_count += 1;
           }

@@ -3,6 +3,8 @@
 
 #include <libnet/client.h>
 
+#include "block/registry.h"
+
 #include "input/manager.h"
 #include "camera/manager.h"
 #include "chunk/manager.h"
@@ -10,6 +12,8 @@
 
 struct application
 {
+  struct block_registry block_registry;
+
   libnet_client_t client;
 
   struct input_manager input_manager;

@@ -15,6 +15,46 @@ int application_init(struct application *application, int argc, char *argv[])
 
   window_init("client", 1024, 720);
 
+  block_registry_init(&application->block_registry);
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "air",
+    .type = BLOCK_TYPE_INVISIBLE,
+    .textures = {0},
+  });
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "ether",
+    .type = BLOCK_TYPE_INVISIBLE,
+    .textures = {0},
+  });
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "stone",
+    .type = BLOCK_TYPE_OPAQUE,
+    .textures[DIRECTION_LEFT]   = "bin/mod/assets/textures/stone.png",
+    .textures[DIRECTION_RIGHT]  = "bin/mod/assets/textures/stone.png",
+    .textures[DIRECTION_BACK]   = "bin/mod/assets/textures/stone.png",
+    .textures[DIRECTION_FRONT]  = "bin/mod/assets/textures/stone.png",
+    .textures[DIRECTION_BOTTOM] = "bin/mod/assets/textures/stone.png",
+    .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/stone.png",
+  });
+
+  block_registry_register_block(&application->block_registry, (struct block_info){
+    .mod = "base",
+    .name = "grass",
+    .type = BLOCK_TYPE_OPAQUE,
+    .textures[DIRECTION_LEFT]   = "bin/mod/assets/textures/grass_side.png",
+    .textures[DIRECTION_RIGHT]  = "bin/mod/assets/textures/grass_side.png",
+    .textures[DIRECTION_BACK]   = "bin/mod/assets/textures/grass_side.png",
+    .textures[DIRECTION_FRONT]  = "bin/mod/assets/textures/grass_side.png",
+    .textures[DIRECTION_BOTTOM] = "bin/mod/assets/textures/grass_bottom.png",
+    .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/grass_top.png",
+  });
+
   if(!(application->client = libnet_client_create(argv[1], argv[2])))
     goto error0;
 
@@ -27,7 +67,7 @@ int application_init(struct application *application, int argc, char *argv[])
   if(chunk_manager_init(&application->chunk_manager) != 0)
     goto error3;
 
-  if(world_renderer_init(&application->world_renderer) != 0)
+  if(world_renderer_init(&application->world_renderer, &application->block_registry) != 0)
     goto error4;
 
   libnet_client_set_opaque(application->client, application);
@@ -43,6 +83,7 @@ error2:
 error1:
   libnet_client_destroy(application->client);
 error0:
+  block_registry_fini(&application->block_registry);
   return -1;
 }
 
@@ -53,6 +94,7 @@ void application_fini(struct application *application)
   camera_manager_fini(&application->camera_manager);
   input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
+  block_registry_fini(&application->block_registry);
 }
 
 void application_run(struct application *application)
@@ -65,7 +107,7 @@ void application_run(struct application *application)
     input_manager_update(&application->input_manager, application->client);
     camera_manager_update(&application->camera_manager);
     chunk_manager_update(&application->chunk_manager);
-    world_renderer_update(&application->world_renderer, &application->chunk_manager);
+    world_renderer_update(&application->world_renderer, &application->block_registry, &application->chunk_manager);
 
     glViewport(0, 0, window_size.x, window_size.y);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);

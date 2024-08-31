@@ -1,4 +1,5 @@
 #include "render_info.h"
+#include "blocks.h"
 
 #include <libcommon/math/direction.h>
 #include <libcommon/graphics/gl.h>
@@ -20,7 +21,7 @@ void blocks_render_info_destroy(struct blocks_render_info *blocks_render_info)
   free(blocks_render_info);
 }
 
-void blocks_render_info_update(struct blocks_render_info *blocks_render_info, const struct chunk *chunk)
+void blocks_render_info_update(struct blocks_render_info *blocks_render_info, struct block_registry *block_registry, struct blocks_renderer *blocks_renderer, const struct chunk *chunk)
 {
   struct blocks_vertices opaque_vertices = {0};
   struct blocks_vertices transparent_vertices = {0};
@@ -55,7 +56,8 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
 
   /// Meshing
   ///
-  /// FIXME: Add back block registry and block types
+  /// FIXME: Potential out of bound array access if we receive a block id from
+  ///        the server that is not inside the registry.
   for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
     for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
       for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
@@ -65,6 +67,7 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
 
         const uint8_t block_id = block_ids[z+1][y+1][x+1];
         const uint8_t block_light_level = block_light_levels[z+1][y+1][x+1];
+        const enum block_type block_type = block_registry->infos.items[block_id].type;
 
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         {
@@ -72,14 +75,15 @@ void blocks_render_info_update(struct blocks_render_info *blocks_render_info, co
 
           const uint8_t neighbour_block_id = block_ids[z+normal.z+1][y+normal.y+1][x+normal.x+1];
           const uint8_t neighbour_block_light_level = block_light_levels[z+normal.z+1][y+normal.y+1][x+normal.x+1];
+          const enum block_type neighbour_block_type = block_registry->infos.items[neighbour_block_id].type;
 
-          if(block_id == 0 || neighbour_block_id != 0)
+          if(block_type == BLOCK_TYPE_INVISIBLE || neighbour_block_type != BLOCK_TYPE_INVISIBLE)
             continue;
 
           const ivec3_t center = global_position;
 
           const uint32_t normal_index = direction;
-          const uint32_t texture_index = 0;
+          const uint32_t texture_index = blocks_renderer->texture_indices[block_id][direction];
 
           const ivec3_t axis2 = normal.z != 0 ? ivec3(1, 0, 0) : ivec3(0, 0, 1);
           const ivec3_t axis1 = ivec3_cross(normal, axis2);

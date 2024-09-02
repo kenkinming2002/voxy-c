@@ -8,6 +8,7 @@
 
 #include "player/manager.h"
 #include "chunk/manager.h"
+#include "entity/manager.h"
 
 struct application
 {
@@ -16,6 +17,7 @@ struct application
 
   libnet_server_t server;
   struct chunk_manager chunk_manager;
+  struct entity_manager entity_manager;
 };
 
 /// Initialize/finalize application.

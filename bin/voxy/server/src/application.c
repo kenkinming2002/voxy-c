@@ -41,6 +41,8 @@ int application_init(struct application *application, int argc, char *argv[])
   if(chunk_manager_init(&application->chunk_manager) != 0)
     goto error1;
 
+  entity_manager_init(&application->entity_manager);
+
   libnet_server_set_opaque(application->server, application);
   libnet_server_set_on_update(application->server, application_on_update);
   libnet_server_set_on_client_connected(application->server, application_on_client_connected);
@@ -59,6 +61,7 @@ error0:
 
 void application_fini(struct application *application)
 {
+  entity_manager_fini(&application->entity_manager);
   chunk_manager_fini(&application->chunk_manager);
   libnet_server_destroy(application->server);
   entity_registry_fini(&application->entity_registry);

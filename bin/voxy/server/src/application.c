@@ -74,6 +74,7 @@ void application_on_update(libnet_server_t server)
   struct application *application = libnet_server_get_opaque(server);
   player_manager_update(application->server, FIXED_DT);
   chunk_manager_update(&application->chunk_manager);
+  entity_manager_update(&application->entity_manager);
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
@@ -82,6 +83,7 @@ void application_on_client_connected(libnet_server_t server, libnet_client_proxy
 
   player_manager_on_client_connected(server, client_proxy);
   chunk_manager_on_client_connected(&application->chunk_manager, server, client_proxy);
+  entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
 }
 
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)

@@ -22,4 +22,7 @@ void entity_manager_on_message_received(struct entity_manager *entity_manager, l
 
 struct entity *entity_manager_get(struct entity_manager *entity_manager, entity_handle_t handle);
 
+void entity_manager_update_entity(struct entity_manager *entity_manager, entity_handle_t handle, entity_id_t id,  fvec3_t position, fvec3_t rotation);
+void entity_manager_remove_entity(struct entity_manager *entity_manager, entity_handle_t handle);
+
 #endif // ENTITY_MANAGER_H

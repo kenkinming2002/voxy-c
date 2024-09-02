@@ -6,8 +6,12 @@
 #include <libcommon/math/vector.h>
 #include <libcommon/utils/dynamic_array.h>
 
+#include <stdbool.h>
+
 struct entity
 {
+  bool alive;
+
   entity_id_t id;
 
   fvec3_t position;

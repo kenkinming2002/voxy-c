@@ -112,7 +112,10 @@ void application_run(struct application *application)
     libnet_client_update(application->client);
     input_manager_update(&application->input_manager, application->client);
     camera_manager_update(&application->camera_manager);
+
     chunk_manager_update(&application->chunk_manager);
+    entity_manager_update(&application->entity_manager);
+
     world_renderer_update(&application->world_renderer, &application->block_registry, &application->chunk_manager);
 
     glViewport(0, 0, window_size.x, window_size.y);
@@ -130,5 +133,6 @@ void application_on_message_received(libnet_client_t client, const struct libnet
   struct application *application = libnet_client_get_opaque(client);
   camera_manager_on_message_received(&application->camera_manager, client, message);
   chunk_manager_on_message_received(&application->chunk_manager, client, message);
+  entity_manager_on_message_received(&application->entity_manager, client, message);
 }
 

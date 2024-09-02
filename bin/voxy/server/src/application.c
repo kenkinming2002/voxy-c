@@ -38,9 +38,7 @@ int application_init(struct application *application, int argc, char *argv[])
   if(!(application->server = libnet_server_create(argv[1], FIXED_DT * 1e9)))
     goto error0;
 
-  if(chunk_manager_init(&application->chunk_manager) != 0)
-    goto error1;
-
+  chunk_manager_init(&application->chunk_manager);
   entity_manager_init(&application->entity_manager);
 
   libnet_server_set_opaque(application->server, application);
@@ -51,8 +49,6 @@ int application_init(struct application *application, int argc, char *argv[])
 
   return 0;
 
-error1:
-  libnet_server_destroy(application->server);
 error0:
   entity_registry_fini(&application->entity_registry);
   block_registry_fini(&application->block_registry);

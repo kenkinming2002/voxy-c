@@ -10,7 +10,7 @@ struct chunk_manager
   struct chunk_hash_table chunks;
 };
 
-int chunk_manager_init(struct chunk_manager *chunk_manager);
+void chunk_manager_init(struct chunk_manager *chunk_manager);
 void chunk_manager_fini(struct chunk_manager *chunk_manager);
 
 void chunk_manager_update(struct chunk_manager *chunk_manager);

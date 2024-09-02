@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-int chunk_manager_init(struct chunk_manager *chunk_manager)
+void chunk_manager_init(struct chunk_manager *chunk_manager)
 {
   chunk_hash_table_init(&chunk_manager->chunks);
 
@@ -27,8 +27,6 @@ int chunk_manager_init(struct chunk_manager *chunk_manager)
         }
         chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
       }
-
-  return 0;
 }
 
 void chunk_manager_fini(struct chunk_manager *chunk_manager)

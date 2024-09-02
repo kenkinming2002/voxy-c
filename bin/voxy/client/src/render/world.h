@@ -1,7 +1,7 @@
 #ifndef RENDER_WORLD_H
 #define RENDER_WORLD_H
 
-#include "blocks/blocks.h"
+#include "block/block.h"
 
 #include "chunk/manager.h"
 #include "block/registry.h"
@@ -10,7 +10,7 @@
 
 struct world_renderer
 {
-  struct blocks_renderer blocks;
+  struct block_renderer block;
 };
 
 int world_renderer_init(struct world_renderer *world_renderer, struct block_registry *block_registry);

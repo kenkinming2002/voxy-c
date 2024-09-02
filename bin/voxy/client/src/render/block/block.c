@@ -1,19 +1,19 @@
-#include "blocks.h"
+#include "block.h"
 
 #include <libcommon/core/log.h>
 
 #include <string.h>
 
-int blocks_renderer_init(struct blocks_renderer *blocks_renderer, const struct block_registry *block_registry)
+int block_renderer_init(struct block_renderer *block_renderer, const struct block_registry *block_registry)
 {
   DYNAMIC_ARRAY_DECLARE(textures, const char *);
 
   GLenum program_targets[] = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};
   const char *program_filepaths[] = {"bin/voxy/client/src/render/blocks/blocks.vert", "bin/voxy/client/src/render/blocks/blocks.frag"};
-  if(gl_program_load(&blocks_renderer->program, 2, program_targets, program_filepaths) != 0)
+  if(gl_program_load(&block_renderer->program, 2, program_targets, program_filepaths) != 0)
     goto error0;
 
-  blocks_renderer->texture_indices = malloc(block_registry->infos.item_count * sizeof *blocks_renderer->texture_indices);
+  block_renderer->texture_indices = malloc(block_registry->infos.item_count * sizeof *block_renderer->texture_indices);
   for(block_id_t id=0; id<block_registry->infos.item_count; ++id)
     for(direction_t direction=0; direction<DIRECTION_COUNT; ++direction)
     {
@@ -28,31 +28,31 @@ int blocks_renderer_init(struct blocks_renderer *blocks_renderer, const struct b
         if(i == textures.item_count)
           DYNAMIC_ARRAY_APPEND(textures, texture);
 
-        blocks_renderer->texture_indices[id][direction] = i;
+        block_renderer->texture_indices[id][direction] = i;
       }
     }
 
-  if(gl_array_texture_2d_load(&blocks_renderer->texture, textures.item_count, textures.items) != 0)
+  if(gl_array_texture_2d_load(&block_renderer->texture, textures.item_count, textures.items) != 0)
     goto error1;
 
-  blocks_render_info_hash_table_init(&blocks_renderer->render_infos);
+  block_render_info_hash_table_init(&block_renderer->render_infos);
   return 0;
 
 error1:
-  gl_program_fini(&blocks_renderer->program);
+  gl_program_fini(&block_renderer->program);
 error0:
   DYNAMIC_ARRAY_CLEAR(textures);
   return -1;
 }
 
-void blocks_renderer_fini(struct blocks_renderer *blocks_renderer)
+void block_renderer_fini(struct block_renderer *block_renderer)
 {
-  blocks_render_info_hash_table_dispose(&blocks_renderer->render_infos);
-  gl_array_texture_2d_fini(&blocks_renderer->texture);
-  gl_program_fini(&blocks_renderer->program);
+  block_render_info_hash_table_dispose(&block_renderer->render_infos);
+  gl_array_texture_2d_fini(&block_renderer->texture);
+  gl_program_fini(&block_renderer->program);
 }
 
-void blocks_renderer_update(struct blocks_renderer *blocks_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager)
+void block_renderer_update(struct block_renderer *block_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager)
 {
   const ivec3_t center = ivec3_zero();
   const int radius = 8;
@@ -61,18 +61,18 @@ void blocks_renderer_update(struct blocks_renderer *blocks_renderer, struct bloc
   unsigned update_count = 0;
 
   // Discard render info for chunks outside of render distance.
-  for(size_t i=0; i<blocks_renderer->render_infos.bucket_count; ++i)
+  for(size_t i=0; i<block_renderer->render_infos.bucket_count; ++i)
   {
-    struct blocks_render_info **render_info = &blocks_renderer->render_infos.buckets[i].head;
+    struct block_render_info **render_info = &block_renderer->render_infos.buckets[i].head;
     while(*render_info)
     {
       const ivec3_t position = (*render_info)->position;
       if(ivec3_length_squared(ivec3_sub(position, center)) > radius * radius)
       {
-        struct blocks_render_info *old_render_info = *render_info;
+        struct block_render_info *old_render_info = *render_info;
         *render_info = (*render_info)->next;
-        blocks_renderer->render_infos.load -= 1;
-        blocks_render_info_destroy(old_render_info);
+        block_renderer->render_infos.load -= 1;
+        block_render_info_destroy(old_render_info);
 
         discard_count += 1;
       }
@@ -93,13 +93,13 @@ void blocks_renderer_update(struct blocks_renderer *blocks_renderer, struct bloc
           if(!chunk)
             continue;
 
-          struct blocks_render_info *render_info = blocks_render_info_hash_table_lookup(&blocks_renderer->render_infos, position);
+          struct block_render_info *render_info = block_render_info_hash_table_lookup(&block_renderer->render_infos, position);
           if(!render_info)
           {
-            render_info = blocks_render_info_create();
+            render_info = block_render_info_create();
             render_info->position = position;
-            blocks_render_info_hash_table_insert_unchecked(&blocks_renderer->render_infos, render_info);
-            blocks_render_info_update(render_info, block_registry, blocks_renderer, chunk);
+            block_render_info_hash_table_insert_unchecked(&block_renderer->render_infos, render_info);
+            block_render_info_update(render_info, block_registry, block_renderer, chunk);
 
             update_count += 1;
           }
@@ -113,9 +113,9 @@ void blocks_renderer_update(struct blocks_renderer *blocks_renderer, struct bloc
     LOG_INFO("Render: Updated meshes for %u chunk", update_count);
 }
 
-void blocks_renderer_render(struct blocks_renderer *blocks_renderer, const struct camera *camera)
+void block_renderer_render(struct block_renderer *block_renderer, const struct camera *camera)
 {
-  struct blocks_render_info *render_info;
+  struct block_render_info *render_info;
 
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(camera),       VP);
@@ -127,20 +127,20 @@ void blocks_renderer_render(struct blocks_renderer *blocks_renderer, const struc
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  glUseProgram(blocks_renderer->program.id);
-  glUniformMatrix4fv(glGetUniformLocation(blocks_renderer->program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
-  glUniformMatrix4fv(glGetUniformLocation(blocks_renderer->program.id, "V"),  1, GL_TRUE, (const float *)&V);
+  glUseProgram(block_renderer->program.id);
+  glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
+  glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "V"),  1, GL_TRUE, (const float *)&V);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, blocks_renderer->texture.id);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, block_renderer->texture.id);
 
-  SC_HASH_TABLE_FOREACH(blocks_renderer->render_infos, render_info)
-    blocks_render_info_update_cull(render_info, camera);
+  SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
+    block_render_info_update_cull(render_info, camera);
 
-  SC_HASH_TABLE_FOREACH(blocks_renderer->render_infos, render_info)
-    blocks_mesh_render(&render_info->opaque_mesh);
+  SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
+    block_mesh_render(&render_info->opaque_mesh);
 
-  SC_HASH_TABLE_FOREACH(blocks_renderer->render_infos, render_info)
-    blocks_mesh_render(&render_info->transparent_mesh);
+  SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
+    block_mesh_render(&render_info->transparent_mesh);
 }
 

@@ -31,9 +31,9 @@ SRCS += src/chunk/chunk.c
 SRCS += src/chunk/manager.c
 
 SRCS += src/render/world.c
-SRCS += src/render/blocks/blocks.c
-SRCS += src/render/blocks/mesh.c
-SRCS += src/render/blocks/render_info.c
+SRCS += src/render/block/block.c
+SRCS += src/render/block/mesh.c
+SRCS += src/render/block/render_info.c
 
 all: voxy-client
 

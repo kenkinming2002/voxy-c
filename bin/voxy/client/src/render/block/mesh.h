@@ -1,11 +1,11 @@
-#ifndef RENDER_BLOCKS_MESH_H
-#define RENDER_BLOCKS_MESH_H
+#ifndef RENDER_BLOCK_MESH_H
+#define RENDER_BLOCK_MESH_H
 
 #include <libcommon/math/vector.h>
 #include <libcommon/utils/dynamic_array.h>
 #include <glad/glad.h>
 
-struct blocks_vertex
+struct block_vertex
 {
   ivec3_t center;
 
@@ -22,19 +22,19 @@ struct blocks_vertex
 
   float damage;
 };
-DYNAMIC_ARRAY_DEFINE(blocks_vertices, struct blocks_vertex);
+DYNAMIC_ARRAY_DEFINE(block_vertices, struct block_vertex);
 
-struct blocks_mesh
+struct block_mesh
 {
   GLuint vao;
   GLuint vbo;
   GLsizei count;
 };
 
-void blocks_mesh_init(struct blocks_mesh *blocks_mesh);
-void blocks_mesh_fini(struct blocks_mesh *blocks_mesh);
+void block_mesh_init(struct block_mesh *block_mesh);
+void block_mesh_fini(struct block_mesh *block_mesh);
 
-void blocks_mesh_update(struct blocks_mesh *blocks_mesh, struct blocks_vertices vertices);
-void blocks_mesh_render(const struct blocks_mesh *blocks_mesh);
+void block_mesh_update(struct block_mesh *block_mesh, struct block_vertices vertices);
+void block_mesh_render(const struct block_mesh *block_mesh);
 
-#endif // RENDER_BLOCKS_MESH_H
+#endif // RENDER_BLOCK_MESH_H

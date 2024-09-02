@@ -30,6 +30,9 @@ SRCS += src/camera/manager.c
 SRCS += src/chunk/chunk.c
 SRCS += src/chunk/manager.c
 
+SRCS += src/entity/registry.c
+SRCS += src/entity/manager.c
+
 SRCS += src/render/world.c
 SRCS += src/render/block/block.c
 SRCS += src/render/block/mesh.c

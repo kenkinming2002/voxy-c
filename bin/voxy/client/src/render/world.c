@@ -15,7 +15,8 @@ void world_renderer_update(struct world_renderer *world_renderer, struct block_r
   block_renderer_update(&world_renderer->block, block_registry, chunk_manager);
 }
 
-void world_renderer_render(struct world_renderer *world_renderer, const struct camera *camera)
+void world_renderer_render(struct world_renderer *world_renderer, struct entity_registry *entity_registry, struct entity_manager *entity_manager, const struct camera *camera)
 {
   block_renderer_render(&world_renderer->block, camera);
+  entity_renderer_render(entity_registry, entity_manager, camera);
 }

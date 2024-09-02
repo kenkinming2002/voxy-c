@@ -34,6 +34,15 @@ int application_init(struct application *application, int argc, char *argv[])
     .name = "grass",
   });
 
+  entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
+    .mod = "base",
+    .name = "test1",
+  });
+
+  entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
+    .mod = "base",
+    .name = "test2",
+  });
 
   if(!(application->server = libnet_server_create(argv[1], FIXED_DT * 1e9)))
     goto error0;

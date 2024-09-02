@@ -37,6 +37,7 @@ SRCS += src/render/world.c
 SRCS += src/render/block/block.c
 SRCS += src/render/block/mesh.c
 SRCS += src/render/block/render_info.c
+SRCS += src/render/entity/entity.c
 
 all: voxy-client
 

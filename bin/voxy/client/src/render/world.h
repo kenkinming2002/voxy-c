@@ -2,6 +2,7 @@
 #define RENDER_WORLD_H
 
 #include "block/block.h"
+#include "entity/entity.h"
 
 #include "chunk/manager.h"
 #include "block/registry.h"
@@ -17,6 +18,6 @@ int world_renderer_init(struct world_renderer *world_renderer, struct block_regi
 void world_renderer_fini(struct world_renderer *world_renderer);
 
 void world_renderer_update(struct world_renderer *world_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager);
-void world_renderer_render(struct world_renderer *world_renderer, const struct camera *camera);
+void world_renderer_render(struct world_renderer *world_renderer, struct entity_registry *entity_registry, struct entity_manager *entity_manager, const struct camera *camera);
 
 #endif // RENDER_WORLD_H

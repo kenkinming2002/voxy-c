@@ -1,9 +1,34 @@
 #include "application.h"
 
+#include <libcommon/graphics/gl.h>
+#include <libcommon/graphics/mesh.h>
+#include <libcommon/graphics/render.h>
+
 #include <libcommon/core/window.h>
 #include <libcommon/core/delta_time.h>
 
 #include <stdio.h>
+
+static void test_render(const struct entity *entity, const struct camera *camera)
+{
+  // FIXME: We are currently hardcoding and loading assets on first use.
+  static bool initialized = false;
+  static struct mesh mesh;
+  static struct gl_texture_2d texture;
+  if(!initialized)
+  {
+    mesh_init(&mesh);
+    mesh_load(&mesh, "bin/mod/assets/models/pig.obj");
+    gl_texture_2d_load(&texture, "bin/mod/assets/models/pig.png");
+    initialized = true;
+  }
+
+  transform_t transform;
+  transform.translation = entity->position;
+  transform.rotation = entity->rotation;
+  render(camera, &mesh, &texture, transform, 1.0f);
+}
+
 
 int application_init(struct application *application, int argc, char *argv[])
 {
@@ -54,6 +79,18 @@ int application_init(struct application *application, int argc, char *argv[])
     .textures[DIRECTION_FRONT]  = "bin/mod/assets/textures/grass_side.png",
     .textures[DIRECTION_BOTTOM] = "bin/mod/assets/textures/grass_bottom.png",
     .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/grass_top.png",
+  });
+
+  entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
+    .mod = "base",
+    .name = "test1",
+    .render = test_render,
+  });
+
+  entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
+    .mod = "base",
+    .name = "test2",
+    .render = test_render,
   });
 
   if(!(application->client = libnet_client_create(argv[1], argv[2])))
@@ -122,7 +159,8 @@ void application_run(struct application *application)
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    world_renderer_render(&application->world_renderer, &application->camera_manager.camera);
+    world_renderer_render(&application->world_renderer, &application->entity_registry, &application->entity_manager, &application->camera_manager.camera);
+    render_end();
 
     window_present();
   }

@@ -9,7 +9,7 @@ int block_renderer_init(struct block_renderer *block_renderer, const struct bloc
   DYNAMIC_ARRAY_DECLARE(textures, const char *);
 
   GLenum program_targets[] = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};
-  const char *program_filepaths[] = {"bin/voxy/client/src/render/blocks/blocks.vert", "bin/voxy/client/src/render/blocks/blocks.frag"};
+  const char *program_filepaths[] = {"bin/voxy/client/src/render/block/block.vert", "bin/voxy/client/src/render/block/block.frag"};
   if(gl_program_load(&block_renderer->program, 2, program_targets, program_filepaths) != 0)
     goto error0;
 

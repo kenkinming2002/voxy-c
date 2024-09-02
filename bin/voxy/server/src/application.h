@@ -4,12 +4,15 @@
 #include <libnet/server.h>
 
 #include "block/registry.h"
+#include "entity/registry.h"
+
 #include "player/manager.h"
 #include "chunk/manager.h"
 
 struct application
 {
   struct block_registry block_registry;
+  struct entity_registry entity_registry;
 
   libnet_server_t server;
   struct chunk_manager chunk_manager;

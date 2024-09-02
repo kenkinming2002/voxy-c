@@ -12,6 +12,7 @@ int application_init(struct application *application, int argc, char *argv[])
   }
 
   block_registry_init(&application->block_registry);
+  entity_registry_init(&application->entity_registry);
 
   block_registry_register_block(&application->block_registry, (struct block_info){
     .mod = "base",
@@ -51,6 +52,7 @@ int application_init(struct application *application, int argc, char *argv[])
 error1:
   libnet_server_destroy(application->server);
 error0:
+  entity_registry_fini(&application->entity_registry);
   block_registry_fini(&application->block_registry);
   return -1;
 }
@@ -59,6 +61,7 @@ void application_fini(struct application *application)
 {
   chunk_manager_fini(&application->chunk_manager);
   libnet_server_destroy(application->server);
+  entity_registry_fini(&application->entity_registry);
   block_registry_fini(&application->block_registry);
 }
 

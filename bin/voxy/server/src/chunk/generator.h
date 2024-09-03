@@ -1,5 +1,5 @@
-#ifndef CHUNK_GENERATE_H
-#define CHUNK_GENERATE_H
+#ifndef CHUNK_GENERATOR_H
+#define CHUNK_GENERATOR_H
 
 #include <libcommon/math/vector.h>
 #include <libcommon/math/random.h>
@@ -15,4 +15,4 @@ void chunk_generator_fini(struct chunk_generator *chunk_generator);
 
 struct chunk *chunk_generator_generate(struct chunk_generator *chunk_generator, ivec3_t position);
 
-#endif // CHUNK_GENERATE_H
+#endif // CHUNK_GENERATOR_H

@@ -10,10 +10,10 @@
 /// Tag for message from server.
 enum LIBNET_MESSAGE voxy_server_message_tag
 {
-  VOXY_SERVER_MESSAGE_CAMREA_UPDATE,
   VOXY_SERVER_MESSAGE_CHUNK_UPDATE,
   VOXY_SERVER_MESSAGE_ENTITY_UPDATE,
   VOXY_SERVER_MESSAGE_ENTITY_REMOVE,
+  VOXY_SERVER_MESSAGE_CAMERA_FOLLOW_ENTITY,
 };
 
 /// A message from server.
@@ -21,14 +21,6 @@ struct LIBNET_MESSAGE voxy_server_message
 {
   struct libnet_message message;
   enum voxy_server_message_tag tag;
-};
-
-struct LIBNET_MESSAGE voxy_server_camera_update_message
-{
-  struct voxy_server_message message;
-
-  fvec3_t position;
-  fvec3_t rotation;
 };
 
 /// Sent from server to client to update an entire chunk.
@@ -61,20 +53,13 @@ struct LIBNET_MESSAGE voxy_server_entity_remove_message
   uint32_t handle;
 };
 
-/// Try to cast struct libnet_message to struct voxy_camera_update_message.
-///
-/// Return NULL on failure.
-static inline struct voxy_server_camera_update_message *voxy_get_server_camera_update_message(const struct libnet_message *message)
+/// Sent from server to client to set entity that camera should follow
+struct LIBNET_MESSAGE voxy_server_camera_follow_entity_message
 {
-  if(message->size != LIBNET_MESSAGE_SIZE(struct voxy_server_camera_update_message))
-    return NULL;
+  struct voxy_server_message message;
 
-  struct voxy_server_camera_update_message *_message = (struct voxy_server_camera_update_message *)message;
-  if(_message->message.tag != VOXY_SERVER_MESSAGE_CAMREA_UPDATE)
-    return NULL;
-
-  return _message;
-}
+  uint32_t handle;
+};
 
 /// Try to cast struct libnet_message to struct voxy_chunk_update_message.
 ///
@@ -116,6 +101,21 @@ static inline struct voxy_server_entity_remove_message *voxy_get_server_entity_r
 
   struct voxy_server_entity_remove_message *_message = (struct voxy_server_entity_remove_message *)message;
   if(_message->message.tag != VOXY_SERVER_MESSAGE_ENTITY_REMOVE)
+    return NULL;
+
+  return _message;
+}
+
+/// Try to cast struct libnet_message to struct voxy_camera_follow_entity_message.
+///
+/// Return NULL on failure.
+static inline struct voxy_server_camera_follow_entity_message *voxy_get_server_camera_follow_entity_message(const struct libnet_message *message)
+{
+  if(message->size != LIBNET_MESSAGE_SIZE(struct voxy_server_camera_follow_entity_message))
+    return NULL;
+
+  struct voxy_server_camera_follow_entity_message *_message = (struct voxy_server_camera_follow_entity_message *)message;
+  if(_message->message.tag != VOXY_SERVER_MESSAGE_CAMERA_FOLLOW_ENTITY)
     return NULL;
 
   return _message;

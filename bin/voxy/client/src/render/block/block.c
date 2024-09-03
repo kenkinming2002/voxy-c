@@ -113,16 +113,16 @@ void block_renderer_update(struct block_renderer *block_renderer, struct block_r
     LOG_INFO("Render: Updated meshes for %u chunk", update_count);
 }
 
-void block_renderer_render(struct block_renderer *block_renderer, const struct camera *camera)
+void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager)
 {
   struct block_render_info *render_info;
 
   fmat4_t VP = fmat4_identity();
-  VP = fmat4_mul(camera_view_matrix(camera),       VP);
-  VP = fmat4_mul(camera_projection_matrix(camera), VP);
+  VP = fmat4_mul(camera_view_matrix(&camera_manager->camera),       VP);
+  VP = fmat4_mul(camera_projection_matrix(&camera_manager->camera), VP);
 
   fmat4_t V = fmat4_identity();
-  V = fmat4_mul(camera_view_matrix(camera), V);
+  V = fmat4_mul(camera_view_matrix(&camera_manager->camera), V);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
@@ -135,7 +135,7 @@ void block_renderer_render(struct block_renderer *block_renderer, const struct c
   glBindTexture(GL_TEXTURE_2D_ARRAY, block_renderer->texture.id);
 
   SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
-    block_render_info_update_cull(render_info, camera);
+    block_render_info_update_cull(render_info, &camera_manager->camera);
 
   SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
     block_mesh_render(&render_info->opaque_mesh);

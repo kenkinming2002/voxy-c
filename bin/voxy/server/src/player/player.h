@@ -27,10 +27,10 @@ struct player
 };
 
 /// Create/destroy player.
-struct player *player_create(struct entity_manager *entity_manager);
+struct player *player_create(struct entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
 void player_destroy(struct player *player, struct entity_manager *entity_manager);
 
 /// Update player.
-void player_update(struct player *player, float dt, struct entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
+void player_update(struct player *player, float dt, struct entity_manager *entity_manager);
 
 #endif // PLAYER_PLAYER_H

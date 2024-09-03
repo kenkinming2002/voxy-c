@@ -148,7 +148,7 @@ void application_run(struct application *application)
 
     libnet_client_update(application->client);
     input_manager_update(&application->input_manager, application->client);
-    camera_manager_update(&application->camera_manager);
+    camera_manager_update(&application->camera_manager, &application->entity_manager);
 
     chunk_manager_update(&application->chunk_manager);
     entity_manager_update(&application->entity_manager);
@@ -159,7 +159,7 @@ void application_run(struct application *application)
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    world_renderer_render(&application->world_renderer, &application->entity_registry, &application->entity_manager, &application->camera_manager.camera);
+    world_renderer_render(&application->world_renderer, &application->entity_registry, &application->entity_manager, &application->camera_manager);
     render_end();
 
     window_present();

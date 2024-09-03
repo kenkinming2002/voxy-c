@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 typedef uint32_t entity_handle_t;
+#define ENTITY_HANDLE_NULL UINT32_MAX
 
 struct entity_manager
 {

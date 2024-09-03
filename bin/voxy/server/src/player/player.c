@@ -7,24 +7,28 @@
 
 #include <stdlib.h>
 
-struct player *player_create(struct entity_manager *entity_manager)
+struct player *player_create(struct entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct player *player = malloc(sizeof *player);
   player->handle = entity_manager_alloc(entity_manager);
-
-  struct entity *entity = entity_manager_get(entity_manager, player->handle);
-  entity->id = 0;
-  entity->position = fvec3_zero();
-  entity->rotation = fvec3_zero();
-
   player->left = 0;
   player->right = 0;
   player->back = 0;
   player->front = 0;
   player->bottom = 0;
   player->top = 0;
-
   player->mouse_motion = fvec2_zero();
+
+  struct entity *entity = entity_manager_get(entity_manager, player->handle);
+  entity->id = 0;
+  entity->position = fvec3_zero();
+  entity->rotation = fvec3_zero();
+
+  struct voxy_server_camera_follow_entity_message message;
+  message.message.message.size = LIBNET_MESSAGE_SIZE(message);
+  message.message.tag = VOXY_SERVER_MESSAGE_CAMERA_FOLLOW_ENTITY;
+  message.handle = player->handle;
+  libnet_server_send_message(server, client_proxy, &message.message.message);
 
   return player;
 }
@@ -62,21 +66,8 @@ static void player_update_rotation(struct player *player, struct entity_manager 
   player->mouse_motion = fvec2_zero();
 }
 
-static void player_update_network(struct player *player, struct entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
-{
-  struct entity *entity = entity_manager_get(entity_manager, player->handle);
-
-  struct voxy_server_camera_update_message message;
-  message.message.message.size = LIBNET_MESSAGE_SIZE(message);
-  message.message.tag = VOXY_SERVER_MESSAGE_CAMREA_UPDATE;
-  message.position = entity->position;
-  message.rotation = entity->rotation;
-  libnet_server_send_message(server, client_proxy, &message.message.message);
-}
-
-void player_update(struct player *player, float dt, struct entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
+void player_update(struct player *player, float dt, struct entity_manager *entity_manager)
 {
   player_update_movement(player, dt, entity_manager);
   player_update_rotation(player, entity_manager);
-  player_update_network(player, entity_manager, server, client_proxy);
 }

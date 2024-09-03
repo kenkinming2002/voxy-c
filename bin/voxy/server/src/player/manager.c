@@ -16,9 +16,8 @@ struct player_manager_update_callback_context
 static void player_manager_update_callback(libnet_server_t server, libnet_client_proxy_t client_proxy, void *data)
 {
   struct player_manager_update_callback_context *context = data;
-
   struct player *player = libnet_client_proxy_get_opaque(client_proxy);
-  player_update(player, context->dt, context->entity_manager, server, client_proxy);
+  player_update(player, context->dt, context->entity_manager);
 }
 
 void player_manager_update(float dt, libnet_server_t server, struct entity_manager *entity_manager)
@@ -31,7 +30,7 @@ void player_manager_update(float dt, libnet_server_t server, struct entity_manag
 
 void player_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy, struct entity_manager *entity_manager)
 {
-  struct player *player = player_create(entity_manager);
+  struct player *player = player_create(entity_manager, server, client_proxy);
   libnet_client_proxy_set_opaque(client_proxy, player);
 }
 

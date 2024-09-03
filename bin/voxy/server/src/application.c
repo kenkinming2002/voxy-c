@@ -3,6 +3,22 @@
 
 #include <stdio.h>
 
+#include <libcommon/core/log.h>
+
+static void player_entity_update(const struct entity *entity, struct chunk_manager *chunk_manager)
+{
+  const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(entity->position), VOXY_CHUNK_WIDTH);
+  const int radius = 10;
+  for(int z=center.z-radius; z<=center.z+radius; ++z)
+    for(int y=center.y-radius; y<=center.y+radius; ++y)
+      for(int x=center.x-radius; x<=center.x+radius; ++x)
+      {
+        const ivec3_t position = ivec3(x, y, z);
+        if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
+          chunk_manager_add_active_chunk(chunk_manager, position);
+      }
+}
+
 int application_init(struct application *application, int argc, char *argv[])
 {
   if(argc != 2)
@@ -36,12 +52,14 @@ int application_init(struct application *application, int argc, char *argv[])
 
   entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
     .mod = "base",
-    .name = "test1",
+    .name = "player",
+    .update = player_entity_update,
   });
 
   entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
     .mod = "base",
-    .name = "test2",
+    .name = "dummy",
+    .update = NULL,
   });
 
   if(!(application->server = libnet_server_create(argv[1], FIXED_DT * 1e9)))
@@ -81,6 +99,17 @@ void application_run(struct application *application)
 void application_on_update(libnet_server_t server)
 {
   struct application *application = libnet_server_get_opaque(server);
+
+  chunk_manager_reset_active_chunks(&application->chunk_manager);
+
+  for(entity_handle_t handle=0; handle<application->entity_manager.entities.item_count; ++handle)
+  {
+    struct entity *entity = &application->entity_manager.entities.items[handle];
+    struct entity_info *info = &application->entity_registry.infos.items[entity->id];
+    if(info->update)
+      info->update(entity, &application->chunk_manager);
+  }
+
   player_manager_update(FIXED_DT, application->server, &application->entity_manager);
   chunk_manager_update(&application->chunk_manager, application->server);
   entity_manager_update(&application->entity_manager, application->server);

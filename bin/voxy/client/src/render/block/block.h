@@ -21,7 +21,7 @@ struct block_renderer
 int block_renderer_init(struct block_renderer *block_renderer, const struct block_registry *block_registry);
 void block_renderer_fini(struct block_renderer *block_renderer);
 
-void block_renderer_update(struct block_renderer *block_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager);
+void block_renderer_update(struct block_renderer *block_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager, struct camera_manager *camera_manager);
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager);
 
 #endif // RENDER_BLOCK_BLOCK_H

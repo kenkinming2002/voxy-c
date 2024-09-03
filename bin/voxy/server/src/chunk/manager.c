@@ -36,22 +36,28 @@ void chunk_manager_init(struct chunk_manager *chunk_manager)
 {
   ivec3_hash_table_init(&chunk_manager->active_chunks);
   chunk_hash_table_init(&chunk_manager->chunks);
-
-  const int radius = 10;
-  for(int z=-radius; z<=radius; ++z)
-    for(int y=-radius; y<=radius; ++y)
-      for(int x=-radius; x<=radius; ++x)
-      {
-        struct ivec3_node *position = malloc(sizeof *position);
-        position->value = ivec3(x, y, z);
-        ivec3_hash_table_insert_unchecked(&chunk_manager->active_chunks, position);
-      }
 }
 
 void chunk_manager_fini(struct chunk_manager *chunk_manager)
 {
   chunk_hash_table_dispose(&chunk_manager->chunks);
   ivec3_hash_table_dispose(&chunk_manager->active_chunks);
+}
+
+void chunk_manager_reset_active_chunks(struct chunk_manager *chunk_manager)
+{
+  ivec3_hash_table_dispose(&chunk_manager->active_chunks);
+}
+
+void chunk_manager_add_active_chunk(struct chunk_manager *chunk_manager, ivec3_t position)
+{
+  struct ivec3_node *node;
+  if(!(node = ivec3_hash_table_lookup(&chunk_manager->active_chunks, position)))
+  {
+    node = malloc(sizeof *node);
+    node->value = position;
+    ivec3_hash_table_insert_unchecked(&chunk_manager->active_chunks, node);
+  }
 }
 
 void chunk_manager_update(struct chunk_manager *chunk_manager, libnet_server_t server)

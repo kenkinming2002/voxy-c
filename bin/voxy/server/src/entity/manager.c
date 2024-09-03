@@ -12,7 +12,7 @@ void entity_manager_init(struct entity_manager *entity_manager)
   for(unsigned i=0; i<100; ++i)
   {
     struct entity *entity = entity_manager_get(entity_manager, entity_manager_alloc(entity_manager));
-    entity->id = i % 2;
+    entity->id = 1;
     entity->position = fvec3(i, i, i);
     entity->rotation = fvec3(i, i, i);
   }

@@ -83,13 +83,13 @@ int application_init(struct application *application, int argc, char *argv[])
 
   entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
     .mod = "base",
-    .name = "test1",
+    .name = "player",
     .render = test_render,
   });
 
   entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
     .mod = "base",
-    .name = "test2",
+    .name = "dummy",
     .render = test_render,
   });
 
@@ -153,7 +153,7 @@ void application_run(struct application *application)
     chunk_manager_update(&application->chunk_manager);
     entity_manager_update(&application->entity_manager);
 
-    world_renderer_update(&application->world_renderer, &application->block_registry, &application->chunk_manager);
+    world_renderer_update(&application->world_renderer, &application->block_registry, &application->chunk_manager, &application->camera_manager);
 
     glViewport(0, 0, window_size.x, window_size.y);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);

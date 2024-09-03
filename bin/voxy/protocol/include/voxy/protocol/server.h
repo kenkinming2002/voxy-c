@@ -11,8 +11,11 @@
 enum LIBNET_MESSAGE voxy_server_message_tag
 {
   VOXY_SERVER_MESSAGE_CHUNK_UPDATE,
+  VOXY_SERVER_MESSAGE_CHUNK_REMOVE,
+
   VOXY_SERVER_MESSAGE_ENTITY_UPDATE,
   VOXY_SERVER_MESSAGE_ENTITY_REMOVE,
+
   VOXY_SERVER_MESSAGE_CAMERA_FOLLOW_ENTITY,
 };
 
@@ -31,6 +34,14 @@ struct LIBNET_MESSAGE voxy_server_chunk_update_message
   ivec3_t position;
   uint8_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
   uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
+};
+
+/// Sent from server to client to remove an entire chunk.
+struct LIBNET_MESSAGE voxy_server_chunk_remove_message
+{
+  struct voxy_server_message message;
+
+  ivec3_t position;
 };
 
 /// Sent from server to client to update an entity.
@@ -71,6 +82,21 @@ static inline struct voxy_server_chunk_update_message *voxy_get_server_chunk_upd
 
   struct voxy_server_chunk_update_message *_message = (struct voxy_server_chunk_update_message *)message;
   if(_message->message.tag != VOXY_SERVER_MESSAGE_CHUNK_UPDATE)
+    return NULL;
+
+  return _message;
+}
+
+/// Try to cast struct libnet_message to struct voxy_chunk_remove_message.
+///
+/// Return NULL on failure.
+static inline struct voxy_server_chunk_remove_message *voxy_get_server_chunk_remove_message(const struct libnet_message *message)
+{
+  if(message->size != LIBNET_MESSAGE_SIZE(struct voxy_server_chunk_remove_message))
+    return NULL;
+
+  struct voxy_server_chunk_remove_message *_message = (struct voxy_server_chunk_remove_message *)message;
+  if(_message->message.tag != VOXY_SERVER_MESSAGE_CHUNK_REMOVE)
     return NULL;
 
   return _message;

@@ -82,7 +82,7 @@ void application_on_update(libnet_server_t server)
 {
   struct application *application = libnet_server_get_opaque(server);
   player_manager_update(FIXED_DT, application->server, &application->entity_manager);
-  chunk_manager_update(&application->chunk_manager);
+  chunk_manager_update(&application->chunk_manager, application->server);
   entity_manager_update(&application->entity_manager, application->server);
 }
 

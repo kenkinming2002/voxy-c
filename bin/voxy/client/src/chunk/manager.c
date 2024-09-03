@@ -17,18 +17,8 @@ void chunk_manager_fini(struct chunk_manager *chunk_manager)
   chunk_hash_table_dispose(&chunk_manager->chunks);
 }
 
-void chunk_manager_update(struct chunk_manager *chunk_manager)
+struct chunk *chunk_manager_get_chunk(struct chunk_manager *chunk_manager, ivec3_t position)
 {
-  (void)chunk_manager;
-}
-
-void chunk_manager_on_message_received(struct chunk_manager *chunk_manager, libnet_client_t client, const struct libnet_message *message)
-{
-  const struct voxy_server_chunk_update_message *_message = voxy_get_server_chunk_update_message(message);
-  if(!_message)
-    return;
-
-  const ivec3_t position = _message->position;
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position);
   if(!chunk)
   {
@@ -46,8 +36,35 @@ void chunk_manager_on_message_received(struct chunk_manager *chunk_manager, libn
         neighbour_chunk->neighbours[direction_reverse(direction)] = chunk;
     }
   }
+  return chunk;
+}
 
-  memcpy(&chunk->block_ids, &_message->block_ids, sizeof _message->block_ids);
-  memcpy(&chunk->block_light_levels, &_message->block_light_levels, sizeof _message->block_light_levels);
+void chunk_manager_remove_chunk(struct chunk_manager *chunk_manager, ivec3_t position)
+{
+  chunk_hash_table_remove(&chunk_manager->chunks, position);
+}
+
+void chunk_manager_update(struct chunk_manager *chunk_manager)
+{
+  (void)chunk_manager;
+}
+
+void chunk_manager_on_message_received(struct chunk_manager *chunk_manager, libnet_client_t client, const struct libnet_message *_message)
+{
+  {
+    const struct voxy_server_chunk_update_message *message = voxy_get_server_chunk_update_message(_message);
+    if(message)
+    {
+      struct chunk *chunk = chunk_manager_get_chunk(chunk_manager, message->position);
+      memcpy(&chunk->block_ids, &message->block_ids, sizeof message->block_ids);
+      memcpy(&chunk->block_light_levels, &message->block_light_levels, sizeof message->block_light_levels);
+    }
+  }
+
+  {
+    const struct voxy_server_chunk_remove_message *message = voxy_get_server_chunk_remove_message(_message);
+    if(message)
+      chunk_manager_remove_chunk(chunk_manager, message->position);
+  }
 }
 

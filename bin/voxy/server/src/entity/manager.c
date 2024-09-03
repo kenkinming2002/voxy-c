@@ -126,7 +126,7 @@ void entity_manager_despawn(struct entity_manager *entity_manager, entity_handle
 
   struct voxy_server_entity_remove_message message;
   message.message.message.size = LIBNET_MESSAGE_SIZE(message);
-  message.message.tag = VOXY_SERVER_MESSAGE_ENTITY_UPDATE;
+  message.message.tag = VOXY_SERVER_MESSAGE_ENTITY_REMOVE;
   message.handle = handle;
   libnet_server_send_message_all(server, &message.message.message);
 }

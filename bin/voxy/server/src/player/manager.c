@@ -37,7 +37,7 @@ void player_manager_on_client_connected(libnet_server_t server, libnet_client_pr
 void player_manager_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy, struct entity_manager *entity_manager)
 {
   struct player *player = libnet_client_proxy_get_opaque(client_proxy);
-  player_destroy(player, entity_manager);
+  player_destroy(player, entity_manager, server);
 }
 
 void player_manager_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *_message)

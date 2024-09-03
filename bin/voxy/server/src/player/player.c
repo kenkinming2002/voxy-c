@@ -10,7 +10,7 @@
 struct player *player_create(struct entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct player *player = malloc(sizeof *player);
-  player->handle = entity_manager_alloc(entity_manager);
+  player->handle = entity_manager_spawn(entity_manager, 0, fvec3_zero(), fvec3_zero(), server);
   player->left = 0;
   player->right = 0;
   player->back = 0;
@@ -18,11 +18,6 @@ struct player *player_create(struct entity_manager *entity_manager, libnet_serve
   player->bottom = 0;
   player->top = 0;
   player->mouse_motion = fvec2_zero();
-
-  struct entity *entity = entity_manager_get(entity_manager, player->handle);
-  entity->id = 0;
-  entity->position = fvec3_zero();
-  entity->rotation = fvec3_zero();
 
   struct voxy_server_camera_follow_entity_message message;
   message.message.message.size = LIBNET_MESSAGE_SIZE(message);
@@ -33,9 +28,9 @@ struct player *player_create(struct entity_manager *entity_manager, libnet_serve
   return player;
 }
 
-void player_destroy(struct player *player, struct entity_manager *entity_manager)
+void player_destroy(struct player *player, struct entity_manager *entity_manager, libnet_server_t server)
 {
-  entity_manager_free(entity_manager, player->handle);
+  entity_manager_despawn(entity_manager, player->handle, server);
   free(player);
 }
 

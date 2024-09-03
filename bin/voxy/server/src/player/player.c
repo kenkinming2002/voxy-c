@@ -49,7 +49,7 @@ static void player_update_movement(struct player *player, float dt, struct entit
   fvec4_t offset4 = fmat4_mul_vec(fmat4_rotate(entity->rotation), fvec4(axis.x, axis.y, axis.z, 1.0f));
   fvec3_t offset = fvec3(offset4.x, offset4.y, offset4.z);
   offset = fvec3_mul_scalar(offset, dt);
-  offset = fvec3_mul_scalar(offset, 5.0f);
+  offset = fvec3_mul_scalar(offset, 100.0f);
   entity->position = fvec3_add(entity->position, offset);
 }
 

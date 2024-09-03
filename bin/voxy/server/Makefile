@@ -26,6 +26,7 @@ SRCS += src/player/manager.c
 
 SRCS += src/chunk/chunk.c
 SRCS += src/chunk/manager.c
+SRCS += src/chunk/generator.c
 
 all: voxy-server
 

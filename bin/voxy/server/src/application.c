@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <time.h>
 
 #include <libcommon/core/log.h>
 
@@ -66,6 +67,8 @@ int application_init(struct application *application, int argc, char *argv[])
     goto error0;
 
   chunk_manager_init(&application->chunk_manager);
+  chunk_generator_init(&application->chunk_generator, time(NULL));
+
   entity_manager_init(&application->entity_manager);
 
   libnet_server_set_opaque(application->server, application);
@@ -85,7 +88,10 @@ error0:
 void application_fini(struct application *application)
 {
   entity_manager_fini(&application->entity_manager);
+
+  chunk_generator_fini(&application->chunk_generator);
   chunk_manager_fini(&application->chunk_manager);
+
   libnet_server_destroy(application->server);
   entity_registry_fini(&application->entity_registry);
   block_registry_fini(&application->block_registry);
@@ -111,7 +117,7 @@ void application_on_update(libnet_server_t server)
   }
 
   player_manager_update(FIXED_DT, application->server, &application->entity_manager);
-  chunk_manager_update(&application->chunk_manager, application->server);
+  chunk_manager_update(&application->chunk_manager, &application->chunk_generator, application->server);
   entity_manager_update(&application->entity_manager, application->server);
 }
 

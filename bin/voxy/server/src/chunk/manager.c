@@ -20,18 +20,6 @@
 ivec3_t ivec3_key(struct ivec3_node *node) { return node->value; }
 void ivec3_dispose(struct ivec3_node *node) { free(node); }
 
-static void chunk_init(struct chunk *chunk, ivec3_t position)
-{
-  chunk->position = position;
-
-  for(int z=0; z<VOXY_CHUNK_WIDTH; ++z)
-    for(int y=0; y<VOXY_CHUNK_WIDTH; ++y)
-      for(int x=0; x<VOXY_CHUNK_WIDTH; ++x)
-        chunk->block_ids[z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + y * VOXY_CHUNK_WIDTH + x] = (x < 8 && y < 8 && z < 8) ? (x + y + z) % 4 : 0;
-
-  memset(&chunk->block_light_levels, 0xFF, sizeof chunk->block_light_levels);
-}
-
 void chunk_manager_init(struct chunk_manager *chunk_manager)
 {
   ivec3_hash_table_init(&chunk_manager->active_chunks);
@@ -60,7 +48,7 @@ void chunk_manager_add_active_chunk(struct chunk_manager *chunk_manager, ivec3_t
   }
 }
 
-void chunk_manager_update(struct chunk_manager *chunk_manager, libnet_server_t server)
+void chunk_manager_update(struct chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, libnet_server_t server)
 {
   // Generate active chunks.
   {
@@ -69,8 +57,7 @@ void chunk_manager_update(struct chunk_manager *chunk_manager, libnet_server_t s
     SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
       if(!(chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position->value)))
       {
-        chunk = chunk_create();
-        chunk_init(chunk, position->value);
+        chunk = chunk_generator_generate(chunk_generator, position->value);
         chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
 
         struct voxy_server_chunk_update_message message;

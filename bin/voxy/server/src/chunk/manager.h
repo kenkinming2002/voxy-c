@@ -2,6 +2,7 @@
 #define CHUNK_MANAGER_H
 
 #include "chunk.h"
+#include "generator.h"
 
 #include <libnet/server.h>
 
@@ -34,7 +35,7 @@ void chunk_manager_fini(struct chunk_manager *chunk_manager);
 void chunk_manager_reset_active_chunks(struct chunk_manager *chunk_manager);
 void chunk_manager_add_active_chunk(struct chunk_manager *chunk_manager, ivec3_t position);
 
-void chunk_manager_update(struct chunk_manager *chunk_manager, libnet_server_t server);
+void chunk_manager_update(struct chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, libnet_server_t server);
 
 void chunk_manager_on_client_connected(struct chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
 

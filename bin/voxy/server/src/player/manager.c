@@ -7,28 +7,38 @@
 #include <libcommon/math/matrix.h>
 #include <libcommon/math/matrix_transform.h>
 
+struct player_manager_update_callback_context
+{
+  float dt;
+  struct entity_manager *entity_manager;
+};
+
 static void player_manager_update_callback(libnet_server_t server, libnet_client_proxy_t client_proxy, void *data)
 {
+  struct player_manager_update_callback_context *context = data;
+
   struct player *player = libnet_client_proxy_get_opaque(client_proxy);
-  const float *dt = data;
-  player_update(player, server, client_proxy, *dt);
+  player_update(player, context->dt, context->entity_manager, server, client_proxy);
 }
 
-void player_manager_update(libnet_server_t server, float dt)
+void player_manager_update(float dt, libnet_server_t server, struct entity_manager *entity_manager)
 {
-  libnet_server_foreach_client(server, player_manager_update_callback, &dt);
+  struct player_manager_update_callback_context context;
+  context.dt = dt;
+  context.entity_manager = entity_manager;
+  libnet_server_foreach_client(server, player_manager_update_callback, &context);
 }
 
-void player_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void player_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy, struct entity_manager *entity_manager)
 {
-  struct player *player = player_create();
+  struct player *player = player_create(entity_manager);
   libnet_client_proxy_set_opaque(client_proxy, player);
 }
 
-void player_manager_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void player_manager_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy, struct entity_manager *entity_manager)
 {
   struct player *player = libnet_client_proxy_get_opaque(client_proxy);
-  player_destroy(player);
+  player_destroy(player, entity_manager);
 }
 
 void player_manager_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *_message)

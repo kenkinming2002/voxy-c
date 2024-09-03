@@ -81,23 +81,25 @@ void application_run(struct application *application)
 void application_on_update(libnet_server_t server)
 {
   struct application *application = libnet_server_get_opaque(server);
-  player_manager_update(application->server, FIXED_DT);
+  player_manager_update(FIXED_DT, application->server, &application->entity_manager);
   chunk_manager_update(&application->chunk_manager);
-  entity_manager_update(&application->entity_manager);
+  entity_manager_update(&application->entity_manager, application->server);
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct application *application = libnet_server_get_opaque(server);
 
-  player_manager_on_client_connected(server, client_proxy);
+  player_manager_on_client_connected(server, client_proxy, &application->entity_manager);
   chunk_manager_on_client_connected(&application->chunk_manager, server, client_proxy);
   entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
 }
 
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
-  player_manager_on_client_disconnected(server, client_proxy);
+  struct application *application = libnet_server_get_opaque(server);
+
+  player_manager_on_client_disconnected(server, client_proxy, &application->entity_manager);
 }
 
 void application_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)

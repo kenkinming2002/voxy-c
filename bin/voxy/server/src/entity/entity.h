@@ -16,6 +16,9 @@ struct entity
 
   fvec3_t position;
   fvec3_t rotation;
+
+  fvec3_t network_position;
+  fvec3_t network_rotation;
 };
 
 #endif // ENTITY_ENTITY_H

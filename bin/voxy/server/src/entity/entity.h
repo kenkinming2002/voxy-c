@@ -21,6 +21,8 @@ struct voxy_entity
 
   fvec3_t network_position;
   fvec3_t network_rotation;
+
+  void *opaque;
 };
 
 #endif // ENTITY_ENTITY_H

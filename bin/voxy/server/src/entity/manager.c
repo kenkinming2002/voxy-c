@@ -97,7 +97,7 @@ void voxy_entity_manager_on_client_connected(struct voxy_entity_manager *entity_
   }
 }
 
-entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, entity_id_t id, fvec3_t position, fvec3_t rotation, libnet_server_t server)
+entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
 {
   entity_handle_t handle = voxy_entity_manager_alloc(entity_manager);
 
@@ -107,6 +107,7 @@ entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_man
   entity->rotation = rotation;
   entity->network_position = position;
   entity->network_rotation = rotation;
+  entity->opaque = opaque;
 
   struct voxy_server_entity_update_message message;
   message.message.message.size = LIBNET_MESSAGE_SIZE(message);

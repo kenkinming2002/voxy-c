@@ -24,7 +24,7 @@ VOXY_SERVER_EXPORT void voxy_entity_manager_free(struct voxy_entity_manager *ent
 /// Spawn/despawn entity.
 ///
 /// This takes care of updating all connected clients over the network.
-VOXY_SERVER_EXPORT entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, entity_id_t id, fvec3_t position, fvec3_t rotation, libnet_server_t server);
+VOXY_SERVER_EXPORT entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server);
 VOXY_SERVER_EXPORT void voxy_entity_manager_despawn(struct voxy_entity_manager *entity_manager, entity_handle_t handle, libnet_server_t server);
 
 /// Get pointer to entity from handle.

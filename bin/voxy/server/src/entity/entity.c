@@ -19,3 +19,14 @@ void voxy_entity_set_rotation(struct voxy_entity *entity, fvec3_t rotation)
 {
   entity->rotation = rotation;
 }
+
+void *voxy_entity_get_opaque(const struct voxy_entity *entity)
+{
+  return entity->opaque;
+}
+
+void voxy_entity_set_opaque(struct voxy_entity *entity, void *opaque)
+{
+  entity->opaque = opaque;
+}
+

@@ -10,7 +10,7 @@
 struct player *player_create(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct player *player = malloc(sizeof *player);
-  player->handle = voxy_entity_manager_spawn(entity_manager, 0, fvec3_zero(), fvec3_zero(), server);
+  player->handle = voxy_entity_manager_spawn(entity_manager, 0, fvec3_zero(), fvec3_zero(), NULL, server);
   player->left = 0;
   player->right = 0;
   player->back = 0;

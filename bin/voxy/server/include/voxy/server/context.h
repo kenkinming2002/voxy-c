@@ -12,6 +12,8 @@
 /// This bundles together all the data that may be accessed by a mod.
 struct voxy_context
 {
+  libnet_server_t server;
+
   struct voxy_block_registry *block_registry;
   struct voxy_entity_registry *entity_registry;
 

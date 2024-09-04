@@ -70,6 +70,7 @@ void application_fini(struct application *application)
 struct voxy_context application_get_context(struct application *application)
 {
   struct voxy_context context;
+  context.server = application->server;
   context.block_registry = &application->block_registry;
   context.entity_registry = &application->entity_registry;
   context.chunk_manager = &application->chunk_manager;

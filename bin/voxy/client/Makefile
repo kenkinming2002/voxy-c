@@ -17,10 +17,8 @@ LIBS += -lcommon
 
 LIBS += -lm
 
+CFLAGS += -fvisibility=hidden
 LDFLAGS += -rdynamic
-
-CFLAGS += $(shell pkg-config --cflags glfw3)
-LIBS   += $(shell pkg-config --libs   glfw3)
 
 SRCS += src/main.c
 SRCS += src/application.c

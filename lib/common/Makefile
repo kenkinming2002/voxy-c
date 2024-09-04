@@ -4,7 +4,11 @@ CFLAGS += -D_GNU_SOURCE
 
 CFLAGS += -Iinclude
 CFLAGS += -Ibundled/include
+
 CFLAGS += $(shell pkg-config --cflags glfw3 fontconfig freetype2)
+LIBS   += $(shell pkg-config --libs   glfw3 fontconfig freetype2)
+
+CFLAGS += -fPIC
 
 SRCS += bundled/src/glad.c
 SRCS += bundled/src/stb_image.c
@@ -28,13 +32,13 @@ SRCS += src/ui/ui.c
 
 .PHONY: clean depclean
 
-all: libcommon.a
+all: libcommon.so
 
-libcommon.a: $(SRCS:.c=.o)
-	ar $(ARFLAGS) $@ $(SRCS:.c=.o)
+libcommon.so: $(SRCS:.c=.o)
+	$(CC) -shared -o $@ $(LDFLAGS) $(CFLAGS) $(SRCS:.c=.o) $(LIBS)
 
 clean: depclean
-	- rm -f libcommon.a
+	- rm -f libcommon.so
 	- rm -f $(SRCS:.c=.o)
 
 depclean:

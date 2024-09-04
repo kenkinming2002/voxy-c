@@ -14,6 +14,7 @@ LIBS += -lnet-server
 
 LIBS += -lm
 
+CFLAGS += -fvisibility=hidden
 LDFLAGS += -rdynamic
 
 SRCS += src/main.c

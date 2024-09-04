@@ -12,7 +12,7 @@ struct voxy_context
 {
   struct voxy_block_registry *block_registry;
   struct voxy_entity_registry *entity_registry;
-  struct chunk_manager *chunk_manager;
+  struct voxy_chunk_manager *chunk_manager;
 };
 
 #endif // VOXY_SERVER_CONTEXT_H

@@ -20,24 +20,24 @@
 ivec3_t ivec3_key(struct ivec3_node *node) { return node->value; }
 void ivec3_dispose(struct ivec3_node *node) { free(node); }
 
-void chunk_manager_init(struct chunk_manager *chunk_manager)
+void chunk_manager_init(struct voxy_chunk_manager *chunk_manager)
 {
   ivec3_hash_table_init(&chunk_manager->active_chunks);
   chunk_hash_table_init(&chunk_manager->chunks);
 }
 
-void chunk_manager_fini(struct chunk_manager *chunk_manager)
+void chunk_manager_fini(struct voxy_chunk_manager *chunk_manager)
 {
   chunk_hash_table_dispose(&chunk_manager->chunks);
   ivec3_hash_table_dispose(&chunk_manager->active_chunks);
 }
 
-void chunk_manager_reset_active_chunks(struct chunk_manager *chunk_manager)
+void chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager)
 {
   ivec3_hash_table_dispose(&chunk_manager->active_chunks);
 }
 
-void chunk_manager_add_active_chunk(struct chunk_manager *chunk_manager, ivec3_t position)
+void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manager, ivec3_t position)
 {
   struct ivec3_node *node;
   if(!(node = ivec3_hash_table_lookup(&chunk_manager->active_chunks, position)))
@@ -48,7 +48,7 @@ void chunk_manager_add_active_chunk(struct chunk_manager *chunk_manager, ivec3_t
   }
 }
 
-void chunk_manager_update(struct chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, libnet_server_t server)
+void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, libnet_server_t server)
 {
   // Generate active chunks.
   {
@@ -95,7 +95,7 @@ void chunk_manager_update(struct chunk_manager *chunk_manager, struct chunk_gene
   }
 }
 
-void chunk_manager_on_client_connected(struct chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
+void chunk_manager_on_client_connected(struct voxy_chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct chunk *chunk;
   SC_HASH_TABLE_FOREACH(chunk_manager->chunks, chunk)

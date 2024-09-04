@@ -11,7 +11,7 @@ static void player_entity_update(const struct voxy_entity *entity, const struct 
       {
         const ivec3_t position = ivec3(x, y, z);
         if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
-          chunk_manager_add_active_chunk(context->chunk_manager, position);
+          voxy_chunk_manager_add_active_chunk(context->chunk_manager, position);
       }
 }
 

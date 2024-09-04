@@ -22,7 +22,7 @@ struct application
 
   libnet_server_t server;
 
-  struct chunk_manager chunk_manager;
+  struct voxy_chunk_manager chunk_manager;
   struct chunk_generator chunk_generator;
 
   struct entity_manager entity_manager;

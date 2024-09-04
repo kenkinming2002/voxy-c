@@ -36,7 +36,7 @@ void player_destroy(struct player *player, struct entity_manager *entity_manager
 
 static void player_update_movement(struct player *player, float dt, struct entity_manager *entity_manager)
 {
-  struct entity *entity = entity_manager_get(entity_manager, player->handle);
+  struct voxy_entity *entity = entity_manager_get(entity_manager, player->handle);
 
   fvec3_t axis = fvec3_zero();
   if(player->left)   axis.x -= 1.0f;
@@ -55,7 +55,7 @@ static void player_update_movement(struct player *player, float dt, struct entit
 
 static void player_update_rotation(struct player *player, struct entity_manager *entity_manager)
 {
-  struct entity *entity = entity_manager_get(entity_manager, player->handle);
+  struct voxy_entity *entity = entity_manager_get(entity_manager, player->handle);
   entity->rotation.yaw   +=  player->mouse_motion.x * 0.002f;
   entity->rotation.pitch += -player->mouse_motion.y * 0.002f;
   player->mouse_motion = fvec2_zero();

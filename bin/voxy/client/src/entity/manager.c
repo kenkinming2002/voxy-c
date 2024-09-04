@@ -38,7 +38,7 @@ void entity_manager_on_message_received(struct entity_manager *entity_manager, l
   }
 }
 
-struct entity *entity_manager_get(struct entity_manager *entity_manager, entity_handle_t handle)
+struct voxy_entity *entity_manager_get(struct entity_manager *entity_manager, entity_handle_t handle)
 {
   assert(handle < entity_manager->entities.item_count);
   return &entity_manager->entities.items[handle];

@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-int block_renderer_init(struct block_renderer *block_renderer, const struct block_registry *block_registry)
+int block_renderer_init(struct block_renderer *block_renderer, const struct voxy_block_registry *block_registry)
 {
   DYNAMIC_ARRAY_DECLARE(textures, const char *);
 
@@ -52,7 +52,7 @@ void block_renderer_fini(struct block_renderer *block_renderer)
   gl_program_fini(&block_renderer->program);
 }
 
-void block_renderer_update(struct block_renderer *block_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager, struct camera_manager *camera_manager)
+void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct chunk_manager *chunk_manager, struct camera_manager *camera_manager)
 {
   const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(camera_manager->camera.transform.translation), VOXY_CHUNK_WIDTH);
   const int radius = 8;

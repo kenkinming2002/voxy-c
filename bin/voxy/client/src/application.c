@@ -1,34 +1,11 @@
 #include "application.h"
 
-#include <libcommon/graphics/gl.h>
-#include <libcommon/graphics/mesh.h>
 #include <libcommon/graphics/render.h>
 
 #include <libcommon/core/window.h>
 #include <libcommon/core/delta_time.h>
 
 #include <stdio.h>
-
-static void test_render(const struct entity *entity, const struct camera *camera)
-{
-  // FIXME: We are currently hardcoding and loading assets on first use.
-  static bool initialized = false;
-  static struct mesh mesh;
-  static struct gl_texture_2d texture;
-  if(!initialized)
-  {
-    mesh_init(&mesh);
-    mesh_load(&mesh, "bin/mod/assets/models/pig.obj");
-    gl_texture_2d_load(&texture, "bin/mod/assets/models/pig.png");
-    initialized = true;
-  }
-
-  transform_t transform;
-  transform.translation = entity->position;
-  transform.rotation = entity->rotation;
-  render(camera, &mesh, &texture, transform, 1.0f);
-}
-
 
 int application_init(struct application *application, int argc, char *argv[])
 {
@@ -38,63 +15,18 @@ int application_init(struct application *application, int argc, char *argv[])
     return -1;
   }
 
+  struct voxy_context context = application_get_context(application);
+
   window_init("client", 1024, 720);
 
-  block_registry_init(&application->block_registry);
-  entity_registry_init(&application->entity_registry);
-
-  block_registry_register_block(&application->block_registry, (struct block_info){
-    .mod = "base",
-    .name = "air",
-    .type = BLOCK_TYPE_INVISIBLE,
-    .textures = {0},
-  });
-
-  block_registry_register_block(&application->block_registry, (struct block_info){
-    .mod = "base",
-    .name = "ether",
-    .type = BLOCK_TYPE_INVISIBLE,
-    .textures = {0},
-  });
-
-  block_registry_register_block(&application->block_registry, (struct block_info){
-    .mod = "base",
-    .name = "stone",
-    .type = BLOCK_TYPE_OPAQUE,
-    .textures[DIRECTION_LEFT]   = "bin/mod/assets/textures/stone.png",
-    .textures[DIRECTION_RIGHT]  = "bin/mod/assets/textures/stone.png",
-    .textures[DIRECTION_BACK]   = "bin/mod/assets/textures/stone.png",
-    .textures[DIRECTION_FRONT]  = "bin/mod/assets/textures/stone.png",
-    .textures[DIRECTION_BOTTOM] = "bin/mod/assets/textures/stone.png",
-    .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/stone.png",
-  });
-
-  block_registry_register_block(&application->block_registry, (struct block_info){
-    .mod = "base",
-    .name = "grass",
-    .type = BLOCK_TYPE_OPAQUE,
-    .textures[DIRECTION_LEFT]   = "bin/mod/assets/textures/grass_side.png",
-    .textures[DIRECTION_RIGHT]  = "bin/mod/assets/textures/grass_side.png",
-    .textures[DIRECTION_BACK]   = "bin/mod/assets/textures/grass_side.png",
-    .textures[DIRECTION_FRONT]  = "bin/mod/assets/textures/grass_side.png",
-    .textures[DIRECTION_BOTTOM] = "bin/mod/assets/textures/grass_bottom.png",
-    .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/grass_top.png",
-  });
-
-  entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
-    .mod = "base",
-    .name = "player",
-    .render = test_render,
-  });
-
-  entity_registry_register_entity(&application->entity_registry, (struct entity_info) {
-    .mod = "base",
-    .name = "dummy",
-    .render = test_render,
-  });
+  voxy_block_registry_init(&application->block_registry);
+  voxy_entity_registry_init(&application->entity_registry);
 
   if(!(application->client = libnet_client_create(argv[1], argv[2])))
     goto error0;
+
+  libnet_client_set_opaque(application->client, application);
+  libnet_client_set_on_message_received(application->client, application_on_message_received);
 
   if(input_manager_init(&application->input_manager) != 0)
     goto error1;
@@ -107,13 +39,17 @@ int application_init(struct application *application, int argc, char *argv[])
 
   entity_manager_init(&application->entity_manager);
 
-  if(world_renderer_init(&application->world_renderer, &application->block_registry) != 0)
+  mod_manager_init(&application->mod_manager);
+  if(mod_manager_load(&application->mod_manager, "bin/mod/base/client/base-client.so", &context) != 0)
     goto error4;
 
-  libnet_client_set_opaque(application->client, application);
-  libnet_client_set_on_message_received(application->client, application_on_message_received);
+  if(world_renderer_init(&application->world_renderer, &application->block_registry) != 0)
+    goto error5;
+
   return 0;
 
+error5:
+  mod_manager_fini(&application->mod_manager, &context);
 error4:
   entity_manager_fini(&application->entity_manager);
   chunk_manager_fini(&application->chunk_manager);
@@ -124,20 +60,31 @@ error2:
 error1:
   libnet_client_destroy(application->client);
 error0:
-  block_registry_fini(&application->block_registry);
+  voxy_block_registry_fini(&application->block_registry);
   return -1;
+}
+
+struct voxy_context application_get_context(struct application *application)
+{
+  struct voxy_context context;
+  context.block_registry = &application->block_registry;
+  context.entity_registry = &application->entity_registry;
+  return context;
 }
 
 void application_fini(struct application *application)
 {
+  struct voxy_context context = application_get_context(application);
+
   world_renderer_fini(&application->world_renderer);
+  mod_manager_fini(&application->mod_manager, &context);
   entity_manager_fini(&application->entity_manager);
   chunk_manager_fini(&application->chunk_manager);
   camera_manager_fini(&application->camera_manager);
   input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
-  entity_registry_fini(&application->entity_registry);
-  block_registry_fini(&application->block_registry);
+  voxy_entity_registry_fini(&application->entity_registry);
+  voxy_block_registry_fini(&application->block_registry);
 }
 
 void application_run(struct application *application)

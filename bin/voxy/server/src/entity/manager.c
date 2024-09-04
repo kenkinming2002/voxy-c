@@ -11,7 +11,7 @@ void entity_manager_init(struct entity_manager *entity_manager)
 
   for(unsigned i=0; i<100; ++i)
   {
-    struct entity *entity = entity_manager_get(entity_manager, entity_manager_alloc(entity_manager));
+    struct voxy_entity *entity = entity_manager_get(entity_manager, entity_manager_alloc(entity_manager));
     entity->id = 1;
     entity->position = fvec3(i, i, i);
     entity->rotation = fvec3(i, i, i);
@@ -30,7 +30,7 @@ entity_handle_t entity_manager_alloc(struct entity_manager *entity_manager)
     return entity_manager->orphans.items[entity_manager->orphans.item_count--];
 
   const entity_handle_t handle = entity_manager->entities.item_count;
-  DYNAMIC_ARRAY_APPEND(entity_manager->entities, (struct entity){ .alive = true });
+  DYNAMIC_ARRAY_APPEND(entity_manager->entities, (struct voxy_entity){ .alive = true });
   return handle;
 }
 
@@ -48,7 +48,7 @@ void entity_manager_free(struct entity_manager *entity_manager, entity_handle_t 
   DYNAMIC_ARRAY_APPEND(entity_manager->orphans, handle);
 }
 
-struct entity *entity_manager_get(struct entity_manager *entity_manager, entity_handle_t handle)
+struct voxy_entity *entity_manager_get(struct entity_manager *entity_manager, entity_handle_t handle)
 {
   assert(handle < entity_manager->entities.item_count);
   return &entity_manager->entities.items[handle];
@@ -58,7 +58,7 @@ void entity_manager_update(struct entity_manager *entity_manager, libnet_server_
 {
   for(entity_handle_t handle=0; handle<entity_manager->entities.item_count; ++handle)
   {
-    struct entity *entity = &entity_manager->entities.items[handle];
+    struct voxy_entity *entity = &entity_manager->entities.items[handle];
     if(entity_manager->entities.items[handle].alive)
       if(fvec3_length_squared(fvec3_sub(entity->position, entity->network_position)) >= 1e-8f ||
          fvec3_length_squared(fvec3_sub(entity->rotation, entity->network_rotation)) >= 1e-8f)
@@ -82,7 +82,7 @@ void entity_manager_on_client_connected(struct entity_manager *entity_manager, l
 {
   for(entity_handle_t handle=0; handle<entity_manager->entities.item_count; ++handle)
   {
-    const struct entity *entity = &entity_manager->entities.items[handle];
+    const struct voxy_entity *entity = &entity_manager->entities.items[handle];
     if(entity_manager->entities.items[handle].alive)
     {
       struct voxy_server_entity_update_message message;
@@ -101,7 +101,7 @@ entity_handle_t entity_manager_spawn(struct entity_manager *entity_manager, enti
 {
   entity_handle_t handle = entity_manager_alloc(entity_manager);
 
-  struct entity *entity = entity_manager_get(entity_manager, handle);
+  struct voxy_entity *entity = entity_manager_get(entity_manager, handle);
   entity->id = id;
   entity->position = position;
   entity->rotation = rotation;

@@ -4,15 +4,15 @@
 #include <libcommon/utils/dynamic_array.h>
 #include <libcommon/graphics/camera.h>
 
-struct entity;
-struct entity_info
+struct voxy_entity;
+struct voxy_entity_info
 {
   const char *mod;
   const char *name;
 
-  void(*render)(const struct entity *entity, const struct camera *camera);
+  void(*render)(const struct voxy_entity *entity, const struct camera *camera);
 };
 
-DYNAMIC_ARRAY_DEFINE(entity_infos, struct entity_info);
+DYNAMIC_ARRAY_DEFINE(entity_infos, struct voxy_entity_info);
 
 #endif // ENTITY_INFO_H

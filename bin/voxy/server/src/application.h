@@ -13,10 +13,12 @@
 
 #include "entity/manager.h"
 
+#include "mod/manager.h"
+
 struct application
 {
-  struct block_registry block_registry;
-  struct entity_registry entity_registry;
+  struct voxy_block_registry block_registry;
+  struct voxy_entity_registry entity_registry;
 
   libnet_server_t server;
 
@@ -24,11 +26,16 @@ struct application
   struct chunk_generator chunk_generator;
 
   struct entity_manager entity_manager;
+
+  struct mod_manager mod_manager;
 };
 
 /// Initialize/finalize application.
 int application_init(struct application *application, int argc, char *argv[]);
 void application_fini(struct application *application);
+
+/// Create context from application.
+struct voxy_context application_get_context(struct application *application);
 
 /// Run the application.
 void application_run(struct application *application);

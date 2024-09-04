@@ -61,17 +61,22 @@ SRCS += src/entity/weird/weird.c
 SRCS += src/update/spawn_player.c
 SRCS += src/update/spawn_weird.c
 
-.PHONY: clean depclean
+.PHONY: base clean depclean
 
-all: mod.so
+all: base mod.so
+
+base:
+	$(MAKE) -C base
 
 mod.so: $(SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(SRCS:.c=.o) $(LIBS)
 
 clean: depclean
+	$(MAKE) -C base clean
 	- rm -f $(SRCS:.c=.o)
 
 depclean:
+	$(MAKE) -C base depclean
 	- rm -f $(SRCS:.c=.d)
 
 -include $(SRCS:.c=.d)

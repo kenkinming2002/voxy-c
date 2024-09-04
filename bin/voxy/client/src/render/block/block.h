@@ -18,10 +18,10 @@ struct block_renderer
   struct block_render_info_hash_table render_infos;
 };
 
-int block_renderer_init(struct block_renderer *block_renderer, const struct block_registry *block_registry);
+int block_renderer_init(struct block_renderer *block_renderer, const struct voxy_block_registry *block_registry);
 void block_renderer_fini(struct block_renderer *block_renderer);
 
-void block_renderer_update(struct block_renderer *block_renderer, struct block_registry *block_registry, struct chunk_manager *chunk_manager, struct camera_manager *camera_manager);
+void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct chunk_manager *chunk_manager, struct camera_manager *camera_manager);
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager);
 
 #endif // RENDER_BLOCK_BLOCK_H

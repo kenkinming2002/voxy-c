@@ -7,7 +7,7 @@
 #include <libcommon/graphics/camera.h>
 
 struct block_renderer;
-struct block_registry;
+struct voxy_block_registry;
 
 /// Render info for blocks in a chunk i.e. handles to meshes of blocks in a
 /// chunk and a boolean for doing some form of frustum culling.
@@ -37,7 +37,7 @@ void block_render_info_destroy(struct block_render_info *block_render_info);
 /// should be indicated by some form of a *dirty* flag on the chunk.
 ///
 /// FIXME: Add back the digger argument.
-void block_render_info_update(struct block_render_info *block_render_info, struct block_registry *block_registry, struct block_renderer *block_renderer, const struct chunk *chunk);
+void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, const struct chunk *chunk);
 
 /// Determine if a chunk can be culled when rendered with the given camera.
 ///

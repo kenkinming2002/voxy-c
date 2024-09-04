@@ -1,6 +1,8 @@
 #ifndef ENTITY_ENTITY_H
 #define ENTITY_ENTITY_H
 
+#include <voxy/server/entity/entity.h>
+
 #include "registry.h"
 
 #include <libcommon/math/vector.h>
@@ -8,7 +10,7 @@
 
 #include <stdbool.h>
 
-struct entity
+struct voxy_entity
 {
   bool alive;
 

@@ -21,7 +21,7 @@ void block_render_info_destroy(struct block_render_info *block_render_info)
   free(block_render_info);
 }
 
-void block_render_info_update(struct block_render_info *block_render_info, struct block_registry *block_registry, struct block_renderer *block_renderer, const struct chunk *chunk)
+void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, const struct chunk *chunk)
 {
   struct block_vertices opaque_vertices = {0};
   struct block_vertices transparent_vertices = {0};
@@ -67,7 +67,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
         const uint8_t block_id = block_ids[z+1][y+1][x+1];
         const uint8_t block_light_level = block_light_levels[z+1][y+1][x+1];
-        const enum block_type block_type = block_registry->infos.items[block_id].type;
+        const enum voxy_block_type block_type = block_registry->infos.items[block_id].type;
 
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         {
@@ -75,9 +75,9 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
           const uint8_t neighbour_block_id = block_ids[z+normal.z+1][y+normal.y+1][x+normal.x+1];
           const uint8_t neighbour_block_light_level = block_light_levels[z+normal.z+1][y+normal.y+1][x+normal.x+1];
-          const enum block_type neighbour_block_type = block_registry->infos.items[neighbour_block_id].type;
+          const enum voxy_block_type neighbour_block_type = block_registry->infos.items[neighbour_block_id].type;
 
-          if(block_type == BLOCK_TYPE_INVISIBLE || neighbour_block_type != BLOCK_TYPE_INVISIBLE)
+          if(block_type == VOXY_BLOCK_TYPE_INVISIBLE || neighbour_block_type != VOXY_BLOCK_TYPE_INVISIBLE)
             continue;
 
           const ivec3_t center = global_position;

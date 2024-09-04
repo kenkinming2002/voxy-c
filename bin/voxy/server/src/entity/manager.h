@@ -11,7 +11,7 @@ typedef uint32_t entity_handle_t;
 
 struct entity_manager
 {
-  DYNAMIC_ARRAY_DEFINE(,struct entity) entities;
+  DYNAMIC_ARRAY_DEFINE(,struct voxy_entity) entities;
   DYNAMIC_ARRAY_DEFINE(,entity_handle_t) orphans;
 };
 
@@ -34,7 +34,7 @@ void entity_manager_on_client_connected(struct entity_manager *entity_manager, l
 ///
 /// Since entities are stored in a dynamic array under the hood, the returned
 /// pointer are invalidated upon allocation/deallocation.
-struct entity *entity_manager_get(struct entity_manager *entity_manager, entity_handle_t handle);
+struct voxy_entity *entity_manager_get(struct entity_manager *entity_manager, entity_handle_t handle);
 
 /// Spawn/despawn entity.
 ///

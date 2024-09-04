@@ -27,7 +27,7 @@ void camera_manager_update(struct camera_manager *camera_manager, struct entity_
   camera_manager->camera.aspect = (float)window_size.x / (float)window_size.y;
   if(camera_manager->target != ENTITY_HANDLE_NULL)
   {
-    const struct entity *entity = entity_manager_get(entity_manager, camera_manager->target);
+    const struct voxy_entity *entity = entity_manager_get(entity_manager, camera_manager->target);
     camera_manager->camera.transform.translation = entity->position;
     camera_manager->camera.transform.rotation = entity->rotation;
   }

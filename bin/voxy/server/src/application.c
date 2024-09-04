@@ -31,7 +31,7 @@ int application_init(struct application *application, int argc, char *argv[])
   chunk_manager_init(&application->chunk_manager);
   chunk_generator_init(&application->chunk_generator, time(NULL));
 
-  entity_manager_init(&application->entity_manager);
+  voxy_entity_manager_init(&application->entity_manager);
 
   struct voxy_context context = application_get_context(application);
   mod_manager_init(&application->mod_manager);
@@ -73,6 +73,7 @@ struct voxy_context application_get_context(struct application *application)
   context.block_registry = &application->block_registry;
   context.entity_registry = &application->entity_registry;
   context.chunk_manager = &application->chunk_manager;
+  context.entity_manager = &application->entity_manager;
   return context;
 }
 
@@ -98,7 +99,7 @@ void application_on_update(libnet_server_t server)
 
   player_manager_update(FIXED_DT, application->server, &application->entity_manager);
   chunk_manager_update(&application->chunk_manager, &application->chunk_generator, application->server);
-  entity_manager_update(&application->entity_manager, application->server);
+  voxy_entity_manager_update(&application->entity_manager, application->server);
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
@@ -107,7 +108,7 @@ void application_on_client_connected(libnet_server_t server, libnet_client_proxy
 
   player_manager_on_client_connected(server, client_proxy, &application->entity_manager);
   chunk_manager_on_client_connected(&application->chunk_manager, server, client_proxy);
-  entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
+  voxy_entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
 }
 
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)

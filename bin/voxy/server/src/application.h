@@ -25,7 +25,7 @@ struct application
   struct voxy_chunk_manager chunk_manager;
   struct chunk_generator chunk_generator;
 
-  struct entity_manager entity_manager;
+  struct voxy_entity_manager entity_manager;
 
   struct mod_manager mod_manager;
 };

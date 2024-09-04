@@ -3,7 +3,9 @@
 
 #include "block/registry.h"
 #include "entity/registry.h"
+
 #include "chunk/manager.h"
+#include "entity/manager.h"
 
 /// Context.
 ///
@@ -12,7 +14,9 @@ struct voxy_context
 {
   struct voxy_block_registry *block_registry;
   struct voxy_entity_registry *entity_registry;
+
   struct voxy_chunk_manager *chunk_manager;
+  struct voxy_entity_manager *entity_manager;
 };
 
 #endif // VOXY_SERVER_CONTEXT_H

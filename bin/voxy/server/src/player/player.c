@@ -7,10 +7,10 @@
 
 #include <stdlib.h>
 
-struct player *player_create(struct entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
+struct player *player_create(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct player *player = malloc(sizeof *player);
-  player->handle = entity_manager_spawn(entity_manager, 0, fvec3_zero(), fvec3_zero(), server);
+  player->handle = voxy_entity_manager_spawn(entity_manager, 0, fvec3_zero(), fvec3_zero(), server);
   player->left = 0;
   player->right = 0;
   player->back = 0;
@@ -28,15 +28,15 @@ struct player *player_create(struct entity_manager *entity_manager, libnet_serve
   return player;
 }
 
-void player_destroy(struct player *player, struct entity_manager *entity_manager, libnet_server_t server)
+void player_destroy(struct player *player, struct voxy_entity_manager *entity_manager, libnet_server_t server)
 {
-  entity_manager_despawn(entity_manager, player->handle, server);
+  voxy_entity_manager_despawn(entity_manager, player->handle, server);
   free(player);
 }
 
-static void player_update_movement(struct player *player, float dt, struct entity_manager *entity_manager)
+static void player_update_movement(struct player *player, float dt, struct voxy_entity_manager *entity_manager)
 {
-  struct voxy_entity *entity = entity_manager_get(entity_manager, player->handle);
+  struct voxy_entity *entity = voxy_entity_manager_get(entity_manager, player->handle);
 
   fvec3_t axis = fvec3_zero();
   if(player->left)   axis.x -= 1.0f;
@@ -53,15 +53,15 @@ static void player_update_movement(struct player *player, float dt, struct entit
   entity->position = fvec3_add(entity->position, offset);
 }
 
-static void player_update_rotation(struct player *player, struct entity_manager *entity_manager)
+static void player_update_rotation(struct player *player, struct voxy_entity_manager *entity_manager)
 {
-  struct voxy_entity *entity = entity_manager_get(entity_manager, player->handle);
+  struct voxy_entity *entity = voxy_entity_manager_get(entity_manager, player->handle);
   entity->rotation.yaw   +=  player->mouse_motion.x * 0.002f;
   entity->rotation.pitch += -player->mouse_motion.y * 0.002f;
   player->mouse_motion = fvec2_zero();
 }
 
-void player_update(struct player *player, float dt, struct entity_manager *entity_manager)
+void player_update(struct player *player, float dt, struct voxy_entity_manager *entity_manager)
 {
   player_update_movement(player, dt, entity_manager);
   player_update_rotation(player, entity_manager);

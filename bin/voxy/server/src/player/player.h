@@ -1,6 +1,8 @@
 #ifndef PLAYER_PLAYER_H
 #define PLAYER_PLAYER_H
 
+#include <voxy/server/player/player.h>
+
 #include "entity/manager.h"
 
 #include <libnet/server.h>
@@ -12,7 +14,7 @@
 /// Player.
 ///
 /// This is stored internally in opaque pointer of client proxy.
-struct player
+struct voxy_player
 {
   entity_handle_t handle;
 
@@ -27,10 +29,10 @@ struct player
 };
 
 /// Create/destroy player.
-struct player *player_create(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
-void player_destroy(struct player *player, struct voxy_entity_manager *entity_manager, libnet_server_t server);
+struct voxy_player *player_create(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
+void player_destroy(struct voxy_player *player, struct voxy_entity_manager *entity_manager, libnet_server_t server);
 
 /// Update player.
-void player_update(struct player *player, float dt, struct voxy_entity_manager *entity_manager);
+void player_update(struct voxy_player *player, float dt, struct voxy_entity_manager *entity_manager);
 
 #endif // PLAYER_PLAYER_H

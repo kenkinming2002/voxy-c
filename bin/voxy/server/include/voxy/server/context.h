@@ -6,6 +6,7 @@
 
 #include "chunk/manager.h"
 #include "entity/manager.h"
+#include "player/manager.h"
 
 /// Context.
 ///
@@ -19,6 +20,7 @@ struct voxy_context
 
   struct voxy_chunk_manager *chunk_manager;
   struct voxy_entity_manager *entity_manager;
+  struct voxy_player_manager *player_manager;
 };
 
 #endif // VOXY_SERVER_CONTEXT_H

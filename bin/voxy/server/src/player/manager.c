@@ -7,40 +7,36 @@
 #include <libcommon/math/matrix.h>
 #include <libcommon/math/matrix_transform.h>
 
-struct player_manager_update_callback_context
+void voxy_player_manager_init(struct voxy_player_manager *player_manager)
 {
-  float dt;
-  struct voxy_entity_manager *entity_manager;
-};
-
-static void player_manager_update_callback(libnet_server_t server, libnet_client_proxy_t client_proxy, void *data)
-{
-  struct player_manager_update_callback_context *context = data;
-  struct voxy_player *player = libnet_client_proxy_get_opaque(client_proxy);
-  player_update(player, context->dt, context->entity_manager);
+  player_manager->on_new_player = NULL;
 }
 
-void player_manager_update(float dt, libnet_server_t server, struct voxy_entity_manager *entity_manager)
+void voxy_player_manager_fini(struct voxy_player_manager *player_manager)
 {
-  struct player_manager_update_callback_context context;
-  context.dt = dt;
-  context.entity_manager = entity_manager;
-  libnet_server_foreach_client(server, player_manager_update_callback, &context);
+  (void)player_manager;
 }
 
-void player_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy, struct voxy_entity_manager *entity_manager)
+void voxy_player_manager_set_on_new_player(struct voxy_player_manager *player_manager, voxy_on_new_player on_new_player)
 {
-  struct voxy_player *player = player_create(entity_manager, server, client_proxy);
+  player_manager->on_new_player = on_new_player;
+}
+
+void voxy_player_manager_on_client_connected(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy, const struct voxy_context *context)
+{
+  struct voxy_player *player = voxy_player_create(server, client_proxy);
   libnet_client_proxy_set_opaque(client_proxy, player);
+  if(player_manager->on_new_player)
+    player_manager->on_new_player(player, context);
 }
 
-void player_manager_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy, struct voxy_entity_manager *entity_manager)
+void voxy_player_manager_on_client_disconnected(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct voxy_player *player = libnet_client_proxy_get_opaque(client_proxy);
-  player_destroy(player, entity_manager, server);
+  voxy_player_put(player);
 }
 
-void player_manager_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *_message)
+void voxy_player_manager_on_message_received(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *_message)
 {
   const struct voxy_client_input_message *message = voxy_get_client_input_message(_message);
   if(message)
@@ -55,6 +51,7 @@ void player_manager_on_message_received(libnet_server_t server, libnet_client_pr
     player->top = message->top;
 
     player->mouse_motion = fvec2_add(player->mouse_motion, message->motion);
+
   }
 }
 

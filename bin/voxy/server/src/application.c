@@ -32,6 +32,7 @@ int application_init(struct application *application, int argc, char *argv[])
   chunk_generator_init(&application->chunk_generator, time(NULL));
 
   voxy_entity_manager_init(&application->entity_manager);
+  voxy_player_manager_init(&application->player_manager);
 
   struct voxy_context context = application_get_context(application);
   mod_manager_init(&application->mod_manager);
@@ -41,6 +42,7 @@ int application_init(struct application *application, int argc, char *argv[])
   return 0;
 
 error1:
+  voxy_player_manager_fini(&application->player_manager);
   entity_manager_fini(&application->entity_manager);
   chunk_generator_fini(&application->chunk_generator);
   chunk_manager_fini(&application->chunk_manager);
@@ -56,6 +58,7 @@ void application_fini(struct application *application)
   struct voxy_context context = application_get_context(application);
   mod_manager_fini(&application->mod_manager, &context);
 
+  voxy_player_manager_fini(&application->player_manager);
   entity_manager_fini(&application->entity_manager);
 
   chunk_generator_fini(&application->chunk_generator);
@@ -75,6 +78,7 @@ struct voxy_context application_get_context(struct application *application)
   context.entity_registry = &application->entity_registry;
   context.chunk_manager = &application->chunk_manager;
   context.entity_manager = &application->entity_manager;
+  context.player_manager = &application->player_manager;
   return context;
 }
 
@@ -95,10 +99,9 @@ void application_on_update(libnet_server_t server)
     struct voxy_entity *entity = &application->entity_manager.entities.items[handle];
     struct voxy_entity_info *info = &application->entity_registry.infos.items[entity->id];
     if(info->update)
-      info->update(entity, &context);
+      info->update(entity, FIXED_DT, &context);
   }
 
-  player_manager_update(FIXED_DT, application->server, &application->entity_manager);
   chunk_manager_update(&application->chunk_manager, &application->chunk_generator, application->server);
   voxy_entity_manager_update(&application->entity_manager, application->server);
 }
@@ -106,21 +109,24 @@ void application_on_update(libnet_server_t server)
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct application *application = libnet_server_get_opaque(server);
+  const struct voxy_context context = application_get_context(application);
 
-  player_manager_on_client_connected(server, client_proxy, &application->entity_manager);
   chunk_manager_on_client_connected(&application->chunk_manager, server, client_proxy);
   voxy_entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
+  voxy_player_manager_on_client_connected(&application->player_manager, server, client_proxy, &context);
 }
 
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct application *application = libnet_server_get_opaque(server);
 
-  player_manager_on_client_disconnected(server, client_proxy, &application->entity_manager);
+  voxy_player_manager_on_client_disconnected(&application->player_manager, server, client_proxy);
 }
 
 void application_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
-  player_manager_on_message_received(server, client_proxy, message);
+  struct application *application = libnet_server_get_opaque(server);
+
+  voxy_player_manager_on_message_received(&application->player_manager, server, client_proxy, message);
 }
 

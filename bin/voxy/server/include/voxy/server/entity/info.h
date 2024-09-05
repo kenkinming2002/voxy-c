@@ -11,7 +11,7 @@ struct voxy_entity_info
   const char *mod;
   const char *name;
 
-  void(*update)(const struct voxy_entity *entity, const struct voxy_context *context);
+  void(*update)(struct voxy_entity *entity, float dt, const struct voxy_context *context);
 };
 
 DYNAMIC_ARRAY_DEFINE(voxy_entity_infos, struct voxy_entity_info);

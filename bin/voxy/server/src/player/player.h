@@ -3,8 +3,6 @@
 
 #include <voxy/server/player/player.h>
 
-#include "entity/manager.h"
-
 #include <libnet/server.h>
 
 #include <libcommon/math/vector.h>
@@ -16,7 +14,11 @@
 /// This is stored internally in opaque pointer of client proxy.
 struct voxy_player
 {
-  entity_handle_t handle;
+  unsigned count;
+  unsigned weak_count;
+
+  libnet_server_t server;
+  libnet_client_proxy_t client_proxy;
 
   uint8_t left : 1;
   uint8_t right : 1;
@@ -28,11 +30,7 @@ struct voxy_player
   fvec2_t mouse_motion;
 };
 
-/// Create/destroy player.
-struct voxy_player *player_create(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
-void player_destroy(struct voxy_player *player, struct voxy_entity_manager *entity_manager, libnet_server_t server);
-
-/// Update player.
-void player_update(struct voxy_player *player, float dt, struct voxy_entity_manager *entity_manager);
+/// Create player.
+struct voxy_player *voxy_player_create(libnet_server_t server, libnet_client_proxy_t client_proxy);
 
 #endif // PLAYER_PLAYER_H

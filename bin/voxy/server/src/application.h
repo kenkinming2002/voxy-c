@@ -6,12 +6,11 @@
 #include "block/registry.h"
 #include "entity/registry.h"
 
-#include "player/manager.h"
-
 #include "chunk/manager.h"
 #include "chunk/generator.h"
 
 #include "entity/manager.h"
+#include "player/manager.h"
 
 #include "mod/manager.h"
 
@@ -26,6 +25,7 @@ struct application
   struct chunk_generator chunk_generator;
 
   struct voxy_entity_manager entity_manager;
+  struct voxy_player_manager player_manager;
 
   struct mod_manager mod_manager;
 };

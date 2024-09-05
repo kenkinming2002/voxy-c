@@ -2,13 +2,30 @@
 #define VOXY_SERVER_PLAYER_PLAYER_H
 
 #include <voxy/server/export.h>
+#include <voxy/server/entity/manager.h>
 
 #include <libcommon/math/vector.h>
+
+#include <stdbool.h>
 
 /// Player type.
 ///
 /// Each instance corresponds to a single client/connection.
 struct voxy_player;
+
+/// Upgrade a weak reference to player to a strong reference to player.
+VOXY_SERVER_EXPORT struct voxy_player *voxy_player_upgrade(struct voxy_player *player);
+
+/// Get/put a strong reference to player.
+VOXY_SERVER_EXPORT struct voxy_player *voxy_player_get(struct voxy_player *player);
+VOXY_SERVER_EXPORT void voxy_player_put(struct voxy_player *player);
+
+/// Get/put a weak reference to player.
+VOXY_SERVER_EXPORT struct voxy_player *voxy_player_get_weak(struct voxy_player *player);
+VOXY_SERVER_EXPORT void voxy_player_put_weak(struct voxy_player *player);
+
+/// Set the entity that the player camera should follow.
+VOXY_SERVER_EXPORT void voxy_player_set_camera_follow_entity(struct voxy_player *player, entity_handle_t handle);
 
 /// Get movement input of player.
 ///

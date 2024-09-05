@@ -11,6 +11,7 @@ CFLAGS += -I../../../lib/common/bundled/include
 
 LIBS += -L../../../lib/net
 LIBS += -lnet-server
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/net'
 
 LIBS += -lm
 

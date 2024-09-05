@@ -14,7 +14,7 @@ struct voxy_entity
 {
   bool alive;
 
-  entity_id_t id;
+  voxy_entity_id_t id;
 
   fvec3_t position;
   fvec3_t rotation;

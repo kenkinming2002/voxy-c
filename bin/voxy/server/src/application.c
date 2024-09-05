@@ -43,7 +43,7 @@ int application_init(struct application *application, int argc, char *argv[])
 
 error1:
   voxy_player_manager_fini(&application->player_manager);
-  entity_manager_fini(&application->entity_manager);
+  voxy_entity_manager_fini(&application->entity_manager);
   chunk_generator_fini(&application->chunk_generator);
   chunk_manager_fini(&application->chunk_manager);
   libnet_server_destroy(application->server);
@@ -59,7 +59,7 @@ void application_fini(struct application *application)
   mod_manager_fini(&application->mod_manager, &context);
 
   voxy_player_manager_fini(&application->player_manager);
-  entity_manager_fini(&application->entity_manager);
+  voxy_entity_manager_fini(&application->entity_manager);
 
   chunk_generator_fini(&application->chunk_generator);
   chunk_manager_fini(&application->chunk_manager);

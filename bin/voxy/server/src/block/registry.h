@@ -3,7 +3,7 @@
 
 #include <voxy/server/block/registry.h>
 
-typedef uint8_t block_id_t;
+typedef uint8_t voxy_block_id_t;
 
 struct voxy_block_registry
 {

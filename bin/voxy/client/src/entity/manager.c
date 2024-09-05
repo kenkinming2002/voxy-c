@@ -44,7 +44,7 @@ struct voxy_entity *entity_manager_get(struct entity_manager *entity_manager, en
   return &entity_manager->entities.items[handle];
 }
 
-void entity_manager_update_entity(struct entity_manager *entity_manager, entity_handle_t handle, entity_id_t id,  fvec3_t position, fvec3_t rotation)
+void entity_manager_update_entity(struct entity_manager *entity_manager, entity_handle_t handle, voxy_entity_id_t id,  fvec3_t position, fvec3_t rotation)
 {
   // FIXME: Maybe we need some protection against malicious server allocating a
   //        high entity handle.

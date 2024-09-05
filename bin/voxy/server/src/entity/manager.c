@@ -18,7 +18,7 @@ void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager)
   }
 }
 
-void entity_manager_fini(struct voxy_entity_manager *entity_manager)
+void voxy_entity_manager_fini(struct voxy_entity_manager *entity_manager)
 {
   DYNAMIC_ARRAY_CLEAR(entity_manager->orphans);
   DYNAMIC_ARRAY_CLEAR(entity_manager->entities);
@@ -97,7 +97,7 @@ void voxy_entity_manager_on_client_connected(struct voxy_entity_manager *entity_
   }
 }
 
-entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
+entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
 {
   entity_handle_t handle = voxy_entity_manager_alloc(entity_manager);
 

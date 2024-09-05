@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-typedef uint8_t entity_id_t;
+typedef uint8_t voxy_entity_id_t;
 
 struct voxy_entity_registry
 {

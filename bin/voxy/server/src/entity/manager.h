@@ -20,7 +20,7 @@ struct voxy_entity_manager
 };
 
 void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager);
-void entity_manager_fini(struct voxy_entity_manager *entity_manager);
+void voxy_entity_manager_fini(struct voxy_entity_manager *entity_manager);
 
 /// Callbacks.
 void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, libnet_server_t server);

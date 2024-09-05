@@ -14,7 +14,7 @@ int block_renderer_init(struct block_renderer *block_renderer, const struct voxy
     goto error0;
 
   block_renderer->texture_indices = malloc(block_registry->infos.item_count * sizeof *block_renderer->texture_indices);
-  for(block_id_t id=0; id<block_registry->infos.item_count; ++id)
+  for(voxy_block_id_t id=0; id<block_registry->infos.item_count; ++id)
     for(direction_t direction=0; direction<DIRECTION_COUNT; ++direction)
     {
       const char *texture = block_registry->infos.items[id].textures[direction];

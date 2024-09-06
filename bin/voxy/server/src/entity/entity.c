@@ -30,3 +30,13 @@ void voxy_entity_set_opaque(struct voxy_entity *entity, void *opaque)
   entity->opaque = opaque;
 }
 
+bool voxy_entity_is_grounded(const struct voxy_entity *entity)
+{
+  return entity->grounded;
+}
+
+void voxy_entity_apply_impulse(struct voxy_entity *entity, fvec3_t impulse)
+{
+  entity->velocity = fvec3_add(entity->velocity, impulse);
+}
+

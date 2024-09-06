@@ -1,6 +1,8 @@
 #include "application.h"
 #include "config.h"
 
+#include "physics/physics.h"
+
 #include <voxy/server/context.h>
 
 #include <libcommon/core/log.h>
@@ -101,6 +103,8 @@ void application_on_update(libnet_server_t server)
     if(info->update)
       info->update(entity, FIXED_DT, &context);
   }
+
+  physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);
 
   chunk_manager_update(&application->chunk_manager, &application->chunk_generator, application->server);
   voxy_entity_manager_update(&application->entity_manager, application->server);

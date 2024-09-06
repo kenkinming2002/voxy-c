@@ -61,33 +61,41 @@ void *mod_create_instance(struct voxy_context *context)
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "air",
+    .collide = false,
   });
 
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "ether",
+    .collide = false,
   });
 
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "stone",
+    .collide = true,
   });
 
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "grass",
+    .collide = true,
   });
 
   voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
     .mod = "base",
     .name = "player",
     .update = player_entity_update,
+    .hitbox_dimension = fvec3(0.8f, 0.8f, 1.9f),
+    .hitbox_offset = fvec3(0.0f, 0.0f, -0.5f),
   });
 
   voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
     .mod = "base",
     .name = "dummy",
     .update = NULL,
+    .hitbox_dimension = fvec3(0.8f, 0.8f, 1.9f),
+    .hitbox_offset = fvec3(0.0f, 0.0f, -0.5f),
   });
 
   voxy_player_manager_set_on_new_player(context->player_manager, on_new_player);

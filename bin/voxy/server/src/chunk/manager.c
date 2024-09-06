@@ -1,4 +1,5 @@
 #include "manager.h"
+#include "coordinates.h"
 
 #include <voxy/protocol/server.h>
 
@@ -30,6 +31,18 @@ void chunk_manager_fini(struct voxy_chunk_manager *chunk_manager)
 {
   chunk_hash_table_dispose(&chunk_manager->chunks);
   ivec3_hash_table_dispose(&chunk_manager->active_chunks);
+}
+
+uint8_t chunk_manager_get_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def)
+{
+  struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
+  return chunk ? chunk_get_block_id(chunk, global_position_to_local_position_i(position)) : def;
+}
+
+uint8_t chunk_manager_get_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def)
+{
+  struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
+  return chunk ? chunk_get_block_light_level(chunk, global_position_to_local_position_i(position)) : def;
 }
 
 void chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager)

@@ -13,6 +13,10 @@ LIBS += -L../../../lib/net
 LIBS += -lnet-server
 LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/net'
 
+LIBS += -L../../../lib/common
+LIBS += -lcommon
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/common'
+
 LIBS += -lm
 
 CFLAGS += -fvisibility=hidden
@@ -25,6 +29,7 @@ SRCS += src/block/registry.c
 SRCS += src/entity/registry.c
 
 SRCS += src/chunk/chunk.c
+SRCS += src/chunk/coordinates.c
 SRCS += src/chunk/manager.c
 SRCS += src/chunk/generator.c
 
@@ -36,6 +41,9 @@ SRCS += src/player/manager.c
 
 SRCS += src/mod/mod.c
 SRCS += src/mod/manager.c
+
+SRCS += src/physics/physics.c
+SRCS += src/physics/swept.c
 
 all: voxy-server
 

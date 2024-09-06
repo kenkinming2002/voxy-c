@@ -22,6 +22,9 @@ struct voxy_entity
   fvec3_t network_position;
   fvec3_t network_rotation;
 
+  fvec3_t velocity;
+  bool grounded;
+
   void *opaque;
 };
 

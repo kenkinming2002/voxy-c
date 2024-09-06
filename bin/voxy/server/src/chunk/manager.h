@@ -34,6 +34,12 @@ struct voxy_chunk_manager
 void chunk_manager_init(struct voxy_chunk_manager *chunk_manager);
 void chunk_manager_fini(struct voxy_chunk_manager *chunk_manager);
 
+/// Accessors.
+///
+/// In case the chunk does not exist, value in def is returned.
+uint8_t chunk_manager_get_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def);
+uint8_t chunk_manager_get_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def);
+
 void chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager);
 void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, libnet_server_t server);
 

@@ -39,6 +39,8 @@ SRCS += src/entity/manager.c
 SRCS += src/player/player.c
 SRCS += src/player/manager.c
 
+SRCS += src/light/manager.c
+
 SRCS += src/mod/mod.c
 SRCS += src/mod/manager.c
 

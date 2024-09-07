@@ -66,24 +66,28 @@ void *mod_create_instance(struct voxy_context *context)
     .mod = "base",
     .name = "air",
     .collide = false,
+    .light_level = 0,
   });
 
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "ether",
     .collide = false,
+    .light_level = 15,
   });
 
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "stone",
     .collide = true,
+    .light_level = 0,
   });
 
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "grass",
     .collide = true,
+    .light_level = 0,
   });
 
   voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {

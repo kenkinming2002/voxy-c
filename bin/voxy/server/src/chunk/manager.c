@@ -1,6 +1,9 @@
 #include "manager.h"
 #include "coordinates.h"
 
+#include "block/registry.h"
+#include "light/manager.h"
+
 #include <voxy/protocol/server.h>
 
 #include <libcommon/core/log.h>
@@ -45,6 +48,38 @@ uint8_t chunk_manager_get_block_light_level(struct voxy_chunk_manager *chunk_man
   return chunk ? chunk_get_block_light_level(chunk, global_position_to_local_position_i(position)) : def;
 }
 
+void chunk_manager_set_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t id)
+{
+  struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
+  if(chunk)
+    chunk_set_block_id(chunk, global_position_to_local_position_i(position), id);
+}
+
+void chunk_manager_set_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t light_level)
+{
+  struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
+  if(chunk)
+    chunk_set_block_light_level(chunk, global_position_to_local_position_i(position), light_level);
+}
+
+bool chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+{
+  struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
+  if(chunk)
+  {
+    chunk_get_block_light_level_atomic(chunk, global_position_to_local_position_i(position), light_level, tmp);
+    return true;
+  }
+  else
+    return false;
+}
+
+bool chunk_manager_set_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+{
+  struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
+  return chunk ? chunk_set_block_light_level_atomic(chunk, global_position_to_local_position_i(position), light_level, tmp) : false;
+}
+
 void chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager)
 {
   ivec3_hash_table_dispose(&chunk_manager->active_chunks);
@@ -61,7 +96,7 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
   }
 }
 
-void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, libnet_server_t server)
+void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager, libnet_server_t server)
 {
   // Generate active chunks.
   {
@@ -70,8 +105,20 @@ void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk
     SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
       if(!(chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position->value)))
       {
-        chunk = chunk_generator_generate(chunk_generator, position->value);
+        chunk = chunk_generator_generate(chunk_generator, position->value, block_registry);
         chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
+
+        for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
+          for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
+            for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
+            {
+              const ivec3_t local_position = ivec3(x, y, z);
+              const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk->position);
+              if(chunk_get_block_light_level(chunk, local_position) != 0)
+                light_manager_enqueue_creation_update(light_manager, global_position);
+              else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
+                light_manager_enqueue_destruction_update(light_manager, global_position, 0);
+            }
 
         struct voxy_server_chunk_update_message message;
         message.message.message.size = LIBNET_MESSAGE_SIZE(message);

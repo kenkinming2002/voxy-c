@@ -9,6 +9,7 @@ struct voxy_block_info
   const char *mod;
   const char *name;
   bool collide;
+  uint8_t light_level;
 };
 
 DYNAMIC_ARRAY_DEFINE(voxy_block_infos, struct voxy_block_info);

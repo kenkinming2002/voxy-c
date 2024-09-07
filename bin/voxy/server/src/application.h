@@ -12,6 +12,8 @@
 #include "entity/manager.h"
 #include "player/manager.h"
 
+#include "light/manager.h"
+
 #include "mod/manager.h"
 
 struct application
@@ -26,6 +28,8 @@ struct application
 
   struct voxy_entity_manager entity_manager;
   struct voxy_player_manager player_manager;
+
+  struct light_manager light_manager;
 
   struct mod_manager mod_manager;
 };

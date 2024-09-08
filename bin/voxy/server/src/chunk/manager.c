@@ -24,45 +24,45 @@
 ivec3_t ivec3_key(struct ivec3_node *node) { return node->value; }
 void ivec3_dispose(struct ivec3_node *node) { free(node); }
 
-void chunk_manager_init(struct voxy_chunk_manager *chunk_manager)
+void voxy_chunk_manager_init(struct voxy_chunk_manager *chunk_manager)
 {
   ivec3_hash_table_init(&chunk_manager->active_chunks);
   chunk_hash_table_init(&chunk_manager->chunks);
 }
 
-void chunk_manager_fini(struct voxy_chunk_manager *chunk_manager)
+void voxy_chunk_manager_fini(struct voxy_chunk_manager *chunk_manager)
 {
   chunk_hash_table_dispose(&chunk_manager->chunks);
   ivec3_hash_table_dispose(&chunk_manager->active_chunks);
 }
 
-uint8_t chunk_manager_get_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def)
+uint8_t voxy_chunk_manager_get_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def)
 {
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
   return chunk ? chunk_get_block_id(chunk, global_position_to_local_position_i(position)) : def;
 }
 
-uint8_t chunk_manager_get_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def)
+uint8_t voxy_chunk_manager_get_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def)
 {
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
   return chunk ? chunk_get_block_light_level(chunk, global_position_to_local_position_i(position)) : def;
 }
 
-void chunk_manager_set_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t id)
+void voxy_chunk_manager_set_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t id)
 {
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
   if(chunk)
     chunk_set_block_id(chunk, global_position_to_local_position_i(position), id);
 }
 
-void chunk_manager_set_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t light_level)
+void voxy_chunk_manager_set_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t light_level)
 {
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
   if(chunk)
     chunk_set_block_light_level(chunk, global_position_to_local_position_i(position), light_level);
 }
 
-bool chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+bool voxy_chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
 {
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
   if(chunk)
@@ -74,13 +74,13 @@ bool chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *chunk
     return false;
 }
 
-bool chunk_manager_set_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+bool voxy_chunk_manager_set_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
 {
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
   return chunk ? chunk_set_block_light_level_atomic(chunk, global_position_to_local_position_i(position), light_level, tmp) : false;
 }
 
-void chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager)
+void voxy_chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager)
 {
   ivec3_hash_table_dispose(&chunk_manager->active_chunks);
 }
@@ -96,7 +96,7 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
   }
 }
 
-void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager, libnet_server_t server)
+void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager, libnet_server_t server)
 {
   // Generate and synchronize active chunks.
   {
@@ -170,7 +170,7 @@ void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk
   }
 }
 
-void chunk_manager_on_client_connected(struct voxy_chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
+void voxy_chunk_manager_on_client_connected(struct voxy_chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct chunk *chunk;
   SC_HASH_TABLE_FOREACH(chunk_manager->chunks, chunk)

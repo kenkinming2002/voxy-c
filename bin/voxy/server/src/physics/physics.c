@@ -53,7 +53,7 @@ static bool entity_physics_resolve_collision_once(
         for(int x=block_position_min.x; x<=block_position_max.x; ++x)
         {
           const ivec3_t block_position = ivec3(x, y, z);
-          const uint8_t block_id = chunk_manager_get_block_id(chunk_manager, block_position, UINT8_MAX);
+          const uint8_t block_id = voxy_chunk_manager_get_block_id(chunk_manager, block_position, UINT8_MAX);
           if(block_id != UINT8_MAX && voxy_block_registry_query_block(block_registry, block_id).collide)
           {
             const aabb3_t block_hitbox = aabb3(ivec3_as_fvec3(block_position), fvec3(1.0f, 1.0f, 1.0f));
@@ -129,7 +129,7 @@ static bool entity_is_grounded(
       for(int x=block_position_min.x; x<=block_position_max.x; ++x)
       {
         const ivec3_t block_position = ivec3(x, y, z);
-        const uint8_t block_id = chunk_manager_get_block_id(chunk_manager, block_position, UINT8_MAX);
+        const uint8_t block_id = voxy_chunk_manager_get_block_id(chunk_manager, block_position, UINT8_MAX);
         if(block_id != UINT8_MAX && voxy_block_registry_query_block(block_registry, block_id).collide)
           return true;
       }

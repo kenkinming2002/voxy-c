@@ -100,9 +100,14 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
             render_info->position = position;
             block_render_info_hash_table_insert_unchecked(&block_renderer->render_infos, render_info);
             block_render_info_update(render_info, block_registry, block_renderer, chunk);
-
-            update_count += 1;
           }
+          else if(chunk->remesh)
+            block_render_info_update(render_info, block_registry, block_renderer, chunk);
+          else
+            continue;
+
+          chunk->remesh = false;
+          update_count += 1;
         }
       }
 

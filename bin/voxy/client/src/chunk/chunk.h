@@ -19,6 +19,8 @@ struct chunk
   ivec3_t position;
   uint8_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
   uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
+
+  bool remesh;
 };
 
 /// Create/destroy chunk.

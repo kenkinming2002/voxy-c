@@ -56,8 +56,14 @@ void chunk_manager_on_message_received(struct chunk_manager *chunk_manager, libn
     if(message)
     {
       struct chunk *chunk = chunk_manager_get_chunk(chunk_manager, message->position);
+
       memcpy(&chunk->block_ids, &message->block_ids, sizeof message->block_ids);
       memcpy(&chunk->block_light_levels, &message->block_light_levels, sizeof message->block_light_levels);
+
+      chunk->remesh = true;
+      for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+        if(chunk->neighbours[direction])
+          chunk->neighbours[direction]->remesh = true;
     }
   }
 

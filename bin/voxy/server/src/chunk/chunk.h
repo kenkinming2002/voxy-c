@@ -7,6 +7,7 @@
 #include <libcommon/math/direction.h>
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /// Chunk.
 struct chunk
@@ -17,6 +18,8 @@ struct chunk
   ivec3_t position;
   uint8_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
   uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
+
+  bool dirty;
 };
 
 /// Create/destroy chunk.

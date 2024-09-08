@@ -46,5 +46,6 @@ struct chunk *chunk_generator_generate(struct chunk_generator *chunk_generator, 
         chunk_set_block_light_level(chunk, ivec3(x, y, z), light_level);
       }
 
+  chunk->dirty = true;
   return chunk;
 }

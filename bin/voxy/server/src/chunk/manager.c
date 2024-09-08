@@ -98,16 +98,19 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
 
 void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager, libnet_server_t server)
 {
-  // Generate active chunks.
+  // Generate and synchronize active chunks.
   {
+    size_t generate_count = 0;
+    size_t synchronize_count = 0;
+
     struct ivec3_node *position;
-    struct chunk *chunk;
     SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
+    {
+      struct chunk *chunk;
       if(!(chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position->value)))
       {
         chunk = chunk_generator_generate(chunk_generator, position->value, block_registry);
         chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
-
         for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
           for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
             for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
@@ -120,6 +123,11 @@ void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk
                 light_manager_enqueue_destruction_update(light_manager, global_position, 0);
             }
 
+        generate_count += 1;
+      }
+
+      if(chunk->dirty)
+      {
         struct voxy_server_chunk_update_message message;
         message.message.message.size = LIBNET_MESSAGE_SIZE(message);
         message.message.tag = VOXY_SERVER_MESSAGE_CHUNK_UPDATE;
@@ -127,7 +135,14 @@ void chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk
         memcpy(&message.block_ids, &chunk->block_ids, sizeof chunk->block_ids);
         memcpy(&message.block_light_levels, &chunk->block_light_levels, sizeof chunk->block_light_levels);
         libnet_server_send_message_all(server, &message.message.message);
+
+        chunk->dirty = false;
+        synchronize_count += 1;
       }
+    }
+
+    if(generate_count != 0) LOG_INFO("Generated %zu chunks", generate_count);
+    if(synchronize_count != 0) LOG_INFO("Synchronized %zu chunks over the network", synchronize_count);
   }
 
   // Discard non-active chunks.

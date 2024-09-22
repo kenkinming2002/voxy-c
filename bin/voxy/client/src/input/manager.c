@@ -84,7 +84,7 @@ void input_manager_update(struct input_manager *input_manager, libnet_client_t c
     changed = true;
   }
 
-  if(fvec2_length_squared(mouse_position) != 0.0f)
+  if(fvec2_length_squared(mouse_motion) != 0.0f)
     changed = true;
 
   if(changed)

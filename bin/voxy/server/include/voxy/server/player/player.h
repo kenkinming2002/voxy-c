@@ -41,4 +41,10 @@ VOXY_SERVER_EXPORT fvec3_t voxy_player_get_movement_input(struct voxy_player *pl
 /// Input are accumulated internaly, and reset to zero on call to this function.
 VOXY_SERVER_EXPORT fvec2_t voxy_player_get_pan_input(struct voxy_player *player);
 
+/// Get left mouse button input of player.
+VOXY_SERVER_EXPORT bool voxy_player_get_left_mouse_button_input(struct voxy_player *player);
+
+/// Get right mouse button input of player.
+VOXY_SERVER_EXPORT bool voxy_player_get_right_mouse_button_input(struct voxy_player *player);
+
 #endif // VOXY_SERVER_PLAYER_PLAYER_H

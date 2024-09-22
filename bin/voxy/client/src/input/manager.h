@@ -6,12 +6,17 @@
 
 struct input_manager
 {
-  uint8_t left : 1;
-  uint8_t right : 1;
-  uint8_t back : 1;
-  uint8_t front : 1;
-  uint8_t bottom : 1;
-  uint8_t top : 1;
+  /// Keys.
+  uint8_t key_left : 1;
+  uint8_t key_right : 1;
+  uint8_t key_back : 1;
+  uint8_t key_front : 1;
+  uint8_t key_bottom : 1;
+  uint8_t key_top : 1;
+
+  /// Mouse buttons.
+  uint8_t mouse_button_left : 1;
+  uint8_t mouse_button_right : 1;
 };
 
 int input_manager_init(struct input_manager *input_manager);

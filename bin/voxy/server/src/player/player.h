@@ -20,12 +20,15 @@ struct voxy_player
   libnet_server_t server;
   libnet_client_proxy_t client_proxy;
 
-  uint8_t left : 1;
-  uint8_t right : 1;
-  uint8_t back : 1;
-  uint8_t front : 1;
-  uint8_t bottom : 1;
-  uint8_t top : 1;
+  uint8_t key_left : 1;
+  uint8_t key_right : 1;
+  uint8_t key_back : 1;
+  uint8_t key_front : 1;
+  uint8_t key_bottom : 1;
+  uint8_t key_top : 1;
+
+  uint8_t mouse_button_left : 1;
+  uint8_t mouse_button_right : 1;
 
   fvec2_t mouse_motion;
 };

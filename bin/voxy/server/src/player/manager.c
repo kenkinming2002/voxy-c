@@ -43,14 +43,17 @@ void voxy_player_manager_on_message_received(struct voxy_player_manager *player_
   {
     struct voxy_player *player = libnet_client_proxy_get_opaque(client_proxy);
 
-    player->left = message->left;
-    player->right = message->right;
-    player->back = message->back;
-    player->front = message->front;
-    player->bottom = message->bottom;
-    player->top = message->top;
+    player->key_left = message->key_left;
+    player->key_right = message->key_right;
+    player->key_back = message->key_back;
+    player->key_front = message->key_front;
+    player->key_bottom = message->key_bottom;
+    player->key_top = message->key_top;
 
-    player->mouse_motion = fvec2_add(player->mouse_motion, message->motion);
+    player->mouse_button_left = message->mouse_button_left;
+    player->mouse_button_right = message->mouse_button_right;
+
+    player->mouse_motion = fvec2_add(player->mouse_motion, message->mouse_motion);
 
   }
 }

@@ -17,12 +17,12 @@ struct voxy_player *voxy_player_create(libnet_server_t server, libnet_client_pro
   player->server = server;
   player->client_proxy = client_proxy;
 
-  player->left = 0;
-  player->right = 0;
-  player->back = 0;
-  player->front = 0;
-  player->bottom = 0;
-  player->top = 0;
+  player->key_left = 0;
+  player->key_right = 0;
+  player->key_back = 0;
+  player->key_front = 0;
+  player->key_bottom = 0;
+  player->key_top = 0;
 
   player->mouse_motion = fvec2_zero();
 
@@ -78,12 +78,12 @@ void voxy_player_set_camera_follow_entity(struct voxy_player *player, entity_han
 fvec3_t voxy_player_get_movement_input(struct voxy_player *player)
 {
   fvec3_t input = fvec3_zero();
-  if(player->left)   input.x -= 1.0f;
-  if(player->right)  input.x += 1.0f;
-  if(player->back)   input.y -= 1.0f;
-  if(player->front)  input.y += 1.0f;
-  if(player->bottom) input.z -= 1.0f;
-  if(player->top)    input.z += 1.0f;
+  if(player->key_left)   input.x -= 1.0f;
+  if(player->key_right)  input.x += 1.0f;
+  if(player->key_back)   input.y -= 1.0f;
+  if(player->key_front)  input.y += 1.0f;
+  if(player->key_bottom) input.z -= 1.0f;
+  if(player->key_top)    input.z += 1.0f;
   return input;
 }
 
@@ -94,3 +94,13 @@ fvec2_t voxy_player_get_pan_input(struct voxy_player *player)
   return input;
 }
 
+bool voxy_player_get_left_mouse_button_input(struct voxy_player *player)
+{
+  return player->mouse_button_left;
+}
+
+/// Get right mouse button input of player.
+bool voxy_player_get_right_mouse_button_input(struct voxy_player *player)
+{
+  return player->mouse_button_right;
+}

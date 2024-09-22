@@ -37,19 +37,6 @@ struct voxy_chunk_manager
 void voxy_chunk_manager_init(struct voxy_chunk_manager *chunk_manager);
 void voxy_chunk_manager_fini(struct voxy_chunk_manager *chunk_manager);
 
-/// FIXME: Figure out a better API so that we no longer have to perform repeated
-///        chunk lookup each time we call a getter or setter.
-
-/// Getters.
-///
-/// In case the chunk does not exist, value in def is returned.
-uint8_t voxy_chunk_manager_get_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def);
-uint8_t voxy_chunk_manager_get_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t def);
-
-/// Setters.
-void voxy_chunk_manager_set_block_id(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t id);
-void voxy_chunk_manager_set_block_light_level(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t light_level);
-
 /// Atomic getters/setters.
 ///
 /// What is so hard about atomicity you may ask? The problem we have is that

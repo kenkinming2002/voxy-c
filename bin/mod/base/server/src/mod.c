@@ -3,6 +3,7 @@
 #include <voxy/server/player/player.h>
 
 #include <libcommon/math/matrix_transform.h>
+#include <libcommon/math/ray_cast.h>
 
 #define PAN_SPEED 0.002f
 #define MOVE_SPEED_GROUND 8.0f
@@ -51,6 +52,30 @@ static void player_entity_update(struct voxy_entity *entity, float dt, const str
 
       if(voxy_entity_is_grounded(entity) && movement.z > 0.5f)
         voxy_entity_apply_impulse(entity, fvec3(0.0f, 0.0f, 10.0f));
+    }
+
+    // Breaking block
+    if(voxy_player_get_left_mouse_button_input(player))
+    {
+      const transform_t transform = voxy_entity_get_transform(entity);
+      const fvec3_t position = transform.translation;
+      const fvec3_t direction = transform_forward(transform);
+
+      struct ray_cast ray_cast;
+      for(ray_cast_init(&ray_cast, position); ray_cast.distance < 10.0f; ray_cast_step(&ray_cast, direction))
+      {
+        const uint8_t id = voxy_chunk_manager_get_block_id(context->chunk_manager, ray_cast.iposition, 0xFF);
+        if(id == 0xFF)
+          continue;
+
+        const struct voxy_block_info info = voxy_block_registry_query_block(context->block_registry, id);
+        if(!info.collide)
+          continue;
+
+        voxy_chunk_manager_set_block_id(context->chunk_manager, ray_cast.iposition, 0);
+        voxy_chunk_manager_set_block_light_level(context->chunk_manager, ray_cast.iposition, 15);
+        break;
+      }
     }
   }
   else

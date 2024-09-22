@@ -1,5 +1,13 @@
 #include "entity.h"
 
+transform_t voxy_entity_get_transform(const struct voxy_entity *entity)
+{
+  transform_t transform;
+  transform.translation = entity->position;
+  transform.rotation = entity->rotation;
+  return transform;
+}
+
 fvec3_t voxy_entity_get_position(const struct voxy_entity *entity)
 {
   return entity->position;
@@ -8,6 +16,12 @@ fvec3_t voxy_entity_get_position(const struct voxy_entity *entity)
 fvec3_t voxy_entity_get_rotation(const struct voxy_entity *entity)
 {
   return entity->rotation;
+}
+
+void voxy_entity_set_transform(struct voxy_entity *entity, transform_t transform)
+{
+  entity->position = transform.translation;
+  entity->rotation = transform.rotation;
 }
 
 void voxy_entity_set_position(struct voxy_entity *entity, fvec3_t position)

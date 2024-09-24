@@ -126,7 +126,7 @@ void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct 
         generate_count += 1;
       }
 
-      if(chunk->dirty)
+      if(chunk->network_dirty)
       {
         struct voxy_server_chunk_update_message message;
         message.message.message.size = LIBNET_MESSAGE_SIZE(message);
@@ -136,7 +136,7 @@ void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct 
         memcpy(&message.block_light_levels, &chunk->block_light_levels, sizeof chunk->block_light_levels);
         libnet_server_send_message_all(server, &message.message.message);
 
-        chunk->dirty = false;
+        chunk->network_dirty = false;
         synchronize_count += 1;
       }
     }

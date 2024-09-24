@@ -16,10 +16,19 @@ struct chunk
   struct chunk *next;
 
   ivec3_t position;
+
+  /// Blocks.
+  ///
+  /// We store block ids and light levels in separate arrays for better
+  /// "compression".
   uint8_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
   uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
 
-  bool dirty;
+  /// If we need to flush this chunk to disk.
+  bool disk_dirty;
+
+  /// If we need to synchronize this chunk over the network.
+  bool network_dirty;
 };
 
 /// Create/destroy chunk.

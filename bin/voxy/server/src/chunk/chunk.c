@@ -48,7 +48,9 @@ void chunk_set_block_id(struct chunk *chunk, ivec3_t position, uint8_t id)
 
   const unsigned index = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
   chunk->block_ids[index] = id;
-  chunk->dirty = true;
+
+  chunk->disk_dirty = true;
+  chunk->network_dirty = true;
 }
 
 void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, uint8_t light_level)
@@ -60,7 +62,9 @@ void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, uint8_t 
   const unsigned r = index % 2;
   chunk->block_light_levels[q] &= ~(((1 << 4) - 1) << (r * 4));
   chunk->block_light_levels[q] |= light_level << (r * 4);
-  chunk->dirty = true;
+
+  chunk->disk_dirty = true;
+  chunk->network_dirty = true;
 }
 
 void chunk_get_block_light_level_atomic(struct chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
@@ -92,7 +96,8 @@ bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, u
     return false;
   }
 
-  atomic_store((_Atomic bool *)&chunk->dirty, true);
+  atomic_store((_Atomic bool *)&chunk->disk_dirty, true);
+  atomic_store((_Atomic bool *)&chunk->network_dirty, true);
   return true;
 }
 

@@ -33,7 +33,7 @@ int libserde_serializer_write(libserde_serializer_t serializer, const void *data
 int libserde_serializer_write_checksum(libserde_serializer_t serializer);
 
 /// Helper macros.
-#define libserde_serializer_try_write(serializer, data, length) do { if(libserde_serializer_write(serializer, data, length) != 0) return -1; } while(0)
-#define libserde_serializer_try_write_checksum(serializer) do { if(libserde_serializer_write_checksum(serializer) != 0) return -1; } while(0)
+#define libserde_serializer_try_write(serializer, v, label) do { if(libserde_serializer_write((serializer), (v), sizeof (v)) != 0) goto label; } while(0)
+#define libserde_serializer_try_write_checksum(serializer, label) do { if(libserde_serializer_write_checksum((serializer)) != 0) goto label; } while(0)
 
 #endif // LIBSERDE_SERIALIZER_H

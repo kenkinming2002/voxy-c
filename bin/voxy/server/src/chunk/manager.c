@@ -1,5 +1,8 @@
 #include "manager.h"
+
 #include "coordinates.h"
+#include "database.h"
+#include "network.h"
 
 #include "block/registry.h"
 #include "light/manager.h"
@@ -96,78 +99,98 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
   }
 }
 
+static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager)
+{
+  size_t generate_count = 0;
+  size_t load_count = 0;
+
+  struct ivec3_node *position;
+  SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
+  {
+    struct chunk *chunk;
+    if((chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position->value)))
+      continue;
+
+    if((chunk = chunk_database_load(position->value)))
+      load_count += 1;
+    else if((chunk = chunk_generator_generate(chunk_generator, position->value, block_registry)))
+      generate_count += 1;
+
+    if(!chunk)
+      continue;
+
+    chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
+    for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
+      for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
+        for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
+        {
+          const ivec3_t local_position = ivec3(x, y, z);
+          const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk->position);
+          if(chunk_get_block_light_level(chunk, local_position) != 0)
+            light_manager_enqueue_creation_update(light_manager, global_position);
+          else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
+            light_manager_enqueue_destruction_update(light_manager, global_position, 0);
+        }
+  }
+
+  if(generate_count != 0) LOG_INFO("Chunk Manager: Generated %zu chunks", generate_count);
+  if(load_count != 0) LOG_INFO("Chunk Manager: Loaded %zu chunks from disk", load_count);
+}
+
+static void flush_chunks(struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
+{
+  size_t save_count = 0;
+  size_t send_count = 0;
+
+  struct chunk *chunk;
+  SC_HASH_TABLE_FOREACH(chunk_manager->chunks, chunk)
+  {
+    if(chunk->disk_dirty && chunk_database_save(chunk) == 0)
+    {
+      chunk->disk_dirty = false;
+      save_count += 1;
+    }
+
+    if(chunk->network_dirty)
+    {
+      chunk_network_update(chunk, server);
+      chunk->network_dirty = false;
+      send_count += 1;
+    }
+  }
+
+  if(save_count != 0) LOG_INFO("Chunk Manager: Saved %zu chunks to disk", save_count);
+  if(send_count != 0) LOG_INFO("Chunk Manager: Sent %zu chunks over the network", send_count);
+}
+
+static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
+{
+  size_t discard_count = 0;
+
+  for(size_t i=0; i<chunk_manager->chunks.bucket_count; ++i)
+  {
+    struct chunk **chunk = &chunk_manager->chunks.buckets[i].head;
+    while(*chunk)
+      if(!ivec3_hash_table_lookup(&chunk_manager->active_chunks, (*chunk)->position) && !(*chunk)->disk_dirty)
+      {
+        struct chunk *old_chunk = *chunk;
+        *chunk = (*chunk)->next;
+
+        chunk_network_remove(old_chunk, server);
+        chunk_destroy(old_chunk);
+      }
+      else
+        chunk = &(*chunk)->next;
+  }
+
+  if(discard_count != 0) LOG_INFO("Chunk Manager: Discarded %zu", discard_count);
+}
+
 void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager, libnet_server_t server)
 {
-  // Generate and synchronize active chunks.
-  {
-    size_t generate_count = 0;
-    size_t synchronize_count = 0;
-
-    struct ivec3_node *position;
-    SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
-    {
-      struct chunk *chunk;
-      if(!(chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position->value)))
-      {
-        chunk = chunk_generator_generate(chunk_generator, position->value, block_registry);
-        chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
-        for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
-          for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
-            for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
-            {
-              const ivec3_t local_position = ivec3(x, y, z);
-              const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk->position);
-              if(chunk_get_block_light_level(chunk, local_position) != 0)
-                light_manager_enqueue_creation_update(light_manager, global_position);
-              else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
-                light_manager_enqueue_destruction_update(light_manager, global_position, 0);
-            }
-
-        generate_count += 1;
-      }
-
-      if(chunk->network_dirty)
-      {
-        struct voxy_server_chunk_update_message message;
-        message.message.message.size = LIBNET_MESSAGE_SIZE(message);
-        message.message.tag = VOXY_SERVER_MESSAGE_CHUNK_UPDATE;
-        message.position = chunk->position;
-        memcpy(&message.block_ids, &chunk->block_ids, sizeof chunk->block_ids);
-        memcpy(&message.block_light_levels, &chunk->block_light_levels, sizeof chunk->block_light_levels);
-        libnet_server_send_message_all(server, &message.message.message);
-
-        chunk->network_dirty = false;
-        synchronize_count += 1;
-      }
-    }
-
-    if(generate_count != 0) LOG_INFO("Generated %zu chunks", generate_count);
-    if(synchronize_count != 0) LOG_INFO("Synchronized %zu chunks over the network", synchronize_count);
-  }
-
-  // Discard non-active chunks.
-  {
-    for(size_t i=0; i<chunk_manager->chunks.bucket_count; ++i)
-    {
-      struct chunk **chunk = &chunk_manager->chunks.buckets[i].head;
-      while(*chunk)
-        if(!ivec3_hash_table_lookup(&chunk_manager->active_chunks, (*chunk)->position))
-        {
-          struct chunk *old_chunk = *chunk;
-          *chunk = (*chunk)->next;
-
-          struct voxy_server_chunk_update_message message;
-          message.message.message.size = LIBNET_MESSAGE_SIZE(message);
-          message.message.tag = VOXY_SERVER_MESSAGE_CHUNK_REMOVE;
-          message.position = old_chunk->position;
-          libnet_server_send_message_all(server, &message.message.message);
-
-          chunk_destroy(old_chunk);
-        }
-        else
-          chunk = &(*chunk)->next;
-    }
-  }
+  load_or_generate_chunks(chunk_manager, chunk_generator, block_registry, light_manager);
+  flush_chunks(chunk_manager, server);
+  discard_chunks(chunk_manager, server);
 }
 
 void voxy_chunk_manager_on_client_connected(struct voxy_chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)

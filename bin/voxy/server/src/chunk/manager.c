@@ -14,19 +14,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_PREFIX ivec3
-#define SC_HASH_TABLE_NODE_TYPE struct ivec3_node
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_IMPLEMENTATION
-
-ivec3_t ivec3_key(struct ivec3_node *node) { return node->value; }
-void ivec3_dispose(struct ivec3_node *node) { free(node); }
-
 void voxy_chunk_manager_init(struct voxy_chunk_manager *chunk_manager)
 {
   ivec3_hash_table_init(&chunk_manager->active_chunks);
@@ -94,7 +81,7 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
   if(!(node = ivec3_hash_table_lookup(&chunk_manager->active_chunks, position)))
   {
     node = malloc(sizeof *node);
-    node->value = position;
+    node->key = position;
     ivec3_hash_table_insert_unchecked(&chunk_manager->active_chunks, node);
   }
 }
@@ -108,12 +95,12 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
   SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
   {
     struct chunk *chunk;
-    if((chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position->value)))
+    if((chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position->key)))
       continue;
 
-    if((chunk = chunk_database_load(position->value)))
+    if((chunk = chunk_database_load(position->key)))
       load_count += 1;
-    else if((chunk = chunk_generator_generate(chunk_generator, position->value, block_registry)))
+    else if((chunk = chunk_generator_generate(chunk_generator, position->key, block_registry)))
       generate_count += 1;
 
     if(!chunk)

@@ -30,6 +30,8 @@ LDFLAGS += -rdynamic
 SRCS += src/main.c
 SRCS += src/application.c
 
+SRCS += src/hash_table/ivec3.c
+
 SRCS += src/block/registry.c
 SRCS += src/entity/registry.c
 

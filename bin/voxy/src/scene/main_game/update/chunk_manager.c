@@ -20,7 +20,7 @@ struct ivec3_node
 {
   struct ivec3_node *next;
   size_t hash;
-  ivec3_t value;
+  ivec3_t key;
 };
 
 #define SC_HASH_TABLE_INTERFACE
@@ -32,7 +32,7 @@ struct ivec3_node
 
 ivec3_t ivec3_key(struct ivec3_node *node)
 {
-  return node->value;
+  return node->key;
 }
 
 void ivec3_dispose(struct ivec3_node *node)
@@ -50,7 +50,7 @@ void reset_active_chunks(void)
 void activate_chunk(ivec3_t position)
 {
   struct ivec3_node *node = malloc(sizeof *node);
-  node->value = position;
+  node->key = position;
   ivec3_hash_table_insert(&active_chunk_positions, node);
 }
 
@@ -95,7 +95,7 @@ void sync_active_chunks(void)
     struct ivec3_node *node;
     SC_HASH_TABLE_FOREACH(active_chunk_positions, node)
     {
-      const ivec3_t chunk_position = node->value;
+      const ivec3_t chunk_position = node->key;
       struct chunk *chunk = world_get_chunk(chunk_position);
       if(chunk)
         continue;
@@ -180,7 +180,7 @@ void save_active_chunks(void)
   for(size_t i=0; i<active_chunk_positions.bucket_count; ++i)
     for(struct ivec3_node *node = active_chunk_positions.buckets[i].head; node; node = node->next)
     {
-      const ivec3_t active_chunk_position = node->value;
+      const ivec3_t active_chunk_position = node->key;
       if(fwrite(&active_chunk_position, sizeof active_chunk_position, 1, f) != 1)
       {
         LOG_ERROR("Failed to save active chunks: Failed to write to file");
@@ -201,7 +201,7 @@ void load_active_chunks(void)
   while(fread(&active_chunk_position, sizeof active_chunk_position, 1, f) == 1)
   {
     struct ivec3_node *node = malloc(sizeof *node);
-    node->value = active_chunk_position;
+    node->key = active_chunk_position;
     ivec3_hash_table_insert(&active_chunk_positions, node);
   }
 

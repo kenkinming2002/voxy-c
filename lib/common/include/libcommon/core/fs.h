@@ -8,9 +8,23 @@
 
 /// Recursive mkdir.
 ///
-/// This will modify dir in the process. Like mkdir(), this will return 0 on
-/// success. On error, -1 is returned and errno is set to indicate the error.
-int mkdir_recursive(char *dir);
+/// Return non-zero value on failure.
+int mkdir_recursive(const char *dir);
+
+/// Create hard link.
+///
+/// Return non-zero value on failure.
+int create_hard_link(const char *path, const char *target);
+
+/// Rename a file.
+///
+/// Return non-zero value on failure.
+int file_rename(const char *from, const char *to);
+
+/// Remove a file.
+///
+/// Return non-zero value on failure.
+int file_remove(const char *path);
 
 /// Return parent directory of dir.
 ///

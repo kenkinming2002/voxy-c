@@ -10,6 +10,13 @@ typedef struct libserde_serializer *libserde_serializer_t;
 /// Returns NULL on failure.
 libserde_serializer_t libserde_serializer_create(const char *path);
 
+/// Create a serializer that writes to file specified by path, without
+/// clobbering existing file.
+///
+/// Returns NULL on failure, where exist will be set to a non-zero value if it
+/// is due to the file already existing.
+libserde_serializer_t libserde_serializer_create_exclusive(const char *path, int *exist);
+
 /// Destroy the serializer.
 void libserde_serializer_destroy(libserde_serializer_t serializer);
 
@@ -33,7 +40,7 @@ int libserde_serializer_write(libserde_serializer_t serializer, const void *data
 int libserde_serializer_write_checksum(libserde_serializer_t serializer);
 
 /// Helper macros.
-#define libserde_serializer_try_write(serializer, v, label) do { if(libserde_serializer_write((serializer), (v), sizeof (v)) != 0) goto label; } while(0)
+#define libserde_serializer_try_write(serializer, v, label) do { if(libserde_serializer_write((serializer), &(v), sizeof (v)) != 0) goto label; } while(0)
 #define libserde_serializer_try_write_checksum(serializer, label) do { if(libserde_serializer_write_checksum((serializer)) != 0) goto label; } while(0)
 
 #endif // LIBSERDE_SERIALIZER_H

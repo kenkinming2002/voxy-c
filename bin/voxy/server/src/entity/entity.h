@@ -19,13 +19,14 @@ struct voxy_entity
   fvec3_t position;
   fvec3_t rotation;
 
-  fvec3_t network_position;
-  fvec3_t network_rotation;
-
   fvec3_t velocity;
   bool grounded;
 
   void *opaque;
+
+  uint32_t cookie;
 };
+
+DYNAMIC_ARRAY_DEFINE(voxy_entities, struct voxy_entity);
 
 #endif // ENTITY_ENTITY_H

@@ -35,7 +35,7 @@ int libserde_deserializer_read(libserde_deserializer_t deserializer, void *data,
 int libserde_deserializer_read_checksum(libserde_deserializer_t deserializer);
 
 /// Helper macros.
-#define libserde_deserializer_try_read(deserializer, v, label) do { if(libserde_deserializer_read((deserializer), (v), sizeof (v)) != 0) goto label; } while(0)
+#define libserde_deserializer_try_read(deserializer, v, label) do { if(libserde_deserializer_read((deserializer), &(v), sizeof (v)) != 0) goto label; } while(0)
 #define libserde_deserializer_try_read_checksum(deserializer, label) do { if(libserde_deserializer_read_checksum((deserializer)) != 0) goto label; } while(0)
 
 

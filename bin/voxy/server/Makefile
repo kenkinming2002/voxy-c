@@ -43,6 +43,9 @@ SRCS += src/chunk/network.c
 SRCS += src/chunk/generator.c
 
 SRCS += src/entity/entity.c
+SRCS += src/entity/allocator.c
+SRCS += src/entity/network.c
+SRCS += src/entity/database.c
 SRCS += src/entity/manager.c
 
 SRCS += src/player/player.c

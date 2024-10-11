@@ -1,32 +1,64 @@
 #include <libcommon/core/fs.h>
 
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 /// Recursive mkdir.
 ///
-/// This will modify dir in the process.
-int mkdir_recursive(char *dir)
+/// Return non-zero value on failure.
+int mkdir_recursive(const char *_dir)
 {
+  int result = 0;
+
+  char *dir = strdup(_dir);
   for(char *p = dir; *p; ++p)
     if(*p == DIRECTORY_SEPARATOR)
     {
       *p = '\0';
-      int result = mkdir(dir, 0755);
+      result = mkdir(dir, 0755);
       *p = DIRECTORY_SEPARATOR;
       if(result != 0 && errno != EEXIST)
-        return -1;
+        goto out;
     }
 
-  int result = mkdir(dir, 0755);
+  result = mkdir(dir, 0755);
   if(result != 0 && errno != EEXIST)
-    return -1;
+    goto out;
 
   return 0;
+
+out:
+  free(dir);
+  return result;
+}
+
+/// Create hard link.
+///
+/// Return non-zero value on failure.
+int create_hard_link(const char *path, const char *target)
+{
+  return link(target, path);
+}
+
+/// Rename a file.
+///
+/// Return non-zero value on failure.
+int file_rename(const char *from, const char *to)
+{
+  return rename(from, to);
+}
+
+/// Remove a file.
+///
+/// Return non-zero value on failure.
+int file_remove(const char *path)
+{
+  return unlink(path);
 }
 
 char *parent(const char *dir)

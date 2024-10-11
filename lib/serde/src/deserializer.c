@@ -17,7 +17,7 @@ libserde_deserializer_t libserde_deserializer_create(const char *path)
   if(!deserializer)
     return NULL;
 
-  if(!(deserializer->file = fopen(path, "r")))
+  if(!(deserializer->file = fopen(path, "rb")))
     return NULL;
 
   deserializer->checksum = checksum_init();

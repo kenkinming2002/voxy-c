@@ -6,6 +6,8 @@
 #include <libcommon/math/vector.h>
 #include <libcommon/math/transform.h>
 
+typedef uint32_t entity_handle_t;
+
 struct voxy_entity;
 
 VOXY_SERVER_EXPORT transform_t voxy_entity_get_transform(const struct voxy_entity *entity);

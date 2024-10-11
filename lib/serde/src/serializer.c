@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include <errno.h>
 
 struct libserde_serializer
 {
@@ -15,15 +18,43 @@ libserde_serializer_t libserde_serializer_create(const char *path)
 {
   libserde_serializer_t serializer = malloc(sizeof *serializer);
   if(!serializer)
-    return NULL;
+    goto error1;
 
-  if(!(serializer->file = fopen(path, "w")))
-    return NULL;
+  if(!(serializer->file = fopen(path, "wb")))
+    goto error2;
 
   serializer->checksum = checksum_init();
   return serializer;
+
+error2:
+  free(serializer);
+error1:
+  return NULL;
 }
 
+libserde_serializer_t libserde_serializer_create_exclusive(const char *path, int *exist)
+{
+  libserde_serializer_t serializer = malloc(sizeof *serializer);
+  if(!serializer)
+  {
+    *exist = 0;
+    goto error1;
+  }
+
+  if(!(serializer->file = fopen(path, "wxb")))
+  {
+    *exist = errno == EEXIST;
+    goto error2;
+  }
+
+  serializer->checksum = checksum_init();
+  return serializer;
+
+error2:
+  free(serializer);
+error1:
+  return NULL;
+}
 
 void libserde_serializer_destroy(libserde_serializer_t serializer)
 {

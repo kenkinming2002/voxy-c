@@ -166,10 +166,13 @@ void physics_update(
     struct voxy_entity_manager *entity_manager,
     float dt)
 {
-  for(entity_handle_t handle = 0; handle < entity_manager->entities.item_count; ++handle)
+
+  for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->entities.items[handle];
-    if(entity->alive)
-      entity_update_physics(block_registry, entity_registry, chunk_manager, entity, dt);
+    struct voxy_entity *entity = &entity_manager->allocator.entities.items[handle];
+    if(!entity->alive)
+      continue;
+
+    entity_update_physics(block_registry, entity_registry, chunk_manager, entity, dt);
   }
 }

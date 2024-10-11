@@ -49,6 +49,17 @@
   } \
   while(0)
 
+#define DYNAMIC_ARRAY_SHRINK_TO_FIT(array) \
+  do \
+  { \
+    if((array).item_capacity > (array).item_count) \
+    { \
+      (array).item_capacity = (array).item_count; \
+      (array).items = realloc((array).items, (array).item_capacity * sizeof *(array).items); \
+    } \
+  } \
+  while(0)
+
 #define DYNAMIC_ARRAY_APPEND(array, value) \
   do \
   { \

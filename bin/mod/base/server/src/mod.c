@@ -22,6 +22,9 @@ static void on_new_player(struct voxy_player *player, const struct voxy_context 
 static void player_entity_update(struct voxy_entity *entity, float dt, const struct voxy_context *context)
 {
   struct voxy_player *player = voxy_entity_get_opaque(entity);
+  if(!player)
+    return;
+
   if(voxy_player_upgrade(player))
   {
     // Chunk Loading

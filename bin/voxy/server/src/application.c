@@ -104,9 +104,12 @@ void application_on_update(libnet_server_t server)
   for(entity_handle_t handle=0; handle<application->entity_manager.allocator.entities.item_count; ++handle)
   {
     struct voxy_entity *entity = &application->entity_manager.allocator.entities.items[handle];
+    if(!entity->alive)
+      continue;
+
     struct voxy_entity_info *info = &application->entity_registry.infos.items[entity->id];
-    if(info->update)
-      info->update(entity, FIXED_DT, &context);
+    if(info->update && !info->update(entity, FIXED_DT, &context))
+      voxy_entity_manager_despawn(&application->entity_manager, handle, server);
   }
 
   physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);

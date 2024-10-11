@@ -32,10 +32,7 @@ struct voxy_player *voxy_player_create(libnet_server_t server, libnet_client_pro
 struct voxy_player *voxy_player_upgrade(struct voxy_player *player)
 {
   if(player->count != 0)
-  {
-    voxy_player_get(player);
-    return player;
-  }
+    return voxy_player_get(player);
   else
     return NULL;
 }
@@ -48,7 +45,7 @@ struct voxy_player *voxy_player_get(struct voxy_player *player)
 
 void voxy_player_put(struct voxy_player *player)
 {
-  --player->weak_count;
+  --player->count;
   if(player->count == 0 && player->weak_count == 0)
     free(player);
 }

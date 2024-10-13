@@ -1,20 +1,18 @@
 #ifndef CHUNK_GENERATOR_H
 #define CHUNK_GENERATOR_H
 
-#include "block/registry.h"
+#include <voxy/server/chunk/generator.h>
 
-#include <libcommon/math/vector.h>
-#include <libcommon/math/random.h>
-
-struct chunk;
-struct chunk_generator
+struct voxy_chunk;
+struct voxy_chunk_generator
 {
   seed_t seed;
+  voxy_generate_chunk_t generate_chunk;
 };
 
-void chunk_generator_init(struct chunk_generator *chunk_generator, seed_t seed);
-void chunk_generator_fini(struct chunk_generator *chunk_generator);
+void voxy_chunk_generator_init(struct voxy_chunk_generator *chunk_generator, seed_t seed);
+void voxy_chunk_generator_fini(struct voxy_chunk_generator *chunk_generator);
 
-struct chunk *chunk_generator_generate(struct chunk_generator *chunk_generator, ivec3_t position, struct voxy_block_registry *block_registry);
+struct voxy_chunk *voxy_chunk_generator_generate(struct voxy_chunk_generator *chunk_generator, ivec3_t position, const struct voxy_context *context);
 
 #endif // CHUNK_GENERATOR_H

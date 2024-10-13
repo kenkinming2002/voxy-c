@@ -22,7 +22,7 @@ static char *get_chunk_filepath(ivec3_t position)
   return s;
 }
 
-struct chunk *chunk_database_load(ivec3_t position)
+struct voxy_chunk *voxy_chunk_database_load(ivec3_t position)
 {
   char *dirpath = get_chunk_dirpath(position);
   if(!dirpath)
@@ -39,7 +39,7 @@ struct chunk *chunk_database_load(ivec3_t position)
   if(!deserializer)
     goto error3;
 
-  struct chunk *chunk = chunk_create();
+  struct voxy_chunk *chunk = voxy_chunk_create();
   if(!chunk)
     goto error4;
 
@@ -60,7 +60,7 @@ struct chunk *chunk_database_load(ivec3_t position)
 error5:
   libserde_deserializer_destroy(deserializer);
 error4:
-  chunk_destroy(chunk);
+  voxy_chunk_destroy(chunk);
 error3:
   free(filepath);
 error2:
@@ -69,7 +69,7 @@ error1:
   return NULL;
 }
 
-int chunk_database_save(struct chunk *chunk)
+int voxy_chunk_database_save(struct voxy_chunk *chunk)
 {
   char *filepath = get_chunk_filepath(chunk->position);
   if(!filepath)

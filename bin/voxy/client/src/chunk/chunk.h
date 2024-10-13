@@ -1,7 +1,7 @@
 #ifndef CHUNK_CHUNK_H
 #define CHUNK_CHUNK_H
 
-#include <voxy/protocol/chunk.h>
+#include <voxy/config.h>
 
 #include <libcommon/math/vector.h>
 #include <libcommon/math/direction.h>

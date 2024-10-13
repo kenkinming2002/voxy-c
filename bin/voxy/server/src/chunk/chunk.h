@@ -1,7 +1,8 @@
 #ifndef CHUNK_CHUNK_H
 #define CHUNK_CHUNK_H
 
-#include <voxy/protocol/chunk.h>
+#include <voxy/config.h>
+#include <voxy/server/chunk/chunk.h>
 
 #include <libcommon/math/vector.h>
 #include <libcommon/math/direction.h>
@@ -10,10 +11,10 @@
 #include <stdbool.h>
 
 /// Chunk.
-struct chunk
+struct voxy_chunk
 {
   size_t        hash;
-  struct chunk *next;
+  struct voxy_chunk *next;
 
   ivec3_t position;
 
@@ -34,16 +35,8 @@ struct chunk
 /// Create/destroy chunk.
 ///
 /// No initialization of any plain old data member is performed.
-struct chunk *chunk_create(void);
-void chunk_destroy(struct chunk *chunk);
-
-/// Getters.
-uint8_t chunk_get_block_id(const struct chunk *chunk, ivec3_t position);
-uint8_t chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position);
-
-/// Setters.
-void chunk_set_block_id(struct chunk *chunk, ivec3_t position, uint8_t id);
-void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, uint8_t light_level);
+struct voxy_chunk *voxy_chunk_create(void);
+void voxy_chunk_destroy(struct voxy_chunk *chunk);
 
 /// Atomic getters/setters.
 ///
@@ -58,18 +51,17 @@ void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, uint8_t 
 ///
 /// Note: This need not be exposed to mod, since it is really only used in the
 ///       implementation of our light system.
-void chunk_get_block_light_level_atomic(struct chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
-bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+void voxy_chunk_get_block_light_level_atomic(struct voxy_chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+bool voxy_chunk_set_block_light_level_atomic(struct voxy_chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
 #define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_PREFIX chunk
-#define SC_HASH_TABLE_NODE_TYPE struct chunk
+#define SC_HASH_TABLE_PREFIX voxy_chunk
+#define SC_HASH_TABLE_NODE_TYPE struct voxy_chunk
 #define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include <sc/hash_table.h>
 #undef SC_HASH_TABLE_PREFIX
 #undef SC_HASH_TABLE_NODE_TYPE
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_INTERFACE
-
 
 #endif // CHUNK_CHUNK_H

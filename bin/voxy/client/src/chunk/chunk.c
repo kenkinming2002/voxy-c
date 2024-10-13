@@ -1,6 +1,6 @@
 #include "chunk.h"
 
-#include <voxy/protocol/chunk.h>
+#include <voxy/config.h>
 
 #include <stdlib.h>
 

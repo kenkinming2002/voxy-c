@@ -1,11 +1,11 @@
 #ifndef VOXY_PROTOCOL_SERVER_H
 #define VOXY_PROTOCOL_SERVER_H
 
+#include <voxy/config.h>
+
 #include <libnet/message.h>
 #include <libcommon/math/vector.h>
 #include <stdint.h>
-
-#include "chunk.h"
 
 /// Tag for message from server.
 enum LIBNET_MESSAGE voxy_server_message_tag

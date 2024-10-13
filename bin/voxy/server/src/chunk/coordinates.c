@@ -1,6 +1,6 @@
 #include "coordinates.h"
 
-#include <voxy/protocol/chunk.h>
+#include <voxy/config.h>
 
 ivec3_t get_chunk_position_i(ivec3_t position)
 {

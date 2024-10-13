@@ -1,14 +1,48 @@
+#include <voxy/config.h>
 #include <voxy/server/context.h>
+#include <voxy/server/chunk/chunk.h>
+#include <voxy/server/chunk/generator.h>
 #include <voxy/server/entity/entity.h>
 #include <voxy/server/player/player.h>
 
 #include <libcommon/math/matrix_transform.h>
 #include <libcommon/math/ray_cast.h>
+#include <libcommon/math/noise.h>
+
+#include <stdio.h>
 
 #define PAN_SPEED 0.002f
 #define MOVE_SPEED_GROUND 8.0f
 #define MOVE_SPEED_AIR 3.0f
 #define JUMP_STRENGTH 5.5f
+
+static void generate_chunk(ivec3_t chunk_position, struct voxy_chunk *chunk, seed_t seed, const struct voxy_context *context)
+{
+  // Generate height map
+  float heights[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH];
+  for(int y=0; y<VOXY_CHUNK_WIDTH; ++y)
+    for(int x=0; x<VOXY_CHUNK_WIDTH; ++x)
+    {
+      const ivec2_t position = ivec2_add(ivec2_mul_scalar(ivec2(chunk_position.x, chunk_position.y), VOXY_CHUNK_WIDTH), ivec2(x, y));
+      heights[y][x] = noise_perlin2_ex(seed, ivec2_as_fvec2(position), 0.008f, 2.0f, 0.3f, 8) * 50.0f;
+    }
+
+
+  // Populate block ids and light levels.
+  for(int z=0; z<VOXY_CHUNK_WIDTH; ++z)
+    for(int y=0; y<VOXY_CHUNK_WIDTH; ++y)
+      for(int x=0; x<VOXY_CHUNK_WIDTH; ++x)
+      {
+        const int height = VOXY_CHUNK_WIDTH * chunk_position.z + z;
+        const uint8_t id
+          = height > 64 ? 1
+          : height > heights[y][x] ? 0
+          : height > heights[y][x] - 1 ? 3
+          : 2;
+
+        voxy_chunk_set_block(chunk, context->block_registry, ivec3(x, y, z), id);
+      }
+}
 
 static void on_new_player(struct voxy_player *player, const struct voxy_context *context)
 {
@@ -93,6 +127,8 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
 
 void *mod_create_instance(struct voxy_context *context)
 {
+  voxy_chunk_generator_set_generate_chunk(context->chunk_generator, generate_chunk);
+
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",
     .name = "air",

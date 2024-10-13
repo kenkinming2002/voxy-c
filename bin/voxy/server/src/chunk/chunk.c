@@ -1,17 +1,19 @@
 #include "chunk.h"
 
-#include <voxy/protocol/chunk.h>
+#include <voxy/config.h>
+
+#include "block/registry.h"
 
 #include <stdatomic.h>
 #include <stdlib.h>
 
-struct chunk *chunk_create(void)
+struct voxy_chunk *voxy_chunk_create(void)
 {
-  struct chunk *chunk = malloc(sizeof *chunk);
+  struct voxy_chunk *chunk = malloc(sizeof *chunk);
   return chunk;
 }
 
-void chunk_destroy(struct chunk *chunk)
+void voxy_chunk_destroy(struct voxy_chunk *chunk)
 {
   free(chunk);
 }
@@ -24,7 +26,7 @@ static void check_position(ivec3_t position)
 
 }
 
-uint8_t chunk_get_block_id(const struct chunk *chunk, ivec3_t position)
+uint8_t voxy_chunk_get_block_id(const struct voxy_chunk *chunk, ivec3_t position)
 {
   check_position(position);
 
@@ -32,7 +34,7 @@ uint8_t chunk_get_block_id(const struct chunk *chunk, ivec3_t position)
   return chunk->block_ids[index];
 }
 
-uint8_t chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position)
+uint8_t voxy_chunk_get_block_light_level(const struct voxy_chunk *chunk, ivec3_t position)
 {
   check_position(position);
 
@@ -42,7 +44,7 @@ uint8_t chunk_get_block_light_level(const struct chunk *chunk, ivec3_t position)
   return (chunk->block_light_levels[q] >> (4 * r)) & 0xF;
 }
 
-void chunk_set_block_id(struct chunk *chunk, ivec3_t position, uint8_t id)
+void voxy_chunk_set_block_id(struct voxy_chunk *chunk, ivec3_t position, uint8_t id)
 {
   check_position(position);
 
@@ -53,7 +55,7 @@ void chunk_set_block_id(struct chunk *chunk, ivec3_t position, uint8_t id)
   chunk->network_dirty = true;
 }
 
-void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, uint8_t light_level)
+void voxy_chunk_set_block_light_level(struct voxy_chunk *chunk, ivec3_t position, uint8_t light_level)
 {
   check_position(position);
 
@@ -67,7 +69,7 @@ void chunk_set_block_light_level(struct chunk *chunk, ivec3_t position, uint8_t 
   chunk->network_dirty = true;
 }
 
-void chunk_get_block_light_level_atomic(struct chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+void voxy_chunk_get_block_light_level_atomic(struct voxy_chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
 {
   check_position(position);
 
@@ -79,7 +81,7 @@ void chunk_get_block_light_level_atomic(struct chunk *chunk, ivec3_t position, u
   *light_level = (*tmp >> (r * 4)) & ((1 << 4) - 1);
 }
 
-bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+bool voxy_chunk_set_block_light_level_atomic(struct voxy_chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
 {
   check_position(position);
 
@@ -101,9 +103,16 @@ bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, u
   return true;
 }
 
+void voxy_chunk_set_block(struct voxy_chunk *chunk, struct voxy_block_registry *block_registry, ivec3_t position, uint8_t id)
+{
+  const uint8_t light_level = voxy_block_registry_query_block(block_registry, id).light_level;
+  voxy_chunk_set_block_id(chunk, position, id);
+  voxy_chunk_set_block_light_level(chunk, position, light_level);
+}
+
 #define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_PREFIX chunk
-#define SC_HASH_TABLE_NODE_TYPE struct chunk
+#define SC_HASH_TABLE_PREFIX voxy_chunk
+#define SC_HASH_TABLE_NODE_TYPE struct voxy_chunk
 #define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include <sc/hash_table.h>
 #undef SC_HASH_TABLE_PREFIX
@@ -111,8 +120,8 @@ bool chunk_set_block_light_level_atomic(struct chunk *chunk, ivec3_t position, u
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_IMPLEMENTATION
 
-ivec3_t chunk_key(struct chunk *chunk) { return chunk->position; }
-size_t chunk_hash(ivec3_t position) { return ivec3_hash(position); }
-int chunk_compare(ivec3_t position1, ivec3_t position2) { return ivec3_compare(position1, position2); }
-void chunk_dispose(struct chunk *chunk) { chunk_destroy(chunk); }
+ivec3_t voxy_chunk_key(struct voxy_chunk *chunk) { return chunk->position; }
+size_t voxy_chunk_hash(ivec3_t position) { return ivec3_hash(position); }
+int voxy_chunk_compare(ivec3_t position1, ivec3_t position2) { return ivec3_compare(position1, position2); }
+void voxy_chunk_dispose(struct voxy_chunk *chunk) { voxy_chunk_destroy(chunk); }
 

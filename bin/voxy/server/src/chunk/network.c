@@ -3,7 +3,7 @@
 #include <voxy/protocol/server.h>
 #include <string.h>
 
-void chunk_network_update(const struct chunk *chunk, libnet_server_t server)
+void voxy_chunk_network_update(const struct voxy_chunk *chunk, libnet_server_t server)
 {
   struct voxy_server_chunk_update_message message;
   message.message.message.size = LIBNET_MESSAGE_SIZE(message);
@@ -14,7 +14,7 @@ void chunk_network_update(const struct chunk *chunk, libnet_server_t server)
   libnet_server_send_message_all(server, &message.message.message);
 }
 
-void chunk_network_remove(const struct chunk *chunk, libnet_server_t server)
+void voxy_chunk_network_remove(const struct voxy_chunk *chunk, libnet_server_t server)
 {
   struct voxy_server_chunk_remove_message message;
   message.message.message.size = LIBNET_MESSAGE_SIZE(message);

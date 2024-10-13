@@ -31,7 +31,7 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_server_set_on_message_received(application->server, application_on_message_received);
 
   voxy_chunk_manager_init(&application->chunk_manager);
-  chunk_generator_init(&application->chunk_generator, time(NULL));
+  voxy_chunk_generator_init(&application->chunk_generator, time(NULL));
 
   voxy_entity_manager_init(&application->entity_manager, application->server);
   voxy_player_manager_init(&application->player_manager);
@@ -49,7 +49,7 @@ error1:
   voxy_light_manager_fini(&application->light_manager);
   voxy_player_manager_fini(&application->player_manager);
   voxy_entity_manager_fini(&application->entity_manager);
-  chunk_generator_fini(&application->chunk_generator);
+  voxy_chunk_generator_fini(&application->chunk_generator);
   voxy_chunk_manager_fini(&application->chunk_manager);
   libnet_server_destroy(application->server);
 error0:
@@ -68,7 +68,7 @@ void application_fini(struct application *application)
   voxy_player_manager_fini(&application->player_manager);
   voxy_entity_manager_fini(&application->entity_manager);
 
-  chunk_generator_fini(&application->chunk_generator);
+  voxy_chunk_generator_fini(&application->chunk_generator);
   voxy_chunk_manager_fini(&application->chunk_manager);
 
   libnet_server_destroy(application->server);
@@ -84,6 +84,7 @@ struct voxy_context application_get_context(struct application *application)
   context.block_registry = &application->block_registry;
   context.entity_registry = &application->entity_registry;
   context.chunk_manager = &application->chunk_manager;
+  context.chunk_generator = &application->chunk_generator;
   context.entity_manager = &application->entity_manager;
   context.player_manager = &application->player_manager;
   context.light_manager = &application->light_manager;
@@ -99,9 +100,10 @@ void application_on_update(libnet_server_t server)
 {
   struct application *application = libnet_server_get_opaque(server);
 
+  const struct voxy_context context = application_get_context(application);
+
   voxy_chunk_manager_reset_active_chunks(&application->chunk_manager);
 
-  const struct voxy_context context = application_get_context(application);
   for(entity_handle_t handle=0; handle<application->entity_manager.allocator.entities.item_count; ++handle)
   {
     struct voxy_entity *entity = &application->entity_manager.allocator.entities.items[handle];
@@ -116,7 +118,7 @@ void application_on_update(libnet_server_t server)
   physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);
   voxy_light_manager_update(&application->light_manager, &application->block_registry, &application->chunk_manager);
 
-  voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_generator, &application->block_registry, &application->light_manager, application->server);
+  voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_generator, &application->light_manager, application->server, &context);
   voxy_entity_manager_update(&application->entity_manager, &application->chunk_manager, application->server);
 }
 

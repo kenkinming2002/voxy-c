@@ -3,6 +3,7 @@ CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
 
 CFLAGS += -Isrc
+CFLAGS += -I../../../voxy/config/include
 CFLAGS += -I../../../voxy/server/include
 CFLAGS += -I../../../../lib/net/include
 CFLAGS += -I../../../../lib/common/include

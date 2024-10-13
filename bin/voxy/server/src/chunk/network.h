@@ -5,7 +5,7 @@
 
 #include "chunk.h"
 
-void chunk_network_update(const struct chunk *chunk, libnet_server_t server);
-void chunk_network_remove(const struct chunk *chunk, libnet_server_t server);
+void voxy_chunk_network_update(const struct voxy_chunk *chunk, libnet_server_t server);
+void voxy_chunk_network_remove(const struct voxy_chunk *chunk, libnet_server_t server);
 
 #endif // CHUNK_NETWORK_H

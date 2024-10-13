@@ -16,7 +16,7 @@ struct voxy_light_manager;
 struct voxy_chunk_manager
 {
   struct ivec3_hash_table active_chunks;
-  struct chunk_hash_table chunks;
+  struct voxy_chunk_hash_table chunks;
 };
 
 void voxy_chunk_manager_init(struct voxy_chunk_manager *chunk_manager);
@@ -39,7 +39,7 @@ bool voxy_chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *
 bool voxy_chunk_manager_set_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
 void voxy_chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager);
-void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct voxy_light_manager *light_manager, libnet_server_t server);
+void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context);
 
 void voxy_chunk_manager_on_client_connected(struct voxy_chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
 

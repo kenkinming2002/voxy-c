@@ -4,6 +4,7 @@ CFLAGS += -D_GNU_SOURCE
 
 CFLAGS += -Iinclude
 CFLAGS += -Isrc
+CFLAGS += -I../config/include
 CFLAGS += -I../protocol/include
 CFLAGS += -I../../../lib/net/include
 CFLAGS += -I../../../lib/common/include

@@ -35,18 +35,18 @@ DYNAMIC_ARRAY_DEFINE(light_destruction_updates, struct light_destruction_update)
 /// Ideally, we would simply have a free-standing function light_update(), but
 /// we do not live in an ideal world, and we have hidden internal state
 /// everywhere.
-struct light_manager
+struct voxy_light_manager
 {
   struct light_creation_updates light_creation_updates;
   struct light_destruction_updates light_destruction_updates;
 };
 
-void light_manager_init(struct light_manager *light_manager);
-void light_manager_fini(struct light_manager *light_manager);
+void voxy_light_manager_init(struct voxy_light_manager *light_manager);
+void voxy_light_manager_fini(struct voxy_light_manager *light_manager);
 
-void light_manager_enqueue_destruction_update(struct light_manager *light_manager, ivec3_t position, uint8_t light_level);
-void light_manager_enqueue_creation_update(struct light_manager *light_manager, ivec3_t position);
+void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, ivec3_t position, uint8_t light_level);
+void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, ivec3_t position);
 
-void light_manager_update(struct light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager);
+void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager);
 
 #endif // LIGHT_MANAGER_H

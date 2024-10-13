@@ -82,8 +82,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
       if(!info.collide)
         continue;
 
-      voxy_chunk_manager_set_block_id(context->chunk_manager, ray_cast.iposition, 0);
-      voxy_chunk_manager_set_block_light_level(context->chunk_manager, ray_cast.iposition, 15);
+      voxy_chunk_manager_set_block(context->chunk_manager, context->block_registry, context->light_manager, ray_cast.iposition, 0);
       break;
     }
   }

@@ -29,7 +29,7 @@ struct application
   struct voxy_entity_manager entity_manager;
   struct voxy_player_manager player_manager;
 
-  struct light_manager light_manager;
+  struct voxy_light_manager light_manager;
 
   struct mod_manager mod_manager;
 };

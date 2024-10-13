@@ -36,7 +36,7 @@ int application_init(struct application *application, int argc, char *argv[])
   voxy_entity_manager_init(&application->entity_manager, application->server);
   voxy_player_manager_init(&application->player_manager);
 
-  light_manager_init(&application->light_manager);
+  voxy_light_manager_init(&application->light_manager);
 
   struct voxy_context context = application_get_context(application);
   mod_manager_init(&application->mod_manager);
@@ -46,7 +46,7 @@ int application_init(struct application *application, int argc, char *argv[])
   return 0;
 
 error1:
-  light_manager_fini(&application->light_manager);
+  voxy_light_manager_fini(&application->light_manager);
   voxy_player_manager_fini(&application->player_manager);
   voxy_entity_manager_fini(&application->entity_manager);
   chunk_generator_fini(&application->chunk_generator);
@@ -63,7 +63,7 @@ void application_fini(struct application *application)
   struct voxy_context context = application_get_context(application);
   mod_manager_fini(&application->mod_manager, &context);
 
-  light_manager_fini(&application->light_manager);
+  voxy_light_manager_fini(&application->light_manager);
 
   voxy_player_manager_fini(&application->player_manager);
   voxy_entity_manager_fini(&application->entity_manager);
@@ -86,6 +86,7 @@ struct voxy_context application_get_context(struct application *application)
   context.chunk_manager = &application->chunk_manager;
   context.entity_manager = &application->entity_manager;
   context.player_manager = &application->player_manager;
+  context.light_manager = &application->light_manager;
   return context;
 }
 
@@ -113,7 +114,7 @@ void application_on_update(libnet_server_t server)
   }
 
   physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);
-  light_manager_update(&application->light_manager, &application->block_registry, &application->chunk_manager);
+  voxy_light_manager_update(&application->light_manager, &application->block_registry, &application->chunk_manager);
 
   voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_generator, &application->block_registry, &application->light_manager, application->server);
   voxy_entity_manager_update(&application->entity_manager, &application->chunk_manager, application->server);

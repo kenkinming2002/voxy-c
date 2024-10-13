@@ -52,6 +52,37 @@ void voxy_chunk_manager_set_block_light_level(struct voxy_chunk_manager *chunk_m
     chunk_set_block_light_level(chunk, global_position_to_local_position_i(position), light_level);
 }
 
+/// Set block at given position.
+///
+/// The light level of the block will be derived from light info in block
+/// registry. This will also enqueue any necessary light updates to light
+/// manager..
+VOXY_SERVER_EXPORT void voxy_chunk_manager_set_block(
+    struct voxy_chunk_manager *chunk_manager,
+    struct voxy_block_registry *block_registry,
+    struct voxy_light_manager *light_manager,
+    ivec3_t position,
+    uint8_t id)
+{
+  struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
+  if(!chunk)
+    return;
+
+  const uint8_t old_light_level = chunk_get_block_light_level(chunk, global_position_to_local_position_i(position));
+  const uint8_t light_level = voxy_block_registry_query_block(block_registry, id).light_level;
+
+  chunk_set_block_id(chunk, global_position_to_local_position_i(position), id);
+  chunk_set_block_light_level(chunk, global_position_to_local_position_i(position), light_level);
+
+  if(old_light_level < light_level)
+    voxy_light_manager_enqueue_creation_update(light_manager, position);
+
+  //// FIXME: Light destroy update really only support the case if light level
+  ////        changes to 0. This happens to be the only possible cases for now.
+  if(old_light_level >= light_level)
+    voxy_light_manager_enqueue_destruction_update(light_manager, position, old_light_level);
+}
+
 bool voxy_chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
 {
   struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, get_chunk_position_i(position));
@@ -86,7 +117,7 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
   }
 }
 
-static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager)
+static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct voxy_light_manager *light_manager)
 {
   size_t generate_count = 0;
   size_t load_count = 0;
@@ -114,9 +145,9 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
           const ivec3_t local_position = ivec3(x, y, z);
           const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk->position);
           if(chunk_get_block_light_level(chunk, local_position) != 0)
-            light_manager_enqueue_creation_update(light_manager, global_position);
+            voxy_light_manager_enqueue_creation_update(light_manager, global_position);
           else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
-            light_manager_enqueue_destruction_update(light_manager, global_position, 0);
+            voxy_light_manager_enqueue_destruction_update(light_manager, global_position, 0);
         }
   }
 
@@ -173,7 +204,7 @@ static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_serv
   if(discard_count != 0) LOG_INFO("Chunk Manager: Discarded %zu", discard_count);
 }
 
-void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct light_manager *light_manager, libnet_server_t server)
+void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct chunk_generator *chunk_generator, struct voxy_block_registry *block_registry, struct voxy_light_manager *light_manager, libnet_server_t server)
 {
   load_or_generate_chunks(chunk_manager, chunk_generator, block_registry, light_manager);
   flush_chunks(chunk_manager, server);

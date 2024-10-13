@@ -5,24 +5,24 @@
 #include <stdatomic.h>
 #include <string.h>
 
-void light_manager_init(struct light_manager *light_manager)
+void voxy_light_manager_init(struct voxy_light_manager *light_manager)
 {
   DYNAMIC_ARRAY_INIT(light_manager->light_creation_updates);
   DYNAMIC_ARRAY_INIT(light_manager->light_destruction_updates);
 }
 
-void light_manager_fini(struct light_manager *light_manager)
+void voxy_light_manager_fini(struct voxy_light_manager *light_manager)
 {
   DYNAMIC_ARRAY_CLEAR(light_manager->light_destruction_updates);
   DYNAMIC_ARRAY_CLEAR(light_manager->light_creation_updates);
 }
 
-void light_manager_enqueue_destruction_update(struct light_manager *light_manager, ivec3_t position, uint8_t light_level)
+void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, ivec3_t position, uint8_t light_level)
 {
   DYNAMIC_ARRAY_APPEND(light_manager->light_destruction_updates, ((struct light_destruction_update){ .position = position, .old_light_level = light_level, }));
 }
 
-void light_manager_enqueue_creation_update(struct light_manager *light_manager, ivec3_t position)
+void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, ivec3_t position)
 {
   DYNAMIC_ARRAY_APPEND(light_manager->light_creation_updates, ((struct light_creation_update){ .position = position,  }));
 }
@@ -120,7 +120,7 @@ static void process_light_creation_update(
   }
 }
 
-static void process_light_destruction_updates(struct light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
+static void process_light_destruction_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
 {
   size_t count = 0;
   while(light_manager->light_destruction_updates.item_count != 0)
@@ -161,7 +161,7 @@ static void process_light_destruction_updates(struct light_manager *light_manage
     LOG_INFO("Processed %zu light destruction updates", count);
 }
 
-static void process_light_creation_updates(struct light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
+static void process_light_creation_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
 {
   size_t count = 0;
   while(light_manager->light_creation_updates.item_count != 0)
@@ -196,7 +196,7 @@ static void process_light_creation_updates(struct light_manager *light_manager, 
     LOG_INFO("Processed %zu light creation updates", count);
 }
 
-void light_manager_update(struct light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
+void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
 {
   process_light_destruction_updates(light_manager, block_registry, chunk_manager);
   process_light_creation_updates(light_manager, block_registry, chunk_manager);

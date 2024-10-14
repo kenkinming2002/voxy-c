@@ -110,8 +110,8 @@ void application_on_update(libnet_server_t server)
     if(!entity->alive)
       continue;
 
-    struct voxy_entity_info *info = &application->entity_registry.infos.items[entity->id];
-    if(info->update && !info->update(entity, FIXED_DT, &context))
+    struct voxy_entity_info info = voxy_entity_registry_query_entity(&application->entity_registry, entity->id);
+    if(info.update && !info.update(entity, FIXED_DT, &context))
       voxy_entity_manager_despawn(&application->entity_manager, handle, server);
   }
 

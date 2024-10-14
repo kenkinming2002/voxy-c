@@ -10,9 +10,9 @@ void entity_renderer_render(struct voxy_entity_registry *entity_registry, struct
       const struct voxy_entity *entity = &entity_manager->entities.items[handle];
       if(entity->alive)
       {
-        const struct voxy_entity_info *info = &entity_registry->infos.items[entity->id]; // FIXME: Potential out of bounds.
-        if(info->render)
-          info->render(entity, &camera_manager->camera);
+        const struct voxy_entity_info info = voxy_entity_registry_query_entity(entity_registry, entity->id);
+        if(info.render)
+          info.render(entity, &camera_manager->camera);
       }
     }
 }

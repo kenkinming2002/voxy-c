@@ -55,9 +55,6 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
       }
 
   /// Meshing
-  ///
-  /// FIXME: Potential out of bound array access if we receive a block id from
-  ///        the server that is not inside the registry.
   for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
     for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
       for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
@@ -67,7 +64,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
         const uint8_t block_id = block_ids[z+1][y+1][x+1];
         const uint8_t block_light_level = block_light_levels[z+1][y+1][x+1];
-        const enum voxy_block_type block_type = block_registry->infos.items[block_id].type;
+        const enum voxy_block_type block_type = voxy_block_registry_query_block(block_registry, block_id).type;
 
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         {
@@ -75,7 +72,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
           const uint8_t neighbour_block_id = block_ids[z+normal.z+1][y+normal.y+1][x+normal.x+1];
           const uint8_t neighbour_block_light_level = block_light_levels[z+normal.z+1][y+normal.y+1][x+normal.x+1];
-          const enum voxy_block_type neighbour_block_type = block_registry->infos.items[neighbour_block_id].type;
+          const enum voxy_block_type neighbour_block_type = voxy_block_registry_query_block(block_registry, neighbour_block_id).type;
 
           if(block_type == VOXY_BLOCK_TYPE_INVISIBLE || neighbour_block_type != VOXY_BLOCK_TYPE_INVISIBLE)
             continue;

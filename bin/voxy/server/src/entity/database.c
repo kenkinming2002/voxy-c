@@ -81,13 +81,18 @@ static int ensure_directory(const char *path)
 /// Write entity to serializer.
 ///
 /// Return non-zero value on failure.
-static int entity_write(libserde_serializer_t serializer, const struct voxy_entity *entity)
+static int entity_write(libserde_serializer_t serializer, const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
 {
   libserde_serializer_try_write(serializer, entity->id, error);
   libserde_serializer_try_write(serializer, entity->position, error);
   libserde_serializer_try_write(serializer, entity->rotation, error);
   libserde_serializer_try_write(serializer, entity->velocity, error);
   libserde_serializer_try_write(serializer, entity->grounded, error);
+
+  const struct voxy_entity_info info = voxy_entity_registry_query_entity(entity_registry, entity->id);
+  if(info.serialize_opaque && info.serialize_opaque(serializer, entity->opaque) != 0)
+    goto error;
+
   return 0;
 error:
   return -1;
@@ -96,7 +101,7 @@ error:
 /// Write entity to path.
 ///
 /// Return non-zero value on failure.
-static int entity_write_to(const char *path, const struct voxy_entity *entity)
+static int entity_write_to(const char *path, const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
 {
   int result = 0;
 
@@ -113,7 +118,7 @@ static int entity_write_to(const char *path, const struct voxy_entity *entity)
     goto out1;
   }
 
-  if(entity_write(serializer, entity) != 0)
+  if(entity_write(serializer, entity, entity_registry) != 0)
   {
     result = -1;
     goto out2;
@@ -130,7 +135,7 @@ out1:
 /// The serializer is created exclusively.
 ///
 /// Return non-zero value on failure.
-static int entity_write_to_exclusive(const char *path, int *exist, const struct voxy_entity *entity)
+static int entity_write_to_exclusive(const char *path, int *exist, const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
 {
   int result = 0;
 
@@ -147,7 +152,7 @@ static int entity_write_to_exclusive(const char *path, int *exist, const struct 
     goto out1;
   }
 
-  if(entity_write(serializer, entity) != 0)
+  if(entity_write(serializer, entity, entity_registry) != 0)
   {
     result = -1;
     goto out2;
@@ -162,14 +167,20 @@ out1:
 /// Read entity from serializer.
 ///
 /// Return non-zero value on failure.
-static int entity_read(libserde_deserializer_t deserializer, struct voxy_entity *entity)
+static int entity_read(libserde_deserializer_t deserializer, struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
 {
   libserde_deserializer_try_read(deserializer, entity->id, error);
   libserde_deserializer_try_read(deserializer, entity->position, error);
   libserde_deserializer_try_read(deserializer, entity->rotation, error);
   libserde_deserializer_try_read(deserializer, entity->velocity, error);
   libserde_deserializer_try_read(deserializer, entity->grounded, error);
-  entity->opaque = NULL;
+
+  const struct voxy_entity_info info = voxy_entity_registry_query_entity(entity_registry, entity->id);
+  if(info.deserialize_opaque && !(entity->opaque = info.deserialize_opaque(deserializer)))
+    goto error;
+  else
+    entity->opaque = NULL;
+
   return 0;
 error:
   return -1;
@@ -178,7 +189,7 @@ error:
 /// Read entity from path.
 ///
 /// Return non-zero value on failure.
-static int entity_read_from(const char *path, struct voxy_entity *entity)
+static int entity_read_from(const char *path, struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
 {
   int result = 0;
 
@@ -189,7 +200,7 @@ static int entity_read_from(const char *path, struct voxy_entity *entity)
     goto out1;
   }
 
-  if(entity_read(deserializer, entity) != 0)
+  if(entity_read(deserializer, entity, entity_registry) != 0)
   {
     result = -1;
     goto out2;
@@ -211,7 +222,7 @@ out1:
 /// The returned path need be be deallocated with free(3).
 ///
 /// Return non-zero value on failure.
-static int create_entity_blob(struct voxy_entity *entity, char **path)
+static int create_entity_blob(struct voxy_entity *entity, struct voxy_entity_registry *entity_registry, char **path)
 {
   int result = 0;
 
@@ -225,7 +236,7 @@ retry:
   }
 
   int exist;
-  if(entity_write_to_exclusive(*path, &exist, entity) != 0)
+  if(entity_write_to_exclusive(*path, &exist, entity, entity_registry) != 0)
   {
     if(exist)
     {
@@ -316,12 +327,12 @@ static int u32_from_hex_str(const char *str, uint32_t *value)
 /// a hard link to it under <ENTITIES_PATH>/active.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_create_entity(struct voxy_entity *entity)
+int voxy_entity_database_create_entity(struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
 {
   int result = 0;
 
   char *blob_path;
-  if(create_entity_blob(entity, &blob_path) != 0)
+  if(create_entity_blob(entity, entity_registry, &blob_path) != 0)
   {
     result = -1;
     goto out1;
@@ -393,7 +404,7 @@ out1:
 /// Update an entity in the database.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_update_entity(const struct voxy_entity *entity)
+int voxy_entity_database_update_entity(const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
 {
   int result = 0;
 
@@ -404,7 +415,7 @@ int voxy_entity_database_update_entity(const struct voxy_entity *entity)
     goto out1;
   }
 
-  if(entity_write_to(blob_path, entity) != 0)
+  if(entity_write_to(blob_path, entity, entity_registry) != 0)
   {
     result = -1;
     goto out2;
@@ -508,7 +519,7 @@ out1:
 /// Load entities from given directory.
 ///
 /// Return non-zero value on failure.
-static int load_entities(const char *dirpath, struct voxy_entities *entities)
+static int load_entities(const char *dirpath, struct voxy_entities *entities, struct voxy_entity_registry *entity_registry)
 {
   int result = 0;
 
@@ -539,7 +550,7 @@ static int load_entities(const char *dirpath, struct voxy_entities *entities)
         goto out2;
       }
 
-      if(entity_read_from(filepath, &entity) != 0)
+      if(entity_read_from(filepath, &entity, entity_registry) != 0)
       {
         free(filepath);
         result = -1;
@@ -561,15 +572,15 @@ out1:
 /// Load active entities.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_load_active_entities(struct voxy_entities *entities)
+int voxy_entity_database_load_active_entities(struct voxy_entities *entities, struct voxy_entity_registry *entity_registry)
 {
-  return load_entities(get_active_links_path(), entities);
+  return load_entities(get_active_links_path(), entities, entity_registry);
 }
 
 /// Load inactive entities in given chunk position.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_load_inactive_entities(ivec3_t chunk_position, struct voxy_entities *entities)
+int voxy_entity_database_load_inactive_entities(ivec3_t chunk_position, struct voxy_entities *entities, struct voxy_entity_registry *entity_registry)
 {
   int result = 0;
 
@@ -580,7 +591,7 @@ int voxy_entity_database_load_inactive_entities(ivec3_t chunk_position, struct v
     goto out1;
   }
 
-  if(load_entities(links_path, entities) != 0)
+  if(load_entities(links_path, entities, entity_registry) != 0)
   {
     result = -1;
     goto out2;

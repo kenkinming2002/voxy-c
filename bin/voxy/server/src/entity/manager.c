@@ -10,13 +10,22 @@
 
 #include <assert.h>
 
-void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager, libnet_server_t server)
+void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager)
 {
   entity_allocator_init(&entity_manager->allocator);
   ivec3_hash_table_init(&entity_manager->loaded_chunks);
+}
 
+void voxy_entity_manager_fini(struct voxy_entity_manager *entity_manager)
+{
+  ivec3_hash_table_dispose(&entity_manager->loaded_chunks);
+  entity_allocator_fini(&entity_manager->allocator);
+}
+
+void voxy_entity_manager_start(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, libnet_server_t server)
+{
   struct voxy_entities entities;
-  if(voxy_entity_database_load_active_entities(&entities) == 0)
+  if(voxy_entity_database_load_active_entities(&entities, entity_registry) == 0)
   {
     for(size_t i=0; i<entities.item_count; ++i)
     {
@@ -28,15 +37,8 @@ void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager, libnet
   else
     LOG_WARN("Failed to load active entitites at startup");
 
-
   for(unsigned i=0; i<100; ++i)
-    voxy_entity_manager_spawn(entity_manager, 1, fvec3(i, i, i), fvec3(i, i, i), NULL, server);
-}
-
-void voxy_entity_manager_fini(struct voxy_entity_manager *entity_manager)
-{
-  ivec3_hash_table_dispose(&entity_manager->loaded_chunks);
-  entity_allocator_fini(&entity_manager->allocator);
+    voxy_entity_manager_spawn(entity_manager, entity_registry, 1, fvec3(i, i, i), fvec3(i, i, i), NULL, server);
 }
 
 /// Create entity.
@@ -70,7 +72,7 @@ void voxy_entity_manager_destroy_entity(struct voxy_entity_manager *entity_manag
   entity_allocator_free(&entity_manager->allocator, handle);
 }
 
-static void load_entities(struct voxy_entity_manager *entity_manager, struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
+static void load_entities(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
 {
   size_t load_count = 0;
 
@@ -84,7 +86,7 @@ static void load_entities(struct voxy_entity_manager *entity_manager, struct vox
       ivec3_hash_table_insert(&entity_manager->loaded_chunks, loaded_chunk);
 
       struct voxy_entities entities;
-      if(voxy_entity_database_load_inactive_entities(loaded_chunk->key, &entities) != 0)
+      if(voxy_entity_database_load_inactive_entities(loaded_chunk->key, &entities, entity_registry) != 0)
       {
         LOG_WARN("Failed to load inactive entitites for chunk at (%d, %d, %d). Continuing anyway...", active_chunk->key.x, active_chunk->key.y, active_chunk->key.z);
         continue;
@@ -145,23 +147,23 @@ static void discard_entities(struct voxy_entity_manager *entity_manager, struct 
     LOG_INFO("Entity Manager: Discarded %zu entities", discard_count);
 }
 
-static void flush_entities(struct voxy_entity_manager *entity_manager, libnet_server_t server)
+static void flush_entities(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, libnet_server_t server)
 {
   for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
   {
     struct voxy_entity *entity = &entity_manager->allocator.entities.items[handle];
     if(entity->alive)
     {
-      voxy_entity_database_update_entity(entity);
+      voxy_entity_database_update_entity(entity, entity_registry);
       voxy_entity_network_update_all(handle, entity, server);
     }
   }
 }
 
-void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
+void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
 {
-  load_entities(entity_manager, chunk_manager, server);
-  flush_entities(entity_manager, server);
+  load_entities(entity_manager, entity_registry, chunk_manager, server);
+  flush_entities(entity_manager, entity_registry, server);
   discard_entities(entity_manager, chunk_manager, server);
 }
 
@@ -175,10 +177,10 @@ void voxy_entity_manager_on_client_connected(struct voxy_entity_manager *entity_
   }
 }
 
-entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
+entity_handle_t voxy_entity_manager_spawn(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
 {
   entity_handle_t handle = voxy_entity_manager_create_entity(entity_manager, 0, id, position, rotation, opaque, server);
-  if(voxy_entity_database_create_entity(voxy_entity_manager_get(entity_manager, handle)) != 0) LOG_WARN("Failed to create entity in database. Continuing anyway...");
+  if(voxy_entity_database_create_entity(voxy_entity_manager_get(entity_manager, handle), entity_registry) != 0) LOG_WARN("Failed to create entity in database. Continuing anyway...");
   return handle;
 }
 

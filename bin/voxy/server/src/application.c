@@ -33,7 +33,7 @@ int application_init(struct application *application, int argc, char *argv[])
   voxy_chunk_manager_init(&application->chunk_manager);
   voxy_chunk_generator_init(&application->chunk_generator, time(NULL));
 
-  voxy_entity_manager_init(&application->entity_manager, application->server);
+  voxy_entity_manager_init(&application->entity_manager);
   voxy_player_manager_init(&application->player_manager);
 
   voxy_light_manager_init(&application->light_manager);
@@ -93,6 +93,7 @@ struct voxy_context application_get_context(struct application *application)
 
 void application_run(struct application *application)
 {
+  voxy_entity_manager_start(&application->entity_manager, &application->entity_registry, application->server);
   libnet_server_run(application->server);
 }
 
@@ -119,7 +120,7 @@ void application_on_update(libnet_server_t server)
   voxy_light_manager_update(&application->light_manager, &application->block_registry, &application->chunk_manager);
 
   voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_generator, &application->light_manager, application->server, &context);
-  voxy_entity_manager_update(&application->entity_manager, &application->chunk_manager, application->server);
+  voxy_entity_manager_update(&application->entity_manager, &application->entity_registry, &application->chunk_manager, application->server);
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)

@@ -49,7 +49,7 @@ static void on_new_player(struct voxy_player *player, const struct voxy_context 
   // FIXME: We need to load the player from disk.
   const fvec3_t position = fvec3(0.0f, 0.0f, 50.0f);
   const fvec3_t rotation = fvec3_zero();
-  const entity_handle_t handle = voxy_entity_manager_spawn(context->entity_manager, 0, position, rotation, voxy_player_get_weak(player), context->server);
+  const entity_handle_t handle = voxy_entity_manager_spawn(context->entity_manager, context->entity_registry, 0, position, rotation, voxy_player_get_weak(player), context->server);
   voxy_player_set_camera_follow_entity(player, handle);
 }
 
@@ -163,6 +163,8 @@ void *mod_create_instance(struct voxy_context *context)
     .update = player_entity_update,
     .hitbox_dimension = fvec3(0.8f, 0.8f, 1.9f),
     .hitbox_offset = fvec3(0.0f, 0.0f, -0.5f),
+    .serialize_opaque = NULL,
+    .deserialize_opaque = NULL,
   });
 
   voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
@@ -171,6 +173,8 @@ void *mod_create_instance(struct voxy_context *context)
     .update = NULL,
     .hitbox_dimension = fvec3(0.8f, 0.8f, 1.9f),
     .hitbox_offset = fvec3(0.0f, 0.0f, -0.5f),
+    .serialize_opaque = NULL,
+    .deserialize_opaque = NULL,
   });
 
   voxy_player_manager_set_on_new_player(context->player_manager, on_new_player);

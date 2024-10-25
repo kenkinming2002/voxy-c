@@ -28,7 +28,7 @@
 /// a hard link to it under <ENTITIES_PATH>/active.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_create_entity(struct voxy_entity *entity);
+int voxy_entity_database_create_entity(struct voxy_entity *entity, struct voxy_entity_registry *entity_registry);
 
 /// Destroy an entity in the database.
 ///
@@ -47,7 +47,7 @@ int voxy_entity_database_destroy_entity(const struct voxy_entity *entity);
 /// Update an entity in the database.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_update_entity(const struct voxy_entity *entity);
+int voxy_entity_database_update_entity(const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry);
 
 /// Commit an entity in the database.
 ///
@@ -69,11 +69,11 @@ int voxy_entity_database_uncommit_entity(const struct voxy_entity *entity, ivec3
 /// Load active entities.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_load_active_entities(struct voxy_entities *entities);
+int voxy_entity_database_load_active_entities(struct voxy_entities *entities, struct voxy_entity_registry *entity_registry);
 
 /// Load inactive entities in given chunk position.
 ///
 /// Return non-zero value on failure.
-int voxy_entity_database_load_inactive_entities(ivec3_t chunk_position, struct voxy_entities *entities);
+int voxy_entity_database_load_inactive_entities(ivec3_t chunk_position, struct voxy_entities *entities, struct voxy_entity_registry *entity_registry);
 
 #endif // ENTITY_DATABASE_H

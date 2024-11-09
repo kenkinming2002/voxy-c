@@ -10,6 +10,14 @@ typedef struct libserde_serializer *libserde_serializer_t;
 /// Returns NULL on failure.
 libserde_serializer_t libserde_serializer_create(const char *path);
 
+/// Create a serializer that writes data to memory.
+///
+/// The allocated buffer is returned via buf and len arguments which will be
+/// updated once the serializer is destroyed.
+///
+/// Returns NULL on failure.
+libserde_serializer_t libserde_serializer_create_mem(char **buf, size_t *len);
+
 /// Create a serializer that writes to file specified by path, without
 /// clobbering existing file.
 ///

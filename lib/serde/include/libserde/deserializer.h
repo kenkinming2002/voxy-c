@@ -10,6 +10,13 @@ typedef struct libserde_deserializer *libserde_deserializer_t;
 /// Returns NULL on failure.
 libserde_deserializer_t libserde_deserializer_create(const char *path);
 
+/// Create a deserializer that reads data from memory.
+///
+/// The buffer is provided via buf and len arguments.
+///
+/// Returns NULL on failure.
+libserde_deserializer_t libserde_deserializer_create_mem(const char *buf, size_t len);
+
 /// Destroy the deserializer.
 void libserde_deserializer_destroy(libserde_deserializer_t deserializer);
 

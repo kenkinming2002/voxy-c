@@ -14,6 +14,8 @@ struct voxy_entity
 {
   bool alive;
 
+  int64_t db_id;
+
   voxy_entity_id_t id;
 
   fvec3_t position;
@@ -23,8 +25,6 @@ struct voxy_entity
   bool grounded;
 
   void *opaque;
-
-  uint32_t cookie;
 };
 
 DYNAMIC_ARRAY_DEFINE(voxy_entities, struct voxy_entity);

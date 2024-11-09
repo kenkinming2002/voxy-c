@@ -8,6 +8,7 @@
 #include "chunk/generator.h"
 
 #include "entity/manager.h"
+#include "entity/database.h"
 #include "player/manager.h"
 
 #include "light/manager.h"
@@ -26,6 +27,7 @@ struct voxy_context
   struct voxy_chunk_generator *chunk_generator;
 
   struct voxy_entity_manager *entity_manager;
+  struct voxy_entity_database *entity_database;
   struct voxy_player_manager *player_manager;
 
   struct voxy_light_manager *light_manager;

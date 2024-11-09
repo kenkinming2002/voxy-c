@@ -23,6 +23,9 @@ LIBS += -L../../../lib/serde
 LIBS += -lserde
 LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/serde'
 
+CFLAGS += $(shell pkg-config --cflags sqlite3)
+LIBS   += $(shell pkg-config --libs   sqlite3)
+
 LIBS += -lm
 
 CFLAGS += -fvisibility=hidden

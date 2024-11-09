@@ -32,6 +32,25 @@ error1:
   return NULL;
 }
 
+libserde_serializer_t libserde_serializer_create_mem(char **buf, size_t *len)
+{
+  libserde_serializer_t serializer = malloc(sizeof *serializer);
+  if(!serializer)
+    goto error1;
+
+  // FIXME: Figure out a solution on windows, if I ever come around to it.
+  if(!(serializer->file = open_memstream(buf, len)))
+    goto error2;
+
+  serializer->checksum = checksum_init();
+  return serializer;
+
+error2:
+  free(serializer);
+error1:
+  return NULL;
+}
+
 libserde_serializer_t libserde_serializer_create_exclusive(const char *path, int *exist)
 {
   libserde_serializer_t serializer = malloc(sizeof *serializer);

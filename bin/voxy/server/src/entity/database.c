@@ -5,601 +5,400 @@
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
 
+#include <libcommon/core/log.h>
 #include <libcommon/core/fs.h>
+
+#include <sqlite3.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
 
-#define ENTITIES_PATH "world/entities"
+#define VOXY_ENTITY_DATABASE_PATH "world/entities.db"
 
-/// Get blob path from cookie.
-///
-/// Return NULL on failure.
-static char *get_blob_path(uint32_t cookie)
+#define SQLITE_TRY_EXEC(rc, conn, errmsg, sql, label) \
+  if(sqlite3_exec(conn, sql, NULL, NULL, &errmsg) != SQLITE_OK) \
+  { \
+    LOG_ERROR("Failed to exec sql statement: %s: %s", #sql, errmsg); \
+    sqlite3_free(errmsg); \
+    rc = -1; \
+    goto out; \
+  }
+
+#define SQLITE_TRY_PREPARE_ONCE(rc, conn, stmt, sql, label) \
+  static sqlite3_stmt *stmt; \
+  if(!stmt && sqlite3_prepare_v2(conn, sql, -1, &stmt,  NULL) != SQLITE_OK) \
+  { \
+    LOG_ERROR("Failed to prepare sql statement: %s: %s", #sql, sqlite3_errmsg(conn)); \
+    rc = -1; \
+    goto out; \
+  }
+
+int voxy_entity_database_init(struct voxy_entity_database *database)
 {
-  char *path;
-  if(asprintf(&path, ENTITIES_PATH "/blobs/%08x", cookie) == -1)
-    return NULL;
+  int rc = 0;
+  char *errmsg;
 
-  return path;
+  if(sqlite3_open(VOXY_ENTITY_DATABASE_PATH, &database->conn) != SQLITE_OK)
+  {
+    LOG_ERROR("Failed to open entity database %s: %s", VOXY_ENTITY_DATABASE_PATH, sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out;
+  }
+
+  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "CREATE TABLE IF NOT EXISTS entities(id INTEGER PRIMARY KEY, data BLOB NOT NULL) STRICT;", out);
+  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "CREATE TABLE IF NOT EXISTS active_entities(id INTEGER PRIMARY KEY, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;", out);
+  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "CREATE TABLE IF NOT EXISTS inactive_entities(id INTEGER PRIMARY KEY, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;", out);
+  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "PRAGMA foreign_keys = ON;", out);
+
+out:
+  if(rc != SQLITE_OK)
+    sqlite3_close(database->conn);
+  return rc;
 }
 
-/// Get active links path which is a constant.
-///
-/// Always succeed.
-static const char *get_active_links_path(void)
+void voxy_entity_database_fini(struct voxy_entity_database *database)
 {
-  return ENTITIES_PATH "/active";
+  sqlite3_close(database->conn);
 }
 
-/// Get active link path from cookie.
-///
-/// Return NULL on failure.
-static char *get_active_link_path(uint32_t cookie)
+int voxy_entity_database_begin_transaction(struct voxy_entity_database *database)
 {
-  char *path;
-  if(asprintf(&path, ENTITIES_PATH "/active/%08x", cookie) == -1)
-    return NULL;
+  int rc = 0;
 
-  return path;
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "BEGIN TRANSACTION", out);
+  if(sqlite3_step(stmt) != SQLITE_DONE)
+  {
+    rc = -1;
+    goto out_reset;
+  }
+
+out_reset:
+  sqlite3_reset(stmt);
+out:
+  return rc;
 }
 
-/// Get inactive path from cookie and entity position.
-static char *get_inactive_link_path(ivec3_t chunk_position, uint32_t cookie)
+int voxy_entity_database_end_transaction(struct voxy_entity_database *database)
 {
-  char *path;
-  if(asprintf(&path, ENTITIES_PATH "/inactive/%d/%d/%d/%08x", chunk_position.x, chunk_position.y, chunk_position.z, cookie) == -1)
-    return NULL;
+  int rc = 0;
 
-  return path;
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "END TRANSACTION", out);
+  if(sqlite3_step(stmt) != SQLITE_DONE)
+  {
+    rc = -1;
+    goto out_reset;
+  }
+
+out_reset:
+  sqlite3_reset(stmt);
+out:
+  return rc;
 }
 
-/// Get path to directory storing inactive links for chunk at specified position.
-///
-/// Return NULL on failure.
-static char *get_inactive_links_path(ivec3_t chunk_position)
+
+static int entity_serialize(const struct voxy_entity *entity, char **buf, size_t *len)
 {
-  char *path;
-  if(asprintf(&path, ENTITIES_PATH "/inactive/%d/%d/%d", chunk_position.x, chunk_position.y, chunk_position.z) == -1)
-    return NULL;
+  libserde_serializer_t serializer = libserde_serializer_create_mem(buf, len);
+  if(!serializer)
+    goto err_create;
 
-  return path;
-}
+  libserde_serializer_try_write(serializer, entity->id, err_write);
+  libserde_serializer_try_write(serializer, entity->position, err_write);
+  libserde_serializer_try_write(serializer, entity->rotation, err_write);
+  libserde_serializer_try_write(serializer, entity->velocity, err_write);
+  libserde_serializer_try_write(serializer, entity->grounded, err_write);
 
-/// Ensure directory containing path exist.
-///
-/// Return non-zero value on failure.
-static int ensure_directory(const char *path)
-{
-  char *dirpath = parent(path);
-  int result = mkdir_recursive(dirpath);
-  free(dirpath);
-  return result;
-}
-
-/// Write entity to serializer.
-///
-/// Return non-zero value on failure.
-static int entity_write(libserde_serializer_t serializer, const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
-{
-  libserde_serializer_try_write(serializer, entity->id, error);
-  libserde_serializer_try_write(serializer, entity->position, error);
-  libserde_serializer_try_write(serializer, entity->rotation, error);
-  libserde_serializer_try_write(serializer, entity->velocity, error);
-  libserde_serializer_try_write(serializer, entity->grounded, error);
-
-  const struct voxy_entity_info info = voxy_entity_registry_query_entity(entity_registry, entity->id);
-  if(info.serialize_opaque && info.serialize_opaque(serializer, entity->opaque) != 0)
-    goto error;
-
+  libserde_serializer_destroy(serializer);
   return 0;
-error:
+
+err_write:
+  libserde_serializer_destroy(serializer);
+  free(buf);
+err_create:
   return -1;
 }
 
-/// Write entity to path.
-///
-/// Return non-zero value on failure.
-static int entity_write_to(const char *path, const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
+static int entity_deserialize(struct voxy_entity *entity, const char *buf, size_t len)
 {
-  int result = 0;
-
-  if(ensure_directory(path) != 0)
-  {
-    result = -1;
-    goto out1;
-  }
-
-  libserde_serializer_t serializer = libserde_serializer_create(path);
-  if(!serializer)
-  {
-    result = -1;
-    goto out1;
-  }
-
-  if(entity_write(serializer, entity, entity_registry) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
-
-out2:
-  libserde_serializer_destroy(serializer);
-out1:
-  return result;
-}
-
-/// Write entity to path.
-///
-/// The serializer is created exclusively.
-///
-/// Return non-zero value on failure.
-static int entity_write_to_exclusive(const char *path, int *exist, const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
-{
-  int result = 0;
-
-  if(ensure_directory(path) != 0)
-  {
-    result = -1;
-    goto out1;
-  }
-
-  libserde_serializer_t serializer = libserde_serializer_create_exclusive(path, exist);
-  if(!serializer)
-  {
-    result = -1;
-    goto out1;
-  }
-
-  if(entity_write(serializer, entity, entity_registry) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
-
-out2:
-  libserde_serializer_destroy(serializer);
-out1:
-  return result;
-}
-
-/// Read entity from serializer.
-///
-/// Return non-zero value on failure.
-static int entity_read(libserde_deserializer_t deserializer, struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
-{
-  libserde_deserializer_try_read(deserializer, entity->id, error);
-  libserde_deserializer_try_read(deserializer, entity->position, error);
-  libserde_deserializer_try_read(deserializer, entity->rotation, error);
-  libserde_deserializer_try_read(deserializer, entity->velocity, error);
-  libserde_deserializer_try_read(deserializer, entity->grounded, error);
-
-  const struct voxy_entity_info info = voxy_entity_registry_query_entity(entity_registry, entity->id);
-  if(info.deserialize_opaque && !(entity->opaque = info.deserialize_opaque(deserializer)))
-    goto error;
-  else
-    entity->opaque = NULL;
-
-  return 0;
-error:
-  return -1;
-}
-
-/// Read entity from path.
-///
-/// Return non-zero value on failure.
-static int entity_read_from(const char *path, struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
-{
-  int result = 0;
-
-  libserde_deserializer_t deserializer = libserde_deserializer_create(path);
+  libserde_deserializer_t deserializer = libserde_deserializer_create_mem(buf, len);
   if(!deserializer)
-  {
-    result = -1;
-    goto out1;
-  }
+    goto err_create;
 
-  if(entity_read(deserializer, entity, entity_registry) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
+  libserde_deserializer_try_read(deserializer, entity->id, err_read);
+  libserde_deserializer_try_read(deserializer, entity->position, err_read);
+  libserde_deserializer_try_read(deserializer, entity->rotation, err_read);
+  libserde_deserializer_try_read(deserializer, entity->velocity, err_read);
+  libserde_deserializer_try_read(deserializer, entity->grounded, err_read);
+  entity->opaque = NULL;
 
-out2:
   libserde_deserializer_destroy(deserializer);
-out1:
-  return result;
-}
-
-/// Create blob for the entity in the database.
-///
-/// This allocates a blob for the entity and serialize the entity data to the
-/// blob. The allocated cookie is stored inside entity->cookie on successful
-/// return. The path is also returned to facilatate creating links to the blob
-/// in the filesystem.
-///
-/// The returned path need be be deallocated with free(3).
-///
-/// Return non-zero value on failure.
-static int create_entity_blob(struct voxy_entity *entity, struct voxy_entity_registry *entity_registry, char **path)
-{
-  int result = 0;
-
-retry:
-  entity->cookie = rand();
-  *path = get_blob_path(entity->cookie);
-  if(!*path)
-  {
-    result = -1;
-    goto out1;
-  }
-
-  int exist;
-  if(entity_write_to_exclusive(*path, &exist, entity, entity_registry) != 0)
-  {
-    if(exist)
-    {
-      free(*path);
-      goto retry;
-    }
-
-    result = -1;
-    goto out2;
-  }
-
-out2:
-  if(result != 0)
-    free(*path);
-out1:
-  return result;
-}
-
-/// Create active link to entity blob.
-///
-/// This create the hard link <ENTITIES_PATH>/active/<COOKIE> to the entity
-/// blob, where <COOKIE> is obtained from entity->cookie. The path argument is
-/// the path to the entity blob as obtained from create_entity_blob().
-///
-/// Return non-zero value on failure.
-static int entity_blob_create_active_link(const struct voxy_entity *entity, char *blob_path)
-{
-  int result = 0;
-
-  char *link_path = get_active_link_path(entity->cookie);
-  if(!link_path)
-  {
-    result = -1;
-    goto out1;
-  }
-
-  if(ensure_directory(link_path) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
-
-  if(create_hard_link(link_path, blob_path) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
-
-out2:
-  free(link_path);
-out1:
-  return result;
-}
-
-/// Parse u32 value from hex string.
-///
-/// The passed string is formatted as if with %08x specifier with printf.
-///
-/// Return non-zero value on failure.
-static int u32_from_hex_str(const char *str, uint32_t *value)
-{
-  *value = 0;
-
-  for(unsigned i=0; i<8; ++i)
-  {
-    const char c = str[i];
-    const int digit = c >= '0' && c <= '9' ? c - '0'
-                    : c >= 'a' && c <= 'f' ? c - 'a' + 10
-                    : -1;
-
-    if(digit == -1)
-      return -1;
-
-    *value <<= 4;
-    *value |= digit;
-  }
-
-  if(str[8] != '\0')
-    return -1;
-
   return 0;
+
+err_read:
+  libserde_deserializer_destroy(deserializer);
+err_create:
+  return -1;
 }
 
-/// Create an entity in the database.
-///
-/// This should be called when an entity is spawned. A blob will be allocated
-/// for the entity and the entity will be put in loaded state i.e. there will be
-/// a hard link to it under <ENTITIES_PATH>/active.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_create_entity(struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
+int voxy_entity_database_create(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity)
 {
-  int result = 0;
+  int rc = 0;
 
-  char *blob_path;
-  if(create_entity_blob(entity, entity_registry, &blob_path) != 0)
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt1, "INSERT INTO entities (data) VALUES (?);", out);
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt2, "INSERT INTO active_entities (id) VALUES (?);", out);
+
+  char *buf;
+  size_t len;
+  if((rc = entity_serialize(entity, &buf, &len) != 0))
   {
-    result = -1;
-    goto out1;
+    rc = -1;
+    goto out;
   }
 
-  if(entity_blob_create_active_link(entity, blob_path) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
+  if(sqlite3_bind_blob(stmt1, 1, buf, len, SQLITE_STATIC) != SQLITE_OK) { LOG_ERROR("Failed to bind ql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_free_buf; }
+  if(sqlite3_step(stmt1) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
 
-out2:
-  free(blob_path);
-out1:
-  return result;
+  if(sqlite3_bind_int(stmt2, 1, (entity->db_id = sqlite3_last_insert_rowid(database->conn))) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
+  if(sqlite3_step(stmt2) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset2; }
+
+out_reset2:
+  sqlite3_reset(stmt2);
+  sqlite3_clear_bindings(stmt2);
+out_reset1:
+  sqlite3_reset(stmt1);
+  sqlite3_clear_bindings(stmt1);
+out_free_buf:
+  free(buf);
+out:
+  return rc;
 }
 
-/// Destroy an entity in the database.
-///
-/// This should be called when an entity is despawned. This assumes that the
-/// entity is in a loaded state i.e. there is a hard link to its blob under
-/// <ENTITIES_PATH>/active. The entity blob will be deallocated and the hard
-/// link to it will be removed.
-///
-/// A blob will be allocated
-/// for the entity and the entity will be put in loaded state i.e. there will be
-/// a hard link to it under <ENTITIES_PATH>/active.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_destroy_entity(const struct voxy_entity *entity)
+int voxy_entity_database_destroy(struct voxy_entity_database *database, struct voxy_entity *entity)
 {
-  int result = 0;
+  int rc = 0;
 
-  char *blob_path = get_blob_path(entity->cookie);
-  if(!blob_path)
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "DELETE FROM entities WHERE id = (?)", out);
+
+  if(sqlite3_bind_int64(stmt, 1, entity->db_id) != SQLITE_OK)
   {
-    result = -1;
-    goto out1;
+    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out;
   }
 
-
-  char *link_path = get_active_link_path(entity->cookie);
-  if(!link_path)
+  if(sqlite3_step(stmt) != SQLITE_DONE)
   {
-    result = -1;
-    goto out2;
+    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out_reset;
   }
 
-  if(file_remove(blob_path) != 0)
-  {
-    result = -1;
-    goto out3;
-  }
-
-  if(file_remove(link_path) != 0)
-  {
-    result = -1;
-    goto out3;
-  }
-
-out3:
-  free(link_path);
-out2:
-  free(blob_path);
-out1:
-  return result;
+out_reset:
+  sqlite3_reset(stmt);
+  sqlite3_clear_bindings(stmt);
+out:
+  return rc;
 }
 
-/// Update an entity in the database.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_update_entity(const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry)
+int voxy_entity_database_save(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, const struct voxy_entity *entity)
 {
-  int result = 0;
+  int rc = 0;
 
-  char *blob_path = get_blob_path(entity->cookie);
-  if(!blob_path)
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "UPDATE entities SET data = (?) WHERE id = (?)", out);
+
+  char *buf;
+  size_t len;
+  if((rc = entity_serialize(entity, &buf, &len) != 0))
   {
-    result = -1;
-    goto out1;
+    LOG_ERROR("Failed to serialize entity");
+    rc = -1;
+    goto out;
   }
 
-  if(entity_write_to(blob_path, entity, entity_registry) != 0)
+  if(sqlite3_bind_blob(stmt, 1, buf, len, SQLITE_STATIC) != SQLITE_OK)
   {
-    result = -1;
-    goto out2;
+    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out_free_buf;
   }
 
-out2:
-  free(blob_path);
-out1:
-  return result;
+  if(sqlite3_bind_int64(stmt, 2, entity->db_id) != SQLITE_OK)
+  {
+    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out_reset;
+  }
+
+  if(sqlite3_step(stmt) != SQLITE_DONE)
+  {
+    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out_reset;
+  }
+
+out_reset:
+  sqlite3_reset(stmt);
+  sqlite3_clear_bindings(stmt);
+out_free_buf:
+  free(buf);
+out:
+  return rc;
 }
 
-/// Commit an entity in the database.
-///
-/// This should be called when an entity is to be unloaded. This move the hard
-/// link to the entity under <ENTITIES_PATH>/active to
-/// <ENTITIES_PATH>/<X>/<Y>/<Z> depending on which chunk the entity is in.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_commit_entity(const struct voxy_entity *entity)
+int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity)
 {
-  int result = 0;
+  int rc = 0;
 
-  char *active_link_path = get_active_link_path(entity->cookie);
-  if(!active_link_path)
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "SELECT data FROM entities WHERE id = (?);", out);
+
+  if(sqlite3_bind_int64(stmt, 1, entity->db_id) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out; }
+  if(sqlite3_step(stmt) != SQLITE_ROW) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset; }
+  if(entity_deserialize(entity, sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0)) != 0)
   {
-    result = -1;
-    goto out1;
+    LOG_ERROR("Failed to deserialize entity");
+    rc = -1;
+    goto out_reset;
   }
+  if(sqlite3_step(stmt) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset; }
 
-  char *inactive_link_path = get_inactive_link_path(get_chunk_position_f(entity->position), entity->cookie);
-  if(!inactive_link_path)
-  {
-    result = -1;
-    goto out2;
-  }
-
-  if(ensure_directory(inactive_link_path) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
-
-  if(file_rename(active_link_path, inactive_link_path) != 0)
-  {
-    result = -1;
-    goto out3;
-  }
-
-out3:
-  free(active_link_path);
-out2:
-  free(inactive_link_path);
-out1:
-  return result;
+out_reset:
+  sqlite3_reset(stmt);
+  sqlite3_clear_bindings(stmt);
+out:
+  return rc;
 }
 
-/// Commit an entity in the database.
-///
-/// This should be called after an entity is loaded. This move the hard link to
-/// the entity under <ENTITIES_PATH>/<X>/<Y>/<Z> to <ENTITIES_PATH>/active.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_uncommit_entity(const struct voxy_entity *entity, ivec3_t chunk_position)
+int voxy_entity_database_uncommit(struct voxy_entity_database *database, int64_t db_id)
 {
-  int result = 0;
+  int rc = 0;
 
-  char *active_link_path = get_active_link_path(entity->cookie);
-  if(!active_link_path)
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt1, "INSERT INTO active_entities(id) VALUES (?)", out);
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt2, "DELETE FROM inactive_entities WHERE id = (?)", out);
+
+  if(sqlite3_bind_int64(stmt1, 1, db_id) != SQLITE_OK)
   {
-    result = -1;
-    goto out1;
+    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out;
   }
 
-  char *inactive_link_path = get_inactive_link_path(chunk_position, entity->cookie);
-  if(!inactive_link_path)
+  if(sqlite3_step(stmt1) != SQLITE_DONE)
   {
-    result = -1;
-    goto out2;
+    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out_reset1;
   }
 
-  if(ensure_directory(active_link_path) != 0)
+  if(sqlite3_bind_int64(stmt2, 1, db_id) != SQLITE_OK)
   {
-    result = -1;
-    goto out2;
+    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out_reset1;
   }
 
-  if(file_rename(inactive_link_path, active_link_path) != 0)
+  if(sqlite3_step(stmt2) != SQLITE_DONE)
   {
-    result = -1;
-    goto out3;
+    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
+    rc = -1;
+    goto out_reset2;
   }
 
-out3:
-  free(active_link_path);
-out2:
-  free(inactive_link_path);
-out1:
-  return result;
+out_reset2:
+  sqlite3_reset(stmt2);
+  sqlite3_clear_bindings(stmt2);
+out_reset1:
+  sqlite3_reset(stmt1);
+  sqlite3_clear_bindings(stmt1);
+out:
+  return rc;
 }
 
-/// Load entities from given directory.
-///
-/// Return non-zero value on failure.
-static int load_entities(const char *dirpath, struct voxy_entities *entities, struct voxy_entity_registry *entity_registry)
+int voxy_entity_database_commit(struct voxy_entity_database *database, int64_t db_id, ivec3_t chunk_position)
 {
-  int result = 0;
+  int rc = 0;
 
-  DYNAMIC_ARRAY_INIT(*entities);
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt1, "INSERT INTO inactive_entities(id, x, y, z) VALUES (?, ?, ?, ?)", out);
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt2, "DELETE FROM active_entities WHERE id = (?)", out);
 
-  DIR *dirp = opendir(dirpath);
-  if(!dirp)
-    goto out1;
+  if(sqlite3_bind_int64(stmt1, 1, db_id) != SQLITE_OK) { LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out; }
+  if(sqlite3_bind_int(stmt1, 2, chunk_position.x) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
+  if(sqlite3_bind_int(stmt1, 3, chunk_position.y) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
+  if(sqlite3_bind_int(stmt1, 4, chunk_position.z) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
+  if(sqlite3_step(stmt1) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
 
-  struct dirent *dirent;
-  while((dirent = readdir(dirp)))
-    if(dirent->d_type == DT_REG)
-    {
-      struct voxy_entity entity;
+  if(sqlite3_bind_int64(stmt2, 1, db_id) != SQLITE_OK) { LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
+  if(sqlite3_step(stmt2) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset2; }
 
-      char *filepath;
-      asprintf(&filepath, "%s/%s", dirpath, dirent->d_name);
-      if(!dirpath)
-      {
-        result = -1;
-        goto out2;
-      }
-
-      if(u32_from_hex_str(dirent->d_name, &entity.cookie) != 0)
-      {
-        free(filepath);
-        result = -1;
-        goto out2;
-      }
-
-      if(entity_read_from(filepath, &entity, entity_registry) != 0)
-      {
-        free(filepath);
-        result = -1;
-        goto out2;
-      }
-
-      DYNAMIC_ARRAY_APPEND(*entities, entity);
-      free(filepath);
-    }
-
-out2:
-  closedir(dirp);
-out1:
-  if(result != 0)
-    DYNAMIC_ARRAY_CLEAR(*entities);
-  return result;
+out_reset2:
+  sqlite3_clear_bindings(stmt2);
+  sqlite3_reset(stmt2);
+out_reset1:
+  sqlite3_clear_bindings(stmt1);
+  sqlite3_reset(stmt1);
+out:
+  return rc;
 }
 
-/// Load active entities.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_load_active_entities(struct voxy_entities *entities, struct voxy_entity_registry *entity_registry)
+int voxy_entity_database_load_active(struct voxy_entity_database *database, struct db_ids *db_ids)
 {
-  return load_entities(get_active_links_path(), entities, entity_registry);
-}
+  int rc = 0;
+  int result;
 
-/// Load inactive entities in given chunk position.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_load_inactive_entities(ivec3_t chunk_position, struct voxy_entities *entities, struct voxy_entity_registry *entity_registry)
-{
-  int result = 0;
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_select, "SELECT id FROM active_entities;", out);
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_delete, "DELETE FROM active_entities;", out);
 
-  char *links_path = get_inactive_links_path(chunk_position);
-  if(!links_path)
+  while((result = sqlite3_step(stmt_select)) == SQLITE_ROW)
   {
-    result = -1;
-    goto out1;
+    int64_t db_id = sqlite3_column_int64(stmt_select, 0);
+    DYNAMIC_ARRAY_APPEND(*db_ids, db_id);
   }
 
-  if(load_entities(links_path, entities, entity_registry) != 0)
-  {
-    result = -1;
-    goto out2;
-  }
+  if(result != SQLITE_DONE)
+    goto out_reset_select;
 
-out2:
-  free(links_path);
-out1:
-  return result;
+  if(sqlite3_step(stmt_delete) != SQLITE_DONE)
+    goto out_reset_delete;
+
+out_reset_delete:
+  sqlite3_reset(stmt_delete);
+out_reset_select:
+  sqlite3_reset(stmt_select);
+out:
+  return rc;
 }
 
+int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, struct db_ids *db_ids)
+{
+  int rc = 0;
+  int result;
+
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_select, "SELECT id FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);", out);
+  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_delete, "DELETE FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);", out);
+
+  if(sqlite3_bind_int(stmt_select, 1, chunk_position.x) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out; }
+  if(sqlite3_bind_int(stmt_select, 2, chunk_position.y) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_select; }
+  if(sqlite3_bind_int(stmt_select, 3, chunk_position.z) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_select; }
+  while((result = sqlite3_step(stmt_select)) == SQLITE_ROW)
+  {
+    int64_t db_id = sqlite3_column_int64(stmt_select, 0);
+    DYNAMIC_ARRAY_APPEND(*db_ids, db_id);
+  }
+  if(result != SQLITE_DONE)
+    goto out_reset_select;
+
+  if(sqlite3_bind_int(stmt_delete, 1, chunk_position.x) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_select; }
+  if(sqlite3_bind_int(stmt_delete, 2, chunk_position.y) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_delete; }
+  if(sqlite3_bind_int(stmt_delete, 3, chunk_position.z) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_delete; }
+  if(sqlite3_step(stmt_delete) != SQLITE_DONE)
+    goto out_reset_delete;
+
+out_reset_delete:
+  sqlite3_reset(stmt_delete);
+  sqlite3_clear_bindings(stmt_delete);
+out_reset_select:
+  sqlite3_reset(stmt_select);
+  sqlite3_clear_bindings(stmt_select);
+out:
+  return rc;
+}

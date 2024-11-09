@@ -24,6 +24,21 @@ libserde_deserializer_t libserde_deserializer_create(const char *path)
   return deserializer;
 }
 
+libserde_deserializer_t libserde_deserializer_create_mem(const char *buf, size_t len)
+{
+  libserde_deserializer_t deserializer = malloc(sizeof *deserializer);
+  if(!deserializer)
+    return NULL;
+
+  // Note: Since we only open in read only mode, it is okay to cast away the
+  //       const qualifier as it would not be written to anyway.
+  if(!(deserializer->file = fmemopen((void *)buf, len, "rb")))
+    return NULL;
+
+  deserializer->checksum = checksum_init();
+  return deserializer;
+}
+
 void libserde_deserializer_destroy(libserde_deserializer_t deserializer)
 {
   fclose(deserializer->file);

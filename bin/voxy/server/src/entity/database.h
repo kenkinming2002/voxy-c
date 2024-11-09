@@ -3,77 +3,97 @@
 
 #include "entity.h"
 
+#include <sqlite3.h>
+
 /// Entity database.
 ///
-/// Following is a description of the directory structure we use.
+/// The original implmenetation is based on storing each entity in a separate
+/// file and (ab)using filesystem directory structure as a indexing mechanism.
+/// While it is "simple" to implement and requires minimal external dependency,
+/// this necessitates the creation of lot of extremely small files, which most
+/// filesystem, notably ext4, are not designed to deal with. In particular, most
+/// filesystems allocate space on disk for file in the granularity of
+/// blocks/sectors which may be something like 4KiB. This leads to both huge
+/// space wastage and worse performance, since we can only read/write to disk a
+/// sector at a time, but must of the space in a sector is unused.
 ///
-/// Each entity is stored in a separate file called a blob in
-/// <ENTITIES_PATH>/blobs/<COOKIE> where <ENTITIES_PATH> defaults to
-/// "world/entities" and <COOKIE> are randomly generated for each entity.
-///
-/// An entity can be in a loaded state, if it is inside a loaded chunk. In such
-/// a case, a hard link to it would be created under the directory
-/// <ENTITIES_PATH>/active. Otherwise, there will be hard link to it under
-/// <ENTITIES_PATH>/<X>/<Y>/<Z> where <X>, <Y>, <Z> are components for the
-/// position of the chunk that the entity is in.
-///
-/// On startup after an arupt shutdown, entities under <ENTITIES_PATH>/active
-/// will be loaded and re-linked under <ENTITIES_PATH>/<X>/<Y>/<Z> depending on
-/// which chunk each entity is in.
+/// Hence, we use sqlite database which should be able to pack data much more
+/// efficiently.
+struct voxy_entity_database
+{
+  sqlite3 *conn;
+};
 
-/// Create an entity in the database.
-///
-/// This should be called when an entity is spawned. A blob will be allocated
-/// for the entity and the entity will be put in loaded state i.e. there will be
-/// a hard link to it under <ENTITIES_PATH>/active.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_create_entity(struct voxy_entity *entity, struct voxy_entity_registry *entity_registry);
+int voxy_entity_database_init(struct voxy_entity_database *database);
+void voxy_entity_database_fini(struct voxy_entity_database *database);
 
-/// Destroy an entity in the database.
+/// Begin and end transaction.
 ///
-/// This should be called when an entity is despawned. This assumes that the
-/// entity is in a loaded state i.e. there is a hard link to its blob under
-/// <ENTITIES_PATH>/active. The entity blob will be deallocated and the hard
-/// link to it will be removed.
-///
-/// A blob will be allocated
-/// for the entity and the entity will be put in loaded state i.e. there will be
-/// a hard link to it under <ENTITIES_PATH>/active.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_destroy_entity(const struct voxy_entity *entity);
+/// Hopefully, this improves performance.
+int voxy_entity_database_begin_transaction(struct voxy_entity_database *database);
+int voxy_entity_database_end_transaction(struct voxy_entity_database *database);
 
-/// Update an entity in the database.
+/// Create an entity in database.
 ///
-/// Return non-zero value on failure.
-int voxy_entity_database_update_entity(const struct voxy_entity *entity, struct voxy_entity_registry *entity_registry);
+/// This should be called whenever a new entity is spawned. This is responsible
+/// for populating entity->db_id.
+///
+/// Return non-zero on error;
+int voxy_entity_database_create(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity);
 
-/// Commit an entity in the database.
+/// Destroy an entity in database.
 ///
-/// This should be called when an entity is to be unloaded. This move the hard
-/// link to the entity under <ENTITIES_PATH>/active to
-/// <ENTITIES_PATH>/<X>/<Y>/<Z>.
+/// This should be called whenever an entity is about to be despawned. This
+/// differs from if the entity is simply unloaded in which case
+/// voxy_entity_database_commit() should be called instead.
 ///
-/// Return non-zero value on failure.
-int voxy_entity_database_commit_entity(const struct voxy_entity *entity);
+/// Return non-zero on error;
+int voxy_entity_database_destroy(struct voxy_entity_database *database, struct voxy_entity *entity);
 
-/// Commit an entity in the database.
+/// Save an entity to database.
 ///
-/// This should be called after an entity is loaded. This move the hard link to
-/// the entity under <ENTITIES_PATH>/<X>/<Y>/<Z> to <ENTITIES_PATH>/active.
-///
-/// Return non-zero value on failure.
-int voxy_entity_database_uncommit_entity(const struct voxy_entity *entity, ivec3_t chunk_position);
+/// Return non-zero on error;
+int voxy_entity_database_save(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, const struct voxy_entity *entity);
 
-/// Load active entities.
+/// Load an entity from database.
 ///
-/// Return non-zero value on failure.
-int voxy_entity_database_load_active_entities(struct voxy_entities *entities, struct voxy_entity_registry *entity_registry);
+/// Return non-zero on error;
+int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity);
 
-/// Load inactive entities in given chunk position.
+/// Uncommit entity in database.
 ///
-/// Return non-zero value on failure.
-int voxy_entity_database_load_inactive_entities(ivec3_t chunk_position, struct voxy_entities *entities, struct voxy_entity_registry *entity_registry);
+/// This should be called whenever an entity is loaded. There is no need to
+/// called this function if a new entity is spawned. Call
+/// voxy_entity_database_create() instead.
+///
+/// Return non-zero on error;
+int voxy_entity_database_uncommit(struct voxy_entity_database *database, int64_t db_id);
+
+/// Commit entity in database.
+///
+/// This should be called whenever an entity is unloaded. There is no need to
+/// called this function if a new entity is despawned. Call
+/// voxy_entity_database_destroy() instead.
+///
+/// Return non-zero on error;
+int voxy_entity_database_commit(struct voxy_entity_database *database, int64_t db_id, ivec3_t chunk_position);
+
+DYNAMIC_ARRAY_DEFINE(db_ids, int64_t);
+
+/// Load all active entities in database.
+///
+/// This should be called after the game restart in case of arupt server
+/// shutdown, in which case there some of the entities maybe stuck in an active
+/// state.
+///
+/// Return non-zero on error;
+int voxy_entity_database_load_active(struct voxy_entity_database *database, struct db_ids *db_ids);
+
+/// Load all inactive entities in database at specified chunk position.
+///
+/// This should be called whenever a chunk is loaded.
+///
+/// Return non-zero on error;
+int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, struct db_ids *db_ids);
 
 #endif // ENTITY_DATABASE_H

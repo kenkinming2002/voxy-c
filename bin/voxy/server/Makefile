@@ -34,6 +34,8 @@ LDFLAGS += -rdynamic
 SRCS += src/main.c
 SRCS += src/application.c
 
+SRCS += src/sqlite3_utils.c
+
 SRCS += src/hash_table/ivec3.c
 
 SRCS += src/block/registry.c

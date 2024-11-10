@@ -2,6 +2,8 @@
 
 #include "chunk/coordinates.h"
 
+#include "sqlite3_utils.h"
+
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
 
@@ -16,28 +18,9 @@
 
 #define VOXY_ENTITY_DATABASE_PATH "world/entities.db"
 
-#define SQLITE_TRY_EXEC(rc, conn, errmsg, sql, label) \
-  if(sqlite3_exec(conn, sql, NULL, NULL, &errmsg) != SQLITE_OK) \
-  { \
-    LOG_ERROR("Failed to exec sql statement: %s: %s", #sql, errmsg); \
-    sqlite3_free(errmsg); \
-    rc = -1; \
-    goto out; \
-  }
-
-#define SQLITE_TRY_PREPARE_ONCE(rc, conn, stmt, sql, label) \
-  static sqlite3_stmt *stmt; \
-  if(!stmt && sqlite3_prepare_v2(conn, sql, -1, &stmt,  NULL) != SQLITE_OK) \
-  { \
-    LOG_ERROR("Failed to prepare sql statement: %s: %s", #sql, sqlite3_errmsg(conn)); \
-    rc = -1; \
-    goto out; \
-  }
-
 int voxy_entity_database_init(struct voxy_entity_database *database)
 {
   int rc = 0;
-  char *errmsg;
 
   if(sqlite3_open(VOXY_ENTITY_DATABASE_PATH, &database->conn) != SQLITE_OK)
   {
@@ -46,10 +29,10 @@ int voxy_entity_database_init(struct voxy_entity_database *database)
     goto out;
   }
 
-  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "CREATE TABLE IF NOT EXISTS entities(id INTEGER PRIMARY KEY, data BLOB NOT NULL) STRICT;", out);
-  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "CREATE TABLE IF NOT EXISTS active_entities(id INTEGER PRIMARY KEY, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;", out);
-  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "CREATE TABLE IF NOT EXISTS inactive_entities(id INTEGER PRIMARY KEY, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;", out);
-  SQLITE_TRY_EXEC(rc, database->conn, errmsg, "PRAGMA foreign_keys = ON;", out);
+  if(sqlite3_utils_exec(database->conn, "PRAGMA foreign_keys = ON;") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_exec(database->conn, "CREATE TABLE IF NOT EXISTS entities(id INTEGER PRIMARY KEY, data BLOB NOT NULL) STRICT;") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_exec(database->conn, "CREATE TABLE IF NOT EXISTS active_entities(id INTEGER PRIMARY KEY, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_exec(database->conn, "CREATE TABLE IF NOT EXISTS inactive_entities(id INTEGER PRIMARY KEY, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;") != 0) { rc = -1; goto out; }
 
 out:
   if(rc != SQLITE_OK)
@@ -64,38 +47,19 @@ void voxy_entity_database_fini(struct voxy_entity_database *database)
 
 int voxy_entity_database_begin_transaction(struct voxy_entity_database *database)
 {
-  int rc = 0;
-
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "BEGIN TRANSACTION", out);
-  if(sqlite3_step(stmt) != SQLITE_DONE)
-  {
-    rc = -1;
-    goto out_reset;
-  }
-
-out_reset:
-  sqlite3_reset(stmt);
-out:
-  return rc;
+  static sqlite3_stmt *stmt = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt, "BEGIN TRANSACTION;") != 0) return -1;
+  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) return -1;
+  return 0;
 }
 
 int voxy_entity_database_end_transaction(struct voxy_entity_database *database)
 {
-  int rc = 0;
-
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "END TRANSACTION", out);
-  if(sqlite3_step(stmt) != SQLITE_DONE)
-  {
-    rc = -1;
-    goto out_reset;
-  }
-
-out_reset:
-  sqlite3_reset(stmt);
-out:
-  return rc;
+  static sqlite3_stmt *stmt = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt, "END TRANSACTION;") != 0) return -1;
+  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) return -1;
+  return 0;
 }
-
 
 static int entity_serialize(const struct voxy_entity *entity, char **buf, size_t *len)
 {
@@ -145,9 +109,6 @@ int voxy_entity_database_create(struct voxy_entity_database *database, struct vo
 {
   int rc = 0;
 
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt1, "INSERT INTO entities (data) VALUES (?);", out);
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt2, "INSERT INTO active_entities (id) VALUES (?);", out);
-
   char *buf;
   size_t len;
   if((rc = entity_serialize(entity, &buf, &len) != 0))
@@ -156,18 +117,14 @@ int voxy_entity_database_create(struct voxy_entity_database *database, struct vo
     goto out;
   }
 
-  if(sqlite3_bind_blob(stmt1, 1, buf, len, SQLITE_STATIC) != SQLITE_OK) { LOG_ERROR("Failed to bind ql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_free_buf; }
-  if(sqlite3_step(stmt1) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
+  static sqlite3_stmt *stmt_insert_entities = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_insert_entities, "INSERT INTO entities (data) VALUES (?);") != 0) { rc = -1; goto out_free_buf; }
+  if(sqlite3_utils_run(database->conn, stmt_insert_entities, SQLITE3_UTILS_TYPE_BLOB, buf, len, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out_free_buf; }
 
-  if(sqlite3_bind_int(stmt2, 1, (entity->db_id = sqlite3_last_insert_rowid(database->conn))) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
-  if(sqlite3_step(stmt2) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset2; }
+  static sqlite3_stmt *stmt_insert_active_entities = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_insert_active_entities, "INSERT INTO active_entities (id) VALUES (?);") != 0) { rc = -1; goto out_free_buf; }
+  if(sqlite3_utils_run(database->conn, stmt_insert_active_entities, SQLITE3_UTILS_TYPE_INT64, (entity->db_id = sqlite3_last_insert_rowid(database->conn)), SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out_free_buf; }
 
-out_reset2:
-  sqlite3_reset(stmt2);
-  sqlite3_clear_bindings(stmt2);
-out_reset1:
-  sqlite3_reset(stmt1);
-  sqlite3_clear_bindings(stmt1);
 out_free_buf:
   free(buf);
 out:
@@ -178,25 +135,10 @@ int voxy_entity_database_destroy(struct voxy_entity_database *database, struct v
 {
   int rc = 0;
 
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "DELETE FROM entities WHERE id = (?)", out);
+  static sqlite3_stmt *stmt = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt, "DELETE FROM entities WHERE id = (?);") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_bind_int64(stmt, 1, entity->db_id) != SQLITE_OK)
-  {
-    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out;
-  }
-
-  if(sqlite3_step(stmt) != SQLITE_DONE)
-  {
-    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out_reset;
-  }
-
-out_reset:
-  sqlite3_reset(stmt);
-  sqlite3_clear_bindings(stmt);
 out:
   return rc;
 }
@@ -204,11 +146,9 @@ out:
 int voxy_entity_database_save(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, const struct voxy_entity *entity)
 {
   int rc = 0;
-
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "UPDATE entities SET data = (?) WHERE id = (?)", out);
-
   char *buf;
   size_t len;
+
   if((rc = entity_serialize(entity, &buf, &len) != 0))
   {
     LOG_ERROR("Failed to serialize entity");
@@ -216,30 +156,10 @@ int voxy_entity_database_save(struct voxy_entity_database *database, struct voxy
     goto out;
   }
 
-  if(sqlite3_bind_blob(stmt, 1, buf, len, SQLITE_STATIC) != SQLITE_OK)
-  {
-    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out_free_buf;
-  }
+  static sqlite3_stmt *stmt = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt, "UPDATE entities SET data = (?) WHERE id = (?);") != 0) { rc = -1; goto out_free_buf; }
+  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_BLOB, buf, len, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out_free_buf; }
 
-  if(sqlite3_bind_int64(stmt, 2, entity->db_id) != SQLITE_OK)
-  {
-    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out_reset;
-  }
-
-  if(sqlite3_step(stmt) != SQLITE_DONE)
-  {
-    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out_reset;
-  }
-
-out_reset:
-  sqlite3_reset(stmt);
-  sqlite3_clear_bindings(stmt);
 out_free_buf:
   free(buf);
 out:
@@ -249,22 +169,22 @@ out:
 int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity)
 {
   int rc = 0;
+  char *buf;
+  size_t len;
 
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt, "SELECT data FROM entities WHERE id = (?);", out);
+  static sqlite3_stmt *stmt = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt, "SELECT data FROM entities WHERE id = (?);") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_BLOB, &buf, &len, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_bind_int64(stmt, 1, entity->db_id) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out; }
-  if(sqlite3_step(stmt) != SQLITE_ROW) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset; }
-  if(entity_deserialize(entity, sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0)) != 0)
+  if(entity_deserialize(entity, buf, len) != 0)
   {
     LOG_ERROR("Failed to deserialize entity");
     rc = -1;
-    goto out_reset;
+    goto out_free_buf;
   }
-  if(sqlite3_step(stmt) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset; }
 
-out_reset:
-  sqlite3_reset(stmt);
-  sqlite3_clear_bindings(stmt);
+out_free_buf:
+  free(buf);
 out:
   return rc;
 }
@@ -273,43 +193,14 @@ int voxy_entity_database_uncommit(struct voxy_entity_database *database, int64_t
 {
   int rc = 0;
 
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt1, "INSERT INTO active_entities(id) VALUES (?)", out);
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt2, "DELETE FROM inactive_entities WHERE id = (?)", out);
+  static sqlite3_stmt *stmt_insert = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_insert, "INSERT INTO active_entities(id) VALUES (?)") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_INT64, db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_bind_int64(stmt1, 1, db_id) != SQLITE_OK)
-  {
-    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out;
-  }
+  static sqlite3_stmt *stmt_delete = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_delete, "DELETE FROM inactive_entities WHERE id = (?)") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_delete, SQLITE3_UTILS_TYPE_INT64, db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_step(stmt1) != SQLITE_DONE)
-  {
-    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out_reset1;
-  }
-
-  if(sqlite3_bind_int64(stmt2, 1, db_id) != SQLITE_OK)
-  {
-    LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out_reset1;
-  }
-
-  if(sqlite3_step(stmt2) != SQLITE_DONE)
-  {
-    LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn));
-    rc = -1;
-    goto out_reset2;
-  }
-
-out_reset2:
-  sqlite3_reset(stmt2);
-  sqlite3_clear_bindings(stmt2);
-out_reset1:
-  sqlite3_reset(stmt1);
-  sqlite3_clear_bindings(stmt1);
 out:
   return rc;
 }
@@ -318,24 +209,14 @@ int voxy_entity_database_commit(struct voxy_entity_database *database, int64_t d
 {
   int rc = 0;
 
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt1, "INSERT INTO inactive_entities(id, x, y, z) VALUES (?, ?, ?, ?)", out);
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt2, "DELETE FROM active_entities WHERE id = (?)", out);
+  static sqlite3_stmt *stmt_insert = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_insert, "INSERT INTO inactive_entities(id, x, y, z) VALUES (?, ?, ?, ?)") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_INT64, db_id, SQLITE3_UTILS_TYPE_INT, chunk_position.x, SQLITE3_UTILS_TYPE_INT, chunk_position.y, SQLITE3_UTILS_TYPE_INT, chunk_position.z, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_bind_int64(stmt1, 1, db_id) != SQLITE_OK) { LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out; }
-  if(sqlite3_bind_int(stmt1, 2, chunk_position.x) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
-  if(sqlite3_bind_int(stmt1, 3, chunk_position.y) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
-  if(sqlite3_bind_int(stmt1, 4, chunk_position.z) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
-  if(sqlite3_step(stmt1) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
+  static sqlite3_stmt *stmt_delete = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_delete, "DELETE FROM active_entities WHERE id = (?)") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_delete, SQLITE3_UTILS_TYPE_INT64, db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_bind_int64(stmt2, 1, db_id) != SQLITE_OK) { LOG_ERROR("Failed to bind blob to sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset1; }
-  if(sqlite3_step(stmt2) != SQLITE_DONE) { LOG_ERROR("Failed to step sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset2; }
-
-out_reset2:
-  sqlite3_clear_bindings(stmt2);
-  sqlite3_reset(stmt2);
-out_reset1:
-  sqlite3_clear_bindings(stmt1);
-  sqlite3_reset(stmt1);
 out:
   return rc;
 }
@@ -343,27 +224,15 @@ out:
 int voxy_entity_database_load_active(struct voxy_entity_database *database, struct db_ids *db_ids)
 {
   int rc = 0;
-  int result;
 
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_select, "SELECT id FROM active_entities;", out);
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_delete, "DELETE FROM active_entities;", out);
+  static sqlite3_stmt *stmt_insert = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_insert, "SELECT id FROM active_entities;") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64, &db_ids->items, &db_ids->item_count, &db_ids->item_capacity, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  while((result = sqlite3_step(stmt_select)) == SQLITE_ROW)
-  {
-    int64_t db_id = sqlite3_column_int64(stmt_select, 0);
-    DYNAMIC_ARRAY_APPEND(*db_ids, db_id);
-  }
+  static sqlite3_stmt *stmt_delete = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_delete, "DELETE FROM active_entities WHERE id = (?)") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_delete, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(result != SQLITE_DONE)
-    goto out_reset_select;
-
-  if(sqlite3_step(stmt_delete) != SQLITE_DONE)
-    goto out_reset_delete;
-
-out_reset_delete:
-  sqlite3_reset(stmt_delete);
-out_reset_select:
-  sqlite3_reset(stmt_select);
 out:
   return rc;
 }
@@ -371,34 +240,15 @@ out:
 int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, struct db_ids *db_ids)
 {
   int rc = 0;
-  int result;
 
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_select, "SELECT id FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);", out);
-  SQLITE_TRY_PREPARE_ONCE(rc, database->conn, stmt_delete, "DELETE FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);", out);
+  static sqlite3_stmt *stmt_insert = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_insert, "SELECT id FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_INT, chunk_position.x, SQLITE3_UTILS_TYPE_INT, chunk_position.y, SQLITE3_UTILS_TYPE_INT, chunk_position.z, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64, &db_ids->items, &db_ids->item_count, &db_ids->item_capacity, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_bind_int(stmt_select, 1, chunk_position.x) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out; }
-  if(sqlite3_bind_int(stmt_select, 2, chunk_position.y) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_select; }
-  if(sqlite3_bind_int(stmt_select, 3, chunk_position.z) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_select; }
-  while((result = sqlite3_step(stmt_select)) == SQLITE_ROW)
-  {
-    int64_t db_id = sqlite3_column_int64(stmt_select, 0);
-    DYNAMIC_ARRAY_APPEND(*db_ids, db_id);
-  }
-  if(result != SQLITE_DONE)
-    goto out_reset_select;
+  static sqlite3_stmt *stmt_delete = NULL;
+  if(sqlite3_utils_prepare_once(database->conn, &stmt_delete, "DELETE FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);") != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_delete, SQLITE3_UTILS_TYPE_INT, chunk_position.x, SQLITE3_UTILS_TYPE_INT, chunk_position.y, SQLITE3_UTILS_TYPE_INT, chunk_position.z, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(sqlite3_bind_int(stmt_delete, 1, chunk_position.x) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_select; }
-  if(sqlite3_bind_int(stmt_delete, 2, chunk_position.y) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_delete; }
-  if(sqlite3_bind_int(stmt_delete, 3, chunk_position.z) != SQLITE_OK) { LOG_ERROR("Failed to bind sql statement: %s", sqlite3_errmsg(database->conn)); rc = -1; goto out_reset_delete; }
-  if(sqlite3_step(stmt_delete) != SQLITE_DONE)
-    goto out_reset_delete;
-
-out_reset_delete:
-  sqlite3_reset(stmt_delete);
-  sqlite3_clear_bindings(stmt_delete);
-out_reset_select:
-  sqlite3_reset(stmt_select);
-  sqlite3_clear_bindings(stmt_select);
 out:
   return rc;
 }

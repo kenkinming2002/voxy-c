@@ -9,7 +9,9 @@
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/timerfd.h>
+#include <sys/signalfd.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -42,6 +44,7 @@ struct libnet_server
   int epoll_fd;
   int socket_fd;
   int timer_fd;
+  int signal_fd;
 
   struct libnet_client_proxies client_proxies;
 
@@ -121,6 +124,17 @@ libnet_server_t libnet_server_create(const char *service, unsigned long long nse
       free(server);
     }
 
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGINT);
+    if((server->signal_fd = signalfd(-1, &mask, SFD_NONBLOCK)) == -1)
+    {
+      fprintf(stderr, "libnet: Error: Failed to create signal file descriptor: %s\n", strerror(errno));
+      close(server->socket_fd);
+      close(server->timer_fd);
+      free(server);
+    }
+
     if((server->epoll_fd = epoll_create1(0)) == -1)
     {
       fprintf(stderr, "libnet: Error: Failed to create epoll file descriptor: %s\n", strerror(errno));
@@ -152,6 +166,20 @@ libnet_server_t libnet_server_create(const char *service, unsigned long long nse
       close(server->epoll_fd);
       close(server->socket_fd);
       close(server->timer_fd);
+      close(server->signal_fd);
+      free(server);
+      return NULL;
+    }
+
+    epoll_event.events = EPOLLIN;
+    epoll_event.data.ptr = &server->signal_fd;
+    if(epoll_ctl(server->epoll_fd, EPOLL_CTL_ADD, server->signal_fd, &epoll_event) == -1)
+    {
+      fprintf(stderr, "libnet: Error: Failed to add socket to epoll file descriptor: %s\n", strerror(errno));
+      close(server->epoll_fd);
+      close(server->socket_fd);
+      close(server->timer_fd);
+      close(server->signal_fd);
       free(server);
       return NULL;
     }
@@ -182,6 +210,7 @@ void libnet_server_destroy(libnet_server_t server)
   close(server->epoll_fd);
   close(server->socket_fd);
   close(server->timer_fd);
+  close(server->signal_fd);
   free(server);
 }
 
@@ -217,6 +246,13 @@ void libnet_server_set_on_message_received(libnet_server_t server, libnet_server
 
 void libnet_server_run(libnet_server_t server)
 {
+  sigset_t mask;
+  sigset_t oldmask;
+
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGINT);
+  pthread_sigmask(SIG_BLOCK, &mask, &oldmask);
+
   for(;;)
   {
     struct epoll_event epoll_events[32];
@@ -287,6 +323,28 @@ void libnet_server_run(libnet_server_t server)
         for(uint64_t i=0; i<count; ++i)
           server->on_update(server);
       }
+      else if(epoll_event.data.ptr == &server->signal_fd)
+      {
+        struct signalfd_siginfo siginfo;
+        ssize_t n = read(server->signal_fd, &siginfo, sizeof siginfo);
+
+        if(n == -1)
+        {
+          if(errno != EAGAIN && errno != EWOULDBLOCK)
+            fprintf(stderr, "libnet: Warn: Error from timer: %s\n", strerror(errno));
+
+          continue;
+        }
+
+        if(n != sizeof siginfo)
+        {
+          fprintf(stderr, "libnet: Expected %zu bytes from timer. Got %zu bytes.\n", sizeof siginfo, n);
+          continue;
+        }
+
+        fprintf(stderr, "libnet: Caught %s... Exiting.\n", strsignal(siginfo.ssi_signo));
+        goto out;
+      }
       else
       {
         libnet_client_proxy_t client_proxy = epoll_event.data.ptr;
@@ -341,6 +399,9 @@ void libnet_server_run(libnet_server_t server)
       }
     }
   }
+
+out:
+  pthread_sigmask(SIG_SETMASK, &oldmask, NULL);
 }
 
 void libnet_server_foreach_client(libnet_server_t server, void(*cb)(libnet_server_t server, libnet_client_proxy_t client, void *data), void *data)

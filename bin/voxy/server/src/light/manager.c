@@ -1,5 +1,6 @@
 #include "manager.h"
 
+#include <libcommon/core/profile.h>
 #include <libcommon/core/log.h>
 
 #include <stdatomic.h>
@@ -198,6 +199,10 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
 
 void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
 {
+  profile_begin;
+
   process_light_destruction_updates(light_manager, block_registry, chunk_manager);
   process_light_creation_updates(light_manager, block_registry, chunk_manager);
+
+  profile_end;
 }

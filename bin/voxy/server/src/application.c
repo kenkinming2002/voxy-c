@@ -6,6 +6,7 @@
 #include <voxy/server/context.h>
 
 #include <libcommon/core/log.h>
+#include <libcommon/core/profile.h>
 
 #include <stdio.h>
 #include <time.h>
@@ -104,6 +105,8 @@ void application_run(struct application *application)
 
 void application_on_update(libnet_server_t server)
 {
+  profile_begin;
+
   struct application *application = libnet_server_get_opaque(server);
 
   const struct voxy_context context = application_get_context(application);
@@ -126,6 +129,8 @@ void application_on_update(libnet_server_t server)
 
   voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_generator, &application->light_manager, application->server, &context);
   voxy_entity_manager_update(&application->entity_manager, &application->entity_registry, &application->entity_database, &application->chunk_manager, application->server);
+
+  profile_end;
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)

@@ -21,6 +21,7 @@ SRCS += src/core/delta_time.c
 SRCS += src/core/fs.c
 SRCS += src/core/time.c
 SRCS += src/core/serde.c
+SRCS += src/core/profile.c
 
 SRCS += src/graphics/gl.c
 SRCS += src/graphics/font_set.c

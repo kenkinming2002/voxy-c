@@ -2,7 +2,7 @@
 
 #include <voxy/config.h>
 
-#include "block/registry.h"
+#include "registry/block.h"
 
 #include <stdatomic.h>
 #include <stdlib.h>

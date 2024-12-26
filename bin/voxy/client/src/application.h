@@ -3,8 +3,8 @@
 
 #include <libnet/client.h>
 
-#include "block/registry.h"
-#include "entity/registry.h"
+#include "registry/block.h"
+#include "registry/entity.h"
 
 #include "input/manager.h"
 #include "camera/manager.h"

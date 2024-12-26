@@ -1,7 +1,7 @@
 #ifndef LIGHT_MANAGER_H
 #define LIGHT_MANAGER_H
 
-#include "block/registry.h"
+#include "registry/block.h"
 #include "chunk/manager.h"
 
 #include <libcommon/utils/dynamic_array.h>

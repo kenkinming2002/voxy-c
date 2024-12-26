@@ -4,8 +4,8 @@
 #include "block/block.h"
 #include "entity/entity.h"
 
-#include "block/registry.h"
-#include "entity/registry.h"
+#include "registry/block.h"
+#include "registry/entity.h"
 
 #include "chunk/manager.h"
 #include "entity/manager.h"

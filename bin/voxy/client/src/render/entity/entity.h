@@ -1,7 +1,7 @@
 #ifndef RENDER_ENTITY_ENTITY_H
 #define RENDER_ENTITY_ENTITY_H
 
-#include "entity/registry.h"
+#include "registry/entity.h"
 #include "entity/manager.h"
 #include "camera/manager.h"
 

@@ -1,8 +1,9 @@
 #ifndef VOXY_SERVER_ENTITY_MANAGER_H
 #define VOXY_SERVER_ENTITY_MANAGER_H
 
+#include <voxy/server/registry/entity.h>
+
 #include "entity.h"
-#include "registry.h"
 #include "database.h"
 
 #include <voxy/server/export.h>

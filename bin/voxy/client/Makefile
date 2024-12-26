@@ -26,8 +26,8 @@ LDFLAGS += -rdynamic
 SRCS += src/main.c
 SRCS += src/application.c
 
-SRCS += src/block/registry.c
-SRCS += src/entity/registry.c
+SRCS += src/registry/block.c
+SRCS += src/registry/entity.c
 
 SRCS += src/input/manager.c
 SRCS += src/camera/manager.c
@@ -47,10 +47,15 @@ SRCS += src/render/entity/entity.c
 SRCS += src/mod/mod.c
 SRCS += src/mod/manager.c
 
+.PHONY: gen
+
 all: voxy-client
 
 voxy-client: $(SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(SRCS:.c=.o) $(LIBS)
+
+gen:
+	./gen
 
 clean: depclean
 	- rm -f $(SRCS:.c=.o)

@@ -1,7 +1,7 @@
 #ifndef RENDER_BLOCK_BLOCK_H
 #define RENDER_BLOCK_BLOCK_H
 
-#include "block/registry.h"
+#include "registry/block.h"
 #include "chunk/manager.h"
 #include "camera/manager.h"
 #include "render_info.h"

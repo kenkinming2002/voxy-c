@@ -1,8 +1,8 @@
 #ifndef VOXY_CLIENT_CONTEXT_H
 #define VOXY_CLIENT_CONTEXT_H
 
-#include "block/registry.h"
-#include "entity/registry.h"
+#include "registry/block.h"
+#include "registry/entity.h"
 
 /// Context.
 ///

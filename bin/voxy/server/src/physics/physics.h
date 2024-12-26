@@ -1,8 +1,8 @@
 #ifndef PHYSICS_PHYSICS_H
 #define PHYSICS_PHYSICS_H
 
-#include "block/registry.h"
-#include "entity/registry.h"
+#include "registry/block.h"
+#include "registry/entity.h"
 
 #include "chunk/manager.h"
 #include "entity/manager.h"

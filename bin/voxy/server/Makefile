@@ -38,8 +38,8 @@ SRCS += src/sqlite3_utils.c
 
 SRCS += src/hash_table/ivec3.c
 
-SRCS += src/block/registry.c
-SRCS += src/entity/registry.c
+SRCS += src/registry/block.c
+SRCS += src/registry/entity.c
 
 SRCS += src/chunk/chunk.c
 SRCS += src/chunk/coordinates.c
@@ -65,10 +65,15 @@ SRCS += src/mod/manager.c
 SRCS += src/physics/physics.c
 SRCS += src/physics/swept.c
 
+.PHONY: gen
+
 all: voxy-server
 
 voxy-server: $(SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(SRCS:.c=.o) $(LIBS)
+
+gen:
+	./gen
 
 clean: depclean
 	- rm -f $(SRCS:.c=.o)

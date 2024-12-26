@@ -4,7 +4,7 @@
 #include "database.h"
 #include "network.h"
 
-#include "block/registry.h"
+#include "registry/block.h"
 #include "light/manager.h"
 
 #include <voxy/protocol/server.h>

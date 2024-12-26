@@ -1,8 +1,7 @@
-#ifndef VOXY_CLIENT_BLOCK_INFO_H
-#define VOXY_CLIENT_BLOCK_INFO_H
+#ifndef VOXY_CLIENT_REGISTRY_BLOCK_INFO_H
+#define VOXY_CLIENT_REGISTRY_BLOCK_INFO_H
 
 #include <libcommon/math/direction.h>
-#include <libcommon/utils/dynamic_array.h>
 
 enum voxy_block_type
 {
@@ -20,6 +19,4 @@ struct voxy_block_info
   const char *textures[DIRECTION_COUNT];
 };
 
-DYNAMIC_ARRAY_DEFINE(voxy_block_infos, struct voxy_block_info);
-
-#endif // VOXY_CLIENT_BLOCK_INFO_H
+#endif // VOXY_CLIENT_REGISTRY_BLOCK_INFO_H

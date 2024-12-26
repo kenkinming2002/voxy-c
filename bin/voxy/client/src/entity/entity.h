@@ -3,7 +3,7 @@
 
 #include <voxy/client/entity/entity.h>
 
-#include "registry.h"
+#include "registry/entity.h"
 
 #include <libcommon/math/vector.h>
 #include <libcommon/utils/dynamic_array.h>

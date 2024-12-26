@@ -1,12 +1,9 @@
 #ifndef VOXY_SERVER_ENTITY_INFO_H
 #define VOXY_SERVER_ENTITY_INFO_H
 
-#include <libcommon/utils/dynamic_array.h>
 #include <libcommon/math/vector.h>
-
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
-
 #include <stdbool.h>
 
 struct voxy_entity;
@@ -42,6 +39,5 @@ struct voxy_entity_info
   void *(*deserialize_opaque)(libserde_deserializer_t deserializer);
 };
 
-DYNAMIC_ARRAY_DEFINE(voxy_entity_infos, struct voxy_entity_info);
-
 #endif // VOXY_SERVER_ENTITY_INFO_H
+

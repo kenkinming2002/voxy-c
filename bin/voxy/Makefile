@@ -74,9 +74,11 @@ SRCS += src/scene/main_game/crafting/recipe.c
 all: voxy server client
 
 server:
+	$(MAKE) -C server gen
 	$(MAKE) -C server
 
 client:
+	$(MAKE) -C client gen
 	$(MAKE) -C client
 
 voxy: $(SRCS:.c=.o)

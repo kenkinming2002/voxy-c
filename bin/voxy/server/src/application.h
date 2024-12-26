@@ -3,8 +3,8 @@
 
 #include <libnet/server.h>
 
-#include "block/registry.h"
-#include "entity/registry.h"
+#include "registry/block.h"
+#include "registry/entity.h"
 
 #include "chunk/manager.h"
 #include "chunk/generator.h"

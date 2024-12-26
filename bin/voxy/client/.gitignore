@@ -1,1 +1,7 @@
 /voxy-client
+/include/voxy/client/registry/block.h
+/include/voxy/client/registry/entity.h
+/src/registry/block.c
+/src/registry/block.h
+/src/registry/entity.c
+/src/registry/entity.h

@@ -7,12 +7,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
 
-static void profile_append_event(const char *name, const char *cat, const char *ph)
+static void profile_append_event(const char *name, const char *cat, const char *ph, va_list args)
 {
   static FILE *file = NULL;
   static const char *separator = "[\n";
@@ -75,27 +76,49 @@ static void profile_append_event(const char *name, const char *cat, const char *
     fprintf(file, "\"ph\":\"%s\"", ph);
 
     fprintf(file, ",");
-
     fprintf(file, "\"ts\":\"%lld\"", ts);
     fprintf(file, ",");
     fprintf(file, "\"tss\":\"%lld\"", tss);
 
     fprintf(file, ",");
-
     fprintf(file, "\"pid\":\"%d\"", pid);
     fprintf(file, ",");
     fprintf(file, "\"tid\":\"%d\"", tid);
+
+    fprintf(file, ",");
+    fprintf(file, "\"args\":{");
+
+    const char *key, *value;
+    bool initial = true;
+
+    while((key = va_arg(args, const char *)) && (value = va_arg(args, const char *)))
+    {
+      if(initial)
+        initial = false;
+      else
+        fprintf(file, ",");
+
+      fprintf(file, "\"%s\":\"%s\"", key, value);
+    }
+
+    fprintf(file, "}");
   }
   fprintf(file, "}");
 }
 
-void profile_begin_impl(const char *name)
+void profile_begin_impl(const char *name, ...)
 {
-  profile_append_event(name, "core", "B");
+  va_list ap;
+  va_start(ap, name);
+  profile_append_event(name, "core", "B", ap);
+  va_end(ap);
 }
 
-void profile_end_impl(const char *name)
+void profile_end_impl(const char *name, ...)
 {
-  profile_append_event(name, "core", "E");
+  va_list ap;
+  va_start(ap, name);
+  profile_append_event(name, "core", "E", ap);
+  va_end(ap);
 }
 

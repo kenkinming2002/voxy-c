@@ -20,10 +20,12 @@
 /// just a visual stutter. You *CANNOT* compensate for it by spending fewer time
 /// next frame.
 
-#define profile_begin profile_begin_impl(__PRETTY_FUNCTION__)
-#define profile_end profile_end_impl(__PRETTY_FUNCTION__)
+#include <stdlib.h>
 
-void profile_begin_impl(const char *name);
-void profile_end_impl(const char *name);
+#define profile_begin(...) profile_begin_impl(__PRETTY_FUNCTION__, ##__VA_ARGS__, NULL)
+#define profile_end(...) profile_end_impl(__PRETTY_FUNCTION__, ##__VA_ARGS__, NULL)
+
+void profile_begin_impl(const char *name, ...);
+void profile_end_impl(const char *name, ...);
 
 #endif // LIBCOMMON_CORE_PROFILE_H

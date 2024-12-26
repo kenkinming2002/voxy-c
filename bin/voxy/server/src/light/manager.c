@@ -2,6 +2,7 @@
 
 #include <libcommon/core/profile.h>
 #include <libcommon/core/log.h>
+#include <libcommon/utils/tformat.h>
 
 #include <stdatomic.h>
 #include <string.h>
@@ -123,6 +124,8 @@ static void process_light_creation_update(
 
 static void process_light_destruction_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
 {
+  profile_begin();
+
   size_t count = 0;
   while(light_manager->light_destruction_updates.item_count != 0)
     #pragma omp parallel
@@ -160,10 +163,14 @@ static void process_light_destruction_updates(struct voxy_light_manager *light_m
 
   if(count != 0)
     LOG_INFO("Processed %zu light destruction updates", count);
+
+  profile_end("count", tformat("%zd", count));
 }
 
 static void process_light_creation_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
 {
+  profile_begin();
+
   size_t count = 0;
   while(light_manager->light_creation_updates.item_count != 0)
     #pragma omp parallel
@@ -195,14 +202,16 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
 
   if(count != 0)
     LOG_INFO("Processed %zu light creation updates", count);
+
+  profile_end("count", tformat("%zd", count));
 }
 
 void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
 {
-  profile_begin;
+  profile_begin();
 
   process_light_destruction_updates(light_manager, block_registry, chunk_manager);
   process_light_creation_updates(light_manager, block_registry, chunk_manager);
 
-  profile_end;
+  profile_end();
 }

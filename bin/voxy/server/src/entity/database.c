@@ -48,25 +48,25 @@ void voxy_entity_database_fini(struct voxy_entity_database *database)
 
 int voxy_entity_database_begin_transaction(struct voxy_entity_database *database)
 {
-  profile_begin;
+  profile_begin();
 
   static sqlite3_stmt *stmt = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt, "BEGIN TRANSACTION;") != 0) return -1;
   if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) return -1;
 
-  profile_end;
+  profile_end();
   return 0;
 }
 
 int voxy_entity_database_end_transaction(struct voxy_entity_database *database)
 {
-  profile_begin;
+  profile_begin();
 
   static sqlite3_stmt *stmt = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt, "END TRANSACTION;") != 0) return -1;
   if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) return -1;
 
-  profile_end;
+  profile_end();
   return 0;
 }
 

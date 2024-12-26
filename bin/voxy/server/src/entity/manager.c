@@ -95,7 +95,7 @@ static void load_entities(
     struct voxy_chunk_manager *chunk_manager,
     libnet_server_t server)
 {
-  profile_begin;
+  profile_begin();
 
   size_t load_count = 0;
 
@@ -144,7 +144,7 @@ static void load_entities(
   if(load_count != 0)
     LOG_INFO("Entity Manager: Loaded %zu entities", load_count);
 
-  profile_end;
+  profile_end();
 }
 
 static void discard_entities(
@@ -153,7 +153,7 @@ static void discard_entities(
     struct voxy_chunk_manager *chunk_manager,
     libnet_server_t server)
 {
-  profile_begin;
+  profile_begin();
 
   size_t discard_count = 0;
 
@@ -191,7 +191,7 @@ static void discard_entities(
   if(discard_count != 0)
     LOG_INFO("Entity Manager: Discarded %zu entities", discard_count);
 
-  profile_end;
+  profile_end();
 }
 
 static void flush_entities(
@@ -200,7 +200,7 @@ static void flush_entities(
     struct voxy_entity_database *entity_database,
     libnet_server_t server)
 {
-  profile_begin;
+  profile_begin();
 
   for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
   {
@@ -212,12 +212,12 @@ static void flush_entities(
     }
   }
 
-  profile_end;
+  profile_end();
 }
 
 void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, struct voxy_entity_database *entity_database, struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
 {
-  profile_begin;
+  profile_begin();
 
   if(voxy_entity_database_begin_transaction(entity_database) != 0) LOG_ERROR("Failed to begin transaction");
   {
@@ -227,7 +227,7 @@ void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, stru
   }
   if(voxy_entity_database_end_transaction(entity_database) != 0) LOG_ERROR("Failed to begin transaction");
 
-  profile_end;
+  profile_end();
 }
 
 void voxy_entity_manager_on_client_connected(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)

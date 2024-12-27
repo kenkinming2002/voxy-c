@@ -5,6 +5,7 @@
 
 #include "registry/block.h"
 #include "registry/entity.h"
+#include "registry/item.h"
 
 #include "input/manager.h"
 #include "camera/manager.h"
@@ -20,6 +21,7 @@ struct application
 {
   struct voxy_block_registry block_registry;
   struct voxy_entity_registry entity_registry;
+  struct voxy_item_registry item_registry;
 
   libnet_client_t client;
 

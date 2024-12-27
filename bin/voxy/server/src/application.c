@@ -21,6 +21,7 @@ int application_init(struct application *application, int argc, char *argv[])
 
   voxy_block_registry_init(&application->block_registry);
   voxy_entity_registry_init(&application->entity_registry);
+  voxy_item_registry_init(&application->item_registry);
 
   if(!(application->server = libnet_server_create(argv[1], FIXED_DT * 1e9)))
     goto error0;
@@ -57,6 +58,7 @@ error1:
   voxy_chunk_manager_fini(&application->chunk_manager);
   libnet_server_destroy(application->server);
 error0:
+  voxy_item_registry_fini(&application->item_registry);
   voxy_entity_registry_fini(&application->entity_registry);
   voxy_block_registry_fini(&application->block_registry);
   return -1;
@@ -78,6 +80,7 @@ void application_fini(struct application *application)
 
   libnet_server_destroy(application->server);
 
+  voxy_item_registry_fini(&application->item_registry);
   voxy_entity_registry_fini(&application->entity_registry);
   voxy_block_registry_fini(&application->block_registry);
 }
@@ -88,6 +91,7 @@ struct voxy_context application_get_context(struct application *application)
   context.server = application->server;
   context.block_registry = &application->block_registry;
   context.entity_registry = &application->entity_registry;
+  context.item_registry = &application->item_registry;
   context.chunk_manager = &application->chunk_manager;
   context.chunk_generator = &application->chunk_generator;
   context.entity_manager = &application->entity_manager;

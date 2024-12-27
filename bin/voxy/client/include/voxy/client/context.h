@@ -11,6 +11,7 @@ struct voxy_context
 {
   struct voxy_block_registry *block_registry;
   struct voxy_entity_registry *entity_registry;
+  struct voxy_item_registry *item_registry;
 };
 
 #endif // VOXY_CLIENT_CONTEXT_H

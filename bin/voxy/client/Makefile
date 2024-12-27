@@ -28,6 +28,7 @@ SRCS += src/application.c
 
 SRCS += src/registry/block.c
 SRCS += src/registry/entity.c
+SRCS += src/registry/item.c
 
 SRCS += src/input/manager.c
 SRCS += src/camera/manager.c

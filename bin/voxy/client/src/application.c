@@ -21,6 +21,7 @@ int application_init(struct application *application, int argc, char *argv[])
 
   voxy_block_registry_init(&application->block_registry);
   voxy_entity_registry_init(&application->entity_registry);
+  voxy_item_registry_init(&application->item_registry);
 
   if(!(application->client = libnet_client_create(argv[1], argv[2])))
     goto error0;
@@ -60,6 +61,8 @@ error2:
 error1:
   libnet_client_destroy(application->client);
 error0:
+  voxy_item_registry_fini(&application->item_registry);
+  voxy_entity_registry_fini(&application->entity_registry);
   voxy_block_registry_fini(&application->block_registry);
   return -1;
 }
@@ -69,6 +72,7 @@ struct voxy_context application_get_context(struct application *application)
   struct voxy_context context;
   context.block_registry = &application->block_registry;
   context.entity_registry = &application->entity_registry;
+  context.item_registry = &application->item_registry;
   return context;
 }
 
@@ -83,6 +87,7 @@ void application_fini(struct application *application)
   camera_manager_fini(&application->camera_manager);
   input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
+  voxy_item_registry_fini(&application->item_registry);
   voxy_entity_registry_fini(&application->entity_registry);
   voxy_block_registry_fini(&application->block_registry);
 }

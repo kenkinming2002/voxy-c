@@ -203,6 +203,8 @@ void libnet_server_destroy(libnet_server_t server)
   while(!LIST_EMPTY(&server->client_proxies))
   {
     libnet_client_proxy_t client_proxy = LIST_FIRST(&server->client_proxies);
+    LIST_REMOVE(client_proxy, entry);
+
     socket_destroy(client_proxy->socket);
     free(client_proxy);
   }

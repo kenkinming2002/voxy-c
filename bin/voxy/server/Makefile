@@ -42,6 +42,8 @@ SRCS += src/registry/block.c
 SRCS += src/registry/entity.c
 SRCS += src/registry/item.c
 
+SRCS += src/registry/entity_info.c
+
 SRCS += src/chunk/chunk.c
 SRCS += src/chunk/coordinates.c
 SRCS += src/chunk/manager.c

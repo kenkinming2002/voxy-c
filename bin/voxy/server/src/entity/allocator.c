@@ -28,18 +28,22 @@ entity_handle_t entity_allocator_alloc(struct entity_allocator *entity_manager)
   return handle;
 }
 
-void entity_allocator_free(struct entity_allocator *entity_manager, entity_handle_t handle)
+void entity_allocator_free(struct entity_allocator *entity_allocator, struct voxy_entity_registry *entity_registry, entity_handle_t handle)
 {
-  assert(handle < entity_manager->entities.item_count);
+  assert(handle < entity_allocator->entities.item_count);
 
-  if(handle == entity_manager->entities.item_count - 1)
+  struct voxy_entity *entity = &entity_allocator->entities.items[handle];
+  struct voxy_entity_info info = voxy_entity_registry_query_entity(entity_registry, entity->id);
+  info.destroy_opaque(entity->opaque);
+
+  if(handle == entity_allocator->entities.item_count - 1)
   {
-    --entity_manager->entities.item_count;
+    --entity_allocator->entities.item_count;
     return;
   }
 
-  entity_manager->entities.items[handle].alive = false;
-  DYNAMIC_ARRAY_APPEND(entity_manager->orphans, handle);
+  entity_allocator->entities.items[handle].alive = false;
+  DYNAMIC_ARRAY_APPEND(entity_allocator->orphans, handle);
 }
 
 struct voxy_entity *entity_allocator_get(struct entity_allocator *entity_allocator, entity_handle_t handle)

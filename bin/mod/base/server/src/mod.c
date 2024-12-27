@@ -163,8 +163,9 @@ void *mod_create_instance(struct voxy_context *context)
     .update = player_entity_update,
     .hitbox_dimension = fvec3(0.8f, 0.8f, 1.9f),
     .hitbox_offset = fvec3(0.0f, 0.0f, -0.5f),
-    .serialize_opaque = NULL,
-    .deserialize_opaque = NULL,
+    .destroy_opaque = voxy_entity_destroy_opaque_default,
+    .serialize_opaque = voxy_entity_serialize_opaque_default,
+    .deserialize_opaque = voxy_entity_deserialize_opaque_default,
   });
 
   voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
@@ -173,8 +174,9 @@ void *mod_create_instance(struct voxy_context *context)
     .update = NULL,
     .hitbox_dimension = fvec3(0.8f, 0.8f, 1.9f),
     .hitbox_offset = fvec3(0.0f, 0.0f, -0.5f),
-    .serialize_opaque = NULL,
-    .deserialize_opaque = NULL,
+    .destroy_opaque = voxy_entity_destroy_opaque_default,
+    .serialize_opaque = voxy_entity_serialize_opaque_default,
+    .deserialize_opaque = voxy_entity_deserialize_opaque_default,
   });
 
   voxy_player_manager_set_on_new_player(context->player_manager, on_new_player);

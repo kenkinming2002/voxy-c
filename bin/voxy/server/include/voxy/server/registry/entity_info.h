@@ -1,6 +1,7 @@
 #ifndef VOXY_SERVER_ENTITY_INFO_H
 #define VOXY_SERVER_ENTITY_INFO_H
 
+#include <voxy/server/export.h>
 #include <libcommon/math/vector.h>
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
@@ -36,8 +37,12 @@ struct voxy_entity_info
   /// The returned pointer will be cleaned up with destroy_opaque().
   ///
   /// Return NULL on error.
-  void *(*deserialize_opaque)(libserde_deserializer_t deserializer);
+  int(*deserialize_opaque)(libserde_deserializer_t deserializer, void **opaque);
 };
+
+VOXY_SERVER_EXPORT void voxy_entity_destroy_opaque_default(void *opaque);
+VOXY_SERVER_EXPORT int voxy_entity_serialize_opaque_default(libserde_serializer_t serializer, const void *opaque);
+VOXY_SERVER_EXPORT int voxy_entity_deserialize_opaque_default(libserde_deserializer_t deserializer, void **opaque);
 
 #endif // VOXY_SERVER_ENTITY_INFO_H
 

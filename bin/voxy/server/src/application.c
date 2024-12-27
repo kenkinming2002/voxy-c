@@ -125,7 +125,7 @@ void application_on_update(libnet_server_t server)
 
     struct voxy_entity_info info = voxy_entity_registry_query_entity(&application->entity_registry, entity->id);
     if(info.update && !info.update(entity, FIXED_DT, &context))
-      voxy_entity_manager_despawn(&application->entity_manager, &application->entity_database, handle, server);
+      voxy_entity_manager_despawn(&application->entity_manager, &application->entity_registry, &application->entity_database, handle, server);
   }
 
   physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);

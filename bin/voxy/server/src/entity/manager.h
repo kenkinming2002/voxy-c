@@ -44,7 +44,7 @@ entity_handle_t voxy_entity_manager_create_entity(struct voxy_entity_manager *en
 ///
 /// This takes care of deallocating the entity and synchronizing the new state
 /// over the network.
-void voxy_entity_manager_destroy_entity(struct voxy_entity_manager *entity_manager, entity_handle_t handle, libnet_server_t server);
+void voxy_entity_manager_destroy_entity(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, entity_handle_t handle, libnet_server_t server);
 
 /// Callbacks.
 void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, struct voxy_entity_database *entity_database, struct voxy_chunk_manager *chunk_manager, libnet_server_t server);

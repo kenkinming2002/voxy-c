@@ -30,8 +30,6 @@ int mkdir_recursive(const char *_dir)
   if(result != 0 && errno != EEXIST)
     goto out;
 
-  return 0;
-
 out:
   free(dir);
   return result;

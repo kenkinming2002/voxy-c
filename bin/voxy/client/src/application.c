@@ -1,17 +1,21 @@
 #include "application.h"
 
+#include <voxy/protocol/client.h>
+
 #include <libcommon/graphics/render.h>
 
 #include <libcommon/core/window.h>
 #include <libcommon/core/delta_time.h>
 
+#include <alloca.h>
 #include <stdio.h>
+#include <string.h>
 
 int application_init(struct application *application, int argc, char *argv[])
 {
-  if(argc != 3)
+  if(argc != 4)
   {
-    fprintf(stderr, "Usage: %s NODE SERVICE", argv[0]);
+    fprintf(stderr, "Usage: %s NODE SERVICE PLAYER_NAME", argv[0]);
     return -1;
   }
 
@@ -25,6 +29,12 @@ int application_init(struct application *application, int argc, char *argv[])
 
   if(!(application->client = libnet_client_create(argv[1], argv[2])))
     goto error0;
+
+  struct voxy_client_login_message *message = alloca(sizeof *message + strlen(argv[3]));
+  message->message.tag = VOXY_CLIENT_MESSAGE_LOGIN;
+  message->message.message.size = LIBNET_MESSAGE_SIZE(*message) + strlen(argv[3]);
+  memcpy(message->player_name, argv[3], strlen(argv[3]));
+  libnet_client_send_message(application->client, &message->message.message);
 
   libnet_client_set_opaque(application->client, application);
   libnet_client_set_on_message_received(application->client, application_on_message_received);

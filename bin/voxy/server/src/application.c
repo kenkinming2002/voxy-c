@@ -140,11 +140,10 @@ void application_on_update(libnet_server_t server)
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct application *application = libnet_server_get_opaque(server);
-  const struct voxy_context context = application_get_context(application);
 
   voxy_chunk_manager_on_client_connected(&application->chunk_manager, server, client_proxy);
   voxy_entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
-  voxy_player_manager_on_client_connected(&application->player_manager, server, client_proxy, &context);
+  voxy_player_manager_on_client_connected(&application->player_manager, server, client_proxy);
 }
 
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
@@ -157,7 +156,7 @@ void application_on_client_disconnected(libnet_server_t server, libnet_client_pr
 void application_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
   struct application *application = libnet_server_get_opaque(server);
-
-  voxy_player_manager_on_message_received(&application->player_manager, server, client_proxy, message);
+  const struct voxy_context context = application_get_context(application);
+  voxy_player_manager_on_message_received(&application->player_manager, server, client_proxy, message, &context);
 }
 

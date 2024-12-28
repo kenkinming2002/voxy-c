@@ -17,6 +17,8 @@ struct voxy_player *voxy_player_create(libnet_server_t server, libnet_client_pro
   player->server = server;
   player->client_proxy = client_proxy;
 
+  player->name = NULL;
+
   player->key_left = 0;
   player->key_right = 0;
   player->key_back = 0;
@@ -28,6 +30,13 @@ struct voxy_player *voxy_player_create(libnet_server_t server, libnet_client_pro
 
   return player;
 }
+
+static void voxy_player_free(struct voxy_player *player)
+{
+  free(player->name);
+  free(player);
+}
+
 
 struct voxy_player *voxy_player_upgrade(struct voxy_player *player)
 {
@@ -47,7 +56,7 @@ void voxy_player_put(struct voxy_player *player)
 {
   --player->count;
   if(player->count == 0 && player->weak_count == 0)
-    free(player);
+    voxy_player_free(player);
 }
 
 struct voxy_player *voxy_player_get_weak(struct voxy_player *player)
@@ -60,7 +69,7 @@ void voxy_player_put_weak(struct voxy_player *player)
 {
   --player->weak_count;
   if(player->count == 0 && player->weak_count == 0)
-    free(player);
+    voxy_player_free(player);
 }
 
 void voxy_player_set_camera_follow_entity(struct voxy_player *player, entity_handle_t handle)

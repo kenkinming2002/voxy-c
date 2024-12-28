@@ -11,6 +11,7 @@
 /// Tag for message from client.
 enum LIBNET_MESSAGE voxy_client_message_tag
 {
+  VOXY_CLIENT_MESSAGE_LOGIN,
   VOXY_CLIENT_MESSAGE_INPUT,
 };
 
@@ -19,6 +20,17 @@ struct LIBNET_MESSAGE voxy_client_message
 {
   struct libnet_message message;
   enum voxy_client_message_tag tag;
+};
+
+/// Sent from client to server on login.
+///
+/// Used to sent client information to server such as player name, which is a
+/// flexible array member. The length of player name can be determined from the
+/// length of message.
+struct LIBNET_MESSAGE voxy_client_login_message
+{
+  struct voxy_client_message message;
+  char player_name[];
 };
 
 /// Sent from client to server for to update input state.
@@ -46,6 +58,21 @@ struct LIBNET_MESSAGE voxy_client_input_message
   /// Mouse motion.
   fvec2_t mouse_motion;
 };
+
+/// Try to cast struct libnet_message to struct voxy_chunk_update_message.
+///
+/// Return NULL on failure.
+static inline struct voxy_client_login_message *voxy_get_client_login_message(const struct libnet_message *message)
+{
+  if(message->size < LIBNET_MESSAGE_SIZE(struct voxy_client_login_message))
+    return NULL;
+
+  struct voxy_client_login_message *_message = (struct voxy_client_login_message *)message;
+  if(_message->message.tag != VOXY_CLIENT_MESSAGE_LOGIN)
+    return NULL;
+
+  return _message;
+}
 
 /// Try to cast struct libnet_message to struct voxy_chunk_update_message.
 ///

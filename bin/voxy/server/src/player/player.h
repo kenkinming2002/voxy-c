@@ -20,6 +20,8 @@ struct voxy_player
   libnet_server_t server;
   libnet_client_proxy_t client_proxy;
 
+  char *name;
+
   uint8_t key_left : 1;
   uint8_t key_right : 1;
   uint8_t key_back : 1;

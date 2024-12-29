@@ -107,6 +107,7 @@ libnet_server_t libnet_server_create(const char *service, unsigned long long nse
       fprintf(stderr, "libnet: Error: Failed to create timer file descriptor: %s\n", strerror(errno));
       close(server->socket_fd);
       free(server);
+      return NULL;
     }
 
     fcntl(server->timer_fd, F_SETFL, fcntl(server->timer_fd, F_GETFL, 0) | O_NONBLOCK);
@@ -122,6 +123,7 @@ libnet_server_t libnet_server_create(const char *service, unsigned long long nse
       close(server->socket_fd);
       close(server->timer_fd);
       free(server);
+      return NULL;
     }
 
     sigset_t mask;
@@ -133,6 +135,7 @@ libnet_server_t libnet_server_create(const char *service, unsigned long long nse
       close(server->socket_fd);
       close(server->timer_fd);
       free(server);
+      return NULL;
     }
 
     if((server->epoll_fd = epoll_create1(0)) == -1)

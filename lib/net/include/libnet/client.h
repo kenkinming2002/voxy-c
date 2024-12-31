@@ -3,6 +3,8 @@
 
 #include "message.h"
 
+#include <stdbool.h>
+
 /// Client type.
 typedef struct libnet_client *libnet_client_t;
 
@@ -32,7 +34,7 @@ void libnet_client_set_on_message_received(libnet_client_t client, libnet_client
 /// Handle all pending network events.
 ///
 /// Return non-zero value if connection was closed.
-int libnet_client_update(libnet_client_t client);
+bool libnet_client_update(libnet_client_t client);
 
 /// Send a message to the server.
 ///

@@ -6,15 +6,18 @@ CFLAGS += -Iinclude
 libnet-server.so: CFLAGS += -fPIC
 libnet-client.so: CFLAGS += -fPIC
 
+CFLAGS += $(shell pkg-config --cflags openssl)
+LIBS += $(shell pkg-config --libs openssl)
+
 .PHONY: clean depclean
 
 all: libnet-server.so libnet-client.so test/server test/client
 
 libnet-server.so: src/server.o
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -shared
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -shared $(LIBS)
 
 libnet-client.so: src/client.o
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -shared
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -shared $(LIBS)
 
 test/server: test/server.o libnet-server.so
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $< -Wl,-rpath,'$$ORIGIN/..' -L. -lnet-server

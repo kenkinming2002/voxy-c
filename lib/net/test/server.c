@@ -38,13 +38,13 @@ static void on_message_received(libnet_server_t server, libnet_client_proxy_t cl
 
 int main(int argc, char *argv[])
 {
-  if(argc != 2)
+  if(argc != 4)
   {
-    fprintf(stderr, "Usage : %s SERVICE\n", argv[0]);
+    fprintf(stderr, "Usage : %s SERVICE CERT KEY\n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  libnet_server_t server = libnet_server_create(argv[1], 1000000000);
+  libnet_server_t server = libnet_server_create(argv[1], argv[2], argv[3], 1000000000);
   if(!server)
     return EXIT_FAILURE;
 

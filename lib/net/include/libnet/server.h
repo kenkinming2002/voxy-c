@@ -25,7 +25,10 @@ typedef struct libnet_server *libnet_server_t;
 /// The nsec argument specifies the interval in nanoseconds that calls to
 /// libnet_server_update() would return, which is useful when implementing a
 /// game loop in the server.
-libnet_server_t libnet_server_create(const char *service, unsigned long long nsec);
+///
+/// The certficiate parameter is path to the server certificate used for TLS
+/// connection.
+libnet_server_t libnet_server_create(const char *service, const char *cert, const char *key, unsigned long long nsec);
 
 /// Destroy a libnet server.
 void libnet_server_destroy(libnet_server_t server);

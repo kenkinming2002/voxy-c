@@ -17,13 +17,53 @@
 
 struct libnet_client
 {
-  struct socket socket;
+  struct ssl_socket socket;
 
   void *opaque;
   libnet_client_on_message_received_t on_message_received;
 };
 
-libnet_client_t libnet_client_create(const char *node, const char *service)
+static SSL_CTX *create_ssl_ctx(void)
+{
+  SSL_CTX *ssl_ctx = SSL_CTX_new(TLS_client_method());
+  if(!ssl_ctx)
+    goto err;
+
+  return ssl_ctx;
+
+err:
+  return NULL;
+}
+
+static void set_nonblock(int fd)
+{
+  fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+}
+
+static int socket_connect_impl(struct addrinfo *p)
+{
+  int fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+  if(fd == -1)
+  {
+    fprintf(stderr, "libnet: Warn: Failed to create socket: %s\n", strerror(errno));
+    return -1;
+  }
+
+  if(connect(fd, p->ai_addr, p->ai_addrlen) == -1)
+  {
+    fprintf(stderr, "libnet: Warn: Failed to connect socket: %s\n", strerror(errno));
+    goto err_close_fd;
+  }
+
+  set_nonblock(fd);
+  return fd;
+
+err_close_fd:
+  close(fd);
+  return -1;
+}
+
+static int socket_connect(const char *node, const char *service)
 {
   struct addrinfo hints = {0};
   hints.ai_family = AF_UNSPEC;
@@ -34,40 +74,52 @@ libnet_client_t libnet_client_create(const char *node, const char *service)
   int result;
   if((result = getaddrinfo(node, service, &hints, &res)) != 0)
   {
-    fprintf(stderr, "libnet: Error: Failed to create client: %s\n", gai_strerror(result));
-    return NULL;
+    fprintf(stderr, "libnet: Error: Failed to resolve %s: %s\n", service, gai_strerror(result));
+    return -1;
   }
 
+  int fd = -1;
   for(struct addrinfo *p = res; p; p = p->ai_next)
-  {
-    int fd;
-    if((fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
-      continue;
+    if((fd = socket_connect_impl(p)) != -1)
+      break;
 
-    if(connect(fd, p->ai_addr, p->ai_addrlen) == -1)
-    {
-      fprintf(stderr, "libnet: Warn: Failed to connect socket: %s\n", strerror(errno));
-      close(fd);
-      continue;
-    }
-
-    freeaddrinfo(res);
-
-    libnet_client_t client = malloc(sizeof *client);
-    client->socket = socket_create_from_fd(fd);
-    client->opaque = NULL;
-    client->on_message_received = NULL;
-    return client;
-  }
-
-  fprintf(stderr, "libnet: Error: Failed to create any socket\n");
   freeaddrinfo(res);
+  return fd;
+}
+
+libnet_client_t libnet_client_create(const char *node, const char *service)
+{
+  libnet_client_t client = malloc(sizeof *client);
+
+  SSL_CTX *ssl_ctx = create_ssl_ctx();
+  if(!ssl_ctx)
+    goto err_free_client;
+
+  int fd;
+  if((fd = socket_connect(node, service)) == -1)
+    goto err_free_ssl_ctx;
+
+  if(ssl_socket_connect(&client->socket, fd, ssl_ctx) != 0)
+    goto err_close_fd;
+
+  SSL_CTX_free(ssl_ctx);
+
+  client->opaque = NULL;
+  client->on_message_received = NULL;
+  return client;
+
+err_close_fd:
+  close(fd);
+err_free_ssl_ctx:
+  SSL_CTX_free(ssl_ctx);
+err_free_client:
+  free(client);
   return NULL;
 }
 
 void libnet_client_destroy(libnet_client_t client)
 {
-  socket_destroy(client->socket);
+  ssl_socket_destroy(&client->socket);
   free(client);
 }
 
@@ -86,30 +138,33 @@ void libnet_client_set_on_message_received(libnet_client_t client, libnet_client
   client->on_message_received = cb;
 }
 
-int libnet_client_update(libnet_client_t client)
+bool libnet_client_update(libnet_client_t client)
 {
-  int connection_closed = 0;
+  bool connection_closed = false;
 
-  if(socket_update_try_send(&client->socket) != 0)
-    fprintf(stderr, "libnet: Warn: Failed to send message: %s\n", strerror(errno));
+  if(ssl_socket_try_recv(&client->socket, &connection_closed) != 0)
+    return true;
 
-  if(socket_update_try_recv(&client->socket, &connection_closed) != 0)
-    fprintf(stderr, "libnet: Warn: Failed to recv message: %s\n", strerror(errno));
+  if(ssl_socket_try_decrypt(&client->socket) != 0)
+    return true;
 
+  struct ssl_socket_message_iter iter = ssl_socket_message_iter_begin(&client->socket);
   const struct libnet_message *message;
-
-  size_t i = 0;
-  while((message = socket_dequeue_message(&client->socket, &i)))
+  while((message = ssl_socket_message_iter_next(&iter)))
     if(client->on_message_received)
       client->on_message_received(client, message);
 
-  socket_dequeue_message_end(&client->socket, i);
+  if(ssl_socket_try_encrypt(&client->socket) != 0)
+    return true;
+
+  if(ssl_socket_try_send(&client->socket) != 0)
+    return true;
 
   return connection_closed;
 }
 
 void libnet_client_send_message(struct libnet_client *client, struct libnet_message *message)
 {
-  socket_enqueue_message(&client->socket, message);
+  ssl_socket_enqueue_message(&client->socket, message);
 }
 

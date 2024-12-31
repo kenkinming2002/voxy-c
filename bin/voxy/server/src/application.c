@@ -13,9 +13,9 @@
 
 int application_init(struct application *application, int argc, char *argv[])
 {
-  if(argc != 2)
+  if(argc != 4)
   {
-    fprintf(stderr, "Usage: %s SERVICE", argv[0]);
+    fprintf(stderr, "Usage: %s SERVICE CERT KEY", argv[0]);
     return -1;
   }
 
@@ -23,7 +23,7 @@ int application_init(struct application *application, int argc, char *argv[])
   voxy_entity_registry_init(&application->entity_registry);
   voxy_item_registry_init(&application->item_registry);
 
-  if(!(application->server = libnet_server_create(argv[1], FIXED_DT * 1e9)))
+  if(!(application->server = libnet_server_create(argv[1], argv[2], argv[3], FIXED_DT * 1e9)))
     goto error0;
 
   libnet_server_set_opaque(application->server, application);

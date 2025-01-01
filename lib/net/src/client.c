@@ -29,6 +29,9 @@ static SSL_CTX *create_ssl_ctx(void)
   if(!ssl_ctx)
     goto err;
 
+  SSL_CTX_clear_options(ssl_ctx, SSL_OP_NO_COMPRESSION);
+  SSL_CTX_set_max_proto_version(ssl_ctx, TLS1_2_VERSION);
+  SSL_CTX_set_security_level(ssl_ctx, 1);
   return ssl_ctx;
 
 err:

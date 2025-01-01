@@ -103,6 +103,9 @@ static SSL_CTX *create_ssl_ctx(const char *cert, const char *key)
     goto err_free_ctx;
   }
 
+  SSL_CTX_set_max_proto_version(ssl_ctx, TLS1_2_VERSION);
+  SSL_CTX_set_security_level(ssl_ctx, 1);
+  SSL_CTX_clear_options(ssl_ctx, SSL_OP_NO_COMPRESSION);
   return ssl_ctx;
 
 err_free_ctx:

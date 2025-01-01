@@ -27,7 +27,7 @@ int application_init(struct application *application, int argc, char *argv[])
   voxy_entity_registry_init(&application->entity_registry);
   voxy_item_registry_init(&application->item_registry);
 
-  if(!(application->client = libnet_client_create(argv[1], argv[2], "cert.pem")))
+  if(!(application->client = libnet_client_create(argv[1], argv[2])))
     goto error0;
 
   struct voxy_client_login_message *message = alloca(sizeof *message + strlen(argv[3]));

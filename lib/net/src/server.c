@@ -233,7 +233,7 @@ static int create_epollfd(void)
 static int configure_epollfd_in(int fd, int *rfd)
 {
   struct epoll_event epoll_event;
-  epoll_event.events = EPOLLIN;
+  epoll_event.events = EPOLLET | EPOLLIN;
   epoll_event.data.ptr = rfd;
   if(epoll_ctl(fd, EPOLL_CTL_ADD, *rfd, &epoll_event) == -1)
   {
@@ -360,46 +360,41 @@ static int accept_client(int fd)
   return client;
 }
 
-static int read_timerfd(int fd, uint64_t *count)
+static int read_special(int fd, void *buf, size_t count, const char *name)
 {
-  ssize_t n = read(fd, count, sizeof *count);
+  ssize_t n = read(fd, buf, count);
   if(n == -1)
   {
-    fprintf(stderr, "libnet: Warn: Failed to read from timerfd: %s\n", strerror(errno));
+    if(errno != EAGAIN && errno != EWOULDBLOCK)
+    {
+      fprintf(stderr, "libnet: Error: Failed to read from %s: %s\n", name, strerror(errno));
+      abort();
+    }
     return -1;
   }
 
-  if(n != sizeof *count)
+  if(n != (ssize_t)count)
   {
-    fprintf(stderr, "libnet: Warn: Expected %zu bytes from timerfd. Got %zu bytes.\n", sizeof *count, n);
-    return -1;
+    fprintf(stderr, "libnet: Error: Expected %zu bytes from %s. Got %zu bytes.\n", count, name, n);
+    abort();
   }
-
   return 0;
+}
+
+static int read_timerfd(int fd, uint64_t *count)
+{
+  return read_special(fd, count, sizeof *count, "timerfd");
 }
 
 static int read_signalfd(int fd, struct signalfd_siginfo *siginfo)
 {
-  ssize_t n = read(fd, siginfo, sizeof *siginfo);
-  if(n == -1)
-  {
-    fprintf(stderr, "libnet: Warn: Error from signalfd: %s\n", strerror(errno));
-    return -1;
-  }
-
-  if(n != sizeof *siginfo)
-  {
-    fprintf(stderr, "libnet: Warn: Expected %zu bytes from signalfd. Got %zu bytes.\n", sizeof *siginfo, n);
-    return -1;
-  }
-
-  return 0;
+  return read_special(fd, siginfo, sizeof *siginfo, "signalfd");
 }
 
 static void libnet_server_insert_client_proxy(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
   struct epoll_event epoll_event;
-  epoll_event.events = EPOLLIN;
+  epoll_event.events = EPOLLET | EPOLLIN;
   epoll_event.data.ptr = client_proxy;
   if(epoll_ctl(server->epollfd, EPOLL_CTL_ADD, client_proxy->socket.fd, &epoll_event))
   {
@@ -435,7 +430,7 @@ static void end_handle_client_proxy(libnet_server_t server, libnet_client_proxy_
   if(new_value != value)
   {
     struct epoll_event epoll_event;
-    epoll_event.events = new_value ? EPOLLIN | EPOLLOUT : EPOLLIN;
+    epoll_event.events = EPOLLET | EPOLLIN | (new_value ? EPOLLOUT : 0);
     epoll_event.data.ptr = client_proxy;
     if(epoll_ctl(server->epollfd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) != 0)
     {
@@ -480,20 +475,18 @@ void libnet_server_run(libnet_server_t server)
       else if(epoll_event.data.ptr == &server->timerfd)
       {
         uint64_t count;
-        if(read_timerfd(server->timerfd, &count) != 0)
-          continue;
-
-        for(uint64_t i=0; i<count; ++i)
-          server->on_update(server);
+        while(read_timerfd(server->timerfd, &count) == 0)
+          for(uint64_t i=0; i<count; ++i)
+            server->on_update(server);
       }
       else if(epoll_event.data.ptr == &server->signalfd)
       {
         struct signalfd_siginfo siginfo;
-        if(read_signalfd(server->signalfd, &siginfo) != 0)
-          continue;
-
-        fprintf(stderr, "libnet: Info: Caught %s... Exiting.\n", strsignal(siginfo.ssi_signo));
-        goto out;
+        while(read_signalfd(server->signalfd, &siginfo) == 0)
+        {
+          fprintf(stderr, "libnet: Info: Caught %s... Exiting.\n", strsignal(siginfo.ssi_signo));
+          goto out;
+        }
       }
       else
       {

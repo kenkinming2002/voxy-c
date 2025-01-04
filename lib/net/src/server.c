@@ -134,6 +134,13 @@ static int socket_bind_impl(struct addrinfo *p)
     return -1;
   }
 
+  int yes = 1;
+  if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
+  {
+    fprintf(stderr, "libnet: Warn: Failed to set socket option: %s\n", strerror(errno));
+    goto err_close_fd;
+  }
+
   if(bind(fd, p->ai_addr, p->ai_addrlen) == -1)
   {
     fprintf(stderr, "libnet: Warn: Failed to bind socket: %s\n", strerror(errno));

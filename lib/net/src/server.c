@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,12 +26,15 @@
 struct libnet_client_proxy
 {
   LIST_ENTRY(libnet_client_proxy) entry;
+  SLIST_ENTRY(libnet_client_proxy) interested_entry;
 
   struct ssl_socket socket;
+  bool interested;
   void *opaque;
 };
 
-LIST_HEAD(libnet_client_proxies, libnet_client_proxy);
+LIST_HEAD(libnet_client_proxy_list, libnet_client_proxy);
+SLIST_HEAD(libnet_client_proxy_slist, libnet_client_proxy);
 
 static libnet_client_proxy_t client_proxy_create(int fd, SSL_CTX *ssl_ctx)
 {
@@ -40,6 +44,7 @@ static libnet_client_proxy_t client_proxy_create(int fd, SSL_CTX *ssl_ctx)
     free(client_proxy);
     return NULL;
   }
+  client_proxy->interested = false;
   client_proxy->opaque = NULL;
   return client_proxy;
 }
@@ -70,7 +75,8 @@ struct libnet_server
 
   int epollfd;
 
-  struct libnet_client_proxies client_proxies;
+  struct libnet_client_proxy_list client_proxies;
+  struct libnet_client_proxy_slist interested_client_proxies;
 
   void *opaque;
   libnet_server_on_update on_update;
@@ -266,6 +272,8 @@ libnet_server_t libnet_server_create(const char *service, const char *cert, cons
     goto err_close_epollfd;
 
   LIST_INIT(&server->client_proxies);
+  SLIST_INIT(&server->interested_client_proxies);
+
   server->opaque = NULL;
   server->on_client_connected = NULL;
   server->on_client_disconnected = NULL;
@@ -416,6 +424,27 @@ static void libnet_server_remove_client_proxy(libnet_server_t server, libnet_cli
   }
 }
 
+static bool begin_handle_client_proxy(libnet_client_proxy_t client_proxy)
+{
+  return ssl_socket_want_send(&client_proxy->socket);
+}
+
+static void end_handle_client_proxy(libnet_server_t server, libnet_client_proxy_t client_proxy, bool value)
+{
+  const bool new_value = ssl_socket_want_send(&client_proxy->socket);
+  if(new_value != value)
+  {
+    struct epoll_event epoll_event;
+    epoll_event.events = new_value ? EPOLLIN | EPOLLOUT : EPOLLIN;
+    epoll_event.data.ptr = client_proxy;
+    if(epoll_ctl(server->epollfd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) != 0)
+    {
+      fprintf(stderr, "libnet: Error: Failed to configure epoll file descriptor: %s\n", strerror(errno));
+      abort();
+    }
+  }
+}
+
 void libnet_server_run(libnet_server_t server)
 {
   sigset_t mask;
@@ -469,8 +498,7 @@ void libnet_server_run(libnet_server_t server)
       else
       {
         libnet_client_proxy_t client_proxy = epoll_event.data.ptr;
-
-        const bool old_want_send = ssl_socket_want_send(&client_proxy->socket);
+        const bool value = begin_handle_client_proxy(client_proxy);
         {
           bool connection_closed = 0;
           if(epoll_event.events & EPOLLIN && ssl_socket_try_recv(&client_proxy->socket, &connection_closed) != 0)
@@ -512,20 +540,24 @@ void libnet_server_run(libnet_server_t server)
             continue;
           }
         }
-        const bool new_want_send = ssl_socket_want_send(&client_proxy->socket);
-
-        if(old_want_send != new_want_send)
-        {
-          struct epoll_event epoll_event;
-          epoll_event.events = new_want_send ? EPOLLIN | EPOLLOUT : EPOLLIN;
-          epoll_event.data.ptr = client_proxy;
-          if(epoll_ctl(server->epollfd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) != 0)
-          {
-            fprintf(stderr, "libnet: Error: Failed to configure epoll file descriptor: %s\n", strerror(errno));
-            abort();
-          }
-        }
+        end_handle_client_proxy(server, client_proxy, value);
       }
+    }
+
+    libnet_client_proxy_t client_proxy;
+    while((client_proxy = SLIST_FIRST(&server->interested_client_proxies)))
+    {
+      SLIST_REMOVE_HEAD(&server->interested_client_proxies, interested_entry);
+      client_proxy->interested = false;
+
+      const bool value = begin_handle_client_proxy(client_proxy);
+      if(ssl_socket_try_encrypt(&client_proxy->socket) != 0)
+      {
+        libnet_server_remove_client_proxy(server, client_proxy);
+        client_proxy_destroy(client_proxy);
+        continue;
+      }
+      end_handle_client_proxy(server, client_proxy, value);
     }
   }
 
@@ -549,18 +581,56 @@ void libnet_server_send_message_all(libnet_server_t server, const struct libnet_
 
 void libnet_server_send_message(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
-  // Ensure that we are polling for whether we can write on the underlying
-  // socket.
-  if(!ssl_socket_want_send(&client_proxy->socket))
+  // Insert client proxy into the interested list if not already. This ensure
+  // that we take a look at and try to send the enqueued message at the end of
+  // the current update iteration of our update loop.
+  //
+  // Simply configuring epoll file descriptor to wait for the socket to become
+  // writable is incorrect. This is because we do not directly enqueue messages
+  // to the socket send buffer (i.e. wbio). Instead, we enqueue messages to the
+  // message write buffer (i.e. mwbio), and rely on calling
+  // ssl_socket_try_encrypt() to let OpenSSL do its job.
+  //
+  // One considered option is to:
+  //  - call ssl_socket_try_encrypt() here directly
+  //  - check if there would be anything put into the socket send buffer (i.e.
+  //    wbio) by OpenSSL
+  //  - configure epoll file descriptor to wait for the socket to become
+  //    writable if the socket send buffer (i.e. wbio) is non-empty
+  //
+  // This is problematic because ssl_socket_try_encrypt() may fail. For example,
+  // we are in the middle of [re]negotiating a TLS connection, and OpenSSL read
+  // bogus hand shake data from the client.
+  //
+  // In case of failure, we will need to destroy the client proxy, but we could
+  // be in a callback chain that rely on the client proxy being valid. For
+  // example,
+  //   - we receive a message from a client
+  //   - a callback is invoked
+  //   - the callback try to send message to every client by calling
+  //     libnet_server_send_message_all()
+  //
+  // In such a case, the callback code needs to know whether the original client
+  // has disonnceted and become invalid but does not care if there is a problem
+  // with any other clients.
+  //
+  // Instead of banging my head against the wall and:
+  //  - figure out some way to report errors from
+  //    libnet_server_send_message_all()
+  //  - ensure every caller will handle error from
+  //    libnet_server_send_message() correctly
+  //
+  // What if we are able to say that libnet_server_send_message_all() will
+  // never return an error and defer the calling of ssl_socket_try_encrypt() and
+  // handling of errors to the main update loop? This is exactly what we are
+  // doing.
+  //
+  // THis also have the added benefit of buffering messages we want to send
+  // before passing them to OpenSSL so that they can be sent in larger packet.
+  if(!client_proxy->interested)
   {
-    struct epoll_event epoll_event;
-    epoll_event.events = EPOLLIN | EPOLLOUT;
-    epoll_event.data.ptr = client_proxy;
-    if(epoll_ctl(server->epollfd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) != 0)
-    {
-      fprintf(stderr, "libnet: Error: Failed to configure epoll file descriptor: %s\n", strerror(errno));
-      abort();
-    }
+    client_proxy->interested = true;
+    SLIST_INSERT_HEAD(&server->interested_client_proxies, client_proxy, interested_entry);
   }
   ssl_socket_enqueue_message(&client_proxy->socket, message);
 }

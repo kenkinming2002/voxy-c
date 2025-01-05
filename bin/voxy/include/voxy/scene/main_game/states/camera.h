@@ -1,6 +1,0 @@
-#ifndef VOXY_SCENE_MAIN_GAME_STATES_CAMERA_H
-#define VOXY_SCENE_MAIN_GAME_STATES_CAMERA_H
-
-extern struct camera world_camera;
-
-#endif // VOXY_SCENE_MAIN_GAME_STATES_CAMERA_H

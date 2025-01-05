@@ -48,21 +48,39 @@ SRCS += src/render/entity/entity.c
 SRCS += src/mod/mod.c
 SRCS += src/mod/manager.c
 
-.PHONY: gen
-
+.PHONY: all
 all: voxy-client
 
 voxy-client: $(SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(SRCS:.c=.o) $(LIBS)
 
-gen:
-	./gen
-
+.PHONY: clean
 clean: depclean
+	- rm -f $(GENERATED)
 	- rm -f $(SRCS:.c=.o)
 
+.PHONY: depclean
 depclean:
 	- rm -f $(SRCS:.c=.d)
 
 -include $(SRCS:.c=.d)
 
+define GENERATED_template =
+
+include/voxy/client/registry/$(1).h:include/voxy/client/registry/registry.h
+	< $$< sed s/name/$(1)/g | sed s/NAME/$(2)/g > $$@
+
+src/registry/$(1).h:src/registry/registry.h
+	< $$< sed s/name/$(1)/g | sed s/NAME/$(2)/g > $$@
+
+src/registry/$(1).c:src/registry/registry.c
+	< $$< sed s/name/$(1)/g | sed s/NAME/$(2)/g > $$@
+
+GENERATED += include/voxy/client/registry/$(1).h
+GENERATED += src/registry/$(1).h
+GENERATED += src/registry/$(1).c
+
+endef
+
+$(foreach prog,entity block item,$(eval $(call GENERATED_template,$(prog),$(shell echo $(prog) |tr [a-z] [A-Z]))))
+$(SRCS:.c=.o): | $(GENERATED)

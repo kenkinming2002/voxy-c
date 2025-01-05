@@ -1,8 +1,8 @@
-SUBDIRS = bin lib
+SUBDIRS = render_block
 
 all clean depclean: $(SUBDIRS)
-bin: lib
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
+

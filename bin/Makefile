@@ -1,24 +1,9 @@
-.PHONY: voxy mod tools/render_block
-.PHONY: clean
-.PHONY: depclean
+SUBDIRS = tools voxy mod
 
-all: voxy mod tools/render_block
+all clean depclean: $(SUBDIRS)
+mod: voxy
+voxy: tools
 
-voxy:
-	$(MAKE) -C voxy
-
-mod:
-	$(MAKE) -C mod
-
-tools/render_block:
-	$(MAKE) -C tools/render_block
-
-clean:
-	$(MAKE) -C voxy clean
-	$(MAKE) -C mod clean
-	$(MAKE) -C tools/render_block clean
-
-depclean:
-	$(MAKE) -C voxy depclean
-	$(MAKE) -C mod depclean
-	$(MAKE) -C tools/render_block depclean
+.PHONY: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS)

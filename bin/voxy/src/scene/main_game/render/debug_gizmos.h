@@ -1,6 +1,0 @@
-#ifndef SCENE_MAIN_GAME_RENDER_DEBUG_GIZMOS_H
-#define SCENE_MAIN_GAME_RENDER_DEBUG_GIZMOS_H
-
-void main_game_render_debug_gizmos(void);
-
-#endif // SCENE_MAIN_GAME_RENDER_DEBUG_GIZMOS_H

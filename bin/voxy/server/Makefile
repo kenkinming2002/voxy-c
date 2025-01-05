@@ -2,6 +2,8 @@ CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
 
+CFLAGS += -fopenmp
+
 CFLAGS += -Iinclude
 CFLAGS += -Isrc
 CFLAGS += -I../config/include
@@ -68,21 +70,39 @@ SRCS += src/mod/manager.c
 SRCS += src/physics/physics.c
 SRCS += src/physics/swept.c
 
-.PHONY: gen
-
+.PHONY: all
 all: voxy-server
 
 voxy-server: $(SRCS:.c=.o)
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(SRCS:.c=.o) $(LIBS)
 
-gen:
-	./gen
-
+.PHONY: clean
 clean: depclean
+	- rm -f $(GENERATED)
 	- rm -f $(SRCS:.c=.o)
 
+.PHONY: depclean
 depclean:
 	- rm -f $(SRCS:.c=.d)
 
 -include $(SRCS:.c=.d)
 
+define GENERATED_template =
+
+include/voxy/server/registry/$(1).h:include/voxy/server/registry/registry.h
+	< $$< sed s/name/$(1)/g | sed s/NAME/$(2)/g > $$@
+
+src/registry/$(1).h:src/registry/registry.h
+	< $$< sed s/name/$(1)/g | sed s/NAME/$(2)/g > $$@
+
+src/registry/$(1).c:src/registry/registry.c
+	< $$< sed s/name/$(1)/g | sed s/NAME/$(2)/g > $$@
+
+GENERATED += include/voxy/server/registry/$(1).h
+GENERATED += src/registry/$(1).h
+GENERATED += src/registry/$(1).c
+
+endef
+
+$(foreach prog,entity block item,$(eval $(call GENERATED_template,$(prog),$(shell echo $(prog) |tr [a-z] [A-Z]))))
+$(SRCS:.c=.o): | $(GENERATED)

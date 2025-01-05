@@ -1,25 +1,8 @@
-.PHONY: common net serde
-.PHONY: clean
-.PHONY: depclean
+SUBDIRS = common net serde
 
-all: common net serde
+all clean depclean: $(SUBDIRS)
 
-common:
-	$(MAKE) -C common
-
-net:
-	$(MAKE) -C net
-
-serde:
-	$(MAKE) -C serde
-
-clean:
-	$(MAKE) -C common clean
-	$(MAKE) -C net clean
-	$(MAKE) -C serde clean
-
-depclean:
-	$(MAKE) -C common depclean
-	$(MAKE) -C net depclean
-	$(MAKE) -C serde depclean
+.PHONY: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 

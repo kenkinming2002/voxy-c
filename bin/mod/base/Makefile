@@ -1,17 +1,8 @@
-.PHONY: server client depclean clean
+SUBDIRS = server client
 
-all: server client
+all clean depclean: $(SUBDIRS)
 
-server:
-	$(MAKE) -C server
+.PHONY: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 
-client:
-	$(MAKE) -C client
-
-depclean:
-	$(MAKE) -C server depclean
-	$(MAKE) -C client depclean
-
-clean:
-	$(MAKE) -C server clean
-	$(MAKE) -C client clean

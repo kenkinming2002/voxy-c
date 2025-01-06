@@ -3,7 +3,7 @@
 
 #include "entity/manager.h"
 
-#include <libcommon/graphics/camera.h>
+#include <libgfx/camera.h>
 
 #include <libnet/client.h>
 

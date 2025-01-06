@@ -1,9 +1,9 @@
 #include <voxy/client/context.h>
 #include <voxy/client/entity/entity.h>
 
-#include <libcommon/graphics/gl.h>
-#include <libcommon/graphics/mesh.h>
-#include <libcommon/graphics/render.h>
+#include <libgfx/gl.h>
+#include <libgfx/mesh.h>
+#include <libgfx/render.h>
 
 static void test_render(const struct voxy_entity *entity, const struct camera *camera)
 {

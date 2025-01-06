@@ -2,7 +2,7 @@
 #define VOXY_SERVER_CHUNK_CHUNK_H
 
 #include <voxy/server/export.h>
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 struct voxy_chunk;
 struct voxy_block_registry;

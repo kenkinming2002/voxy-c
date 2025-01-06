@@ -1,22 +1,40 @@
 CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
-
 CFLAGS += -Iinclude
 CFLAGS += -Isrc
 CFLAGS += -I../config/include
 CFLAGS += -I../protocol/include
-CFLAGS += -I../../../lib/net/include
-CFLAGS += -I../../../lib/common/include
-CFLAGS += -I../../../lib/common/bundled/include
 
+CFLAGS += -I../../../lib/core/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/core'
+LIBS += -L../../../lib/core
+LIBS += -lcore
+
+CFLAGS += -I../../../lib/math/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/math'
+LIBS += -L../../../lib/math
+LIBS += -lmath
+
+CFLAGS += -I../../../lib/serde/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/serde'
+LIBS += -L../../../lib/serde
+LIBS += -lserde
+
+CFLAGS += -I../../../lib/gfx/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/gfx'
+LIBS += -L../../../lib/gfx
+LIBS += -lgfx
+
+CFLAGS += -I../../../lib/ui/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/ui'
+LIBS += -L../../../lib/ui
+LIBS += -lui
+
+CFLAGS += -I../../../lib/net/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/net'
 LIBS += -L../../../lib/net
 LIBS += -lnet-client
-LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/net'
-
-LIBS += -L../../../lib/common
-LIBS += -lcommon
-LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/common'
 
 LIBS += -lm
 

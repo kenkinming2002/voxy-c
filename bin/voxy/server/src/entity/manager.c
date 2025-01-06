@@ -7,8 +7,8 @@
 
 #include <libserde/serializer.h>
 
-#include <libcommon/core/log.h>
-#include <libcommon/core/profile.h>
+#include <libcore/log.h>
+#include <libcore/profile.h>
 
 #include <assert.h>
 

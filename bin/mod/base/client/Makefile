@@ -5,8 +5,11 @@ CFLAGS += -D_GNU_SOURCE
 CFLAGS += -Isrc
 CFLAGS += -I../../../voxy/config/include
 CFLAGS += -I../../../voxy/client/include
-CFLAGS += -I../../../../lib/common/include
-CFLAGS += -I../../../../lib/common/bundled/include
+CFLAGS += -I../../../../lib/core/include
+CFLAGS += -I../../../../lib/math/include
+CFLAGS += -I../../../../lib/net/include
+CFLAGS += -I../../../../lib/serde/include
+CFLAGS += -I../../../../lib/gfx/include
 
 CFLAGS += -fPIC
 

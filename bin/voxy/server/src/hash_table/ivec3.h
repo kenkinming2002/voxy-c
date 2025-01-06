@@ -1,7 +1,7 @@
 #ifndef HASH_TABLE_IVEC3_H
 #define HASH_TABLE_IVEC3_H
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 struct ivec3_node
 {

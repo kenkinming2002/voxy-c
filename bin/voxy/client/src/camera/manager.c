@@ -2,8 +2,8 @@
 
 #include <voxy/protocol/server.h>
 
-#include <libcommon/core/window.h>
-#include <libcommon/core/log.h>
+#include <libgfx/window.h>
+#include <libcore/log.h>
 
 int camera_manager_init(struct camera_manager *camera_manager)
 {

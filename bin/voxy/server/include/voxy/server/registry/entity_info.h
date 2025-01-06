@@ -2,7 +2,7 @@
 #define VOXY_SERVER_ENTITY_INFO_H
 
 #include <voxy/server/export.h>
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
 #include <stdbool.h>

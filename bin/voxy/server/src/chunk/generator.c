@@ -2,7 +2,7 @@
 
 #include "chunk.h"
 
-#include <libcommon/utils/utils.h>
+#include <libcore/utils.h>
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX voxy_chunk_generator_wrapper

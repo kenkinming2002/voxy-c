@@ -3,7 +3,7 @@
 
 #include <voxy/client/export.h>
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 struct voxy_entity;
 

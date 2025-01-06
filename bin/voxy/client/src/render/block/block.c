@@ -1,6 +1,6 @@
 #include "block.h"
 
-#include <libcommon/core/log.h>
+#include <libcore/log.h>
 
 #include <string.h>
 

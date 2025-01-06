@@ -3,7 +3,7 @@
 
 #include <libnet/message.h>
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 #include <stdint.h>
 #include <stdlib.h>

@@ -5,7 +5,7 @@
 
 #include <libnet/server.h>
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 #include <stdint.h>
 

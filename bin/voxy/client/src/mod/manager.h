@@ -3,7 +3,7 @@
 
 #include "mod.h"
 
-#include <libcommon/utils/dynamic_array.h>
+#include <libcore/dynamic_array.h>
 
 struct mod_manager
 {

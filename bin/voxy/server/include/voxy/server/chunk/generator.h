@@ -2,7 +2,7 @@
 #define VOXY_SERVER_CHUNK_GENERATOR_H
 
 #include <voxy/server/export.h>
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 struct voxy_chunk_generator;
 struct voxy_context;

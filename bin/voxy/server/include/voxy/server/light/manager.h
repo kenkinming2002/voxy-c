@@ -3,7 +3,7 @@
 
 #include <voxy/server/export.h>
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 /// Light manager.
 ///

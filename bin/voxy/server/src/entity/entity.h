@@ -5,8 +5,8 @@
 
 #include "registry/entity.h"
 
-#include <libcommon/math/vector.h>
-#include <libcommon/utils/dynamic_array.h>
+#include <libmath/vector.h>
+#include <libcore/dynamic_array.h>
 
 #include <stdbool.h>
 

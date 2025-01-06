@@ -4,7 +4,7 @@
 #include "chunk/chunk.h"
 #include "mesh.h"
 
-#include <libcommon/graphics/camera.h>
+#include <libgfx/camera.h>
 
 struct block_renderer;
 struct voxy_block_registry;

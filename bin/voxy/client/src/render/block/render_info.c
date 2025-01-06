@@ -1,8 +1,8 @@
 #include "render_info.h"
 #include "block.h"
 
-#include <libcommon/math/direction.h>
-#include <libcommon/graphics/gl.h>
+#include <libmath/direction.h>
+#include <libgfx/gl.h>
 
 #include <stdlib.h>
 

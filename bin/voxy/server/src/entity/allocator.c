@@ -1,6 +1,6 @@
 #include "allocator.h"
 
-#include <libcommon/core/log.h>
+#include <libcore/log.h>
 
 void entity_allocator_init(struct entity_allocator *entity_manager)
 {

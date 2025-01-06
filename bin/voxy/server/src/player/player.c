@@ -2,8 +2,8 @@
 
 #include <voxy/protocol/server.h>
 
-#include <libcommon/math/matrix.h>
-#include <libcommon/math/matrix_transform.h>
+#include <libmath/matrix.h>
+#include <libmath/matrix_transform.h>
 
 #include <stdlib.h>
 

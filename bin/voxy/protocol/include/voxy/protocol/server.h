@@ -4,7 +4,7 @@
 #include <voxy/config.h>
 
 #include <libnet/message.h>
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 #include <stdint.h>
 
 /// Tag for message from server.

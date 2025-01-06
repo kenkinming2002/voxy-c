@@ -3,7 +3,7 @@
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
 
-#include <libcommon/core/fs.h>
+#include <libcore/fs.h>
 
 #include <stdio.h>
 #include <stdlib.h>

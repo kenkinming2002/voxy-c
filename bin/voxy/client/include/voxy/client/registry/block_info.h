@@ -1,7 +1,7 @@
 #ifndef VOXY_CLIENT_REGISTRY_BLOCK_INFO_H
 #define VOXY_CLIENT_REGISTRY_BLOCK_INFO_H
 
-#include <libcommon/math/direction.h>
+#include <libmath/direction.h>
 
 enum voxy_block_type
 {

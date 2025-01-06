@@ -8,7 +8,7 @@
 
 #include <voxy/server/export.h>
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 #include <libnet/server.h>
 
 #include <stdint.h>

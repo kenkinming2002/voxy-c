@@ -12,7 +12,7 @@
 
 #include "camera/manager.h"
 
-#include <libcommon/graphics/camera.h>
+#include <libgfx/camera.h>
 
 struct world_renderer
 {

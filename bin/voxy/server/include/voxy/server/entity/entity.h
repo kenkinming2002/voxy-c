@@ -3,8 +3,8 @@
 
 #include <voxy/server/export.h>
 
-#include <libcommon/math/vector.h>
-#include <libcommon/math/transform.h>
+#include <libmath/vector.h>
+#include <libmath/transform.h>
 
 typedef uint32_t entity_handle_t;
 

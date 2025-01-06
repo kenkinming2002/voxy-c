@@ -1,6 +1,6 @@
 #include "mod.h"
 
-#include <libcommon/core/log.h>
+#include <libcore/log.h>
 
 #include <dlfcn.h>
 

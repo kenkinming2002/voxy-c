@@ -1,8 +1,8 @@
 #ifndef RENDER_BLOCK_MESH_H
 #define RENDER_BLOCK_MESH_H
 
-#include <libcommon/math/vector.h>
-#include <libcommon/utils/dynamic_array.h>
+#include <libmath/vector.h>
+#include <libcore/dynamic_array.h>
 #include <glad/glad.h>
 
 struct block_vertex

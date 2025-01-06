@@ -1,11 +1,11 @@
 #include "physics.h"
 #include "swept.h"
 
-#include <libcommon/math/aabb.h>
-#include <libcommon/math/direction.h>
-#include <libcommon/core/log.h>
-#include <libcommon/core/profile.h>
-#include <libcommon/utils/utils.h>
+#include <libmath/aabb.h>
+#include <libmath/direction.h>
+#include <libcore/log.h>
+#include <libcore/profile.h>
+#include <libcore/utils.h>
 
 #include <stdbool.h>
 

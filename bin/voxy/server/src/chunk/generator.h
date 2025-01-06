@@ -2,7 +2,7 @@
 #define CHUNK_GENERATOR_H
 
 #include <voxy/server/chunk/generator.h>
-#include <libcommon/core/thread_pool.h>
+#include <libcore/thread_pool.h>
 
 struct voxy_chunk;
 struct voxy_chunk_generator;

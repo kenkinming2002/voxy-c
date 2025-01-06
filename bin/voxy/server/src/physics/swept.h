@@ -1,8 +1,8 @@
 #ifndef PHYSICS_SWEPT_H
 #define PHYSICS_SWEPT_H
 
-#include <libcommon/math/aabb.h>
-#include <libcommon/math/direction.h>
+#include <libmath/aabb.h>
+#include <libmath/direction.h>
 
 #include <stdbool.h>
 

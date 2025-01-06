@@ -1,7 +1,7 @@
 #ifndef VOXY_SERVER_BLOCK_INFO_H
 #define VOXY_SERVER_BLOCK_INFO_H
 
-#include <libcommon/math/direction.h>
+#include <libmath/direction.h>
 
 struct voxy_block_info
 {

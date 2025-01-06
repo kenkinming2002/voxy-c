@@ -4,7 +4,7 @@
 #include <voxy/server/export.h>
 #include <voxy/server/entity/manager.h>
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 #include <stdbool.h>
 

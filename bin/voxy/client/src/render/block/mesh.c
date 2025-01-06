@@ -1,6 +1,6 @@
 #include "mesh.h"
 
-#include <libcommon/core/log.h>
+#include <libcore/log.h>
 
 void block_mesh_init(struct block_mesh *block_mesh)
 {

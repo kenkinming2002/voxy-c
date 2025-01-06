@@ -1,7 +1,7 @@
 #include "swept.h"
 
-#include <libcommon/utils/utils.h>
-#include <libcommon/core/log.h>
+#include <libcore/utils.h>
+#include <libcore/log.h>
 
 int contact3_compare(struct contact3 contact1, struct contact3 contact2)
 {

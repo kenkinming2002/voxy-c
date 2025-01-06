@@ -8,9 +8,9 @@
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
 
-#include <libcommon/core/profile.h>
-#include <libcommon/core/log.h>
-#include <libcommon/core/fs.h>
+#include <libcore/profile.h>
+#include <libcore/log.h>
+#include <libcore/fs.h>
 
 #include <sqlite3.h>
 

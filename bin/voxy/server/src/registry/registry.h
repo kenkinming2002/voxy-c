@@ -2,7 +2,7 @@
 #define REGISTRY_NAME_H
 
 #include <voxy/server/registry/name.h>
-#include <libcommon/utils/dynamic_array.h>
+#include <libcore/dynamic_array.h>
 #include <stdint.h>
 
 struct voxy_name_registry

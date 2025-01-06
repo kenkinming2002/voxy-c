@@ -3,8 +3,8 @@
 
 #include <voxy/config.h>
 
-#include <libcommon/math/vector.h>
-#include <libcommon/math/direction.h>
+#include <libmath/vector.h>
+#include <libmath/direction.h>
 
 #include <stdint.h>
 

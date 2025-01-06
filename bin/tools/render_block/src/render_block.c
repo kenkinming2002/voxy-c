@@ -1,8 +1,8 @@
-#include <libcommon/core/window.h>
-#include <libcommon/core/log.h>
+#include <libcore/log.h>
 
-#include <libcommon/graphics/gl.h>
-#include <libcommon/graphics/camera.h>
+#include <libgfx/window.h>
+#include <libgfx/gl.h>
+#include <libgfx/camera.h>
 
 #include <glad/glad.h>
 #include <png.h>

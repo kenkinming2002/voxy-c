@@ -2,7 +2,7 @@
 
 #include <voxy/protocol/client.h>
 
-#include <libcommon/core/window.h>
+#include <libgfx/window.h>
 
 #include <stdbool.h>
 

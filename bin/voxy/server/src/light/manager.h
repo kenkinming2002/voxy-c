@@ -4,7 +4,7 @@
 #include "registry/block.h"
 #include "chunk/manager.h"
 
-#include <libcommon/utils/dynamic_array.h>
+#include <libcore/dynamic_array.h>
 
 #include <stdint.h>
 

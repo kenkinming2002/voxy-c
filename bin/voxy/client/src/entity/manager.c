@@ -2,7 +2,7 @@
 
 #include <voxy/protocol/server.h>
 
-#include <libcommon/core/log.h>
+#include <libcore/log.h>
 
 #include <assert.h>
 

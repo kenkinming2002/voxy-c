@@ -1,33 +1,34 @@
 CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
-
 CFLAGS += -fopenmp
-
 CFLAGS += -Iinclude
 CFLAGS += -Isrc
 CFLAGS += -I../config/include
 CFLAGS += -I../protocol/include
-CFLAGS += -I../../../lib/common/include
-CFLAGS += -I../../../lib/common/bundled/include
-CFLAGS += -I../../../lib/net/include
+
+CFLAGS += -I../../../lib/core/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/core'
+LIBS += -L../../../lib/core
+LIBS += -lcore
+
+CFLAGS += -I../../../lib/math/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/math'
+LIBS += -L../../../lib/math
+LIBS += -lmath
+
 CFLAGS += -I../../../lib/serde/include
-
-LIBS += -L../../../lib/common
-LIBS += -lcommon
-LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/common'
-
-LIBS += -L../../../lib/net
-LIBS += -lnet-server
-LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/net'
-
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/serde'
 LIBS += -L../../../lib/serde
 LIBS += -lserde
-LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/serde'
+
+CFLAGS += -I../../../lib/net/include
+LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/net'
+LIBS += -L../../../lib/net
+LIBS += -lnet-server
 
 CFLAGS += $(shell pkg-config --cflags sqlite3)
-LIBS   += $(shell pkg-config --libs   sqlite3)
-
+LIBS += $(shell pkg-config --libs   sqlite3)
 LIBS += -lm
 
 CFLAGS += -fvisibility=hidden

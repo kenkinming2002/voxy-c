@@ -1,7 +1,7 @@
 #ifndef VOXY_CLIENT_REGISTRY_ENTITY_INFO_H
 #define VOXY_CLIENT_REGISTRY_ENTITY_INFO_H
 
-#include <libcommon/graphics/camera.h>
+#include <libgfx/camera.h>
 
 struct voxy_entity;
 struct voxy_entity_info

@@ -1,16 +1,15 @@
 CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE
+CFLAGS += -fPIC
 
 CFLAGS += -Isrc
 CFLAGS += -I../../../voxy/config/include
 CFLAGS += -I../../../voxy/server/include
+CFLAGS += -I../../../../lib/core/include
+CFLAGS += -I../../../../lib/math/include
 CFLAGS += -I../../../../lib/net/include
 CFLAGS += -I../../../../lib/serde/include
-CFLAGS += -I../../../../lib/common/include
-CFLAGS += -I../../../../lib/common/bundled/include
-
-CFLAGS += -fPIC
 
 SRCS += src/mod.c
 

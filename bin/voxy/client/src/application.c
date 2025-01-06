@@ -2,10 +2,10 @@
 
 #include <voxy/protocol/client.h>
 
-#include <libcommon/graphics/render.h>
+#include <libgfx/render.h>
 
-#include <libcommon/core/window.h>
-#include <libcommon/core/delta_time.h>
+#include <libgfx/window.h>
+#include <libgfx/window.h>
 
 #include <alloca.h>
 #include <stdio.h>

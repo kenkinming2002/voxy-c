@@ -4,7 +4,7 @@
 #include <voxy/server/export.h>
 #include <voxy/server/entity/manager.h>
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 struct voxy_context;
 struct voxy_player;

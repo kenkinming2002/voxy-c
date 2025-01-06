@@ -5,9 +5,9 @@
 #include <voxy/server/entity/entity.h>
 #include <voxy/server/player/player.h>
 
-#include <libcommon/math/matrix_transform.h>
-#include <libcommon/math/ray_cast.h>
-#include <libcommon/math/noise.h>
+#include <libmath/matrix_transform.h>
+#include <libmath/ray_cast.h>
+#include <libmath/noise.h>
 
 #include <stdio.h>
 

@@ -1,7 +1,7 @@
 #ifndef CHUNK_COORDINATES_H
 #define CHUNK_COORDINATES_H
 
-#include <libcommon/math/vector.h>
+#include <libmath/vector.h>
 
 /// Coordinate conversions.
 ///

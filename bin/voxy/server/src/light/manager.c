@@ -1,8 +1,8 @@
 #include "manager.h"
 
-#include <libcommon/core/profile.h>
-#include <libcommon/core/log.h>
-#include <libcommon/utils/tformat.h>
+#include <libcore/profile.h>
+#include <libcore/log.h>
+#include <libcore/tformat.h>
 
 #include <stdatomic.h>
 #include <string.h>

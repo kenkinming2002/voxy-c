@@ -6,7 +6,7 @@
 #include "camera/manager.h"
 #include "render_info.h"
 
-#include <libcommon/graphics/gl.h>
+#include <libgfx/gl.h>
 
 struct block_renderer
 {

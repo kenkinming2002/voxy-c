@@ -5,8 +5,8 @@
 
 #include <voxy/server/context.h>
 
-#include <libcommon/core/log.h>
-#include <libcommon/core/profile.h>
+#include <libcore/log.h>
+#include <libcore/profile.h>
 
 #include <stdio.h>
 #include <time.h>

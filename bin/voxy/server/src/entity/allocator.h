@@ -5,7 +5,7 @@
 #include "entity.h"
 
 #include <voxy/server/entity/manager.h>
-#include <libcommon/utils/dynamic_array.h>
+#include <libcore/dynamic_array.h>
 
 /// Entity allocator.
 ///

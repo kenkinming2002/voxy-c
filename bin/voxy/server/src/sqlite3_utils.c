@@ -1,6 +1,6 @@
 #include "sqlite3_utils.h"
 
-#include <libcommon/core/log.h>
+#include <libcore/log.h>
 
 #include <stdarg.h>
 #include <stdint.h>

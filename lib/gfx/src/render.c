@@ -50,7 +50,7 @@ void render_end(void)
 
   // Draw calls
   {
-    struct gl_program program = GL_PROGRAM_LOAD(lib/common/assets/shaders/model);
+    struct gl_program program = GL_PROGRAM_LOAD(lib/gfx/assets/shaders/model);
     glUseProgram(program.id);
 
     size_t i=0;

@@ -64,7 +64,7 @@ static void font_set_ensure(void)
 {
   if(!font_set.fonts)
   {
-    font_set_load(&font_set, "lib/common/assets/fonts/arial.ttf");
+    font_set_load(&font_set, "lib/ui/assets/fonts/arial.ttf");
     font_set_load_system(&font_set);
     atexit(font_set_atexit);
   }
@@ -187,7 +187,7 @@ void ui_render(void)
 
   // Colored
   {
-    struct gl_program program = GL_PROGRAM_LOAD(lib/common/assets/shaders/ui/quad_rounded);
+    struct gl_program program = GL_PROGRAM_LOAD(lib/ui/assets/shaders/quad_rounded);
     glUseProgram(program.id);
     glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
     for(size_t i=0; i<colored_quads.item_count; ++i)
@@ -204,7 +204,7 @@ void ui_render(void)
 
   // Textured
   {
-    struct gl_program program = GL_PROGRAM_LOAD(lib/common/assets/shaders/ui/quad_textured);
+    struct gl_program program = GL_PROGRAM_LOAD(lib/ui/assets/shaders/quad_textured);
     glUseProgram(program.id);
     glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
     for(size_t i=0; i<textured_quads.item_count; ++i)

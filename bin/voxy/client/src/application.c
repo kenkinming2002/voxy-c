@@ -15,7 +15,7 @@ int application_init(struct application *application, int argc, char *argv[])
 {
   if(argc < 4)
   {
-    fprintf(stderr, "Usage: %s SERVICE CERT KEY [MOD]...", argv[0]);
+    fprintf(stderr, "Usage: %s SERVICE CERT KEY PLAYER_NAME [MOD]...", argv[0]);
     return -1;
   }
 

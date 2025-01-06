@@ -13,13 +13,11 @@
 
 int application_init(struct application *application, int argc, char *argv[])
 {
-  if(argc != 4)
+  if(argc < 4)
   {
-    fprintf(stderr, "Usage: %s NODE SERVICE PLAYER_NAME", argv[0]);
+    fprintf(stderr, "Usage: %s SERVICE CERT KEY [MOD]...", argv[0]);
     return -1;
   }
-
-  struct voxy_context context = application_get_context(application);
 
   window_init("client", 1024, 720);
 
@@ -51,8 +49,11 @@ int application_init(struct application *application, int argc, char *argv[])
   entity_manager_init(&application->entity_manager);
 
   mod_manager_init(&application->mod_manager);
-  if(mod_manager_load(&application->mod_manager, "bin/mod/base/client/base-client.so", &context) != 0)
-    goto error4;
+
+  struct voxy_context context = application_get_context(application);
+  for(int i=4; i<argc; ++i)
+    if(mod_manager_load(&application->mod_manager, argv[i], &context) != 0)
+      goto error5;
 
   if(world_renderer_init(&application->world_renderer, &application->block_registry) != 0)
     goto error5;
@@ -61,7 +62,6 @@ int application_init(struct application *application, int argc, char *argv[])
 
 error5:
   mod_manager_fini(&application->mod_manager, &context);
-error4:
   entity_manager_fini(&application->entity_manager);
   chunk_manager_fini(&application->chunk_manager);
 error3:

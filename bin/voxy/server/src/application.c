@@ -13,9 +13,9 @@
 
 int application_init(struct application *application, int argc, char *argv[])
 {
-  if(argc != 4)
+  if(argc < 4)
   {
-    fprintf(stderr, "Usage: %s SERVICE CERT KEY", argv[0]);
+    fprintf(stderr, "Usage: %s SERVICE CERT KEY [MOD]...", argv[0]);
     return -1;
   }
 
@@ -41,14 +41,17 @@ int application_init(struct application *application, int argc, char *argv[])
 
   voxy_light_manager_init(&application->light_manager);
 
-  struct voxy_context context = application_get_context(application);
   mod_manager_init(&application->mod_manager);
-  if(mod_manager_load(&application->mod_manager, "bin/mod/base/server/base-server.so", &context) != 0)
-    goto error2;
+
+  struct voxy_context context = application_get_context(application);
+  for(int i=4; i<argc; ++i)
+    if(mod_manager_load(&application->mod_manager, argv[i], &context) != 0)
+      goto error2;
 
   return 0;
 
 error2:
+  mod_manager_fini(&application->mod_manager, &context);
   voxy_light_manager_fini(&application->light_manager);
   voxy_player_manager_fini(&application->player_manager);
 error1:

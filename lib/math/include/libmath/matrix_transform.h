@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_MATRIX_TRANSFORM_H
-#define LIBCOMMON_MATH_MATRIX_TRANSFORM_H
+#ifndef LIBMATH_MATRIX_TRANSFORM_H
+#define LIBMATH_MATRIX_TRANSFORM_H
 
 #include <libmath/vector.h>
 #include <libmath/matrix.h>
@@ -125,4 +125,4 @@ static inline fvec3_t fmat4_apply_fvec3_perspective_divide(fmat4_t mat, fvec3_t 
   return fvec3_div_scalar(fvec3(tmp.x, tmp.y, tmp.z), tmp.w);
 }
 
-#endif // LIBCOMMON_MATH_MATRIX_TRANSFORM_H
+#endif // LIBMATH_MATRIX_TRANSFORM_H

@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_CORE_THREAD_POOL_H
-#define LIBCOMMON_CORE_THREAD_POOL_H
+#ifndef LIBCORE_THREAD_POOL_H
+#define LIBCORE_THREAD_POOL_H
 
 #include <pthread.h>
 #include <stdatomic.h>
@@ -14,4 +14,4 @@ struct thread_pool_job
 
 void thread_pool_enqueue(struct thread_pool_job *job);
 
-#endif // LIBCOMMON_CORE_THREAD_POOL_H
+#endif // LIBCORE_THREAD_POOL_H

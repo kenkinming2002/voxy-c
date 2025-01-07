@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_NOISE_H
-#define LIBCOMMON_MATH_NOISE_H
+#ifndef LIBMATH_NOISE_H
+#define LIBMATH_NOISE_H
 
 #include <libmath/vector.h>
 #include <libmath/random.h>
@@ -303,4 +303,4 @@ static inline float smooth_min(size_t n, float values[n], float smoothness)
   return -smooth_max(n, negative_values, smoothness);
 }
 
-#endif // LIBCOMMON_MATH_NOISE_H
+#endif // LIBMATH_NOISE_H

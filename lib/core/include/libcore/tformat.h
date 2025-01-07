@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_UTILS_TFORMAT_H
-#define LIBCOMMON_UTILS_TFORMAT_H
+#ifndef LIBCORE_TFORMAT_H
+#define LIBCORE_TFORMAT_H
 
 #include <stdio.h>
 
@@ -11,4 +11,4 @@
     buf; \
   })
 
-#endif // LIBCOMMON_UTILS_TFORMAT_H
+#endif // LIBCORE_TFORMAT_H

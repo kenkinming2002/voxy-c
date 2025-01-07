@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_MATRIX_H
-#define LIBCOMMON_MATH_MATRIX_H
+#ifndef LIBMATH_MATRIX_H
+#define LIBMATH_MATRIX_H
 
 #include <libmath/vector.h>
 
@@ -53,4 +53,4 @@ MATRIX_DEFINE_OPS(f, 2)
 MATRIX_DEFINE_OPS(f, 3)
 MATRIX_DEFINE_OPS(f, 4)
 
-#endif // LIBCOMMON_MATH_MATRIX_H
+#endif // LIBMATH_MATRIX_H

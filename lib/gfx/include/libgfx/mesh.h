@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_GRAPHICS_MESH_H
-#define LIBCOMMON_GRAPHICS_MESH_H
+#ifndef LIBGFX_MESH_H
+#define LIBGFX_MESH_H
 
 #include <libmath/vector.h>
 #include <libmath/matrix.h>
@@ -39,4 +39,4 @@ void mesh_update_instanced(const struct mesh *mesh, const struct mesh_vertex_ins
 
 int mesh_load(struct mesh *mesh, const char *filepath);
 
-#endif // LIBCOMMON_GRAPHICS_MESH_H
+#endif // LIBGFX_MESH_H

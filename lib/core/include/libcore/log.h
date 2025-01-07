@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_CORE_LOG_H
-#define LIBCOMMON_CORE_LOG_H
+#ifndef LIBCORE_LOG_H
+#define LIBCORE_LOG_H
 
 #include <stdio.h>
 
@@ -7,4 +7,4 @@
 #define LOG_WARN(fmt, ...)  do { fprintf(stderr, "[" "\033[33m" "WARN"  "\033[37m" "] %s:%d " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__); } while(0)
 #define LOG_ERROR(fmt, ...) do { fprintf(stderr, "[" "\033[31m" "ERROR" "\033[37m" "] %s:%d " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__); } while(0)
 
-#endif // LIBCOMMON_CORE_LOG_H
+#endif // LIBCORE_LOG_H

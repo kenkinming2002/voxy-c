@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_UI_LAYOUT_H
-#define LIBCOMMON_UI_LAYOUT_H
+#ifndef LIBUI_LAYOUT_H
+#define LIBUI_LAYOUT_H
 
 #include <libmath/vector.h>
 
@@ -177,4 +177,4 @@ static inline struct ui_rect ui_grid_get_rect_at(struct ui_grid grid, unsigned x
 }
 
 
-#endif // LIBCOMMON_UI_LAYOUT_H
+#endif // LIBUI_LAYOUT_H

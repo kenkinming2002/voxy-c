@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_VECTOR_H
-#define LIBCOMMON_MATH_VECTOR_H
+#ifndef LIBMATH_VECTOR_H
+#define LIBMATH_VECTOR_H
 
 #include <libmath/random.h>
 
@@ -134,4 +134,4 @@ static inline fvec3_t fvec3_cross(fvec3_t lhs, fvec3_t rhs)
   );
 }
 
-#endif // LIBCOMMON_MATH_VECTOR_H
+#endif // LIBMATH_VECTOR_H

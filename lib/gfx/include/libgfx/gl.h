@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_GRAPHICS_GL_H
-#define LIBCOMMON_GRAPHICS_GL_H
+#ifndef LIBGFX_GL_H
+#define LIBGFX_GL_H
 
 #include <libcore/log.h>
 #include <glad/glad.h>
@@ -41,4 +41,4 @@ void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d);
     instance;                                                                                       \
 })
 
-#endif // LIBCOMMON_GRAPHICS_GL_H
+#endif // LIBGFX_GL_H

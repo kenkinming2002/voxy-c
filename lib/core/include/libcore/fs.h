@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_CORE_FS_H
-#define LIBCOMMON_CORE_FS_H
+#ifndef LIBCORE_FS_H
+#define LIBCORE_FS_H
 
 /// Directory separator.
 ///
@@ -32,4 +32,4 @@ int file_remove(const char *path);
 /// duplicate of the substring up to that not including the separator.
 char *parent(const char *dir);
 
-#endif // LIBCOMMON_CORE_FS_H
+#endif // LIBCORE_FS_H

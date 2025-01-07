@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_GRAPHICS_FONT_SET_H
-#define LIBCOMMON_GRAPHICS_FONT_SET_H
+#ifndef LIBGFX_FONT_SET_H
+#define LIBGFX_FONT_SET_H
 
 #include <glad/glad.h>
 #include <libmath/vector.h>
@@ -70,4 +70,4 @@ int font_set_load_system(struct font_set *font_set);
 
 struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height, unsigned outline);
 
-#endif // LIBCOMMON_GRAPHICS_FONT_SET_H
+#endif // LIBGFX_FONT_SET_H

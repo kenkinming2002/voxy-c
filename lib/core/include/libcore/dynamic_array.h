@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_UTILS_DYNAMIC_ARRAY_H
-#define LIBCOMMON_UTILS_DYNAMIC_ARRAY_H
+#ifndef LIBCORE_DYNAMIC_ARRAY_H
+#define LIBCORE_DYNAMIC_ARRAY_H
 
 #include <stdlib.h>
 
@@ -83,4 +83,4 @@
   } \
   while(0)
 
-#endif // LIBCOMMON_UTILS_DYNAMIC_ARRAY_H
+#endif // LIBCORE_DYNAMIC_ARRAY_H

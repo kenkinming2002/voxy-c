@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_CORE_WINDOW_H
-#define LIBCOMMON_CORE_WINDOW_H
+#ifndef LIBGFX_WINDOW_H
+#define LIBGFX_WINDOW_H
 
 #include <libmath/vector.h>
 
@@ -93,4 +93,4 @@ void window_present();
 
 void window_show_cursor(bool cursor);
 
-#endif // LIBCOMMON_CORE_WINDOW_H
+#endif // LIBGFX_WINDOW_H

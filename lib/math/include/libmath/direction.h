@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_DIRECTION_H
-#define LIBCOMMON_MATH_DIRECTION_H
+#ifndef LIBMATH_DIRECTION_H
+#define LIBMATH_DIRECTION_H
 
 #include <libmath/vector.h>
 
@@ -37,4 +37,4 @@ ivec3_t direction_as_ivec(direction_t direction);
 /// Convert direction to a vector.
 fvec3_t direction_as_fvec(direction_t direction);
 
-#endif // LIBCOMMON_MATH_DIRECTION_H
+#endif // LIBMATH_DIRECTION_H

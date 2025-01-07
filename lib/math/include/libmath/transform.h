@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_TRANSFORM_H
-#define LIBCOMMON_MATH_TRANSFORM_H
+#ifndef LIBMATH_TRANSFORM_H
+#define LIBMATH_TRANSFORM_H
 
 #include <libmath/vector.h>
 #include <libmath/matrix.h>
@@ -63,4 +63,4 @@ static inline transform_t transform_local_translate(transform_t transform, fvec3
   return transform;
 }
 
-#endif // LIBCOMMON_MATH_TRANSFORM_H
+#endif // LIBMATH_TRANSFORM_H

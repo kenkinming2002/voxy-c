@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_GRAPHICS_CAMERA_H
-#define LIBCOMMON_GRAPHICS_CAMERA_H
+#ifndef LIBGFX_CAMERA_H
+#define LIBGFX_CAMERA_H
 
 #include <libmath/transform.h>
 
@@ -18,4 +18,4 @@ fmat4_t camera_rotation_matrix(const struct camera *camera);
 fmat4_t camera_view_matrix(const struct camera *camera);
 fmat4_t camera_projection_matrix(const struct camera *camera);
 
-#endif // LIBCOMMON_GRAPHICS_CAMERA_H
+#endif // LIBGFX_CAMERA_H

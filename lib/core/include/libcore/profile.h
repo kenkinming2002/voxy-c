@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_CORE_PROFILE_H
-#define LIBCOMMON_CORE_PROFILE_H
+#ifndef LIBCORE_PROFILE_H
+#define LIBCORE_PROFILE_H
 
 /// Implementation of a basic profiling system inspired by [VISUAL BENCHMARKING
 /// in C++ (how to measure performance visually) - YouTube](
@@ -28,4 +28,4 @@
 void profile_begin_impl(const char *name, ...);
 void profile_end_impl(const char *name, ...);
 
-#endif // LIBCOMMON_CORE_PROFILE_H
+#endif // LIBCORE_PROFILE_H

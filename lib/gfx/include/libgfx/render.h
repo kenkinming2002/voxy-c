@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_GRAPHICS_RENDER_H
-#define LIBCOMMON_GRAPHICS_RENDER_H
+#ifndef LIBGFX_RENDER_H
+#define LIBGFX_RENDER_H
 
 #include <libmath/transform.h>
 
@@ -18,4 +18,4 @@ void render(const struct camera *camera, const struct mesh *mesh, const struct g
 /// This is when actual rendering occurs.
 void render_end(void);
 
-#endif // LIBCOMMON_GRAPHICS_RENDER_H
+#endif // LIBGFX_RENDER_H

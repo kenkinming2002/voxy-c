@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_RAY_CAST_H
-#define LIBCOMMON_MATH_RAY_CAST_H
+#ifndef LIBMATH_RAY_CAST_H
+#define LIBMATH_RAY_CAST_H
 
 #include <libmath/vector.h>
 
@@ -37,4 +37,4 @@ static inline void ray_cast_step(struct ray_cast *ray_cast, fvec3_t direction)
   ray_cast->distance += min_value;
 }
 
-#endif // LIBCOMMON_MATH_RAY_CAST_H
+#endif // LIBMATH_RAY_CAST_H

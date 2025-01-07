@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_BUNDLED_KHR_KHRPLATFORM_H
-#define LIBCOMMON_BUNDLED_KHR_KHRPLATFORM_H
+#ifndef KHR_KHRPLATFORM_H
+#define KHR_KHRPLATFORM_H
 
 /*
 ** Copyright (c) 2008-2018 The Khronos Group Inc.
@@ -308,4 +308,4 @@ typedef enum {
     KHRONOS_BOOLEAN_ENUM_FORCE_SIZE = KHRONOS_MAX_ENUM
 } khronos_boolean_enum_t;
 
-#endif // LIBCOMMON_BUNDLED_KHR_KHRPLATFORM_H
+#endif // KHR_KHRPLATFORM_H

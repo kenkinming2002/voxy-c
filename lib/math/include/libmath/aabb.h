@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_AABB_H
-#define LIBCOMMON_MATH_AABB_H
+#ifndef LIBMATH_AABB_H
+#define LIBMATH_AABB_H
 
 #include <libmath/vector.h>
 #include <libmath/direction.h>
@@ -185,4 +185,4 @@ static inline aabb3_t aabb3_face(aabb3_t aabb, direction_t direction)
   return aabb;
 }
 
-#endif // LIBCOMMON_MATH_AABB_H
+#endif // LIBMATH_AABB_H

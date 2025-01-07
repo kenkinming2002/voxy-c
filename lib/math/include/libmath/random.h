@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_MATH_RANDOM_H
-#define LIBCOMMON_MATH_RANDOM_H
+#ifndef LIBMATH_RANDOM_H
+#define LIBMATH_RANDOM_H
 
 #include <assert.h>
 #include <limits.h>
@@ -67,4 +67,4 @@ static inline int seed_randi(seed_t *seed, int low, int high)
 }
 
 
-#endif // LIBCOMMON_MATH_RANDOM_H
+#endif // LIBMATH_RANDOM_H

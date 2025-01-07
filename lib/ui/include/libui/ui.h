@@ -1,5 +1,5 @@
-#ifndef LIBCOMMON_UI_UI_H
-#define LIBCOMMON_UI_UI_H
+#ifndef LIBUI_UI_H
+#define LIBUI_UI_H
 
 #include <libmath/vector.h>
 #include <glad/glad.h>
@@ -53,4 +53,4 @@ enum ui_button_result
 };
 int ui_button(fvec2_t position, fvec2_t dimension);
 
-#endif // LIBCOMMON_UI_UI_H
+#endif // LIBUI_UI_H

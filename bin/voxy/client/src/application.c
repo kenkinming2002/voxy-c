@@ -1,11 +1,15 @@
 #include "application.h"
 
+#include <ui/manager.h>
+
 #include <voxy/protocol/client.h>
 
 #include <libgfx/render.h>
 
 #include <libgfx/window.h>
 #include <libgfx/window.h>
+
+#include <libui/ui.h>
 
 #include <alloca.h>
 #include <stdio.h>
@@ -117,12 +121,16 @@ void application_run(struct application *application)
 
     world_renderer_update(&application->world_renderer, &application->block_registry, &application->chunk_manager, &application->camera_manager);
 
+    ui_manager_update();
+
     glViewport(0, 0, window_size.x, window_size.y);
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     world_renderer_render(&application->world_renderer, &application->entity_registry, &application->entity_manager, &application->camera_manager);
     render_end();
+
+    ui_render();
 
     window_present();
   }

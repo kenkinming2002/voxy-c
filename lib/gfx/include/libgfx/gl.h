@@ -41,4 +41,18 @@ void gl_array_texture_2d_fini(struct gl_array_texture_2d *array_texture_2d);
     instance;                                                                                       \
 })
 
+#define GL_TEXTURE_2D_LOAD(path)                              \
+({                                                            \
+    static struct gl_texture_2d instance;                     \
+    if(instance.id == 0)                                      \
+    {                                                         \
+      if(gl_texture_2d_load(&instance, path) != 0)            \
+      {                                                       \
+        LOG_ERROR("Failed to load 2d texture from %s", path); \
+        exit(EXIT_FAILURE);                                   \
+      }                                                       \
+    }                                                         \
+    instance;                                                 \
+})
+
 #endif // LIBGFX_GL_H

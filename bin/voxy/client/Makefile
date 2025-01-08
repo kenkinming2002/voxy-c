@@ -63,6 +63,8 @@ SRCS += src/render/block/mesh.c
 SRCS += src/render/block/render_info.c
 SRCS += src/render/entity/entity.c
 
+SRCS += src/ui/manager.c
+
 SRCS += src/mod/mod.c
 SRCS += src/mod/manager.c
 

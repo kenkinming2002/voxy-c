@@ -57,7 +57,7 @@ void render_end(void)
     while(i < renderables.item_count)
     {
       size_t j=i+1;
-      while(compar(&renderables.items[i], &renderables.items[j]) == 0)
+      while(j < renderables.item_count && compar(&renderables.items[i], &renderables.items[j]) == 0)
         ++j;
 
       {

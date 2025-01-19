@@ -120,6 +120,8 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
 
 static struct chunk_future load_or_generate_chunk(ivec3_t position, struct voxy_chunk_database *chunk_database, struct voxy_chunk_generator *chunk_generator, const struct voxy_context *context, size_t *load_count, size_t *generate_count)
 {
+  profile_scope;
+
   struct chunk_future result;
 
   result = voxy_chunk_database_load(chunk_database, position);

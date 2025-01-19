@@ -28,4 +28,17 @@
 void profile_begin_impl(const char *name, ...);
 void profile_end_impl(const char *name, ...);
 
+struct profile_scope_info
+{
+  const char *function;
+  int line;
+};
+
+void profile_scope_begin(const struct profile_scope_info *info);
+void profile_scope_end(const struct profile_scope_info *info);
+
+#define profile_scope \
+  const struct profile_scope_info profile_scope_info __attribute__((cleanup(profile_scope_end))) = { .function = __FUNCTION__, .line = __LINE__, }; \
+  profile_scope_begin(&profile_scope_info);
+
 #endif // LIBCORE_PROFILE_H

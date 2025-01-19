@@ -1,6 +1,7 @@
 #include <libcore/profile.h>
 
 #include <libcore/log.h>
+#include <libcore/tformat.h>
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -119,5 +120,15 @@ void profile_end_impl(const char *name, ...)
   va_start(ap, name);
   profile_append_event(name, "core", "E", ap);
   va_end(ap);
+}
+
+void profile_scope_begin(const struct profile_scope_info *info)
+{
+  profile_begin_impl(tformat("%s:%d", info->function, info->line), NULL);
+}
+
+void profile_scope_end(const struct profile_scope_info *info)
+{
+  profile_end_impl(tformat("%s:%d", info->function, info->line), NULL);
 }
 

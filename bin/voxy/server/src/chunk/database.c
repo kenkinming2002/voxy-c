@@ -8,6 +8,7 @@
 #include <libcore/log.h>
 #include <libcore/fs.h>
 #include <libcore/tformat.h>
+#include <libcore/profile.h>
 
 #include <string.h>
 #include <errno.h>
@@ -61,6 +62,8 @@ void voxy_chunk_database_fini(struct voxy_chunk_database *chunk_database)
 
 struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_database, ivec3_t position)
 {
+  profile_scope;
+
   // In the following code, we may return chunk_future_pending in case of an
   // error. This is a hack since we cannot be sure if the error is transient.
   // For example, we may failed to open a file due to permission problem but the

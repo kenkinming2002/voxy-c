@@ -5,6 +5,7 @@
 #include <voxy/server/context.h>
 
 #include <libcore/utils.h>
+#include <libcore/profile.h>
 
 #include <string.h>
 
@@ -79,6 +80,8 @@ void voxy_chunk_generator_set_generate_chunk(struct voxy_chunk_generator *chunk_
 
 struct chunk_future voxy_chunk_generator_generate(struct voxy_chunk_generator *chunk_generator, ivec3_t position, const struct voxy_context *context)
 {
+  profile_scope;
+
   struct voxy_chunk_generator_wrapper *wrapper = voxy_chunk_generator_wrapper_hash_table_lookup(&chunk_generator->wrappers, position);
   if(!wrapper)
   {

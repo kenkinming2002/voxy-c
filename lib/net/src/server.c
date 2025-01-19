@@ -506,12 +506,14 @@ void libnet_server_run(libnet_server_t server)
           if(epoll_event.events & EPOLLIN && ssl_socket_try_recv(&client_proxy->socket, &connection_closed) != 0)
           {
             libnet_server_remove_client_proxy(server, client_proxy);
+            client_proxy_destroy(client_proxy);
             continue;
           }
 
           if(ssl_socket_try_decrypt(&client_proxy->socket) != 0)
           {
             libnet_server_remove_client_proxy(server, client_proxy);
+            client_proxy_destroy(client_proxy);
             continue;
           }
 

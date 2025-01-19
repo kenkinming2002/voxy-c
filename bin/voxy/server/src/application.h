@@ -8,6 +8,7 @@
 #include "registry/item.h"
 
 #include "chunk/manager.h"
+#include "chunk/database.h"
 #include "chunk/generator.h"
 
 #include "entity/manager.h"
@@ -27,6 +28,7 @@ struct application
   libnet_server_t server;
 
   struct voxy_chunk_manager chunk_manager;
+  struct voxy_chunk_database chunk_database;
   struct voxy_chunk_generator chunk_generator;
 
   struct voxy_entity_manager entity_manager;

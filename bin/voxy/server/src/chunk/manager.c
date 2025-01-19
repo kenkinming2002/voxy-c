@@ -118,12 +118,33 @@ void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manage
   }
 }
 
-static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, const struct voxy_context *context)
+static struct chunk_future load_or_generate_chunk(ivec3_t position, struct voxy_chunk_database *chunk_database, struct voxy_chunk_generator *chunk_generator, const struct voxy_context *context, size_t *load_count, size_t *generate_count)
+{
+  struct chunk_future result;
+
+  result = voxy_chunk_database_load(chunk_database, position);
+  if(result.value || result.pending)
+  {
+    *load_count += !result.pending;
+    return result;
+  }
+
+  result = voxy_chunk_generator_generate(chunk_generator, position, context);
+  if(result.value || result.pending)
+  {
+    *generate_count += !result.pending;
+    return result;
+  }
+
+  return chunk_future_reject;
+}
+
+static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database , struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, const struct voxy_context *context)
 {
   profile_begin();
 
-  size_t generate_count = 0;
   size_t load_count = 0;
+  size_t generate_count = 0;
 
   struct ivec3_node *position;
   SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
@@ -132,26 +153,22 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
     if((chunk = voxy_chunk_hash_table_lookup(&chunk_manager->chunks, position->key)))
       continue;
 
-    if((chunk = voxy_chunk_database_load(position->key)))
-      load_count += 1;
-    else if((chunk = voxy_chunk_generator_generate(chunk_generator, position->key, context)))
-      generate_count += 1;
-
-    if(!chunk)
-      continue;
-
-    voxy_chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
-    for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
-      for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
-        for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
-        {
-          const ivec3_t local_position = ivec3(x, y, z);
-          const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk->position);
-          if(voxy_chunk_get_block_light_level(chunk, local_position) != 0)
-            voxy_light_manager_enqueue_creation_update(light_manager, global_position);
-          else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
-            voxy_light_manager_enqueue_destruction_update(light_manager, global_position, 0);
-        }
+    struct chunk_future chunk_future = load_or_generate_chunk(position->key, chunk_database, chunk_generator, context, &load_count, &generate_count);
+    if((chunk = chunk_future.value))
+    {
+      voxy_chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
+      for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
+        for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
+          for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
+          {
+            const ivec3_t local_position = ivec3(x, y, z);
+            const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk->position);
+            if(voxy_chunk_get_block_light_level(chunk, local_position) != 0)
+              voxy_light_manager_enqueue_creation_update(light_manager, global_position);
+            else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
+              voxy_light_manager_enqueue_destruction_update(light_manager, global_position, 0);
+          }
+    }
   }
 
   if(generate_count != 0) LOG_INFO("Chunk Manager: Generated %zu chunks", generate_count);
@@ -160,7 +177,7 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
   profile_end();
 }
 
-static void flush_chunks(struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
+static void flush_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database, libnet_server_t server)
 {
   profile_begin();
 
@@ -170,7 +187,7 @@ static void flush_chunks(struct voxy_chunk_manager *chunk_manager, libnet_server
   struct voxy_chunk *chunk;
   SC_HASH_TABLE_FOREACH(chunk_manager->chunks, chunk)
   {
-    if(chunk->disk_dirty && voxy_chunk_database_save(chunk) == 0)
+    if(chunk->disk_dirty && voxy_chunk_database_save(chunk_database, chunk) == 0)
     {
       chunk->disk_dirty = false;
       save_count += 1;
@@ -217,12 +234,12 @@ static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_serv
   profile_end();
 }
 
-void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context)
+void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context)
 {
   profile_begin();
 
-  load_or_generate_chunks(chunk_manager, chunk_generator, light_manager, context);
-  flush_chunks(chunk_manager, server);
+  load_or_generate_chunks(chunk_manager, chunk_database, chunk_generator, light_manager, context);
+  flush_chunks(chunk_manager, chunk_database, server);
   discard_chunks(chunk_manager, server);
 
   profile_end();

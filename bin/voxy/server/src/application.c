@@ -33,6 +33,7 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_server_set_on_message_received(application->server, application_on_message_received);
 
   voxy_chunk_manager_init(&application->chunk_manager);
+  voxy_chunk_database_init(&application->chunk_database);
   voxy_chunk_generator_init(&application->chunk_generator, time(NULL));
 
   voxy_entity_manager_init(&application->entity_manager);
@@ -58,6 +59,7 @@ error1:
   voxy_entity_database_fini(&application->entity_database);
   voxy_entity_manager_fini(&application->entity_manager);
   voxy_chunk_generator_fini(&application->chunk_generator);
+  voxy_chunk_database_fini(&application->chunk_database);
   voxy_chunk_manager_fini(&application->chunk_manager);
   libnet_server_destroy(application->server);
 error0:
@@ -79,6 +81,7 @@ void application_fini(struct application *application)
   voxy_entity_manager_fini(&application->entity_manager);
 
   voxy_chunk_generator_fini(&application->chunk_generator);
+  voxy_chunk_database_fini(&application->chunk_database);
   voxy_chunk_manager_fini(&application->chunk_manager);
 
   libnet_server_destroy(application->server);
@@ -134,7 +137,7 @@ void application_on_update(libnet_server_t server)
   physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);
   voxy_light_manager_update(&application->light_manager, &application->block_registry, &application->chunk_manager);
 
-  voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_generator, &application->light_manager, application->server, &context);
+  voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_database, &application->chunk_generator, &application->light_manager, application->server, &context);
   voxy_entity_manager_update(&application->entity_manager, &application->entity_registry, &application->entity_database, &application->chunk_manager, application->server);
 
   profile_end();

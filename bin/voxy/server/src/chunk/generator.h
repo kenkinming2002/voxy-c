@@ -1,6 +1,8 @@
 #ifndef CHUNK_GENERATOR_H
 #define CHUNK_GENERATOR_H
 
+#include "future.h"
+
 #include <voxy/server/chunk/generator.h>
 #include <libcore/thread_pool.h>
 
@@ -16,7 +18,7 @@ struct voxy_chunk_generator_wrapper
 
   ivec3_t position;
   struct voxy_chunk_generator *chunk_generator;
-  const struct voxy_context *context;
+  struct voxy_context *context;
   struct voxy_chunk * _Atomic chunk;
 };
 
@@ -40,6 +42,6 @@ struct voxy_chunk_generator
 void voxy_chunk_generator_init(struct voxy_chunk_generator *chunk_generator, seed_t seed);
 void voxy_chunk_generator_fini(struct voxy_chunk_generator *chunk_generator);
 
-struct voxy_chunk *voxy_chunk_generator_generate(struct voxy_chunk_generator *chunk_generator, ivec3_t position, const struct voxy_context *context);
+struct chunk_future voxy_chunk_generator_generate(struct voxy_chunk_generator *chunk_generator, ivec3_t position, const struct voxy_context *context);
 
 #endif // CHUNK_GENERATOR_H

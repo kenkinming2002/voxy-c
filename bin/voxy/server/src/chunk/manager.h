@@ -4,6 +4,7 @@
 #include <voxy/server/chunk/manager.h>
 
 #include "chunk.h"
+#include "database.h"
 #include "generator.h"
 
 #include "hash_table/ivec3.h"
@@ -39,7 +40,7 @@ bool voxy_chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *
 bool voxy_chunk_manager_set_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
 void voxy_chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager);
-void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context);
+void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context);
 
 void voxy_chunk_manager_on_client_connected(struct voxy_chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
 

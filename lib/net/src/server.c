@@ -480,10 +480,13 @@ void libnet_server_run(libnet_server_t server)
       }
       else if(epoll_event.data.ptr == &server->timerfd)
       {
+        uint64_t total = 0;
         uint64_t count;
         while(read_timerfd(server->timerfd, &count) == 0)
-          for(uint64_t i=0; i<count; ++i)
-            server->on_update(server);
+          total += count;
+
+        if(total > 0)
+          server->on_update(server);
       }
       else if(epoll_event.data.ptr == &server->signalfd)
       {

@@ -8,11 +8,24 @@
 
 #include <libmath/vector.h>
 
+#include <liburing.h>
 #include <aio.h>
+
+/// NOTE: I am aware that the name of some of the types are unwieldily long. The
+/// alternative is being able to put those types inside the source file so that
+/// I do not have to worry about name collision. But C being C means that it is
+/// not possible.
 
 #define member_sizeof(type, member) sizeof ((type *)0)->member
 
 struct voxy_chunk;
+
+enum voxy_chunk_database_wrapper_state
+{
+  VOXY_CHUNK_DATABASE_WRAPPER_STATE_OPEN,
+  VOXY_CHUNK_DATABASE_WRAPPER_STATE_READ,
+  VOXY_CHUNK_DATABASE_WRAPPER_STATE_CLOSE,
+};
 
 struct voxy_chunk_database_wrapper
 {
@@ -21,10 +34,13 @@ struct voxy_chunk_database_wrapper
 
   ivec3_t position;
 
-  struct aiocb aiocb;
-  char buf[member_sizeof(struct voxy_chunk, block_ids)
-         + member_sizeof(struct voxy_chunk, block_light_levels)
-         + 1];
+  enum voxy_chunk_database_wrapper_state state;
+
+  char *path;
+  int fd;
+  struct voxy_chunk *chunk;
+
+  struct iovec iovecs[2];
 };
 
 #define SC_HASH_TABLE_INTERFACE
@@ -39,7 +55,11 @@ struct voxy_chunk_database_wrapper
 
 struct voxy_chunk_database
 {
-  struct voxy_chunk_database_wrapper_hash_table wrappers;
+  struct io_uring ring;
+
+  struct voxy_chunk_database_wrapper_hash_table done;
+  struct voxy_chunk_database_wrapper_hash_table wait_sqe;
+  struct voxy_chunk_database_wrapper_hash_table wait_cqe;
 };
 
 void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database);
@@ -47,5 +67,7 @@ void voxy_chunk_database_fini(struct voxy_chunk_database *chunk_database);
 
 struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_database, ivec3_t position);
 int voxy_chunk_database_save(struct voxy_chunk_database *chunk_database, struct voxy_chunk *chunk);
+
+void voxy_chunk_database_update(struct voxy_chunk_database *chunk_database);
 
 #endif // CHUNK_DATABASE_H

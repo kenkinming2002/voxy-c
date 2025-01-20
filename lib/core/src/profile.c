@@ -1,7 +1,7 @@
 #include <libcore/profile.h>
 
 #include <libcore/log.h>
-#include <libcore/tformat.h>
+#include <libcore/format.h>
 
 #include <stdbool.h>
 #include <stdio.h>

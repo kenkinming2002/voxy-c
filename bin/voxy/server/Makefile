@@ -27,8 +27,8 @@ LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/net'
 LIBS += -L../../../lib/net
 LIBS += -lnet-server
 
-CFLAGS += $(shell pkg-config --cflags sqlite3)
-LIBS += $(shell pkg-config --libs   sqlite3)
+CFLAGS += $(shell pkg-config --cflags sqlite3 liburing)
+LIBS   += $(shell pkg-config --libs   sqlite3 liburing)
 LIBS += -lm
 
 CFLAGS += -fvisibility=hidden

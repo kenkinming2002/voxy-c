@@ -26,7 +26,7 @@
 struct libnet_client_proxy
 {
   LIST_ENTRY(libnet_client_proxy) entry;
-  SLIST_ENTRY(libnet_client_proxy) interested_entry;
+  LIST_ENTRY(libnet_client_proxy) interested_entry;
 
   struct ssl_socket socket;
   bool interested;
@@ -34,7 +34,7 @@ struct libnet_client_proxy
 };
 
 LIST_HEAD(libnet_client_proxy_list, libnet_client_proxy);
-SLIST_HEAD(libnet_client_proxy_slist, libnet_client_proxy);
+LIST_HEAD(libnet_client_proxy_slist, libnet_client_proxy);
 
 static libnet_client_proxy_t client_proxy_create(int fd, SSL_CTX *ssl_ctx)
 {
@@ -279,7 +279,7 @@ libnet_server_t libnet_server_create(const char *service, const char *cert, cons
     goto err_close_epollfd;
 
   LIST_INIT(&server->client_proxies);
-  SLIST_INIT(&server->interested_client_proxies);
+  LIST_INIT(&server->interested_client_proxies);
 
   server->opaque = NULL;
   server->on_client_connected = NULL;
@@ -308,8 +308,7 @@ void libnet_server_destroy(libnet_server_t server)
   while((client_proxy = LIST_FIRST(&server->client_proxies)))
   {
     LIST_REMOVE(client_proxy, entry);
-    ssl_socket_destroy(&client_proxy->socket);
-    free(client_proxy);
+    client_proxy_destroy(client_proxy);
   }
 
   close(server->epollfd);
@@ -414,8 +413,12 @@ static void libnet_server_insert_client_proxy(libnet_server_t server, libnet_cli
 
 static void libnet_server_remove_client_proxy(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
-  if(server->on_client_disconnected) server->on_client_disconnected(server, client_proxy);
+  if(server->on_client_disconnected)
+    server->on_client_disconnected(server, client_proxy);
+
   LIST_REMOVE(client_proxy, entry);
+  if(client_proxy->interested)
+    LIST_REMOVE(client_proxy, interested_entry);
 
   struct epoll_event epoll_event;
   if(epoll_ctl(server->epollfd, EPOLL_CTL_DEL, client_proxy->socket.fd, &epoll_event) != 0)
@@ -548,21 +551,21 @@ void libnet_server_run(libnet_server_t server)
       }
     }
 
-    libnet_client_proxy_t client_proxy;
-    while((client_proxy = SLIST_FIRST(&server->interested_client_proxies)))
+    libnet_client_proxy_t interested_client_proxy;
+    LIST_FOREACH(interested_client_proxy, &server->interested_client_proxies, interested_entry)
     {
-      SLIST_REMOVE_HEAD(&server->interested_client_proxies, interested_entry);
-      client_proxy->interested = false;
+      interested_client_proxy->interested = false;
 
-      const bool value = begin_handle_client_proxy(client_proxy);
-      if(ssl_socket_try_encrypt(&client_proxy->socket) != 0)
+      const bool value = begin_handle_client_proxy(interested_client_proxy);
+      if(ssl_socket_try_encrypt(&interested_client_proxy->socket) != 0)
       {
-        libnet_server_remove_client_proxy(server, client_proxy);
-        client_proxy_destroy(client_proxy);
+        libnet_server_remove_client_proxy(server, interested_client_proxy);
+        client_proxy_destroy(interested_client_proxy);
         continue;
       }
-      end_handle_client_proxy(server, client_proxy, value);
+      end_handle_client_proxy(server, interested_client_proxy, value);
     }
+    LIST_INIT(&server->interested_client_proxies);
   }
 
 out:
@@ -634,7 +637,7 @@ void libnet_server_send_message(libnet_server_t server, libnet_client_proxy_t cl
   if(!client_proxy->interested)
   {
     client_proxy->interested = true;
-    SLIST_INSERT_HEAD(&server->interested_client_proxies, client_proxy, interested_entry);
+    LIST_INSERT_HEAD(&server->interested_client_proxies, client_proxy, interested_entry);
   }
   ssl_socket_enqueue_message(&client_proxy->socket, message);
 }

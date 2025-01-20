@@ -11,22 +11,9 @@
 #include <liburing.h>
 #include <aio.h>
 
-/// NOTE: I am aware that the name of some of the types are unwieldily long. The
-/// alternative is being able to put those types inside the source file so that
-/// I do not have to worry about name collision. But C being C means that it is
-/// not possible.
-
-#define member_sizeof(type, member) sizeof ((type *)0)->member
+#define CHUNK_DATABASE_LOAD_LIMIT 512
 
 struct voxy_chunk;
-
-enum voxy_chunk_database_wrapper_state
-{
-  VOXY_CHUNK_DATABASE_WRAPPER_STATE_OPEN,
-  VOXY_CHUNK_DATABASE_WRAPPER_STATE_READ,
-  VOXY_CHUNK_DATABASE_WRAPPER_STATE_CLOSE,
-};
-
 struct voxy_chunk_database_wrapper
 {
   struct voxy_chunk_database_wrapper *next;
@@ -34,13 +21,13 @@ struct voxy_chunk_database_wrapper
 
   ivec3_t position;
 
-  enum voxy_chunk_database_wrapper_state state;
+  int fixed_file;
 
   char *path;
-  int fd;
   struct voxy_chunk *chunk;
-
   struct iovec iovecs[2];
+
+  bool done;
 };
 
 #define SC_HASH_TABLE_INTERFACE
@@ -56,10 +43,8 @@ struct voxy_chunk_database_wrapper
 struct voxy_chunk_database
 {
   struct io_uring ring;
-
-  struct voxy_chunk_database_wrapper_hash_table done;
-  struct voxy_chunk_database_wrapper_hash_table wait_sqe;
-  struct voxy_chunk_database_wrapper_hash_table wait_cqe;
+  size_t fixed_file_bitmaps[CHUNK_DATABASE_LOAD_LIMIT / SIZE_WIDTH];
+  struct voxy_chunk_database_wrapper_hash_table wrappers;
 };
 
 void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database);

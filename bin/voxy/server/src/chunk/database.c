@@ -52,16 +52,9 @@ void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database)
 
 void voxy_chunk_database_fini(struct voxy_chunk_database *chunk_database)
 {
+  io_uring_register_sync_cancel(&chunk_database->ring, &(struct io_uring_sync_cancel_reg){ .flags = IORING_ASYNC_CANCEL_ANY, .timeout = { .tv_sec = -1, .tv_nsec = -1 } });
   io_uring_queue_exit(&chunk_database->ring);
-
-  // NOTE: Is it actually possible that there can still be outgoing request that
-  // try to access user space buffers even after we call io_uring_queue_exit(3)?
-  // If that is the case, the *technically correct* solution is probably to
-  // issue a cancellation request and wait for its completion. Anyway, since
-  // this is only called at application shutdown anyway, we might as well leak
-  // some memory.
-  //
-  // voxy_chunk_database_wrapper_hash_table_dispose(&chunk_database->wrappers);
+  voxy_chunk_database_wrapper_hash_table_dispose(&chunk_database->wrappers);
 }
 
 #define TAG_OPEN_DIRECT 0x0

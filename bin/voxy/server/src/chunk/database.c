@@ -96,7 +96,6 @@ struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_d
   if(!(wrapper = voxy_chunk_database_wrapper_hash_table_lookup(&chunk_database->wrappers, position)))
   {
     int fixed_file = alloc_fixed_file(chunk_database);
-    LOG_INFO("Allocated fixed file %d", fixed_file);
     if(fixed_file == -1)
       return chunk_future_pending;
 

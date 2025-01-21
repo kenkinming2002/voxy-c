@@ -138,7 +138,7 @@ static struct chunk_future load_or_generate_chunk(ivec3_t position, struct voxy_
     return result;
   }
 
-  return chunk_future_reject;
+  return chunk_future_ready(NULL);
 }
 
 static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database , struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, const struct voxy_context *context)
@@ -189,10 +189,14 @@ static void flush_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_c
   struct voxy_chunk *chunk;
   SC_HASH_TABLE_FOREACH(chunk_manager->chunks, chunk)
   {
-    if(chunk->disk_dirty && voxy_chunk_database_save(chunk_database, chunk) == 0)
+    if(chunk->disk_dirty)
     {
-      chunk->disk_dirty = false;
-      save_count += 1;
+      struct unit_future result = voxy_chunk_database_save(chunk_database, chunk);
+      if(!result.pending)
+      {
+        chunk->disk_dirty = false;
+        save_count += 1;
+      }
     }
 
     if(chunk->network_dirty)

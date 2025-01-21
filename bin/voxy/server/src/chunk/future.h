@@ -9,8 +9,15 @@ struct chunk_future
   bool pending;
 };
 
-#define chunk_future_ready(chunk) (struct chunk_future) { .value = chunk, }
-#define chunk_future_pending      (struct chunk_future) { .value = NULL, .pending = true, }
-#define chunk_future_reject       (struct chunk_future) { .value = NULL, .pending = false, }
+#define chunk_future_ready(v) (struct chunk_future) { .pending = false, .value = v, }
+#define chunk_future_pending  (struct chunk_future) { .pending = true, }
+
+struct unit_future
+{
+  bool pending;
+};
+
+#define unit_future_ready    (struct unit_future) { .pending = false, }
+#define unit_future_pending  (struct unit_future) { .pending = true, }
 
 #endif // CHUNK_FUTURE_H

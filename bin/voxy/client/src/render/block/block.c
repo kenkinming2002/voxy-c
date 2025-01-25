@@ -61,7 +61,7 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
   unsigned update_count = 0;
 
   // Discard render info for chunks outside of render distance.
-  for(size_t i=0; i<block_renderer->render_infos.bucket_count; ++i)
+  for(size_t i=0; i<SC_HASH_TABLE_BUCKET_COUNT_FROM_ORDER(block_renderer->render_infos.bucket_order); ++i)
   {
     struct block_render_info **render_info = &block_renderer->render_infos.buckets[i].head;
     while(*render_info)

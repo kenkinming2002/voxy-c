@@ -219,7 +219,7 @@ static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_serv
 
   size_t discard_count = 0;
 
-  for(size_t i=0; i<chunk_manager->chunks.bucket_count; ++i)
+  for(size_t i=0; i<SC_HASH_TABLE_BUCKET_COUNT_FROM_ORDER(chunk_manager->chunks.bucket_order); ++i)
   {
     struct voxy_chunk **chunk = &chunk_manager->chunks.buckets[i].head;
     while(*chunk)

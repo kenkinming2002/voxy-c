@@ -158,7 +158,7 @@ static void discard_entities(
 
   size_t discard_count = 0;
 
-  for(size_t i=0; i<entity_manager->loaded_chunks.bucket_count; ++i)
+  for(size_t i=0; i<SC_HASH_TABLE_BUCKET_COUNT_FROM_ORDER(entity_manager->loaded_chunks.bucket_order); ++i)
   {
     struct ivec3_node **node = &entity_manager->loaded_chunks.buckets[i].head;
     while(*node)

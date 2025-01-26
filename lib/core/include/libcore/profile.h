@@ -22,8 +22,8 @@
 
 #include <stdlib.h>
 
-#define profile_begin(...) profile_begin_impl(__PRETTY_FUNCTION__, ##__VA_ARGS__, NULL)
-#define profile_end(...) profile_end_impl(__PRETTY_FUNCTION__, ##__VA_ARGS__, NULL)
+#define profile_begin(...) profile_begin_impl(__FUNCTION__, ##__VA_ARGS__, NULL)
+#define profile_end(...) profile_end_impl(__FUNCTION__, ##__VA_ARGS__, NULL)
 
 void profile_begin_impl(const char *name, ...);
 void profile_end_impl(const char *name, ...);

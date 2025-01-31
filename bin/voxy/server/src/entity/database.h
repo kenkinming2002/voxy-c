@@ -24,7 +24,7 @@ struct voxy_entity_database
   sqlite3 *conn;
 };
 
-int voxy_entity_database_init(struct voxy_entity_database *database);
+int voxy_entity_database_init(struct voxy_entity_database *database, const char *world_directory);
 void voxy_entity_database_fini(struct voxy_entity_database *database);
 
 /// Begin and end transaction.

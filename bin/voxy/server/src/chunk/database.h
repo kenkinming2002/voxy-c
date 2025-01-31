@@ -69,11 +69,13 @@ struct voxy_chunk_database
 {
   struct io_uring ring;
   size_t fixed_file_bitmaps[CHUNK_DATABASE_LOAD_LIMIT / SIZE_WIDTH];
+
+  char *directory;
   struct voxy_chunk_database_load_wrapper_hash_table load_wrappers;
   struct voxy_chunk_database_save_wrapper_hash_table save_wrappers;
 };
 
-void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database);
+void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database, const char *world_directory);
 void voxy_chunk_database_fini(struct voxy_chunk_database *chunk_database);
 
 struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_database, ivec3_t position);

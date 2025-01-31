@@ -13,9 +13,9 @@
 
 int application_init(struct application *application, int argc, char *argv[])
 {
-  if(argc < 4)
+  if(argc < 5)
   {
-    fprintf(stderr, "Usage: %s SERVICE CERT KEY [MOD]...", argv[0]);
+    fprintf(stderr, "Usage: %s SERVICE CERT KEY WORLD_DIRECTORY [MOD]...", argv[0]);
     return -1;
   }
 
@@ -33,11 +33,11 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_server_set_on_message_received(application->server, application_on_message_received);
 
   voxy_chunk_manager_init(&application->chunk_manager);
-  voxy_chunk_database_init(&application->chunk_database);
+  voxy_chunk_database_init(&application->chunk_database, argv[4]);
   voxy_chunk_generator_init(&application->chunk_generator, time(NULL));
 
   voxy_entity_manager_init(&application->entity_manager);
-  if(voxy_entity_database_init(&application->entity_database) != 0) goto error1;
+  if(voxy_entity_database_init(&application->entity_database, argv[4]) != 0) goto error1;
   voxy_player_manager_init(&application->player_manager);
 
   voxy_light_manager_init(&application->light_manager);
@@ -45,7 +45,7 @@ int application_init(struct application *application, int argc, char *argv[])
   mod_manager_init(&application->mod_manager);
 
   struct voxy_context context = application_get_context(application);
-  for(int i=4; i<argc; ++i)
+  for(int i=5; i<argc; ++i)
     if(mod_manager_load(&application->mod_manager, argv[i], &context) != 0)
       goto error2;
 

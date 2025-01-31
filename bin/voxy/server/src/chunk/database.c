@@ -55,21 +55,26 @@ void voxy_chunk_database_save_wrapper_dispose(struct voxy_chunk_database_save_wr
   free(wrapper);
 }
 
-#define chunk_dir(position) "world/chunks/%d/%d/%d", position.x, position.y, position.z
-
-#define chunk_dir0(position) "world/chunks/%d",       position.x
-#define chunk_dir1(position) "world/chunks/%d/%d/",   position.x, position.y
-#define chunk_dir2(position) "world/chunks/%d/%d/%d", position.x, position.y, position.z
-
-#define chunk_file(position) "world/chunks/%d/%d/%d/blocks", position.x, position.y, position.z
+#define chunk_dir0(directory, position) "%s/%d",            directory, position.x
+#define chunk_dir1(directory, position) "%s/%d/%d/",        directory, position.x, position.y
+#define chunk_dir2(directory, position) "%s/%d/%d/%d",      directory, position.x, position.y, position.z
+#define chunk_file(directory, position) "%s/%d/%d/%d/data", directory, position.x, position.y, position.z
 
 #define chunk_size (sizeof ((struct voxy_chunk *)0)->block_ids + sizeof ((struct voxy_chunk *)0)->block_light_levels)
 
-void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database)
+void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database, const char *world_directory)
 {
   io_uring_queue_init(CHUNK_DATABASE_LOAD_LIMIT * 6, &chunk_database->ring, 0);
   io_uring_register_files_sparse(&chunk_database->ring, CHUNK_DATABASE_LOAD_LIMIT);
   memset(&chunk_database->fixed_file_bitmaps, 0, sizeof chunk_database->fixed_file_bitmaps);
+
+  chunk_database->directory = aformat("%s/chunks", world_directory);
+  if(mkdir_recursive(tformat("%s/chunks", world_directory)) != 0)
+  {
+    LOG_ERROR("Failed to create directory: %s", chunk_database->directory);
+    exit(EXIT_FAILURE);
+  }
+
   voxy_chunk_database_load_wrapper_hash_table_init(&chunk_database->load_wrappers);
   voxy_chunk_database_save_wrapper_hash_table_init(&chunk_database->save_wrappers);
 }
@@ -78,6 +83,8 @@ void voxy_chunk_database_fini(struct voxy_chunk_database *chunk_database)
 {
   io_uring_register_sync_cancel(&chunk_database->ring, &(struct io_uring_sync_cancel_reg){ .flags = IORING_ASYNC_CANCEL_ANY, .timeout = { .tv_sec = -1, .tv_nsec = -1 } });
   io_uring_queue_exit(&chunk_database->ring);
+
+  free(chunk_database->directory);
   voxy_chunk_database_load_wrapper_hash_table_dispose(&chunk_database->load_wrappers);
   voxy_chunk_database_save_wrapper_hash_table_dispose(&chunk_database->save_wrappers);
 }
@@ -140,7 +147,7 @@ struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_d
 
     wrapper->fixed_file = fixed_file;
 
-    wrapper->path = aformat(chunk_file(position));
+    wrapper->path = aformat(chunk_file(chunk_database->directory, position));
 
     wrapper->chunk = voxy_chunk_create();
     wrapper->chunk->position = wrapper->position;
@@ -203,11 +210,11 @@ struct unit_future voxy_chunk_database_save(struct voxy_chunk_database *chunk_da
 
     wrapper->fixed_file = fixed_file;
 
-    wrapper->dirs[0] = aformat(chunk_dir0(chunk->position));
-    wrapper->dirs[1] = aformat(chunk_dir1(chunk->position));
-    wrapper->dirs[2] = aformat(chunk_dir2(chunk->position));
+    wrapper->dirs[0] = aformat(chunk_dir0(chunk_database->directory, chunk->position));
+    wrapper->dirs[1] = aformat(chunk_dir1(chunk_database->directory, chunk->position));
+    wrapper->dirs[2] = aformat(chunk_dir2(chunk_database->directory, chunk->position));
 
-    wrapper->path = aformat(chunk_file(chunk->position));
+    wrapper->path = aformat(chunk_file(chunk_database->directory, chunk->position));
 
     wrapper->iovecs[0].iov_base = chunk->block_ids;
     wrapper->iovecs[0].iov_len = sizeof chunk->block_ids;

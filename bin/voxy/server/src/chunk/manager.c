@@ -76,12 +76,12 @@ VOXY_SERVER_EXPORT void voxy_chunk_manager_set_block(
   voxy_chunk_set_block_light_level(chunk, global_position_to_local_position_i(position), light_level);
 
   if(old_light_level < light_level)
-    voxy_light_manager_enqueue_creation_update(light_manager, position);
+    voxy_light_manager_enqueue_creation_update(light_manager, chunk_manager, position);
 
   //// FIXME: Light destroy update really only support the case if light level
   ////        changes to 0. This happens to be the only possible cases for now.
   if(old_light_level >= light_level)
-    voxy_light_manager_enqueue_destruction_update(light_manager, position, old_light_level);
+    voxy_light_manager_enqueue_destruction_update(light_manager, chunk_manager, position, old_light_level);
 }
 
 bool voxy_chunk_manager_get_block_light_level_atomic(struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
@@ -159,6 +159,11 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
     if((chunk = chunk_future.value))
     {
       voxy_chunk_hash_table_insert_unchecked(&chunk_manager->chunks, chunk);
+
+      for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+        if((chunk->neighbours[direction] = voxy_chunk_hash_table_lookup(&chunk_manager->chunks, ivec3_add(chunk->position, direction_as_ivec(direction)))))
+          chunk->neighbours[direction]->neighbours[direction_reverse(direction)] = chunk;
+
       for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
         for(int y = 0; y<VOXY_CHUNK_WIDTH; ++y)
           for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
@@ -166,9 +171,9 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
             const ivec3_t local_position = ivec3(x, y, z);
             const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk->position);
             if(voxy_chunk_get_block_light_level(chunk, local_position) != 0)
-              voxy_light_manager_enqueue_creation_update(light_manager, global_position);
+              voxy_light_manager_enqueue_creation_update(light_manager, chunk_manager, global_position);
             else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
-              voxy_light_manager_enqueue_destruction_update(light_manager, global_position, 0);
+              voxy_light_manager_enqueue_destruction_update(light_manager, chunk_manager, global_position, 0);
           }
     }
   }
@@ -227,6 +232,10 @@ static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_serv
       {
         struct voxy_chunk *old_chunk = *chunk;
         *chunk = (*chunk)->next;
+
+        for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+          if(old_chunk->neighbours[direction])
+            old_chunk->neighbours[direction]->neighbours[direction_reverse(direction)] = NULL;
 
         voxy_chunk_network_remove(old_chunk, server);
         voxy_chunk_destroy(old_chunk);

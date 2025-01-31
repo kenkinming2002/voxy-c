@@ -15,13 +15,19 @@
 
 struct light_destruction_update
 {
-  ivec3_t position;
-  uint8_t old_light_level;
+  struct voxy_chunk *chunk;
+  uint16_t x : 4;
+  uint16_t y : 4;
+  uint16_t z : 4;
+  uint16_t old_light_level : 4;
 };
 
 struct light_creation_update
 {
-  ivec3_t position;
+  struct voxy_chunk *chunk;
+  uint16_t x : 4;
+  uint16_t y : 4;
+  uint16_t z : 4;
 };
 
 DYNAMIC_ARRAY_DEFINE(light_creation_updates, struct light_creation_update);
@@ -44,9 +50,12 @@ struct voxy_light_manager
 void voxy_light_manager_init(struct voxy_light_manager *light_manager);
 void voxy_light_manager_fini(struct voxy_light_manager *light_manager);
 
-void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, ivec3_t position, uint8_t light_level);
-void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, ivec3_t position);
+void voxy_light_manager_enqueue_destruction_update_at(struct voxy_light_manager *light_manager, struct voxy_chunk *chunk, ivec3_t position, uint8_t light_level);
+void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *light_manager, struct voxy_chunk *chunk, ivec3_t position);
 
-void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager);
+void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t light_level);
+void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_chunk_manager *chunk_manager, ivec3_t position);
+
+void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry);
 
 #endif // LIGHT_MANAGER_H

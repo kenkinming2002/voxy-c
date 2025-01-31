@@ -13,8 +13,10 @@
 /// Chunk.
 struct voxy_chunk
 {
-  size_t        hash;
+  size_t hash;
+
   struct voxy_chunk *next;
+  struct voxy_chunk *neighbours[DIRECTION_COUNT];
 
   ivec3_t position;
 

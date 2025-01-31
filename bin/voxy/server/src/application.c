@@ -135,7 +135,7 @@ void application_on_update(libnet_server_t server)
   }
 
   physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);
-  voxy_light_manager_update(&application->light_manager, &application->block_registry, &application->chunk_manager);
+  voxy_light_manager_update(&application->light_manager, &application->block_registry);
 
   voxy_chunk_database_update(&application->chunk_database);
   voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_database, &application->chunk_generator, &application->light_manager, application->server, &context);

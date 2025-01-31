@@ -1,5 +1,7 @@
 #include "manager.h"
 
+#include "chunk/coordinates.h"
+
 #include <libcore/profile.h>
 #include <libcore/log.h>
 #include <libcore/format.h>
@@ -19,14 +21,50 @@ void voxy_light_manager_fini(struct voxy_light_manager *light_manager)
   DYNAMIC_ARRAY_CLEAR(light_manager->light_creation_updates);
 }
 
-void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, ivec3_t position, uint8_t light_level)
+void voxy_light_manager_enqueue_destruction_update_at(struct voxy_light_manager *light_manager, struct voxy_chunk *chunk, ivec3_t position, uint8_t light_level)
 {
-  DYNAMIC_ARRAY_APPEND(light_manager->light_destruction_updates, ((struct light_destruction_update){ .position = position, .old_light_level = light_level, }));
+  DYNAMIC_ARRAY_APPEND(light_manager->light_destruction_updates, ((struct light_destruction_update){
+      .chunk = chunk,
+      .x = position.x,
+      .y = position.y,
+      .z = position.z,
+      .old_light_level = light_level,
+  }));
 }
 
-void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, ivec3_t position)
+void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *light_manager, struct voxy_chunk *chunk, ivec3_t position)
 {
-  DYNAMIC_ARRAY_APPEND(light_manager->light_creation_updates, ((struct light_creation_update){ .position = position,  }));
+  DYNAMIC_ARRAY_APPEND(light_manager->light_destruction_updates, ((struct light_destruction_update){
+      .chunk = chunk,
+      .x = position.x,
+      .y = position.y,
+      .z = position.z,
+  }));
+}
+
+
+void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t light_level)
+{
+  ivec3_t chunk_position = get_chunk_position_i(position);
+  ivec3_t local_position = global_position_to_local_position_i(position);
+
+  struct voxy_chunk *chunk;
+  if(!(chunk = voxy_chunk_hash_table_lookup(&chunk_manager->chunks, chunk_position)))
+    return;
+
+  voxy_light_manager_enqueue_destruction_update_at(light_manager, chunk, local_position, light_level);
+}
+
+void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_chunk_manager *chunk_manager, ivec3_t position)
+{
+  ivec3_t chunk_position = get_chunk_position_i(position);
+  ivec3_t local_position = global_position_to_local_position_i(position);
+
+  struct voxy_chunk *chunk;
+  if(!(chunk = voxy_chunk_hash_table_lookup(&chunk_manager->chunks, chunk_position)))
+    return;
+
+  voxy_light_manager_enqueue_creation_update_at(light_manager, chunk, local_position);
 }
 
 /// Compute new light level after propagation in direction.
@@ -43,34 +81,100 @@ static uint8_t propagate(uint8_t light_level, direction_t direction)
 
 static void process_light_destruction_update(
     struct voxy_block_registry *block_registry,
-    struct voxy_chunk_manager *chunk_manager,
     struct light_destruction_updates *new_light_destruction_updates,
     struct light_creation_updates *new_light_creation_updates,
     struct light_destruction_update update, direction_t direction)
 {
-  const ivec3_t neighbour_position = ivec3_add(update.position, direction_as_ivec(direction));
-  const uint8_t neighbour_id = voxy_chunk_manager_get_block_id(chunk_manager, neighbour_position, UINT8_MAX);
-  if(neighbour_id == UINT8_MAX)
+  struct voxy_chunk *neighbour_chunk = update.chunk;
+  ivec3_t neighbour_position = ivec3(update.x, update.y, update.z);
+  switch(direction)
+  {
+  case DIRECTION_LEFT:
+    if(neighbour_position.x == 0)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_LEFT];
+      neighbour_position.x = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      neighbour_position.x -= 1;
+    break;
+  case DIRECTION_RIGHT:
+    if(neighbour_position.x == VOXY_CHUNK_WIDTH - 1)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_RIGHT];
+      neighbour_position.x = 0;
+    }
+    else
+      neighbour_position.x += 1;
+    break;
+
+  case DIRECTION_BACK:
+    if(neighbour_position.y == 0)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BACK];
+      neighbour_position.y = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      neighbour_position.y -= 1;
+    break;
+  case DIRECTION_FRONT:
+    if(neighbour_position.y == VOXY_CHUNK_WIDTH - 1)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_FRONT];
+      neighbour_position.y = 0;
+    }
+    else
+      neighbour_position.y += 1;
+    break;
+
+  case DIRECTION_BOTTOM:
+    if(neighbour_position.z == 0)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BOTTOM];
+      neighbour_position.z = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      neighbour_position.z -= 1;
+    break;
+  case DIRECTION_TOP:
+    if(neighbour_position.z == VOXY_CHUNK_WIDTH - 1)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_TOP];
+      neighbour_position.z = 0;
+    }
+    else
+      neighbour_position.z += 1;
+    break;
+  default:
+    assert(0 && "Unreachable");
+  }
+
+  if(!neighbour_chunk)
     return;
 
+  const uint8_t neighbour_id = voxy_chunk_get_block_id(neighbour_chunk, neighbour_position);
   const struct voxy_block_info neighbour_info = voxy_block_registry_query_block(block_registry, neighbour_id);
   if(neighbour_info.collide)
     return;
 
-  uint8_t neighbour_light_level;
   uint8_t tmp;
-  if(!voxy_chunk_manager_get_block_light_level_atomic(chunk_manager, neighbour_position, &neighbour_light_level, &tmp))
-    return;
+
+  uint8_t neighbour_light_level;
+  voxy_chunk_get_block_light_level_atomic(neighbour_chunk, neighbour_position, &neighbour_light_level, &tmp);
 
   while(neighbour_light_level != 0)
     if(neighbour_light_level == propagate(update.old_light_level, direction))
     {
       uint8_t neighbour_old_light_level = neighbour_light_level;
-      if(!voxy_chunk_manager_set_block_light_level_atomic(chunk_manager, neighbour_position, &neighbour_light_level, &tmp))
+      neighbour_light_level = 0;
+      if(!voxy_chunk_set_block_light_level_atomic(neighbour_chunk, neighbour_position, &neighbour_light_level, &tmp))
         continue;
 
       struct light_destruction_update new_update;
-      new_update.position = neighbour_position;
+      new_update.chunk = neighbour_chunk;
+      new_update.x = neighbour_position.x;
+      new_update.y = neighbour_position.y;
+      new_update.z = neighbour_position.z;
       new_update.old_light_level = neighbour_old_light_level;
       DYNAMIC_ARRAY_APPEND(*new_light_destruction_updates, new_update);
       return;
@@ -78,7 +182,10 @@ static void process_light_destruction_update(
     else
     {
       struct light_creation_update new_update;
-      new_update.position = neighbour_position;
+      new_update.chunk = neighbour_chunk;
+      new_update.x = neighbour_position.x;
+      new_update.y = neighbour_position.y;
+      new_update.z = neighbour_position.z;
       DYNAMIC_ARRAY_APPEND(*new_light_creation_updates, new_update);
       return;
     }
@@ -86,15 +193,77 @@ static void process_light_destruction_update(
 
 static void process_light_creation_update(
     struct voxy_block_registry *block_registry,
-    struct voxy_chunk_manager *chunk_manager,
     struct light_creation_updates *new_light_creation_updates,
     struct light_creation_update update, direction_t direction)
 {
-  const ivec3_t neighbour_position = ivec3_add(update.position, direction_as_ivec(direction));
-  const uint8_t neighbour_id = voxy_chunk_manager_get_block_id(chunk_manager, neighbour_position, UINT8_MAX);
-  if(neighbour_id == UINT8_MAX)
+  struct voxy_chunk *neighbour_chunk = update.chunk;
+  ivec3_t neighbour_position = ivec3(update.x, update.y, update.z);
+  switch(direction)
+  {
+  case DIRECTION_LEFT:
+    if(neighbour_position.x == 0)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_LEFT];
+      neighbour_position.x = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      neighbour_position.x -= 1;
+    break;
+  case DIRECTION_RIGHT:
+    if(neighbour_position.x == VOXY_CHUNK_WIDTH - 1)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_RIGHT];
+      neighbour_position.x = 0;
+    }
+    else
+      neighbour_position.x += 1;
+    break;
+
+  case DIRECTION_BACK:
+    if(neighbour_position.y == 0)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BACK];
+      neighbour_position.y = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      neighbour_position.y -= 1;
+    break;
+  case DIRECTION_FRONT:
+    if(neighbour_position.y == VOXY_CHUNK_WIDTH - 1)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_FRONT];
+      neighbour_position.y = 0;
+    }
+    else
+      neighbour_position.y += 1;
+    break;
+
+  case DIRECTION_BOTTOM:
+    if(neighbour_position.z == 0)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BOTTOM];
+      neighbour_position.z = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      neighbour_position.z -= 1;
+    break;
+  case DIRECTION_TOP:
+    if(neighbour_position.z == VOXY_CHUNK_WIDTH - 1)
+    {
+      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_TOP];
+      neighbour_position.z = 0;
+    }
+    else
+      neighbour_position.z += 1;
+    break;
+  default:
+    assert(0 && "Unreachable");
+  }
+
+  if(!neighbour_chunk)
     return;
 
+  const uint8_t neighbour_id = voxy_chunk_get_block_id(neighbour_chunk, neighbour_position);
   const struct voxy_block_info neighbour_info = voxy_block_registry_query_block(block_registry, neighbour_id);
   if(neighbour_info.collide)
     return;
@@ -102,27 +271,28 @@ static void process_light_creation_update(
   uint8_t tmp;
 
   uint8_t light_level;
-  if(!voxy_chunk_manager_get_block_light_level_atomic(chunk_manager, update.position, &light_level, &tmp))
-    return;
+  voxy_chunk_get_block_light_level_atomic(update.chunk, ivec3(update.x, update.y, update.z), &light_level, &tmp);
 
   uint8_t neighbour_light_level;
-  if(!voxy_chunk_manager_get_block_light_level_atomic(chunk_manager, neighbour_position, &neighbour_light_level, &tmp))
-    return;
+  voxy_chunk_get_block_light_level_atomic(neighbour_chunk, neighbour_position, &neighbour_light_level, &tmp);
 
   while(neighbour_light_level < propagate(light_level, direction))
   {
     neighbour_light_level = propagate(light_level, direction);
-    if(voxy_chunk_manager_set_block_light_level_atomic(chunk_manager, neighbour_position, &neighbour_light_level, &tmp))
+    if(voxy_chunk_set_block_light_level_atomic(neighbour_chunk, neighbour_position, &neighbour_light_level, &tmp))
     {
       struct light_creation_update new_update;
-      new_update.position = neighbour_position;
+      new_update.chunk = neighbour_chunk;
+      new_update.x = neighbour_position.x;
+      new_update.y = neighbour_position.y;
+      new_update.z = neighbour_position.z;
       DYNAMIC_ARRAY_APPEND(*new_light_creation_updates, new_update);
       return;
     }
   }
 }
 
-static void process_light_destruction_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
+static void process_light_destruction_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry)
 {
   profile_begin();
 
@@ -136,7 +306,7 @@ static void process_light_destruction_updates(struct voxy_light_manager *light_m
       #pragma omp for
       for(size_t i=0; i<light_manager->light_destruction_updates.item_count; ++i)
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
-          process_light_destruction_update(block_registry, chunk_manager, &new_light_destruction_updates, &new_light_creation_updates, light_manager->light_destruction_updates.items[i], direction);
+          process_light_destruction_update(block_registry, &new_light_destruction_updates, &new_light_creation_updates, light_manager->light_destruction_updates.items[i], direction);
 
       #pragma omp single
       {
@@ -167,7 +337,7 @@ static void process_light_destruction_updates(struct voxy_light_manager *light_m
   profile_end("count", tformat("%zd", count));
 }
 
-static void process_light_creation_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
+static void process_light_creation_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry)
 {
   profile_begin();
 
@@ -180,7 +350,7 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
       #pragma omp for
       for(size_t i=0; i<light_manager->light_creation_updates.item_count; ++i)
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
-          process_light_creation_update(block_registry, chunk_manager, &new_light_creation_updates, light_manager->light_creation_updates.items[i], direction);
+          process_light_creation_update(block_registry, &new_light_creation_updates, light_manager->light_creation_updates.items[i], direction);
 
       #pragma omp single
       {
@@ -206,12 +376,12 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
   profile_end("count", tformat("%zd", count));
 }
 
-void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry, struct voxy_chunk_manager *chunk_manager)
+void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry)
 {
   profile_begin();
 
-  process_light_destruction_updates(light_manager, block_registry, chunk_manager);
-  process_light_creation_updates(light_manager, block_registry, chunk_manager);
+  process_light_destruction_updates(light_manager, block_registry);
+  process_light_creation_updates(light_manager, block_registry);
 
   profile_end();
 }

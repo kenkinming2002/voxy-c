@@ -110,14 +110,13 @@ void application_fini(struct application *application)
 
 static void application_update_network(struct application *application)
 {
-  profile_begin();
+  profile_scope;
   libnet_client_update(application->client);
-  profile_end();
 }
 
 static void application_update(struct application *application)
 {
-  profile_begin();
+  profile_scope;
 
   window_update();
 
@@ -143,8 +142,6 @@ static void application_update(struct application *application)
   ui_render();
 
   window_present();
-
-  profile_end();
 }
 
 void application_run(struct application *application)

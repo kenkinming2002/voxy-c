@@ -143,7 +143,7 @@ static struct chunk_future load_or_generate_chunk(ivec3_t position, struct voxy_
 
 static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database , struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, const struct voxy_context *context)
 {
-  profile_begin();
+  profile_scope;
 
   size_t load_count = 0;
   size_t generate_count = 0;
@@ -180,13 +180,11 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
 
   if(generate_count != 0) LOG_INFO("Chunk Manager: Generated %zu chunks", generate_count);
   if(load_count != 0) LOG_INFO("Chunk Manager: Loaded %zu chunks from disk", load_count);
-
-  profile_end();
 }
 
 static void flush_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database, libnet_server_t server)
 {
-  profile_begin();
+  profile_scope;
 
   size_t save_count = 0;
   size_t send_count = 0;
@@ -214,13 +212,11 @@ static void flush_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_c
 
   if(save_count != 0) LOG_INFO("Chunk Manager: Saved %zu chunks to disk", save_count);
   if(send_count != 0) LOG_INFO("Chunk Manager: Sent %zu chunks over the network", send_count);
-
-  profile_end();
 }
 
 static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
 {
-  profile_begin();
+  profile_scope;
 
   size_t discard_count = 0;
 
@@ -245,19 +241,15 @@ static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_serv
   }
 
   if(discard_count != 0) LOG_INFO("Chunk Manager: Discarded %zu", discard_count);
-
-  profile_end();
 }
 
 void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context)
 {
-  profile_begin();
+  profile_scope;
 
   load_or_generate_chunks(chunk_manager, chunk_database, chunk_generator, light_manager, context);
   flush_chunks(chunk_manager, chunk_database, server);
   discard_chunks(chunk_manager, server);
-
-  profile_end();
 }
 
 void voxy_chunk_manager_on_client_connected(struct voxy_chunk_manager *chunk_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)

@@ -167,7 +167,7 @@ void physics_update(
     struct voxy_entity_manager *entity_manager,
     float dt)
 {
-  profile_begin();
+  profile_scope;
 
   for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
   {
@@ -177,6 +177,4 @@ void physics_update(
 
     entity_update_physics(block_registry, entity_registry, chunk_manager, entity, dt);
   }
-
-  profile_end();
 }

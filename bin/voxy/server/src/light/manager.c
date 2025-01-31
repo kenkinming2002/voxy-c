@@ -378,10 +378,8 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
 
 void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry)
 {
-  profile_begin();
+  profile_scope;
 
   process_light_destruction_updates(light_manager, block_registry);
   process_light_creation_updates(light_manager, block_registry);
-
-  profile_end();
 }

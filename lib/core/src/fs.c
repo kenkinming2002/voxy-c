@@ -5,8 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+
 #include <unistd.h>
+#include <fcntl.h>
+
+#include <sys/stat.h>
 
 /// Recursive mkdir.
 ///
@@ -67,3 +70,83 @@ char *parent(const char *dir)
   parent[n] = '\0';
   return parent;
 }
+
+static int read_all(int fd, char *buf, size_t n)
+{
+  while(n > 0)
+  {
+    ssize_t result = read(fd, buf, n);
+    if(result == -1)
+    {
+      if(errno == EINTR)
+        continue;
+      return -1;
+    }
+
+    buf += result;
+    n -= result;
+  }
+  return 0;
+}
+
+static int write_all(int fd, const char *buf, size_t n)
+{
+  while(n > 0)
+  {
+    ssize_t result = write(fd, buf, n);
+    if(result == -1)
+    {
+      if(errno == EINTR)
+        continue;
+      return -1;
+    }
+
+    buf += result;
+    n -= result;
+  }
+  return 0;
+}
+
+/// Read all data from a file.
+///
+/// Return non-zero value on failure.
+int read_file_all(const char *path, char **data, size_t *length)
+{
+  int fd = open(path, O_RDONLY);
+  if(fd == -1)
+    return -1;
+
+  struct stat stat;
+  if(fstat(fd, &stat) == -1)
+  {
+    close(fd);
+    return -1;
+  }
+
+  *length = stat.st_size;
+  *data = malloc(*length);
+  if(read_all(fd, *data, *length) != 0)
+  {
+    free(*data);
+    close(fd);
+    return -1;
+  }
+
+  close(fd);
+  return 0;
+}
+
+/// Write all data to a file.
+///
+/// Return non-zero value on failure.
+int write_file_all(const char *path, const char *data, size_t length)
+{
+  int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  if(fd == -1)
+    return -1;
+
+  int result = write_all(fd, data, length);
+  close(fd);
+  return result;
+}
+

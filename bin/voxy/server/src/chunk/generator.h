@@ -35,11 +35,12 @@ struct voxy_chunk_generator_wrapper
 struct voxy_chunk_generator
 {
   seed_t seed;
-  voxy_generate_chunk_t generate_chunk;
   struct voxy_chunk_generator_wrapper_hash_table wrappers;
+
+  voxy_generate_chunk_t generate_chunk;
 };
 
-void voxy_chunk_generator_init(struct voxy_chunk_generator *chunk_generator, seed_t seed);
+void voxy_chunk_generator_init(struct voxy_chunk_generator *chunk_generator, const char *world_directory);
 void voxy_chunk_generator_fini(struct voxy_chunk_generator *chunk_generator);
 
 struct chunk_future voxy_chunk_generator_generate(struct voxy_chunk_generator *chunk_generator, ivec3_t position, const struct voxy_context *context);

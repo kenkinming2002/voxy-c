@@ -4,10 +4,15 @@
 
 #include <voxy/server/context.h>
 
+#include <libcore/format.h>
 #include <libcore/utils.h>
 #include <libcore/profile.h>
+#include <libcore/fs.h>
+#include <libcore/log.h>
 
 #include <string.h>
+#include <ctype.h>
+#include <errno.h>
 
 #define SC_HASH_TABLE_IMPLEMENTATION
 #define SC_HASH_TABLE_PREFIX voxy_chunk_generator_wrapper
@@ -57,11 +62,48 @@ static void job_destroy(struct thread_pool_job *job)
 }
 
 
-void voxy_chunk_generator_init(struct voxy_chunk_generator *chunk_generator, seed_t seed)
+void voxy_chunk_generator_init(struct voxy_chunk_generator *chunk_generator, const char *world_directory)
 {
-  chunk_generator->seed = seed;
-  chunk_generator->generate_chunk = NULL;
+  const char *path = tformat("%s/chunks/seed", world_directory);
+
+  char *seed_data;
+  size_t seed_length;
+  if(read_file_all(path, &seed_data, &seed_length) != 0)
+  {
+    seed_length = 32;
+    seed_data = malloc(seed_length);
+
+    srand(time(NULL));
+    for(unsigned i=0; i<seed_length; ++i)
+      while(!isalnum(seed_data[i] = rand()));
+
+    LOG_INFO("Failed to find seed for chunk generator. Generated a new seed %.*s", (int)seed_length, seed_data);
+
+    if(mkdir_recursive(tformat("%s/chunks", world_directory)) != 0)
+    {
+      LOG_INFO("Failed to create directory for chunk generator seed file: %s", strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    if(write_file_all(path, seed_data, seed_length) != 0)
+    {
+      LOG_INFO("Failed to write chunk generator seed file: %s", strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  chunk_generator->seed = 0b0101110101011010101110101101010101011010111010100011010100101010;
+  seed_combine(&chunk_generator->seed, seed_data, seed_length);
+  seed_combine(&chunk_generator->seed, seed_data, seed_length);
+
+  LOG_INFO("Seed for chunk generator(string): %.*s", (int)seed_length, seed_data);
+  LOG_INFO("Seed for chunk generator(integer): %zu", chunk_generator->seed);
+
+  free(seed_data);
+
   voxy_chunk_generator_wrapper_hash_table_init(&chunk_generator->wrappers);
+
+  chunk_generator->generate_chunk = NULL;
 }
 
 void voxy_chunk_generator_fini(struct voxy_chunk_generator *chunk_generator)

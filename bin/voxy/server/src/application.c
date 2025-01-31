@@ -9,7 +9,6 @@
 #include <libcore/profile.h>
 
 #include <stdio.h>
-#include <time.h>
 
 int application_init(struct application *application, int argc, char *argv[])
 {
@@ -34,7 +33,7 @@ int application_init(struct application *application, int argc, char *argv[])
 
   voxy_chunk_manager_init(&application->chunk_manager);
   voxy_chunk_database_init(&application->chunk_database, argv[4]);
-  voxy_chunk_generator_init(&application->chunk_generator, time(NULL));
+  voxy_chunk_generator_init(&application->chunk_generator, argv[4]);
 
   voxy_entity_manager_init(&application->entity_manager);
   if(voxy_entity_database_init(&application->entity_database, argv[4]) != 0) goto error1;

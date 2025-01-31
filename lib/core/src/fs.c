@@ -13,26 +13,22 @@
 /// Return non-zero value on failure.
 int mkdir_recursive(const char *_dir)
 {
-  int result = 0;
-
-  char *dir = strdup(_dir);
+  char *dir = strdupa(_dir);
   for(char *p = dir; *p; ++p)
     if(*p == DIRECTORY_SEPARATOR)
     {
       *p = '\0';
-      result = mkdir(dir, 0755);
+
+      if(mkdir(dir, 0755) != 0 && errno != EEXIST)
+        return -1;
+
       *p = DIRECTORY_SEPARATOR;
-      if(result != 0 && errno != EEXIST)
-        goto out;
     }
 
-  result = mkdir(dir, 0755);
-  if(result != 0 && errno != EEXIST)
-    goto out;
+  if(mkdir(dir, 0755) != 0 && errno != EEXIST)
+    return -1;
 
-out:
-  free(dir);
-  return result;
+  return 0;
 }
 
 /// Create hard link.

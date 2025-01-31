@@ -61,8 +61,7 @@ static void profile_append_event(const char *name, const char *cat, const char *
     return;
   }
 
-  const long long ts = time.tv_sec * 1000000 + time.tv_nsec / 1000;
-  const long long tss = time.tv_sec * 1000000000 + time.tv_nsec;
+  const long long nsec = time.tv_sec * 1000000000 + time.tv_nsec;
 
   const pid_t pid = getpid();
   const pid_t tid = gettid();
@@ -76,9 +75,7 @@ static void profile_append_event(const char *name, const char *cat, const char *
     fprintf(file, "\"ph\":\"%s\"", ph);
 
     fprintf(file, ",");
-    fprintf(file, "\"ts\":\"%lld\"", ts);
-    fprintf(file, ",");
-    fprintf(file, "\"tss\":\"%lld\"", tss);
+    fprintf(file, "\"ts\":\"%lf\"", (double)nsec * 1e-3);
 
     fprintf(file, ",");
     fprintf(file, "\"pid\":\"%d\"", pid);

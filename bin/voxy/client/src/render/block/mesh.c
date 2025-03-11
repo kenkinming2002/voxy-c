@@ -47,8 +47,8 @@ void block_mesh_update(struct block_mesh *block_mesh, struct block_vertices vert
     glEnableVertexAttribArray(3);
 
     glVertexAttribIPointer(0, 3, GL_UNSIGNED_INT, sizeof(struct block_vertex), (void *)offsetof(struct block_vertex, center));
-    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(struct block_vertex), (void *)offsetof(struct block_vertex, normal_index_and_texture_index));
-    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(struct block_vertex), (void *)offsetof(struct block_vertex, light_level_and_occlusion_counts));
+    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(struct block_vertex), (void *)offsetof(struct block_vertex, metadata1));
+    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(struct block_vertex), (void *)offsetof(struct block_vertex, metadata2));
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(struct block_vertex), (void *)offsetof(struct block_vertex, damage));
 
     glVertexAttribDivisor(0, 1);

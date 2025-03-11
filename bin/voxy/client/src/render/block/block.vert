@@ -1,14 +1,16 @@
 #version 460 core
 layout(location = 0) in ivec3 v_center;
-layout(location = 1) in uint  v_normal_index_and_texture_index;
-layout(location = 2) in uint  v_light_level_and_occlusion_counts;
+layout(location = 1) in uint  v_metadata1;
+layout(location = 2) in uint  v_metadata2;
 layout(location = 3) in float v_damage;
 
 out vec2      f_texture_coords;
 flat out uint f_texture_index;
-out float     f_light;
-out float     f_visibility;
-out float     f_damage;
+
+out mat2 f_luminances;
+
+out float f_visibility;
+out float f_damage;
 
 uniform mat4 VP;
 uniform mat4 V;
@@ -53,26 +55,10 @@ vec2 get_texture_coords()
   }
 }
 
-uint get_light_level()
-{
-  return bitfieldExtract(v_light_level_and_occlusion_counts, 0, 4);
-}
-
-uint get_occlusion_count()
-{
-  switch(gl_VertexID)
-  {
-  case 0: return bitfieldExtract(v_light_level_and_occlusion_counts, 4,  4);
-  case 1: return bitfieldExtract(v_light_level_and_occlusion_counts, 8,  4);
-  case 2: return bitfieldExtract(v_light_level_and_occlusion_counts, 12, 4);
-  case 3: return bitfieldExtract(v_light_level_and_occlusion_counts, 16, 4);
-  }
-}
-
 void main()
 {
-  uint normal_index  = bitfieldExtract(v_normal_index_and_texture_index, 0, 3);
-  uint texture_index = bitfieldExtract(v_normal_index_and_texture_index, 3, 29);
+  uint normal_index = bitfieldExtract(v_metadata2, 16, 3);
+  uint texture_index = bitfieldExtract(v_metadata2, 19, 13);
 
   vec3 normal = get_normal(normal_index);
 
@@ -91,9 +77,16 @@ void main()
   f_texture_coords = texture_coords;
   f_texture_index  = texture_index;
 
-  uint light_level     = get_light_level();
-  uint occlusion_count = get_occlusion_count();
-  f_light = (float(light_level) / 15.0 * 0.95 + 0.05) * (1.0 - float(occlusion_count) / float(2 * 2 * 2));
+  for(int v = 0; v < 2; ++v)
+    for(int u = 0; u < 2; ++u)
+    {
+      uint light_level = bitfieldExtract(v_metadata1, 8 * (2 * v + u),  8);
+      uint occlusion   = bitfieldExtract(v_metadata2, 4 * (2 * v + u),  4);
+
+      float luminance = float(light_level) / float(8-occlusion) / 15.0 * mix(0.3, 1.0, 1.0 - float(occlusion) / 8.0);
+      f_luminances[v][u] = luminance;
+    }
+
 
   vec4  view_position = V * vec4(position, 1.0);
   float view_distance = length(view_position.xyz);

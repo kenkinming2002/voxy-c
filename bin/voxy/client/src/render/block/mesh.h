@@ -9,16 +9,13 @@ struct block_vertex
 {
   ivec3_t center;
 
-  // Bits 0..2: normal index
-  // Bits 3.15: texture index
-  uint32_t normal_index_and_texture_index;
+  // Light levels: 4 * 6 bits = 24 bits
+  uint32_t metadata1;
 
-  // Bits 0..3:   base light level
-  // Bits 4..7:   occlusion count 0
-  // Bits 8..11:  occlusion count 1
-  // Bits 12..15: occlusion count 2
-  // Bits 16..20: occlusion count 3
-  uint32_t light_level_and_occlusion_counts;
+  // Occlusion counts: 4 * 4 bits = 16 bits
+  // Normal index:                  3  bits
+  // Texture index:                 13 bits
+  uint32_t metadata2;
 
   float damage;
 };

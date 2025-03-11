@@ -27,18 +27,25 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
   struct block_vertices transparent_vertices = {0};
 
   // Cache block ids
-  uint8_t block_ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2];
+  uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2];
   for(int z = -1; z<VOXY_CHUNK_WIDTH+1; ++z)
     for(int y = -1; y<VOXY_CHUNK_WIDTH+1; ++y)
       for(int x = -1; x<VOXY_CHUNK_WIDTH+1; ++x)
-        block_ids[z+1][y+1][x+1] = chunk_get_block_id_ex(chunk, ivec3(x, y, z), 0);
+        ids[z+1][y+1][x+1] = chunk_get_block_id_ex(chunk, ivec3(x, y, z), 0);
 
-  // Cache block light_levels
-  uint8_t block_light_levels[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2];
-  for(int z = -1; z<VOXY_CHUNK_WIDTH+1; ++z)
-    for(int y = -1; y<VOXY_CHUNK_WIDTH+1; ++y)
-      for(int x = -1; x<VOXY_CHUNK_WIDTH+1; ++x)
-        block_light_levels[z+1][y+1][x+1] = chunk_get_block_light_level_ex(chunk, ivec3(x, y, z), 15);
+  // Compute light levels
+  uint8_t light_levels[VOXY_CHUNK_WIDTH+1][VOXY_CHUNK_WIDTH+1][VOXY_CHUNK_WIDTH+1];
+  for(int z = 0; z<VOXY_CHUNK_WIDTH+1; ++z)
+    for(int y = 0; y<VOXY_CHUNK_WIDTH+1; ++y)
+      for(int x = 0; x<VOXY_CHUNK_WIDTH+1; ++x)
+      {
+        light_levels[z][y][x] = 0;
+        for(int dz = 0; dz<2; ++dz)
+          for(int dy = 0; dy<2; ++dy)
+            for(int dx = 0; dx<2; ++dx)
+              if(ids[z+dz][y+dy][x+dx] == 0)
+                light_levels[z][y][x] += chunk_get_block_light_level_ex(chunk, ivec3(x+dx, y+dy, z+dz), 15);
+      }
 
   /// Compute occlusion
   uint8_t occlusions[VOXY_CHUNK_WIDTH+1][VOXY_CHUNK_WIDTH+1][VOXY_CHUNK_WIDTH+1];
@@ -50,7 +57,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
         for(int dz = 0; dz<2; ++dz)
           for(int dy = 0; dy<2; ++dy)
             for(int dx = 0; dx<2; ++dx)
-              if(block_ids[z+dz][y+dy][x+dx] != 0)
+              if(ids[z+dz][y+dy][x+dx] != 0)
                 occlusions[z][y][x] += 1;
       }
 
@@ -62,16 +69,15 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
         const ivec3_t local_position = ivec3(x, y, z);
         const ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk->position, VOXY_CHUNK_WIDTH), local_position);
 
-        const uint8_t block_id = block_ids[z+1][y+1][x+1];
-        const uint8_t block_light_level = block_light_levels[z+1][y+1][x+1];
+        const uint8_t block_id = ids[z+1][y+1][x+1];
+        const uint8_t block_light_level = light_levels[z+1][y+1][x+1];
         const enum voxy_block_type block_type = voxy_block_registry_query_block(block_registry, block_id).type;
 
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         {
           const ivec3_t normal = direction_as_ivec(direction);
 
-          const uint8_t neighbour_block_id = block_ids[z+normal.z+1][y+normal.y+1][x+normal.x+1];
-          const uint8_t neighbour_block_light_level = block_light_levels[z+normal.z+1][y+normal.y+1][x+normal.x+1];
+          const uint8_t neighbour_block_id = ids[z+normal.z+1][y+normal.y+1][x+normal.x+1];
           const enum voxy_block_type neighbour_block_type = voxy_block_registry_query_block(block_registry, neighbour_block_id).type;
 
           if(block_type == VOXY_BLOCK_TYPE_INVISIBLE || neighbour_block_type != VOXY_BLOCK_TYPE_INVISIBLE)
@@ -85,8 +91,9 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
           const ivec3_t axis2 = normal.z != 0 ? ivec3(1, 0, 0) : ivec3(0, 0, 1);
           const ivec3_t axis1 = ivec3_cross(normal, axis2);
 
-          const uint16_t light_level = neighbour_block_light_level;
-          uint16_t occlusion_counts[2][2];
+          uint8_t local_light_levels[2][2];
+          uint8_t local_occlusions[2][2];
+
           for(int v = 0; v < 2; ++v)
             for(int u = 0; u < 2; ++u)
             {
@@ -99,17 +106,31 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
               position = ivec3_add(position, ivec3(1, 1, 1));
               position = ivec3_div_scalar(position, 2);
 
-              occlusion_counts[v][u] = occlusions[position.z][position.y][position.x];
+              local_light_levels[v][u] = light_levels[position.z][position.y][position.x];
+              local_occlusions[v][u] = occlusions[position.z][position.y][position.x];
             }
 
           struct block_vertex vertex;
+
           vertex.center = center;
-          vertex.normal_index_and_texture_index = normal_index | texture_index << 3;
-          vertex.light_level_and_occlusion_counts = light_level;
-          vertex.light_level_and_occlusion_counts |= occlusion_counts[0][0] << 4;
-          vertex.light_level_and_occlusion_counts |= occlusion_counts[0][1] << 8;
-          vertex.light_level_and_occlusion_counts |= occlusion_counts[1][0] << 12;
-          vertex.light_level_and_occlusion_counts |= occlusion_counts[1][1] << 16;
+
+          vertex.metadata1 = 0;
+
+          vertex.metadata1 |= (uint32_t)local_light_levels[0][0] << (0 * 8);
+          vertex.metadata1 |= (uint32_t)local_light_levels[0][1] << (1 * 8);
+          vertex.metadata1 |= (uint32_t)local_light_levels[1][0] << (2 * 8);;
+          vertex.metadata1 |= (uint32_t)local_light_levels[1][1] << (3 * 8);;
+
+          vertex.metadata2 = 0;
+
+          vertex.metadata2 |= (uint32_t)local_occlusions[0][0] << (0 * 4);
+          vertex.metadata2 |= (uint32_t)local_occlusions[0][1] << (1 * 4);
+          vertex.metadata2 |= (uint32_t)local_occlusions[1][0] << (2 * 4);
+          vertex.metadata2 |= (uint32_t)local_occlusions[1][1] << (3 * 4);
+
+          vertex.metadata2 |= normal_index << 16;
+          vertex.metadata2 |= texture_index << 19;
+
           vertex.damage = 0.0f;
 
           DYNAMIC_ARRAY_APPEND(opaque_vertices, vertex);

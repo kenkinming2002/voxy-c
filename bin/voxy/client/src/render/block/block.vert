@@ -81,9 +81,9 @@ void main()
     for(int u = 0; u < 2; ++u)
     {
       uint light_level = bitfieldExtract(v_metadata1, 8 * (2 * v + u),  8);
-      uint occlusion   = bitfieldExtract(v_metadata2, 4 * (2 * v + u),  4);
+      uint count       = bitfieldExtract(v_metadata2, 4 * (2 * v + u),  4);
 
-      float luminance = float(light_level) / float(8-occlusion) / 15.0 * mix(0.3, 1.0, 1.0 - float(occlusion) / 8.0);
+      float luminance = float(light_level) / float(count) / 15.0 * mix(0.3, 1.0, float(count) / 8.0);
       f_luminances[v][u] = luminance;
     }
 

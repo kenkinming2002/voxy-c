@@ -122,7 +122,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
               bool final = false;
 
-              outer_local_light_levels[v][u] += inner_local_light_levels[0][0][1];
+              outer_local_light_levels[v][u] += inner_local_light_levels[1][0][0];
               outer_local_counts[v][u] += 1;
 
               if(inner_local_ids[1][0][1] == 0)

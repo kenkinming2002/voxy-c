@@ -64,7 +64,7 @@ void voxy_chunk_database_save_wrapper_dispose(struct voxy_chunk_database_save_wr
 
 void voxy_chunk_database_init(struct voxy_chunk_database *chunk_database, const char *world_directory)
 {
-  io_uring_queue_init(CHUNK_DATABASE_LOAD_LIMIT * 6, &chunk_database->ring, 0);
+  io_uring_queue_init(512, &chunk_database->ring, 0);
   io_uring_register_files_sparse(&chunk_database->ring, CHUNK_DATABASE_LOAD_LIMIT);
   memset(&chunk_database->fixed_file_bitmaps, 0, sizeof chunk_database->fixed_file_bitmaps);
 
@@ -130,6 +130,12 @@ static void free_fixed_file(struct voxy_chunk_database *chunk_database, int fixe
   chunk_database->fixed_file_bitmaps[i] &= ~(size_t)((size_t)1 << j);
 }
 
+static void io_uring_sq_ensure_space(struct io_uring *ring, unsigned n)
+{
+  if(io_uring_sq_space_left(ring) < n)
+    io_uring_submit(ring);
+}
+
 struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_database, ivec3_t position)
 {
   profile_scope;
@@ -162,6 +168,7 @@ struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_d
     wrapper->done = false;
 
     struct io_uring_sqe *sqe;
+    io_uring_sq_ensure_space(&chunk_database->ring, 3);
 
     sqe = io_uring_get_sqe(&chunk_database->ring);
     io_uring_prep_open_direct(sqe, wrapper->path, O_RDONLY, 0, wrapper->fixed_file);
@@ -176,8 +183,6 @@ struct chunk_future voxy_chunk_database_load(struct voxy_chunk_database *chunk_d
     sqe = io_uring_get_sqe(&chunk_database->ring);
     io_uring_prep_close_direct(sqe, wrapper->fixed_file);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_LOAD_CLOSE_DIRECT));
-
-    io_uring_submit(&chunk_database->ring);
 
     voxy_chunk_database_load_wrapper_hash_table_insert(&chunk_database->load_wrappers, wrapper);
 
@@ -224,6 +229,7 @@ struct unit_future voxy_chunk_database_save(struct voxy_chunk_database *chunk_da
     wrapper->done = false;
 
     struct io_uring_sqe *sqe;
+    io_uring_sq_ensure_space(&chunk_database->ring, 6);
 
     for(unsigned i=0; i<3; ++i)
     {
@@ -247,8 +253,6 @@ struct unit_future voxy_chunk_database_save(struct voxy_chunk_database *chunk_da
     io_uring_prep_close_direct(sqe, wrapper->fixed_file);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_SAVE_CLOSE_DIRECT));
 
-    io_uring_submit(&chunk_database->ring);
-
     voxy_chunk_database_save_wrapper_hash_table_insert(&chunk_database->save_wrappers, wrapper);
 
     return unit_future_pending;
@@ -266,8 +270,12 @@ void voxy_chunk_database_update(struct voxy_chunk_database *chunk_database)
 {
   profile_scope;
 
+  io_uring_submit(&chunk_database->ring);
+
   struct io_uring_cqe *cqe;
-  while(io_uring_peek_cqe(&chunk_database->ring, &cqe) == 0)
+  unsigned head;
+  unsigned count = 0;
+  io_uring_for_each_cqe(&chunk_database->ring, head, cqe)
   {
     uintptr_t tagged_ptr = io_uring_cqe_get_data64(cqe);
     switch(tagged_ptr_tag(tagged_ptr))
@@ -409,6 +417,7 @@ void voxy_chunk_database_update(struct voxy_chunk_database *chunk_database)
       break;
     }
 
-    io_uring_cqe_seen(&chunk_database->ring, cqe);
+    ++count;
   }
+  io_uring_cq_advance(&chunk_database->ring, count);
 }

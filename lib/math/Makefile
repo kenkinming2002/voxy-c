@@ -4,8 +4,6 @@ CFLAGS += -D_GNU_SOURCE
 CFLAGS += -fPIC
 CFLAGS += -Iinclude
 
-SRCS += src/direction.c
-
 .PHONY: clean depclean
 
 all: libmath.so

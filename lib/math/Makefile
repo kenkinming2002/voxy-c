@@ -1,3 +1,5 @@
+SRCS = src/dummy.c
+
 CFLAGS += -MMD
 CFLAGS += -Wall -Wextra
 CFLAGS += -D_GNU_SOURCE

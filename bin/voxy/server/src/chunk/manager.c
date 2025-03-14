@@ -11,6 +11,7 @@
 
 #include <libcore/log.h>
 #include <libcore/profile.h>
+#include <libcore/format.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -143,7 +144,7 @@ static struct chunk_future load_or_generate_chunk(ivec3_t position, struct voxy_
 
 static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database , struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, const struct voxy_context *context)
 {
-  profile_scope;
+  profile_begin();
 
   size_t load_count = 0;
   size_t generate_count = 0;
@@ -180,11 +181,15 @@ static void load_or_generate_chunks(struct voxy_chunk_manager *chunk_manager, st
 
   if(generate_count != 0) LOG_INFO("Chunk Manager: Generated %zu chunks", generate_count);
   if(load_count != 0) LOG_INFO("Chunk Manager: Loaded %zu chunks from disk", load_count);
+
+  profile_end("load_count", tformat("%zu", load_count),
+              "generate_count", tformat("%zu", generate_count),
+              "total_count", tformat("%zu", load_count + generate_count));
 }
 
 static void flush_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database, libnet_server_t server)
 {
-  profile_scope;
+  profile_begin();
 
   size_t save_count = 0;
   size_t send_count = 0;
@@ -212,11 +217,14 @@ static void flush_chunks(struct voxy_chunk_manager *chunk_manager, struct voxy_c
 
   if(save_count != 0) LOG_INFO("Chunk Manager: Saved %zu chunks to disk", save_count);
   if(send_count != 0) LOG_INFO("Chunk Manager: Sent %zu chunks over the network", send_count);
+
+  profile_end("send_count", tformat("%zu", send_count),
+              "save_count", tformat("%zu", save_count));
 }
 
 static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
 {
-  profile_scope;
+  profile_begin();
 
   size_t discard_count = 0;
 
@@ -241,6 +249,8 @@ static void discard_chunks(struct voxy_chunk_manager *chunk_manager, libnet_serv
   }
 
   if(discard_count != 0) LOG_INFO("Chunk Manager: Discarded %zu", discard_count);
+
+  profile_end("discard_count", tformat("%zu", discard_count));
 }
 
 void voxy_chunk_manager_update(struct voxy_chunk_manager *chunk_manager, struct voxy_chunk_database *chunk_database, struct voxy_chunk_generator *chunk_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context)

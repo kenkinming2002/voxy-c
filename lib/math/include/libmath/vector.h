@@ -1,7 +1,7 @@
 #ifndef LIBMATH_VECTOR_H
 #define LIBMATH_VECTOR_H
 
-#include <libmath/random.h>
+#include <libmath/hash.h>
 
 #include <math.h>
 #include <stdbool.h>
@@ -65,7 +65,7 @@ static inline ivec4_t fvec4_as_ivec4_round(fvec4_t vec) { return ivec4(roundf(ve
 #define VECTOR_DEFINE_OP_LENGTH(prefix, type, count)         static inline type                       VECTOR_FUNCTION_NAME(prefix, count, length)        (VECTOR_TYPE(prefix, count) a)                               { return sqrt(VECTOR_FUNCTION_NAME(prefix, count, length_squared)(a)); }
 #define VECTOR_DEFINE_OP_NORMALIZE(prefix, type, count)      static inline VECTOR_TYPE(prefix, count) VECTOR_FUNCTION_NAME(prefix, count, normalize)     (VECTOR_TYPE(prefix, count) a)                               { type length_squared = VECTOR_FUNCTION_NAME(prefix, count, length_squared)(a); return length_squared != 0 ? VECTOR_FUNCTION_NAME(prefix, count, div_scalar)(a, sqrt(length_squared)) : a; }
 
-#define VECTOR_DEFINE_OP_HASH(prefix, type, count) static inline size_t VECTOR_FUNCTION_NAME(prefix, count, hash) (VECTOR_TYPE(prefix, count) a) { seed_t result = 0; for(unsigned i=0; i<count; ++i) seed_combine(&result, &a.values[i], sizeof a.values[i]); return result; }
+#define VECTOR_DEFINE_OP_HASH(prefix, type, count) static inline size_t VECTOR_FUNCTION_NAME(prefix, count, hash) (VECTOR_TYPE(prefix, count) a) { return hash_fnv_1a(&a, sizeof a); }
 
 #define VECTOR_DEFINE_OP_COPYSIGN(prefix, type, count) static inline VECTOR_TYPE(prefix, count) VECTOR_FUNCTION_NAME(prefix, count, copysign) (VECTOR_TYPE(prefix, count) a, VECTOR_TYPE(prefix, count) b) { VECTOR_TYPE(prefix, count) result; for(unsigned i=0; i<count; ++i) result.values[i] = copysign(a.values[i], b.values[i]); return result; }
 

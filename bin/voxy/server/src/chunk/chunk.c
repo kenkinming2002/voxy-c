@@ -4,6 +4,7 @@
 
 #include "registry/block.h"
 
+#include <limits.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 

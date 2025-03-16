@@ -2,6 +2,8 @@
 #define VOXY_SERVER_CHUNK_GENERATOR_H
 
 #include <voxy/server/export.h>
+
+#include <libmath/random.h>
 #include <libmath/vector.h>
 
 struct voxy_chunk_generator;

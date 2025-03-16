@@ -79,76 +79,87 @@ static uint8_t propagate(uint8_t light_level, direction_t direction)
   return 0;
 }
 
-static void process_light_destruction_update(
+struct cursor
+{
+  struct voxy_chunk *chunk;
+  ivec3_t position;
+};
+
+static inline struct cursor traverse(struct cursor cursor, direction_t direction)
+{
+  switch(direction)
+  {
+  case DIRECTION_LEFT:
+    if(cursor.position.x == 0)
+    {
+      cursor.chunk = cursor.chunk->neighbours[DIRECTION_LEFT];
+      cursor.position.x = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      cursor.position.x -= 1;
+    break;
+  case DIRECTION_RIGHT:
+    if(cursor.position.x == VOXY_CHUNK_WIDTH - 1)
+    {
+      cursor.chunk = cursor.chunk->neighbours[DIRECTION_RIGHT];
+      cursor.position.x = 0;
+    }
+    else
+      cursor.position.x += 1;
+    break;
+
+  case DIRECTION_BACK:
+    if(cursor.position.y == 0)
+    {
+      cursor.chunk = cursor.chunk->neighbours[DIRECTION_BACK];
+      cursor.position.y = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      cursor.position.y -= 1;
+    break;
+  case DIRECTION_FRONT:
+    if(cursor.position.y == VOXY_CHUNK_WIDTH - 1)
+    {
+      cursor.chunk = cursor.chunk->neighbours[DIRECTION_FRONT];
+      cursor.position.y = 0;
+    }
+    else
+      cursor.position.y += 1;
+    break;
+
+  case DIRECTION_BOTTOM:
+    if(cursor.position.z == 0)
+    {
+      cursor.chunk = cursor.chunk->neighbours[DIRECTION_BOTTOM];
+      cursor.position.z = VOXY_CHUNK_WIDTH - 1;
+    }
+    else
+      cursor.position.z -= 1;
+    break;
+  case DIRECTION_TOP:
+    if(cursor.position.z == VOXY_CHUNK_WIDTH - 1)
+    {
+      cursor.chunk = cursor.chunk->neighbours[DIRECTION_TOP];
+      cursor.position.z = 0;
+    }
+    else
+      cursor.position.z += 1;
+    break;
+  default:
+    assert(0 && "Unreachable");
+  }
+  return cursor;
+}
+
+static inline void process_light_destruction_update(
     struct voxy_block_registry *block_registry,
     struct light_destruction_updates *new_light_destruction_updates,
     struct light_creation_updates *new_light_creation_updates,
     struct light_destruction_update update, direction_t direction)
 {
-  struct voxy_chunk *neighbour_chunk = update.chunk;
-  ivec3_t neighbour_position = ivec3(update.x, update.y, update.z);
-  switch(direction)
-  {
-  case DIRECTION_LEFT:
-    if(neighbour_position.x == 0)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_LEFT];
-      neighbour_position.x = VOXY_CHUNK_WIDTH - 1;
-    }
-    else
-      neighbour_position.x -= 1;
-    break;
-  case DIRECTION_RIGHT:
-    if(neighbour_position.x == VOXY_CHUNK_WIDTH - 1)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_RIGHT];
-      neighbour_position.x = 0;
-    }
-    else
-      neighbour_position.x += 1;
-    break;
-
-  case DIRECTION_BACK:
-    if(neighbour_position.y == 0)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BACK];
-      neighbour_position.y = VOXY_CHUNK_WIDTH - 1;
-    }
-    else
-      neighbour_position.y -= 1;
-    break;
-  case DIRECTION_FRONT:
-    if(neighbour_position.y == VOXY_CHUNK_WIDTH - 1)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_FRONT];
-      neighbour_position.y = 0;
-    }
-    else
-      neighbour_position.y += 1;
-    break;
-
-  case DIRECTION_BOTTOM:
-    if(neighbour_position.z == 0)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BOTTOM];
-      neighbour_position.z = VOXY_CHUNK_WIDTH - 1;
-    }
-    else
-      neighbour_position.z -= 1;
-    break;
-  case DIRECTION_TOP:
-    if(neighbour_position.z == VOXY_CHUNK_WIDTH - 1)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_TOP];
-      neighbour_position.z = 0;
-    }
-    else
-      neighbour_position.z += 1;
-    break;
-  default:
-    assert(0 && "Unreachable");
-  }
-
+  struct cursor neighbour_cursor = traverse((struct cursor) { update.chunk, ivec3(update.x, update.y, update.z) } , direction);
+  struct voxy_chunk *neighbour_chunk = neighbour_cursor.chunk;
+  ivec3_t neighbour_position = neighbour_cursor.position;
   if(!neighbour_chunk)
     return;
 
@@ -191,75 +202,14 @@ static void process_light_destruction_update(
     }
 }
 
-static void process_light_creation_update(
+static inline void process_light_creation_update(
     struct voxy_block_registry *block_registry,
     struct light_creation_updates *new_light_creation_updates,
     struct light_creation_update update, direction_t direction)
 {
-  struct voxy_chunk *neighbour_chunk = update.chunk;
-  ivec3_t neighbour_position = ivec3(update.x, update.y, update.z);
-  switch(direction)
-  {
-  case DIRECTION_LEFT:
-    if(neighbour_position.x == 0)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_LEFT];
-      neighbour_position.x = VOXY_CHUNK_WIDTH - 1;
-    }
-    else
-      neighbour_position.x -= 1;
-    break;
-  case DIRECTION_RIGHT:
-    if(neighbour_position.x == VOXY_CHUNK_WIDTH - 1)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_RIGHT];
-      neighbour_position.x = 0;
-    }
-    else
-      neighbour_position.x += 1;
-    break;
-
-  case DIRECTION_BACK:
-    if(neighbour_position.y == 0)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BACK];
-      neighbour_position.y = VOXY_CHUNK_WIDTH - 1;
-    }
-    else
-      neighbour_position.y -= 1;
-    break;
-  case DIRECTION_FRONT:
-    if(neighbour_position.y == VOXY_CHUNK_WIDTH - 1)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_FRONT];
-      neighbour_position.y = 0;
-    }
-    else
-      neighbour_position.y += 1;
-    break;
-
-  case DIRECTION_BOTTOM:
-    if(neighbour_position.z == 0)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_BOTTOM];
-      neighbour_position.z = VOXY_CHUNK_WIDTH - 1;
-    }
-    else
-      neighbour_position.z -= 1;
-    break;
-  case DIRECTION_TOP:
-    if(neighbour_position.z == VOXY_CHUNK_WIDTH - 1)
-    {
-      neighbour_chunk = neighbour_chunk->neighbours[DIRECTION_TOP];
-      neighbour_position.z = 0;
-    }
-    else
-      neighbour_position.z += 1;
-    break;
-  default:
-    assert(0 && "Unreachable");
-  }
-
+  struct cursor neighbour_cursor = traverse((struct cursor) { update.chunk, ivec3(update.x, update.y, update.z) } , direction);
+  struct voxy_chunk *neighbour_chunk = neighbour_cursor.chunk;
+  ivec3_t neighbour_position = neighbour_cursor.position;
   if(!neighbour_chunk)
     return;
 
@@ -305,6 +255,7 @@ static void process_light_destruction_updates(struct voxy_light_manager *light_m
 
       #pragma omp for
       for(size_t i=0; i<light_manager->light_destruction_updates.item_count; ++i)
+        #pragma omp unroll
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
           process_light_destruction_update(block_registry, &new_light_destruction_updates, &new_light_creation_updates, light_manager->light_destruction_updates.items[i], direction);
 
@@ -349,6 +300,7 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
 
       #pragma omp for
       for(size_t i=0; i<light_manager->light_creation_updates.item_count; ++i)
+        #pragma omp unroll
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
           process_light_creation_update(block_registry, &new_light_creation_updates, light_manager->light_creation_updates.items[i], direction);
 

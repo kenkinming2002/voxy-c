@@ -16,18 +16,18 @@
 struct light_destruction_update
 {
   struct voxy_chunk *chunk;
-  uint16_t x : 4;
-  uint16_t y : 4;
-  uint16_t z : 4;
-  uint16_t old_light_level : 4;
+  uint8_t x;
+  uint8_t y;
+  uint8_t z;
+  uint8_t old_light_level;
 };
 
 struct light_creation_update
 {
   struct voxy_chunk *chunk;
-  uint16_t x : 4;
-  uint16_t y : 4;
-  uint16_t z : 4;
+  uint8_t x;
+  uint8_t y;
+  uint8_t z;
 };
 
 DYNAMIC_ARRAY_DEFINE(light_creation_updates, struct light_creation_update);

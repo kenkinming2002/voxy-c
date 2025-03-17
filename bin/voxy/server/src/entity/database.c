@@ -39,7 +39,9 @@ int voxy_entity_database_init(struct voxy_entity_database *database, const char 
     goto out;
   }
 
+  if(sqlite3_utils_exec(database->conn, "PRAGMA journal_mode = WAL;") != 0) { rc = -1; goto out; }
   if(sqlite3_utils_exec(database->conn, "PRAGMA foreign_keys = ON;") != 0) { rc = -1; goto out; }
+
   if(sqlite3_utils_exec(database->conn, "CREATE TABLE IF NOT EXISTS entities(id INTEGER PRIMARY KEY, data BLOB NOT NULL) STRICT;") != 0) { rc = -1; goto out; }
   if(sqlite3_utils_exec(database->conn, "CREATE TABLE IF NOT EXISTS active_entities(id INTEGER PRIMARY KEY, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;") != 0) { rc = -1; goto out; }
   if(sqlite3_utils_exec(database->conn, "CREATE TABLE IF NOT EXISTS inactive_entities(id INTEGER PRIMARY KEY, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, FOREIGN KEY(id) REFERENCES entities(id) ON DELETE CASCADE) STRICT;") != 0) { rc = -1; goto out; }

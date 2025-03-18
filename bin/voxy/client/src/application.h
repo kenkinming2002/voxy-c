@@ -10,8 +10,8 @@
 #include "input/manager.h"
 #include "camera/manager.h"
 
-#include "chunk/manager.h"
-#include "entity/manager.h"
+#include "chunk/block/manager.h"
+#include "chunk/entity/manager.h"
 
 #include "render/world.h"
 
@@ -28,7 +28,7 @@ struct application
   struct input_manager input_manager;
   struct camera_manager camera_manager;
 
-  struct chunk_manager chunk_manager;
+  struct block_manager block_manager;
   struct entity_manager entity_manager;
 
   struct mod_manager mod_manager;

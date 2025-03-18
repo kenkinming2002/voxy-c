@@ -52,7 +52,7 @@ void block_renderer_fini(struct block_renderer *block_renderer)
   gl_program_fini(&block_renderer->program);
 }
 
-void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct chunk_manager *chunk_manager, struct camera_manager *camera_manager)
+void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct block_manager *block_manager, struct camera_manager *camera_manager)
 {
   const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(camera_manager->camera.transform.translation), VOXY_CHUNK_WIDTH);
   const int radius = 8;
@@ -60,7 +60,7 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
   unsigned discard_count = 0;
   unsigned update_count = 0;
 
-  // Discard render info for chunks outside of render distance.
+  // Discard render info for block groups outside of render distance.
   for(size_t i=0; i<SC_HASH_TABLE_BUCKET_COUNT_FROM_ORDER(block_renderer->render_infos.bucket_order); ++i)
   {
     struct block_render_info **render_info = &block_renderer->render_infos.buckets[i].head;
@@ -81,7 +81,7 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
     }
   }
 
-  // Create render info for chunks inside render distance.
+  // Create render info for block groups inside render distance.
   for(int z = center.z - radius + 1; z <= center.z + radius - 1; ++z)
     for(int y = center.y - radius + 1; y <= center.y + radius - 1; ++y)
       for(int x = center.x - radius + 1; x <= center.x + radius - 1; ++x)
@@ -89,8 +89,8 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
         const ivec3_t position = ivec3(x, y, z);
         if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
         {
-          struct chunk *chunk = chunk_hash_table_lookup(&chunk_manager->chunks, position);
-          if(!chunk)
+          struct block_group *block_group = block_group_hash_table_lookup(&block_manager->block_groups, position);
+          if(!block_group)
             continue;
 
           struct block_render_info *render_info = block_render_info_hash_table_lookup(&block_renderer->render_infos, position);
@@ -99,23 +99,23 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
             render_info = block_render_info_create();
             render_info->position = position;
             block_render_info_hash_table_insert_unchecked(&block_renderer->render_infos, render_info);
-            block_render_info_update(render_info, block_registry, block_renderer, chunk);
+            block_render_info_update(render_info, block_registry, block_renderer, block_group);
           }
-          else if(chunk->remesh)
-            block_render_info_update(render_info, block_registry, block_renderer, chunk);
+          else if(block_group->remesh)
+            block_render_info_update(render_info, block_registry, block_renderer, block_group);
           else
             continue;
 
-          chunk->remesh = false;
+          block_group->remesh = false;
           update_count += 1;
         }
       }
 
   if(discard_count != 0)
-    LOG_INFO("Render: Discard meshes for %u chunk", discard_count);
+    LOG_INFO("Render: Discard meshes for %u block groups", discard_count);
 
   if(update_count != 0)
-    LOG_INFO("Render: Updated meshes for %u chunk", update_count);
+    LOG_INFO("Render: Updated meshes for %u block groups", update_count);
 }
 
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager)

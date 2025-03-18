@@ -49,7 +49,7 @@ int application_init(struct application *application, int argc, char *argv[])
   if(camera_manager_init(&application->camera_manager) != 0)
     goto error2;
 
-  if(chunk_manager_init(&application->chunk_manager) != 0)
+  if(block_manager_init(&application->block_manager) != 0)
     goto error3;
 
   entity_manager_init(&application->entity_manager);
@@ -69,7 +69,7 @@ int application_init(struct application *application, int argc, char *argv[])
 error5:
   mod_manager_fini(&application->mod_manager, &context);
   entity_manager_fini(&application->entity_manager);
-  chunk_manager_fini(&application->chunk_manager);
+  block_manager_fini(&application->block_manager);
 error3:
   camera_manager_fini(&application->camera_manager);
 error2:
@@ -99,7 +99,7 @@ void application_fini(struct application *application)
   world_renderer_fini(&application->world_renderer);
   mod_manager_fini(&application->mod_manager, &context);
   entity_manager_fini(&application->entity_manager);
-  chunk_manager_fini(&application->chunk_manager);
+  block_manager_fini(&application->block_manager);
   camera_manager_fini(&application->camera_manager);
   input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
@@ -125,10 +125,10 @@ static void application_update(struct application *application)
   input_manager_update(&application->input_manager, application->client);
   camera_manager_update(&application->camera_manager, &application->entity_manager);
 
-  chunk_manager_update(&application->chunk_manager);
+  block_manager_update(&application->block_manager);
   entity_manager_update(&application->entity_manager);
 
-  world_renderer_update(&application->world_renderer, &application->block_registry, &application->chunk_manager, &application->camera_manager);
+  world_renderer_update(&application->world_renderer, &application->block_registry, &application->block_manager, &application->camera_manager);
 
   ui_manager_update();
 
@@ -154,7 +154,7 @@ void application_on_message_received(libnet_client_t client, const struct libnet
 {
   struct application *application = libnet_client_get_opaque(client);
   camera_manager_on_message_received(&application->camera_manager, client, message);
-  chunk_manager_on_message_received(&application->chunk_manager, client, message);
+  block_manager_on_message_received(&application->block_manager, client, message);
   entity_manager_on_message_received(&application->entity_manager, client, message);
 }
 

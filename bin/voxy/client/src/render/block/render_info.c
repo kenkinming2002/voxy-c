@@ -21,20 +21,20 @@ void block_render_info_destroy(struct block_render_info *block_render_info)
   free(block_render_info);
 }
 
-static void prefetch_block_ids(const struct chunk *chunk, uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2])
+static void prefetch_block_ids(const struct block_group *block_group, uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2])
 {
   for(int z = -1; z<VOXY_CHUNK_WIDTH+1; ++z)
     for(int y = -1; y<VOXY_CHUNK_WIDTH+1; ++y)
       for(int x = -1; x<VOXY_CHUNK_WIDTH+1; ++x)
-        ids[z+1][y+1][x+1] = chunk_get_block_id_ex(chunk, ivec3(x, y, z), 0);
+        ids[z+1][y+1][x+1] = block_group_get_block_id_ex(block_group, ivec3(x, y, z), 0);
 }
 
-static void prefetch_block_light_levels(const struct chunk *chunk, uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2])
+static void prefetch_block_light_levels(const struct block_group *block_group, uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2])
 {
   for(int z = -1; z<VOXY_CHUNK_WIDTH+1; ++z)
     for(int y = -1; y<VOXY_CHUNK_WIDTH+1; ++y)
       for(int x = -1; x<VOXY_CHUNK_WIDTH+1; ++x)
-        ids[z+1][y+1][x+1] = chunk_get_block_light_level_ex(chunk, ivec3(x, y, z), 15);
+        ids[z+1][y+1][x+1] = block_group_get_block_light_level_ex(block_group, ivec3(x, y, z), 15);
 }
 
 static uint8_t get_prefetched(uint8_t infos[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2], ivec3_t position)
@@ -42,18 +42,18 @@ static uint8_t get_prefetched(uint8_t infos[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH
   return infos[position.z+1][position.y+1][position.x+1];
 }
 
-void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, const struct chunk *chunk)
+void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, const struct block_group *block_group)
 {
   struct block_vertices opaque_vertices = {0};
   struct block_vertices transparent_vertices = {0};
 
   // Cache block ids
   uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2];
-  prefetch_block_ids(chunk, ids);
+  prefetch_block_ids(block_group, ids);
 
   // Cahce block light levels
   uint8_t light_levels[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2];
-  prefetch_block_light_levels(chunk, light_levels);
+  prefetch_block_light_levels(block_group, light_levels);
 
   /// Meshing
   for(int z = 0; z<VOXY_CHUNK_WIDTH; ++z)
@@ -61,7 +61,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
       for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
       {
         const ivec3_t local_position = ivec3(x, y, z);
-        const ivec3_t global_position = ivec3_add(ivec3_mul_scalar(chunk->position, VOXY_CHUNK_WIDTH), local_position);
+        const ivec3_t global_position = ivec3_add(ivec3_mul_scalar(block_group->position, VOXY_CHUNK_WIDTH), local_position);
 
         const uint8_t block_id = get_prefetched(ids, local_position);
         const enum voxy_block_type block_type = voxy_block_registry_query_block(block_registry, block_id).type;

@@ -1,5 +1,5 @@
-#ifndef ENTITY_ENTITY_H
-#define ENTITY_ENTITY_H
+#ifndef CHUNK_ENTITY_ENTITY_H
+#define CHUNK_ENTITY_ENTITY_H
 
 #include <voxy/client/entity/entity.h>
 
@@ -20,4 +20,4 @@ struct voxy_entity
   fvec3_t rotation;
 };
 
-#endif // ENTITY_ENTITY_H
+#endif // CHUNK_ENTITY_ENTITY_H

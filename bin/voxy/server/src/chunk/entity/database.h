@@ -1,5 +1,5 @@
-#ifndef ENTITY_DATABASE_H
-#define ENTITY_DATABASE_H
+#ifndef CHUNK_ENTITY_DATABASE_H
+#define CHUNK_ENTITY_DATABASE_H
 
 #include "entity.h"
 
@@ -96,4 +96,4 @@ int voxy_entity_database_load_active(struct voxy_entity_database *database, stru
 /// Return non-zero on error;
 int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, struct db_ids *db_ids);
 
-#endif // ENTITY_DATABASE_H
+#endif // CHUNK_ENTITY_DATABASE_H

@@ -32,8 +32,10 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_server_set_on_message_received(application->server, application_on_message_received);
 
   voxy_chunk_manager_init(&application->chunk_manager);
-  voxy_chunk_database_init(&application->chunk_database, argv[4]);
-  voxy_chunk_generator_init(&application->chunk_generator, argv[4]);
+
+  voxy_block_manager_init(&application->block_manager);
+  voxy_block_database_init(&application->block_database, argv[4]);
+  voxy_block_generator_init(&application->block_generator, argv[4]);
 
   voxy_entity_manager_init(&application->entity_manager);
   if(voxy_entity_database_init(&application->entity_database, argv[4]) != 0) goto error1;
@@ -57,9 +59,13 @@ error2:
 error1:
   voxy_entity_database_fini(&application->entity_database);
   voxy_entity_manager_fini(&application->entity_manager);
-  voxy_chunk_generator_fini(&application->chunk_generator);
-  voxy_chunk_database_fini(&application->chunk_database);
+
+  voxy_block_generator_fini(&application->block_generator);
+  voxy_block_database_fini(&application->block_database);
+  voxy_block_manager_fini(&application->block_manager);
+
   voxy_chunk_manager_fini(&application->chunk_manager);
+
   libnet_server_destroy(application->server);
 error0:
   voxy_item_registry_fini(&application->item_registry);
@@ -79,8 +85,10 @@ void application_fini(struct application *application)
   voxy_entity_database_fini(&application->entity_database);
   voxy_entity_manager_fini(&application->entity_manager);
 
-  voxy_chunk_generator_fini(&application->chunk_generator);
-  voxy_chunk_database_fini(&application->chunk_database);
+  voxy_block_generator_fini(&application->block_generator);
+  voxy_block_database_fini(&application->block_database);
+  voxy_block_manager_fini(&application->block_manager);
+
   voxy_chunk_manager_fini(&application->chunk_manager);
 
   libnet_server_destroy(application->server);
@@ -93,16 +101,24 @@ void application_fini(struct application *application)
 struct voxy_context application_get_context(struct application *application)
 {
   struct voxy_context context;
+
   context.server = application->server;
+
   context.block_registry = &application->block_registry;
   context.entity_registry = &application->entity_registry;
   context.item_registry = &application->item_registry;
+
   context.chunk_manager = &application->chunk_manager;
-  context.chunk_generator = &application->chunk_generator;
+
+  context.block_manager = &application->block_manager;
+  context.block_generator = &application->block_generator;
+
   context.entity_manager = &application->entity_manager;
   context.entity_database = &application->entity_database;
+
   context.player_manager = &application->player_manager;
   context.light_manager = &application->light_manager;
+
   return context;
 }
 
@@ -133,12 +149,11 @@ void application_on_update(libnet_server_t server)
       voxy_entity_manager_despawn(&application->entity_manager, &application->entity_registry, &application->entity_database, handle, server);
   }
 
-  physics_update(&application->block_registry, &application->entity_registry, &application->chunk_manager, &application->entity_manager, FIXED_DT);
+  physics_update(&application->block_registry, &application->entity_registry, &application->block_manager, &application->entity_manager, FIXED_DT);
   voxy_light_manager_update(&application->light_manager, &application->block_registry);
 
-  voxy_chunk_database_update(&application->chunk_database);
-  voxy_chunk_manager_update(&application->chunk_manager, &application->chunk_database, &application->chunk_generator, &application->light_manager, application->server, &context);
-
+  voxy_block_database_update(&application->block_database);
+  voxy_block_manager_update(&application->block_manager, &application->chunk_manager, &application->block_database, &application->block_generator, &application->light_manager, application->server, &context);
   voxy_entity_manager_update(&application->entity_manager, &application->entity_registry, &application->entity_database, &application->chunk_manager, application->server);
 }
 
@@ -146,7 +161,7 @@ void application_on_client_connected(libnet_server_t server, libnet_client_proxy
 {
   struct application *application = libnet_server_get_opaque(server);
 
-  voxy_chunk_manager_on_client_connected(&application->chunk_manager, server, client_proxy);
+  voxy_block_manager_on_client_connected(&application->block_manager, server, client_proxy);
   voxy_entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
   voxy_player_manager_on_client_connected(&application->player_manager, server, client_proxy);
 }

@@ -1,7 +1,7 @@
 #ifndef CAMERA_MANAGER_H
 #define CAMERA_MANAGER_H
 
-#include "entity/manager.h"
+#include "chunk/entity/manager.h"
 
 #include <libgfx/camera.h>
 

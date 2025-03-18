@@ -1,5 +1,5 @@
-#ifndef ENTITY_MANAGER_H
-#define ENTITY_MANAGER_H
+#ifndef CHUNK_ENTITY_MANAGER_H
+#define CHUNK_ENTITY_MANAGER_H
 
 #include "entity.h"
 
@@ -26,4 +26,4 @@ struct voxy_entity *entity_manager_get(struct entity_manager *entity_manager, en
 void entity_manager_update_entity(struct entity_manager *entity_manager, entity_handle_t handle, voxy_entity_id_t id,  fvec3_t position, fvec3_t rotation);
 void entity_manager_remove_entity(struct entity_manager *entity_manager, entity_handle_t handle);
 
-#endif // ENTITY_MANAGER_H
+#endif // CHUNK_ENTITY_MANAGER_H

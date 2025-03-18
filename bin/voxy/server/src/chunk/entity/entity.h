@@ -1,7 +1,7 @@
-#ifndef ENTITY_ENTITY_H
-#define ENTITY_ENTITY_H
+#ifndef CHUNK_ENTITY_ENTITY_H
+#define CHUNK_ENTITY_ENTITY_H
 
-#include <voxy/server/entity/entity.h>
+#include <voxy/server/chunk/entity/entity.h>
 
 #include "registry/entity.h"
 
@@ -29,4 +29,4 @@ struct voxy_entity
 
 DYNAMIC_ARRAY_DEFINE(voxy_entities, struct voxy_entity);
 
-#endif // ENTITY_ENTITY_H
+#endif // CHUNK_ENTITY_ENTITY_H

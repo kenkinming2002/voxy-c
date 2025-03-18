@@ -1,5 +1,5 @@
-#ifndef VOXY_SERVER_ENTITY_MANAGER_H
-#define VOXY_SERVER_ENTITY_MANAGER_H
+#ifndef VOXY_SERVER_CHUNK_ENTITY_MANAGER_H
+#define VOXY_SERVER_CHUNK_ENTITY_MANAGER_H
 
 #include <voxy/server/registry/entity.h>
 
@@ -25,4 +25,4 @@ VOXY_SERVER_EXPORT void voxy_entity_manager_despawn(struct voxy_entity_manager *
 /// pointer are invalidated upon spawn/despawn.
 VOXY_SERVER_EXPORT struct voxy_entity *voxy_entity_manager_get(struct voxy_entity_manager *entity_manager, entity_handle_t handle);
 
-#endif // VOXY_SERVER_ENTITY_MANAGER_H
+#endif // VOXY_SERVER_CHUNK_ENTITY_MANAGER_H

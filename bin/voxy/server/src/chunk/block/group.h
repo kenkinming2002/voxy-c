@@ -1,8 +1,8 @@
-#ifndef CHUNK_CHUNK_H
-#define CHUNK_CHUNK_H
+#ifndef CHUNK_BLOCK_GROUP_H
+#define CHUNK_BLOCK_GROUP_H
 
 #include <voxy/config.h>
-#include <voxy/server/chunk/chunk.h>
+#include <voxy/server/chunk/block/group.h>
 
 #include <libmath/vector.h>
 #include <libmath/direction.h>
@@ -11,12 +11,12 @@
 #include <stdbool.h>
 
 /// Chunk.
-struct voxy_chunk
+struct voxy_block_group
 {
   size_t hash;
 
-  struct voxy_chunk *next;
-  struct voxy_chunk *neighbours[DIRECTION_COUNT];
+  struct voxy_block_group *next;
+  struct voxy_block_group *neighbours[DIRECTION_COUNT];
 
   ivec3_t position;
 
@@ -24,21 +24,21 @@ struct voxy_chunk
   ///
   /// We store block ids and light levels in separate arrays for better
   /// "compression".
-  uint8_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
-  uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
+  uint8_t ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
+  uint8_t light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
 
-  /// If we need to flush this chunk to disk.
+  /// If we need to flush this block group to disk.
   bool disk_dirty;
 
-  /// If we need to synchronize this chunk over the network.
+  /// If we need to synchronize this block_group over the network.
   bool network_dirty;
 };
 
-/// Create/destroy chunk.
+/// Create/destroy block group.
 ///
 /// No initialization of any plain old data member is performed.
-struct voxy_chunk *voxy_chunk_create(void);
-void voxy_chunk_destroy(struct voxy_chunk *chunk);
+struct voxy_block_group *voxy_block_group_create(void);
+void voxy_block_group_destroy(struct voxy_block_group *block_group);
 
 /// Atomic getters/setters.
 ///
@@ -53,12 +53,12 @@ void voxy_chunk_destroy(struct voxy_chunk *chunk);
 ///
 /// Note: This need not be exposed to mod, since it is really only used in the
 ///       implementation of our light system.
-void voxy_chunk_get_block_light_level_atomic(struct voxy_chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
-bool voxy_chunk_set_block_light_level_atomic(struct voxy_chunk *chunk, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+void voxy_block_group_get_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+bool voxy_block_group_set_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
 #define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_PREFIX voxy_chunk
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_chunk
+#define SC_HASH_TABLE_PREFIX voxy_block_group
+#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_group
 #define SC_HASH_TABLE_KEY_TYPE ivec3_t
 #include <sc/hash_table.h>
 #undef SC_HASH_TABLE_PREFIX
@@ -66,4 +66,4 @@ bool voxy_chunk_set_block_light_level_atomic(struct voxy_chunk *chunk, ivec3_t p
 #undef SC_HASH_TABLE_KEY_TYPE
 #undef SC_HASH_TABLE_INTERFACE
 
-#endif // CHUNK_CHUNK_H
+#endif // CHUNK_BLOCK_GROUP_H

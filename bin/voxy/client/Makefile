@@ -51,11 +51,11 @@ SRCS += src/registry/item.c
 SRCS += src/input/manager.c
 SRCS += src/camera/manager.c
 
-SRCS += src/chunk/chunk.c
-SRCS += src/chunk/manager.c
+SRCS += src/chunk/block/manager.c
+SRCS += src/chunk/block/group.c
 
-SRCS += src/entity/entity.c
-SRCS += src/entity/manager.c
+SRCS += src/chunk/entity/entity.c
+SRCS += src/chunk/entity/manager.c
 
 SRCS += src/render/world.c
 SRCS += src/render/block/block.c

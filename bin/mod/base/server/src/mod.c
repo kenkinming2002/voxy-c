@@ -1,8 +1,10 @@
 #include <voxy/config.h>
 #include <voxy/server/context.h>
-#include <voxy/server/chunk/chunk.h>
-#include <voxy/server/chunk/generator.h>
-#include <voxy/server/entity/entity.h>
+
+#include <voxy/server/chunk/block/group.h>
+#include <voxy/server/chunk/block/generator.h>
+#include <voxy/server/chunk/entity/entity.h>
+
 #include <voxy/server/player/player.h>
 
 #include <libmath/matrix_transform.h>
@@ -16,7 +18,7 @@
 #define MOVE_SPEED_AIR 3.0f
 #define JUMP_STRENGTH 5.5f
 
-static void generate_chunk(ivec3_t chunk_position, struct voxy_chunk *chunk, seed_t seed, const struct voxy_context *context)
+static void generate_block(ivec3_t chunk_position, struct voxy_block_group *block_group, seed_t seed, const struct voxy_context *context)
 {
   // Generate height map
   float heights[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH];
@@ -40,7 +42,7 @@ static void generate_chunk(ivec3_t chunk_position, struct voxy_chunk *chunk, see
           : height > heights[y][x] - 1 ? 3
           : 2;
 
-        voxy_chunk_set_block(chunk, context->block_registry, ivec3(x, y, z), id);
+        voxy_block_group_set_block(block_group, context->block_registry, ivec3(x, y, z), id);
       }
 }
 
@@ -108,7 +110,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
     struct ray_cast ray_cast;
     for(ray_cast_init(&ray_cast, position); ray_cast.distance < 10.0f; ray_cast_step(&ray_cast, direction))
     {
-      const uint8_t id = voxy_chunk_manager_get_block_id(context->chunk_manager, ray_cast.iposition, 0xFF);
+      const uint8_t id = voxy_block_manager_get_block_id(context->block_manager, ray_cast.iposition, 0xFF);
       if(id == 0xFF)
         continue;
 
@@ -116,7 +118,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
       if(!info.collide)
         continue;
 
-      voxy_chunk_manager_set_block(context->chunk_manager, context->block_registry, context->light_manager, ray_cast.iposition, 0);
+      voxy_block_manager_set_block(context->block_manager, context->block_registry, context->light_manager, ray_cast.iposition, 0);
       break;
     }
   }
@@ -127,7 +129,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
 
 void *mod_create_instance(struct voxy_context *context)
 {
-  voxy_chunk_generator_set_generate_chunk(context->chunk_generator, generate_chunk);
+  voxy_block_generator_set_generate_block(context->block_generator, generate_block);
 
   voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
     .mod = "base",

@@ -1,10 +1,12 @@
-#ifndef ENTITY_MANAGER_H
-#define ENTITY_MANAGER_H
+#ifndef CHUNK_ENTITY_MANAGER_H
+#define CHUNK_ENTITY_MANAGER_H
+
+#include "chunk/manager.h"
+#include "chunk/block/manager.h"
 
 #include "allocator.h"
 #include "database.h"
 
-#include "chunk/manager.h"
 #include "hash_table/ivec3.h"
 
 #include <libnet/server.h>
@@ -50,4 +52,4 @@ void voxy_entity_manager_destroy_entity(struct voxy_entity_manager *entity_manag
 void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, struct voxy_entity_database *entity_database, struct voxy_chunk_manager *chunk_manager, libnet_server_t server);
 void voxy_entity_manager_on_client_connected(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
 
-#endif // ENTITY_MANAGER_H
+#endif // CHUNK_ENTITY_MANAGER_H

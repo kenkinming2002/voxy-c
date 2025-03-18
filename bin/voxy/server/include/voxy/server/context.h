@@ -6,10 +6,13 @@
 #include "registry/item.h"
 
 #include "chunk/manager.h"
-#include "chunk/generator.h"
 
-#include "entity/manager.h"
-#include "entity/database.h"
+#include "chunk/block/manager.h"
+#include "chunk/block/generator.h"
+
+#include "chunk/entity/manager.h"
+#include "chunk/entity/database.h"
+
 #include "player/manager.h"
 
 #include "light/manager.h"
@@ -26,10 +29,13 @@ struct voxy_context
   struct voxy_item_registry *item_registry;
 
   struct voxy_chunk_manager *chunk_manager;
-  struct voxy_chunk_generator *chunk_generator;
+
+  struct voxy_block_manager *block_manager;
+  struct voxy_block_generator *block_generator;
 
   struct voxy_entity_manager *entity_manager;
   struct voxy_entity_database *entity_database;
+
   struct voxy_player_manager *player_manager;
 
   struct voxy_light_manager *light_manager;

@@ -34,7 +34,7 @@ static int compar(const void *ptr1, const void *ptr2)
 static bool entity_physics_resolve_collision_once(
     struct voxy_block_registry *block_registry,
     struct voxy_entity_registry *entity_registry,
-    struct voxy_chunk_manager *chunk_manager,
+    struct voxy_block_manager *block_manager,
     struct voxy_entity *entity,
     float dt)
 {
@@ -54,7 +54,7 @@ static bool entity_physics_resolve_collision_once(
         for(int x=block_position_min.x; x<=block_position_max.x; ++x)
         {
           const ivec3_t block_position = ivec3(x, y, z);
-          const uint8_t block_id = voxy_chunk_manager_get_block_id(chunk_manager, block_position, UINT8_MAX);
+          const uint8_t block_id = voxy_block_manager_get_block_id(block_manager, block_position, UINT8_MAX);
           if(block_id != UINT8_MAX && voxy_block_registry_query_block(block_registry, block_id).collide)
           {
             const aabb3_t block_hitbox = aabb3(ivec3_as_fvec3(block_position), fvec3(1.0f, 1.0f, 1.0f));
@@ -99,11 +99,11 @@ static bool entity_physics_resolve_collision_once(
 static void entity_physics_resolve_collision(
     struct voxy_block_registry *block_registry,
     struct voxy_entity_registry *entity_registry,
-    struct voxy_chunk_manager *chunk_manager,
+    struct voxy_block_manager *block_manager,
     struct voxy_entity *entity,
     float dt)
 {
-  while(entity_physics_resolve_collision_once(block_registry, entity_registry, chunk_manager, entity, dt));
+  while(entity_physics_resolve_collision_once(block_registry, entity_registry, block_manager, entity, dt));
 }
 
 static void entity_physics_integrate(struct voxy_entity *entity, float dt)
@@ -114,7 +114,7 @@ static void entity_physics_integrate(struct voxy_entity *entity, float dt)
 static bool entity_is_grounded(
     struct voxy_block_registry *block_registry,
     struct voxy_entity_registry *entity_registry,
-    struct voxy_chunk_manager *chunk_manager,
+    struct voxy_block_manager *block_manager,
     struct voxy_entity *entity)
 {
   const struct voxy_entity_info entity_info = voxy_entity_registry_query_entity(entity_registry, entity->id);
@@ -130,7 +130,7 @@ static bool entity_is_grounded(
       for(int x=block_position_min.x; x<=block_position_max.x; ++x)
       {
         const ivec3_t block_position = ivec3(x, y, z);
-        const uint8_t block_id = voxy_chunk_manager_get_block_id(chunk_manager, block_position, UINT8_MAX);
+        const uint8_t block_id = voxy_block_manager_get_block_id(block_manager, block_position, UINT8_MAX);
         if(block_id != UINT8_MAX && voxy_block_registry_query_block(block_registry, block_id).collide)
           return true;
       }
@@ -141,29 +141,29 @@ static bool entity_is_grounded(
 static void entity_physics_update_grounded(
     struct voxy_block_registry *block_registry,
     struct voxy_entity_registry *entity_registry,
-    struct voxy_chunk_manager *chunk_manager,
+    struct voxy_block_manager *block_manager,
     struct voxy_entity *entity)
 {
-  entity->grounded = entity_is_grounded(block_registry, entity_registry, chunk_manager, entity);
+  entity->grounded = entity_is_grounded(block_registry, entity_registry, block_manager, entity);
 }
 
 static void entity_update_physics(
     struct voxy_block_registry *block_registry,
     struct voxy_entity_registry *entity_registry,
-    struct voxy_chunk_manager *chunk_manager,
+    struct voxy_block_manager *block_manager,
     struct voxy_entity *entity,
     float dt)
 {
   entity_physics_apply_law(entity, dt);
-  entity_physics_resolve_collision(block_registry, entity_registry, chunk_manager, entity, dt);
+  entity_physics_resolve_collision(block_registry, entity_registry, block_manager, entity, dt);
   entity_physics_integrate(entity, dt);
-  entity_physics_update_grounded(block_registry, entity_registry, chunk_manager, entity);
+  entity_physics_update_grounded(block_registry, entity_registry, block_manager, entity);
 }
 
 void physics_update(
     struct voxy_block_registry *block_registry,
     struct voxy_entity_registry *entity_registry,
-    struct voxy_chunk_manager *chunk_manager,
+    struct voxy_block_manager *block_manager,
     struct voxy_entity_manager *entity_manager,
     float dt)
 {
@@ -175,6 +175,6 @@ void physics_update(
     if(!entity->alive)
       continue;
 
-    entity_update_physics(block_registry, entity_registry, chunk_manager, entity, dt);
+    entity_update_physics(block_registry, entity_registry, block_manager, entity, dt);
   }
 }

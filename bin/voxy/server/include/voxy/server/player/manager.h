@@ -2,7 +2,7 @@
 #define VOXY_SERVER_PLAYER_MANAGER_H
 
 #include <voxy/server/export.h>
-#include <voxy/server/entity/manager.h>
+#include <voxy/server/chunk/entity/manager.h>
 
 #include <libmath/vector.h>
 

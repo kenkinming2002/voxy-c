@@ -1,5 +1,5 @@
-#ifndef VOXY_SERVER_ENTITY_ENTITY_H
-#define VOXY_SERVER_ENTITY_ENTITY_H
+#ifndef VOXY_SERVER_CHUNK_ENTITY_ENTITY_H
+#define VOXY_SERVER_CHUNK_ENTITY_ENTITY_H
 
 #include <voxy/server/export.h>
 
@@ -24,4 +24,4 @@ VOXY_SERVER_EXPORT void voxy_entity_apply_impulse(struct voxy_entity *entity, fv
 VOXY_SERVER_EXPORT void *voxy_entity_get_opaque(const struct voxy_entity *entity);
 VOXY_SERVER_EXPORT void voxy_entity_set_opaque(struct voxy_entity *entity, void *opaque);
 
-#endif // VOXY_SERVER_ENTITY_ENTITY_H
+#endif // VOXY_SERVER_CHUNK_ENTITY_ENTITY_H

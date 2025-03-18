@@ -47,18 +47,20 @@ SRCS += src/registry/item.c
 
 SRCS += src/registry/entity_info.c
 
-SRCS += src/chunk/chunk.c
-SRCS += src/chunk/coordinates.c
 SRCS += src/chunk/manager.c
-SRCS += src/chunk/database.c
-SRCS += src/chunk/network.c
-SRCS += src/chunk/generator.c
+SRCS += src/chunk/coordinates.c
 
-SRCS += src/entity/entity.c
-SRCS += src/entity/allocator.c
-SRCS += src/entity/network.c
-SRCS += src/entity/database.c
-SRCS += src/entity/manager.c
+SRCS += src/chunk/block/group.c
+SRCS += src/chunk/block/manager.c
+SRCS += src/chunk/block/database.c
+SRCS += src/chunk/block/network.c
+SRCS += src/chunk/block/generator.c
+
+SRCS += src/chunk/entity/entity.c
+SRCS += src/chunk/entity/allocator.c
+SRCS += src/chunk/entity/network.c
+SRCS += src/chunk/entity/database.c
+SRCS += src/chunk/entity/manager.c
 
 SRCS += src/player/player.c
 SRCS += src/player/manager.c

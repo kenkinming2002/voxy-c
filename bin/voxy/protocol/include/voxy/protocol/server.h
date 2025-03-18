@@ -26,8 +26,8 @@ struct LIBNET_MESSAGE voxy_server_message
   enum voxy_server_message_tag tag;
 };
 
-/// Sent from server to client to update an entire chunk.
-struct LIBNET_MESSAGE voxy_server_chunk_update_message
+/// Sent from server to client to update an entire block group
+struct LIBNET_MESSAGE voxy_server_block_group_update_message
 {
   struct voxy_server_message message;
 
@@ -36,8 +36,8 @@ struct LIBNET_MESSAGE voxy_server_chunk_update_message
   uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
 };
 
-/// Sent from server to client to remove an entire chunk.
-struct LIBNET_MESSAGE voxy_server_chunk_remove_message
+/// Sent from server to client to remove an entire block group
+struct LIBNET_MESSAGE voxy_server_block_group_remove_message
 {
   struct voxy_server_message message;
 
@@ -72,30 +72,30 @@ struct LIBNET_MESSAGE voxy_server_camera_follow_entity_message
   uint32_t handle;
 };
 
-/// Try to cast struct libnet_message to struct voxy_chunk_update_message.
+/// Try to cast struct libnet_message to struct voxy_block_group_update_message.
 ///
 /// Return NULL on failure.
-static inline struct voxy_server_chunk_update_message *voxy_get_server_chunk_update_message(const struct libnet_message *message)
+static inline struct voxy_server_block_group_update_message *voxy_get_server_block_group_update_message(const struct libnet_message *message)
 {
-  if(message->size != LIBNET_MESSAGE_SIZE(struct voxy_server_chunk_update_message))
+  if(message->size != LIBNET_MESSAGE_SIZE(struct voxy_server_block_group_update_message))
     return NULL;
 
-  struct voxy_server_chunk_update_message *_message = (struct voxy_server_chunk_update_message *)message;
+  struct voxy_server_block_group_update_message *_message = (struct voxy_server_block_group_update_message *)message;
   if(_message->message.tag != VOXY_SERVER_MESSAGE_CHUNK_UPDATE)
     return NULL;
 
   return _message;
 }
 
-/// Try to cast struct libnet_message to struct voxy_chunk_remove_message.
+/// Try to cast struct libnet_message to struct voxy_block_group_remove_message.
 ///
 /// Return NULL on failure.
-static inline struct voxy_server_chunk_remove_message *voxy_get_server_chunk_remove_message(const struct libnet_message *message)
+static inline struct voxy_server_block_group_remove_message *voxy_get_server_block_group_remove_message(const struct libnet_message *message)
 {
-  if(message->size != LIBNET_MESSAGE_SIZE(struct voxy_server_chunk_remove_message))
+  if(message->size != LIBNET_MESSAGE_SIZE(struct voxy_server_block_group_remove_message))
     return NULL;
 
-  struct voxy_server_chunk_remove_message *_message = (struct voxy_server_chunk_remove_message *)message;
+  struct voxy_server_block_group_remove_message *_message = (struct voxy_server_block_group_remove_message *)message;
   if(_message->message.tag != VOXY_SERVER_MESSAGE_CHUNK_REMOVE)
     return NULL;
 

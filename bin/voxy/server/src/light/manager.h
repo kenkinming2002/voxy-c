@@ -2,7 +2,8 @@
 #define LIGHT_MANAGER_H
 
 #include "registry/block.h"
-#include "chunk/manager.h"
+
+#include "chunk/block/manager.h"
 
 #include <libcore/dynamic_array.h>
 
@@ -15,7 +16,7 @@
 
 struct light_destruction_update
 {
-  struct voxy_chunk *chunk;
+  struct voxy_block_group *block_group;
   uint8_t x;
   uint8_t y;
   uint8_t z;
@@ -24,7 +25,7 @@ struct light_destruction_update
 
 struct light_creation_update
 {
-  struct voxy_chunk *chunk;
+  struct voxy_block_group *block_group;
   uint8_t x;
   uint8_t y;
   uint8_t z;
@@ -50,11 +51,11 @@ struct voxy_light_manager
 void voxy_light_manager_init(struct voxy_light_manager *light_manager);
 void voxy_light_manager_fini(struct voxy_light_manager *light_manager);
 
-void voxy_light_manager_enqueue_destruction_update_at(struct voxy_light_manager *light_manager, struct voxy_chunk *chunk, ivec3_t position, uint8_t light_level);
-void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *light_manager, struct voxy_chunk *chunk, ivec3_t position);
+void voxy_light_manager_enqueue_destruction_update_at(struct voxy_light_manager *light_manager, struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level);
+void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *light_manager, struct voxy_block_group *block_group, ivec3_t position);
 
-void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, struct voxy_chunk_manager *chunk_manager, ivec3_t position, uint8_t light_level);
-void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_chunk_manager *chunk_manager, ivec3_t position);
+void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position, uint8_t light_level);
+void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position);
 
 void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry);
 

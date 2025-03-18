@@ -1,10 +1,10 @@
-#ifndef ENTITY_ALLOCATOR_H
-#define ENTITY_ALLOCATOR_H
+#ifndef CHUNK_ENTITY_ALLOCATOR_H
+#define CHUNK_ENTITY_ALLOCATOR_H
 
 #include "registry/entity.h"
 #include "entity.h"
 
-#include <voxy/server/entity/manager.h>
+#include <voxy/server/chunk/entity/manager.h>
 #include <libcore/dynamic_array.h>
 
 /// Entity allocator.
@@ -24,4 +24,4 @@ void entity_allocator_free(struct entity_allocator *entity_allocator, struct vox
 
 struct voxy_entity *entity_allocator_get(struct entity_allocator *entity_allocator, entity_handle_t handle);
 
-#endif // ENTITY_ALLOCATOR_H
+#endif // CHUNK_ENTITY_ALLOCATOR_H

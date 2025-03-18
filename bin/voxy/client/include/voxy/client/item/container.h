@@ -1,5 +1,5 @@
-#ifndef VOXY_SERVER_ITEM_CONTAINER_H
-#define VOXY_SERVER_ITEM_CONTAINER_H
+#ifndef VOXY_CLIENT_ITEM_CONTAINER_H
+#define VOXY_CLIENT_ITEM_CONTAINER_H
 
 #include <voxy/server/export.h>
 #include <voxy/server/item/stack.h>
@@ -10,5 +10,4 @@ struct voxy_item_container
   struct voxy_item_stack *slots;
 };
 
-#endif // VOXY_SERVER_ITEM_CONTAINER_H
-
+#endif // VOXY_CLIENT_ITEM_CONTAINER_H

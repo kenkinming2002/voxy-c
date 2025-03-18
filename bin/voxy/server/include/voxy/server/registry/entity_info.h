@@ -1,5 +1,5 @@
-#ifndef VOXY_SERVER_ENTITY_INFO_H
-#define VOXY_SERVER_ENTITY_INFO_H
+#ifndef VOXY_SERVER_REGISTRY_ENTITY_INFO_H
+#define VOXY_SERVER_REGISTRY_ENTITY_INFO_H
 
 #include <voxy/server/export.h>
 #include <libmath/vector.h>
@@ -44,5 +44,4 @@ VOXY_SERVER_EXPORT void voxy_entity_destroy_opaque_default(void *opaque);
 VOXY_SERVER_EXPORT int voxy_entity_serialize_opaque_default(libserde_serializer_t serializer, const void *opaque);
 VOXY_SERVER_EXPORT int voxy_entity_deserialize_opaque_default(libserde_deserializer_t deserializer, void **opaque);
 
-#endif // VOXY_SERVER_ENTITY_INFO_H
-
+#endif // VOXY_SERVER_REGISTRY_ENTITY_INFO_H

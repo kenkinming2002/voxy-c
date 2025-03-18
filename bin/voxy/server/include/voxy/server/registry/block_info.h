@@ -1,5 +1,5 @@
-#ifndef VOXY_SERVER_BLOCK_INFO_H
-#define VOXY_SERVER_BLOCK_INFO_H
+#ifndef VOXY_SERVER_REGISTRY_BLOCK_INFO_H
+#define VOXY_SERVER_REGISTRY_BLOCK_INFO_H
 
 #include <libmath/direction.h>
 
@@ -11,5 +11,4 @@ struct voxy_block_info
   uint8_t light_level;
 };
 
-#endif // VOXY_SERVER_BLOCK_INFO_H
-
+#endif // VOXY_SERVER_REGISTRY_BLOCK_INFO_H

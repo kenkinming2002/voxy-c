@@ -11,4 +11,3 @@ struct voxy_item_container
 };
 
 #endif // VOXY_SERVER_ITEM_CONTAINER_H
-

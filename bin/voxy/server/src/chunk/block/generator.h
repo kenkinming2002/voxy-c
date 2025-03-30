@@ -4,40 +4,22 @@
 #include "future.h"
 
 #include <voxy/server/chunk/block/generator.h>
-#include <libcore/thread_pool.h>
 
 struct voxy_block_group;
 struct voxy_block_generator;
 
-struct voxy_block_generator_wrapper
+struct block_generator_wrappers
 {
-  struct voxy_block_generator_wrapper *next;
-  size_t          hash;
-
-  struct thread_pool_job job;
-
-  ivec3_t position;
-  struct voxy_block_generator *block_generator;
-  struct voxy_context *context;
-  struct voxy_block_group * _Atomic block_group;
+  ivec3_t key;
+  struct block_generator_job *value;
 };
-
-#define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_PREFIX voxy_block_generator_wrapper
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_generator_wrapper
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_INTERFACE
 
 struct voxy_block_generator
 {
   seed_t seed;
-  struct voxy_block_generator_wrapper_hash_table wrappers;
-
   voxy_generate_block_t generate_block;
+
+  struct block_generator_wrappers *wrappers;
 };
 
 void voxy_block_generator_init(struct voxy_block_generator *block_generator, const char *world_directory);

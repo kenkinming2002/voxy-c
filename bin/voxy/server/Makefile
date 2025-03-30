@@ -7,6 +7,10 @@ CFLAGS += -Isrc
 CFLAGS += -I../config/include
 CFLAGS += -I../protocol/include
 
+CFLAGS += -I../../../lib/external/include
+LIBS += -L../../../lib/external
+LIBS += -lexternal
+
 CFLAGS += -I../../../lib/core/include
 LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/core'
 LIBS += -L../../../lib/core

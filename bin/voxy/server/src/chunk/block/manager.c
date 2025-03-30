@@ -14,6 +14,8 @@
 #include <libcore/profile.h>
 #include <libcore/format.h>
 
+#include <stb_ds.h>
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -132,14 +134,15 @@ static void load_or_generate_blocks(struct voxy_block_manager *block_manager, st
   size_t load_count = 0;
   size_t generate_count = 0;
 
-  struct ivec3_node *position;
-  SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, position)
+  for(ptrdiff_t i=0; i<hmlen(chunk_manager->active_chunks); ++i)
   {
+    ivec3_t position = chunk_manager->active_chunks[i].key;
+
     struct voxy_block_group *block_group;
-    if((block_group = voxy_block_group_hash_table_lookup(&block_manager->block_groups, position->key)))
+    if((block_group = voxy_block_group_hash_table_lookup(&block_manager->block_groups, position)))
       continue;
 
-    struct block_group_future block_group_future = load_or_generate_block(position->key, block_database, block_generator, context, &load_count, &generate_count);
+    struct block_group_future block_group_future = load_or_generate_block(position, block_database, block_generator, context, &load_count, &generate_count);
     if((block_group = block_group_future.value))
     {
       voxy_block_group_hash_table_insert_unchecked(&block_manager->block_groups, block_group);
@@ -215,7 +218,7 @@ static void discard_blocks(struct voxy_block_manager *block_manager, struct voxy
   {
     struct voxy_block_group **block_group = &block_manager->block_groups.buckets[i].head;
     while(*block_group)
-      if(!ivec3_hash_table_lookup(&chunk_manager->active_chunks, (*block_group)->position) && !(*block_group)->disk_dirty)
+      if(hmgeti(chunk_manager->active_chunks, (*block_group)->position) == -1 && !(*block_group)->disk_dirty)
       {
         struct voxy_block_group *old_block_group = *block_group;
         *block_group = (*block_group)->next;

@@ -10,6 +10,8 @@
 #include <libcore/log.h>
 #include <libcore/profile.h>
 
+#include <stb_ds.h>
+
 #include <assert.h>
 
 void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager)
@@ -99,19 +101,20 @@ static void load_entities(
 
   size_t load_count = 0;
 
-  struct ivec3_node *active_chunk;
   struct ivec3_node *loaded_chunk;
-  SC_HASH_TABLE_FOREACH(chunk_manager->active_chunks, active_chunk)
-    if(!(loaded_chunk = ivec3_hash_table_lookup(&entity_manager->loaded_chunks, active_chunk->key)))
+  for(ptrdiff_t i=0; i<hmlen(chunk_manager->active_chunks); ++i)
+  {
+    ivec3_t position = chunk_manager->active_chunks[i].key;
+    if(!(loaded_chunk = ivec3_hash_table_lookup(&entity_manager->loaded_chunks, position)))
     {
       loaded_chunk = malloc(sizeof *loaded_chunk);
-      loaded_chunk->key = active_chunk->key;
+      loaded_chunk->key = position;
       ivec3_hash_table_insert(&entity_manager->loaded_chunks, loaded_chunk);
 
       struct db_ids db_ids = {0};
       if(voxy_entity_database_load_inactive(entity_database, loaded_chunk->key, &db_ids) != 0)
       {
-        LOG_WARN("Failed to load inactive entitites for chunk at (%d, %d, %d). Continuing anyway...", active_chunk->key.x, active_chunk->key.y, active_chunk->key.z);
+        LOG_WARN("Failed to load inactive entitites for chunk at (%d, %d, %d). Continuing anyway...", position.x, position.y, position.z);
         continue;
       }
 
@@ -140,6 +143,7 @@ static void load_entities(
 
       DYNAMIC_ARRAY_CLEAR(db_ids);
     }
+  }
 
   if(load_count != 0)
     LOG_INFO("Entity Manager: Loaded %zu entities", load_count);
@@ -160,7 +164,7 @@ static void discard_entities(
   {
     struct ivec3_node **node = &entity_manager->loaded_chunks.buckets[i].head;
     while(*node)
-      if(!ivec3_hash_table_lookup(&chunk_manager->active_chunks, (*node)->key))
+      if(hmgeti(chunk_manager->active_chunks, (*node)->key) == -1)
       {
         struct ivec3_node *old_node = *node;
         *node = (*node)->next;

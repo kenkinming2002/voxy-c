@@ -3,11 +3,19 @@
 
 #include <voxy/server/chunk/manager.h>
 
-#include "hash_table/ivec3.h"
+struct empty
+{
+};
+
+struct active_chunk
+{
+  ivec3_t key;
+  struct empty value;
+};
 
 struct voxy_chunk_manager
 {
-  struct ivec3_hash_table active_chunks;
+  struct active_chunk *active_chunks;
 };
 
 void voxy_chunk_manager_init(struct voxy_chunk_manager *chunk_manager);

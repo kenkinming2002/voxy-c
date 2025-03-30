@@ -1,4 +1,4 @@
-SUBDIRS = core math gfx ui net serde
+SUBDIRS = external core math gfx ui net serde
 
 all clean depclean: $(SUBDIRS)
 

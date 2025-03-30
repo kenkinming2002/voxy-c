@@ -17,12 +17,12 @@
 void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager)
 {
   entity_allocator_init(&entity_manager->allocator);
-  ivec3_hash_table_init(&entity_manager->loaded_chunks);
+  entity_manager->loaded_chunks = NULL;
 }
 
 void voxy_entity_manager_fini(struct voxy_entity_manager *entity_manager)
 {
-  ivec3_hash_table_dispose(&entity_manager->loaded_chunks);
+  hmfree(entity_manager->loaded_chunks);
   entity_allocator_fini(&entity_manager->allocator);
 }
 
@@ -100,19 +100,15 @@ static void load_entities(
   profile_scope;
 
   size_t load_count = 0;
-
-  struct ivec3_node *loaded_chunk;
   for(ptrdiff_t i=0; i<hmlen(chunk_manager->active_chunks); ++i)
   {
     ivec3_t position = chunk_manager->active_chunks[i].key;
-    if(!(loaded_chunk = ivec3_hash_table_lookup(&entity_manager->loaded_chunks, position)))
+    if(hmgeti(entity_manager->loaded_chunks, position) == -1)
     {
-      loaded_chunk = malloc(sizeof *loaded_chunk);
-      loaded_chunk->key = position;
-      ivec3_hash_table_insert(&entity_manager->loaded_chunks, loaded_chunk);
+      hmput(entity_manager->loaded_chunks, position, (struct empty){});
 
       struct db_ids db_ids = {0};
-      if(voxy_entity_database_load_inactive(entity_database, loaded_chunk->key, &db_ids) != 0)
+      if(voxy_entity_database_load_inactive(entity_database, position, &db_ids) != 0)
       {
         LOG_WARN("Failed to load inactive entitites for chunk at (%d, %d, %d). Continuing anyway...", position.x, position.y, position.z);
         continue;
@@ -160,20 +156,16 @@ static void discard_entities(
 
   size_t discard_count = 0;
 
-  for(size_t i=0; i<SC_HASH_TABLE_BUCKET_COUNT_FROM_ORDER(entity_manager->loaded_chunks.bucket_order); ++i)
+  struct loaded_chunk *new_loaded_chunks = NULL;
+  for(ptrdiff_t i=0; i<hmlen(entity_manager->loaded_chunks); ++i)
   {
-    struct ivec3_node **node = &entity_manager->loaded_chunks.buckets[i].head;
-    while(*node)
-      if(hmgeti(chunk_manager->active_chunks, (*node)->key) == -1)
-      {
-        struct ivec3_node *old_node = *node;
-        *node = (*node)->next;
-        free(old_node);
-        entity_manager->loaded_chunks.load -= 1;
-      }
-      else
-        node = &(*node)->next;
+    ivec3_t position = entity_manager->loaded_chunks[i].key;
+    if(hmgeti(chunk_manager->active_chunks, position) != -1)
+      hmput(new_loaded_chunks, position, (struct empty){});
   }
+
+  hmfree(entity_manager->loaded_chunks);
+  entity_manager->loaded_chunks = new_loaded_chunks;
 
   for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
   {
@@ -182,7 +174,7 @@ static void discard_entities(
       continue;
 
     const ivec3_t chunk_position = get_chunk_position_f(entity->position);
-    if(ivec3_hash_table_lookup(&entity_manager->loaded_chunks, chunk_position))
+    if(hmgeti(entity_manager->loaded_chunks, chunk_position) != -1)
       continue;
 
     if(voxy_entity_database_commit(entity_database, entity->db_id, chunk_position) != 0) LOG_WARN("Failed to commit active entity for chunk at (%d, %d, %d). Continuing anyway...", chunk_position.x, chunk_position.y, chunk_position.z);

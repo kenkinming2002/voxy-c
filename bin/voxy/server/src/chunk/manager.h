@@ -2,10 +2,7 @@
 #define CHUNK_MANAGER_H
 
 #include <voxy/server/chunk/manager.h>
-
-struct empty
-{
-};
+#include <empty.h>
 
 struct active_chunk
 {

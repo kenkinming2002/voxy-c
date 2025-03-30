@@ -1,8 +1,11 @@
 #ifndef CHUNK_ENTITY_MANAGER_H
 #define CHUNK_ENTITY_MANAGER_H
 
+#include <voxy/server/chunk/entity/manager.h>
+
+#include <empty.h>
+
 #include "chunk/manager.h"
-#include "chunk/block/manager.h"
 
 #include "allocator.h"
 #include "database.h"
@@ -13,6 +16,12 @@
 
 #include <stdint.h>
 
+struct loaded_chunk
+{
+  ivec3_t key;
+  struct empty value;
+};
+
 /// Entity manager.
 ///
 /// This takes care of allocating a unique handle for each entity and
@@ -20,7 +29,7 @@
 struct voxy_entity_manager
 {
   struct entity_allocator allocator;
-  struct ivec3_hash_table loaded_chunks;
+  struct loaded_chunk *loaded_chunks;
 };
 
 /// Initialization and deinitialization functions.

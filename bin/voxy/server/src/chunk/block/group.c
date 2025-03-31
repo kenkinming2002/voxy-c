@@ -111,18 +111,3 @@ void voxy_block_group_set_block(struct voxy_block_group *block_group, struct vox
   voxy_block_group_set_block_light_level(block_group, position, light_level);
 }
 
-#define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_PREFIX voxy_block_group
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_group
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_IMPLEMENTATION
-
-ivec3_t voxy_block_group_key(struct voxy_block_group *block_group) { return block_group->position; }
-size_t voxy_block_group_hash(ivec3_t position) { return ivec3_hash(position); }
-int voxy_block_group_compare(ivec3_t position1, ivec3_t position2) { return ivec3_compare(position1, position2); }
-void voxy_block_group_dispose(struct voxy_block_group *block_group) { voxy_block_group_destroy(block_group); }
-

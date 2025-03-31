@@ -13,12 +13,7 @@
 /// Chunk.
 struct voxy_block_group
 {
-  size_t hash;
-
-  struct voxy_block_group *next;
   struct voxy_block_group *neighbours[DIRECTION_COUNT];
-
-  ivec3_t position;
 
   /// Blocks.
   ///

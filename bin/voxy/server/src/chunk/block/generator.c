@@ -97,7 +97,6 @@ static void job_invoke(struct thread_pool_job *job)
   struct block_generator_job *real_job = container_of(job, struct block_generator_job, job);
 
   struct voxy_block_group *block_group = voxy_block_group_create();
-  block_group->position = real_job->position;
   block_group->disk_dirty = true;
   block_group->network_dirty = true;
 

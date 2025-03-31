@@ -14,9 +14,15 @@
 struct voxy_block_registry;
 struct voxy_light_manager;
 
+struct block_group_node
+{
+  ivec3_t key;
+  struct voxy_block_group *value;
+};
+
 struct voxy_block_manager
 {
-  struct voxy_block_group_hash_table block_groups;
+  struct block_group_node *block_group_nodes;
 };
 
 void voxy_block_manager_init(struct voxy_block_manager *block_manager);

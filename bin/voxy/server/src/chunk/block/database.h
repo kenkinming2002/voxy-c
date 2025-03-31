@@ -79,7 +79,7 @@ void voxy_block_database_init(struct voxy_block_database *block_database, const 
 void voxy_block_database_fini(struct voxy_block_database *block_database);
 
 struct block_group_future voxy_block_database_load(struct voxy_block_database *block_database, ivec3_t position);
-struct unit_future voxy_block_database_save(struct voxy_block_database *block_database, struct voxy_block_group *chunk);
+struct unit_future voxy_block_database_save(struct voxy_block_database *block_database, ivec3_t position, struct voxy_block_group *block_group);
 
 void voxy_block_database_update(struct voxy_block_database *block_database);
 

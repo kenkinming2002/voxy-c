@@ -156,7 +156,6 @@ struct block_group_future voxy_block_database_load(struct voxy_block_database *b
     wrapper->path = aformat(block_group_file(block_database->directory, position));
 
     wrapper->block_group = voxy_block_group_create();
-    wrapper->block_group->position = wrapper->position;
     wrapper->block_group->disk_dirty = false;
     wrapper->block_group->network_dirty = true;
 
@@ -198,12 +197,12 @@ struct block_group_future voxy_block_database_load(struct voxy_block_database *b
   return block_group_future_ready(block_group);
 }
 
-struct unit_future voxy_block_database_save(struct voxy_block_database *block_database, struct voxy_block_group *block_group)
+struct unit_future voxy_block_database_save(struct voxy_block_database *block_database, ivec3_t position, struct voxy_block_group *block_group)
 {
   profile_scope;
 
   struct voxy_block_database_save_wrapper *wrapper;
-  if(!(wrapper = voxy_block_database_save_wrapper_hash_table_lookup(&block_database->save_wrappers, block_group->position)))
+  if(!(wrapper = voxy_block_database_save_wrapper_hash_table_lookup(&block_database->save_wrappers, position)))
   {
     int fixed_file = alloc_fixed_file(block_database);
     if(fixed_file == -1)
@@ -211,15 +210,15 @@ struct unit_future voxy_block_database_save(struct voxy_block_database *block_da
 
     wrapper = malloc(sizeof *wrapper);
 
-    wrapper->position = block_group->position;
+    wrapper->position = position;
 
     wrapper->fixed_file = fixed_file;
 
-    wrapper->dirs[0] = aformat(block_group_dir0(block_database->directory, block_group->position));
-    wrapper->dirs[1] = aformat(block_group_dir1(block_database->directory, block_group->position));
-    wrapper->dirs[2] = aformat(block_group_dir2(block_database->directory, block_group->position));
+    wrapper->dirs[0] = aformat(block_group_dir0(block_database->directory, position));
+    wrapper->dirs[1] = aformat(block_group_dir1(block_database->directory, position));
+    wrapper->dirs[2] = aformat(block_group_dir2(block_database->directory, position));
 
-    wrapper->path = aformat(block_group_file(block_database->directory, block_group->position));
+    wrapper->path = aformat(block_group_file(block_database->directory, position));
 
     wrapper->iovecs[0].iov_base = block_group->ids;
     wrapper->iovecs[0].iov_len = sizeof block_group->ids;

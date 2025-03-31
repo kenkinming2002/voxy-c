@@ -6,6 +6,8 @@
 #include <libcore/log.h>
 #include <libcore/format.h>
 
+#include <stb_ds.h>
+
 #include <stdatomic.h>
 #include <string.h>
 
@@ -48,11 +50,11 @@ void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *li
   ivec3_t chunk_position = get_chunk_position_i(position);
   ivec3_t local_position = global_position_to_local_position_i(position);
 
-  struct voxy_block_group *block_group;
-  if(!(block_group = voxy_block_group_hash_table_lookup(&block_manager->block_groups, chunk_position)))
+  ptrdiff_t i = hmgeti(block_manager->block_group_nodes, chunk_position);
+  if(i == -1)
     return;
 
-  voxy_light_manager_enqueue_destruction_update_at(light_manager, block_group, local_position, light_level);
+  voxy_light_manager_enqueue_destruction_update_at(light_manager, block_manager->block_group_nodes[i].value, local_position, light_level);
 }
 
 void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position)
@@ -60,11 +62,11 @@ void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light
   ivec3_t chunk_position = get_chunk_position_i(position);
   ivec3_t local_position = global_position_to_local_position_i(position);
 
-  struct voxy_block_group *block_group;
-  if(!(block_group = voxy_block_group_hash_table_lookup(&block_manager->block_groups, chunk_position)))
+  ptrdiff_t i = hmgeti(block_manager->block_group_nodes, chunk_position);
+  if(i == -1)
     return;
 
-  voxy_light_manager_enqueue_creation_update_at(light_manager, block_group, local_position);
+  voxy_light_manager_enqueue_creation_update_at(light_manager, block_manager->block_group_nodes[i].value, local_position);
 }
 
 /// Compute new light level after propagation in direction.

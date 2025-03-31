@@ -5,9 +5,16 @@
 
 #include <libnet/client.h>
 
+struct block_group_node
+{
+  ivec3_t key;
+  struct block_group *value;
+};
+
+
 struct block_manager
 {
-  struct block_group_hash_table block_groups;
+  struct block_group_node *block_group_nodes;
 };
 
 int block_manager_init(struct block_manager *block_manager);

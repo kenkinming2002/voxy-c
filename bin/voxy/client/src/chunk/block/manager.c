@@ -4,44 +4,50 @@
 
 #include <libcore/log.h>
 
+#include <stb_ds.h>
+
 #include <string.h>
 
 int block_manager_init(struct block_manager *block_manager)
 {
-  block_group_hash_table_init(&block_manager->block_groups);
+  block_manager->block_group_nodes = NULL;
   return 0;
 }
 
 void block_manager_fini(struct block_manager *block_manager)
 {
-  block_group_hash_table_dispose(&block_manager->block_groups);
+  hmfree(block_manager->block_group_nodes);
+}
+
+static struct block_group *block_group_lookup(struct block_manager *block_manager, ivec3_t position)
+{
+  ptrdiff_t i = hmgeti(block_manager->block_group_nodes, position);
+  return i != -1 ? block_manager->block_group_nodes[i].value : NULL;
 }
 
 struct block_group *block_manager_get_block_group(struct block_manager *block_manager, ivec3_t position)
 {
-  struct block_group *block_group = block_group_hash_table_lookup(&block_manager->block_groups, position);
+  struct block_group *block_group = block_group_lookup(block_manager, position);
   if(!block_group)
   {
     block_group = block_group_create();
-    block_group->position = position;
-    block_group_hash_table_insert_unchecked(&block_manager->block_groups, block_group);
-
     for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
     {
-      const ivec3_t neighbour_position = ivec3_add(block_group->position, direction_as_ivec(direction));
-      struct block_group *neighbour_block_group = block_group_hash_table_lookup(&block_manager->block_groups, neighbour_position);
-
+      const ivec3_t neighbour_position = ivec3_add(position, direction_as_ivec(direction));
+      struct block_group *neighbour_block_group = block_group_lookup(block_manager, neighbour_position);
       block_group->neighbours[direction] = neighbour_block_group;
       if(neighbour_block_group)
         neighbour_block_group->neighbours[direction_reverse(direction)] = block_group;
     }
+
+    hmput(block_manager->block_group_nodes, position, block_group);
   }
   return block_group;
 }
 
 void block_manager_remove_block_group(struct block_manager *block_manager, ivec3_t position)
 {
-  block_group_hash_table_remove(&block_manager->block_groups, position);
+  hmdel(block_manager->block_group_nodes, position);
 }
 
 void block_manager_update(struct block_manager *block_manager)

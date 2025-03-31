@@ -2,6 +2,8 @@
 
 #include <libcore/log.h>
 
+#include <stb_ds.h>
+
 #include <string.h>
 
 int block_renderer_init(struct block_renderer *block_renderer, const struct voxy_block_registry *block_registry)
@@ -89,20 +91,21 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
         const ivec3_t position = ivec3(x, y, z);
         if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
         {
-          struct block_group *block_group = block_group_hash_table_lookup(&block_manager->block_groups, position);
-          if(!block_group)
+          ptrdiff_t i = hmgeti(block_manager->block_group_nodes, position);
+          if(i == -1)
             continue;
 
+          struct block_group *block_group = block_manager->block_group_nodes[i].value;
           struct block_render_info *render_info = block_render_info_hash_table_lookup(&block_renderer->render_infos, position);
           if(!render_info)
           {
             render_info = block_render_info_create();
             render_info->position = position;
             block_render_info_hash_table_insert_unchecked(&block_renderer->render_infos, render_info);
-            block_render_info_update(render_info, block_registry, block_renderer, block_group);
+            block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
           }
           else if(block_group->remesh)
-            block_render_info_update(render_info, block_registry, block_renderer, block_group);
+            block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
           else
             continue;
 

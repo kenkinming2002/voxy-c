@@ -37,7 +37,7 @@ void block_render_info_destroy(struct block_render_info *block_render_info);
 /// should be indicated by some form of a *dirty* flag on the block group.
 ///
 /// FIXME: Add back the digger argument.
-void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, const struct block_group *block_group);
+void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, ivec3_t position, const struct block_group *block_group);
 
 /// Determine if a block group can be culled when rendered with the given camera.
 ///

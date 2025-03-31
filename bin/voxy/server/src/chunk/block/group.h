@@ -51,14 +51,4 @@ void voxy_block_group_destroy(struct voxy_block_group *block_group);
 void voxy_block_group_get_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 bool voxy_block_group_set_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
-#define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_PREFIX voxy_block_group
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_group
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_INTERFACE
-
 #endif // CHUNK_BLOCK_GROUP_H

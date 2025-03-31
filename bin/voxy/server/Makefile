@@ -43,8 +43,6 @@ SRCS += src/application.c
 
 SRCS += src/sqlite3_utils.c
 
-SRCS += src/hash_table/ivec3.c
-
 SRCS += src/registry/block.c
 SRCS += src/registry/entity.c
 SRCS += src/registry/item.c

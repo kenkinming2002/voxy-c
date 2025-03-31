@@ -10,8 +10,6 @@
 #include "allocator.h"
 #include "database.h"
 
-#include "hash_table/ivec3.h"
-
 #include <libnet/server.h>
 
 #include <stdint.h>

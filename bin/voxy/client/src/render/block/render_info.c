@@ -4,21 +4,18 @@
 #include <libmath/direction.h>
 #include <libgfx/gl.h>
 
-#include <stdlib.h>
-
-struct block_render_info *block_render_info_create(void)
+struct block_render_info block_render_info_create(void)
 {
-  struct block_render_info *block_render_info = malloc(sizeof *block_render_info);
-  block_mesh_init(&block_render_info->opaque_mesh);
-  block_mesh_init(&block_render_info->transparent_mesh);
+  struct block_render_info block_render_info = {0};
+  block_mesh_init(&block_render_info.opaque_mesh);
+  block_mesh_init(&block_render_info.transparent_mesh);
   return block_render_info;
 }
 
-void block_render_info_destroy(struct block_render_info *block_render_info)
+void block_render_info_destroy(struct block_render_info block_render_info)
 {
-  block_mesh_fini(&block_render_info->opaque_mesh);
-  block_mesh_fini(&block_render_info->transparent_mesh);
-  free(block_render_info);
+  block_mesh_fini(&block_render_info.opaque_mesh);
+  block_mesh_fini(&block_render_info.transparent_mesh);
 }
 
 static void prefetch_block_ids(const struct block_group *block_group, uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2])
@@ -197,7 +194,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
   DYNAMIC_ARRAY_CLEAR(transparent_vertices);
 }
 
-void block_render_info_update_cull(struct block_render_info *block_render_info, const struct camera *camera)
+void block_render_info_update_cull(ivec3_t position, struct block_render_info *block_render_info, const struct camera *camera)
 {
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(camera),       VP);
@@ -209,7 +206,7 @@ void block_render_info_update_cull(struct block_render_info *block_render_info, 
     for(int j=0; j<2; ++j)
       for(int i=0; i<2; ++i)
       {
-        fvec3_t point_world_space = fvec3_sub(ivec3_as_fvec3(ivec3_mul_scalar(ivec3_add(block_render_info->position, ivec3(i, j, k)), VOXY_CHUNK_WIDTH)), fvec3(0.5f, 0.5f, 0.5f));
+        fvec3_t point_world_space = fvec3_sub(ivec3_as_fvec3(ivec3_mul_scalar(ivec3_add(position, ivec3(i, j, k)), VOXY_CHUNK_WIDTH)), fvec3(0.5f, 0.5f, 0.5f));
         fvec3_t point_clip_space  = fmat4_apply_fvec3_perspective_divide(VP, point_world_space);
 
         min = fvec3_min(min, point_clip_space);
@@ -221,19 +218,4 @@ void block_render_info_update_cull(struct block_render_info *block_render_info, 
   block_render_info->culled = block_render_info->culled && (min.y >= 1.0f || max.y <= -1.0f);
   block_render_info->culled = block_render_info->culled && (min.z >= 1.0f || max.z <= -1.0f);
 }
-
-#define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_PREFIX block_render_info
-#define SC_HASH_TABLE_NODE_TYPE struct block_render_info
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_IMPLEMENTATION
-
-ivec3_t block_render_info_key(struct block_render_info *block_render_info) { return block_render_info->position; }
-size_t block_render_info_hash(ivec3_t position) { return ivec3_hash(position); }
-int block_render_info_compare(ivec3_t position1, ivec3_t position2) { return ivec3_compare(position1, position2); }
-void block_render_info_dispose(struct block_render_info *block_render_info) { block_render_info_destroy(block_render_info); }
 

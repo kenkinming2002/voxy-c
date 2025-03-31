@@ -17,13 +17,8 @@ struct glyph_key
   unsigned outline;
 };
 
-struct glyph
+struct glyph_value
 {
-  struct glyph *next;
-  size_t        hash;
-
-  struct glyph_key key;
-
   GLuint outline_texture;
   fvec2_t outline_dimension;
   fvec2_t outline_bearing;
@@ -35,15 +30,11 @@ struct glyph
   float advance;
 };
 
-#define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_PREFIX glyph
-#define SC_HASH_TABLE_NODE_TYPE struct glyph
-#define SC_HASH_TABLE_KEY_TYPE struct glyph_key
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_INTERFACE
+struct glyph
+{
+  struct glyph_key key;
+  struct glyph_value value;
+};
 
 struct font
 {
@@ -57,7 +48,7 @@ struct font_set
   size_t       font_count;
   size_t       font_capacity;
 
-  struct glyph_hash_table glyphs;
+  struct glyph *glyphs;
 };
 
 int font_load(struct font *font, const char *filepath);

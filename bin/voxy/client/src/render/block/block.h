@@ -8,6 +8,12 @@
 
 #include <libgfx/gl.h>
 
+struct block_render_info_node
+{
+  ivec3_t key;
+  struct block_render_info value;
+};
+
 struct block_renderer
 {
   struct gl_program program;
@@ -15,7 +21,7 @@ struct block_renderer
   struct gl_array_texture_2d texture;
   uint32_t (*texture_indices)[DIRECTION_COUNT];
 
-  struct block_render_info_hash_table render_infos;
+  struct block_render_info_node *render_info_nodes;
 };
 
 int block_renderer_init(struct block_renderer *block_renderer, const struct voxy_block_registry *block_registry);

@@ -121,7 +121,7 @@ float ui_text_width(unsigned height, const char *str)
   while((c = utf8_next((const unsigned char **)&str)))
   {
     struct glyph *glyph = font_set_get_glyph(&font_set, c, height, 1);
-    width += glyph->advance;
+    width += glyph->value.advance;
   }
   return width;
 }
@@ -136,18 +136,18 @@ void ui_text(fvec2_t position, unsigned height, unsigned outline, const char *st
     struct glyph *glyph = font_set_get_glyph(&font_set, c, height, outline);
 
     {
-      fvec2_t current_position  = fvec2_add(position, glyph->outline_bearing);
-      fvec2_t current_dimension = fvec2_mul(glyph->outline_dimension, fvec2(1.0f, -1.0f));
-      ui_rect_textured(current_position, current_dimension, 0.0f, glyph->outline_texture);
+      fvec2_t current_position  = fvec2_add(position, glyph->value.outline_bearing);
+      fvec2_t current_dimension = fvec2_mul(glyph->value.outline_dimension, fvec2(1.0f, -1.0f));
+      ui_rect_textured(current_position, current_dimension, 0.0f, glyph->value.outline_texture);
     }
 
     {
-      fvec2_t current_position  = fvec2_add(position, glyph->interior_bearing);
-      fvec2_t current_dimension = fvec2_mul(glyph->interior_dimension, fvec2(1.0f, -1.0f));
-      ui_rect_textured(current_position, current_dimension, 0.0f, glyph->interior_texture);
+      fvec2_t current_position  = fvec2_add(position, glyph->value.interior_bearing);
+      fvec2_t current_dimension = fvec2_mul(glyph->value.interior_dimension, fvec2(1.0f, -1.0f));
+      ui_rect_textured(current_position, current_dimension, 0.0f, glyph->value.interior_texture);
     }
 
-    position.x += glyph->advance;
+    position.x += glyph->value.advance;
   }
 }
 

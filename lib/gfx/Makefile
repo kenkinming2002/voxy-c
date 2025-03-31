@@ -4,6 +4,7 @@ CFLAGS += -D_GNU_SOURCE
 CFLAGS += -fPIC
 CFLAGS += -Iinclude
 
+CFLAGS += -I../external/include
 CFLAGS += -I../core/include
 CFLAGS += -I../math/include
 

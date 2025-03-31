@@ -2,15 +2,7 @@
 
 #include <libcore/log.h>
 
-#define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_PREFIX glyph
-#define SC_HASH_TABLE_NODE_TYPE struct glyph
-#define SC_HASH_TABLE_KEY_TYPE struct glyph_key
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_IMPLEMENTATION
+#include <stb_ds.h>
 
 #include <fontconfig/fontconfig.h>
 
@@ -43,8 +35,8 @@ int glyph_compare(struct glyph_key key1, struct glyph_key key2)
 
 void glyph_dispose(struct glyph *glyph)
 {
-  glDeleteTextures(1, &glyph->interior_texture);
-  glDeleteTextures(1, &glyph->outline_texture);
+  glDeleteTextures(1, &glyph->value.interior_texture);
+  glDeleteTextures(1, &glyph->value.outline_texture);
   free(glyph);
 }
 
@@ -120,12 +112,12 @@ void font_set_init(struct font_set *font_set)
   font_set->fonts         = NULL;
   font_set->font_count    = 0;
   font_set->font_capacity = 0;
-  glyph_hash_table_init(&font_set->glyphs);
+  font_set->glyphs        = NULL;
 }
 
 void font_set_fini(struct font_set *font_set)
 {
-  glyph_hash_table_dispose(&font_set->glyphs);
+  hmfree(font_set->glyphs);
   for(size_t i=0; i<font_set->font_count; ++i)
   {
     free(font_set->fonts[i].filepath);
@@ -184,12 +176,12 @@ int font_set_load_system(struct font_set *font_set)
 struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned height, unsigned outline)
 {
   struct glyph_key glyph_key = { .c = c, .height = height, .outline = outline, };
-  struct glyph *glyph = glyph_hash_table_lookup(&font_set->glyphs, glyph_key);
-  if(glyph)
-    return glyph;
 
-  glyph = malloc(sizeof *glyph);
-  glyph->key = glyph_key;
+  ptrdiff_t i = hmgeti(font_set->glyphs, glyph_key);
+  if(i != -1)
+    return &font_set->glyphs[i];
+
+  struct glyph_value glyph_value;
 
   for(size_t i=0; i<font_set->font_count; ++i)
   {
@@ -235,8 +227,8 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       FT_BitmapGlyph ft_bitmap_glyph = (FT_BitmapGlyph)ft_glyph;
       FT_Bitmap *ft_bitmap = &ft_bitmap_glyph->bitmap;
 
-      glGenTextures(1, &glyph->outline_texture);
-      glBindTexture(GL_TEXTURE_2D, glyph->outline_texture);
+      glGenTextures(1, &glyph_value.outline_texture);
+      glBindTexture(GL_TEXTURE_2D, glyph_value.outline_texture);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -251,8 +243,8 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
       glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, ft_bitmap->width, ft_bitmap->rows, 0, GL_RED, GL_UNSIGNED_BYTE, ft_bitmap->buffer);
 
-      glyph->outline_dimension = fvec2(ft_bitmap->width, ft_bitmap->rows);
-      glyph->outline_bearing = fvec2(ft_bitmap_glyph->left, ft_bitmap_glyph->top);
+      glyph_value.outline_dimension = fvec2(ft_bitmap->width, ft_bitmap->rows);
+      glyph_value.outline_bearing = fvec2(ft_bitmap_glyph->left, ft_bitmap_glyph->top);
 
       FT_Done_Glyph(ft_glyph);
     }
@@ -276,8 +268,8 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       FT_BitmapGlyph ft_bitmap_glyph = (FT_BitmapGlyph)ft_glyph;
       FT_Bitmap *ft_bitmap = &ft_bitmap_glyph->bitmap;
 
-      glGenTextures(1, &glyph->interior_texture);
-      glBindTexture(GL_TEXTURE_2D, glyph->interior_texture);
+      glGenTextures(1, &glyph_value.interior_texture);
+      glBindTexture(GL_TEXTURE_2D, glyph_value.interior_texture);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -292,22 +284,24 @@ struct glyph *font_set_get_glyph(struct font_set *font_set, unsigned c, unsigned
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
       glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, ft_bitmap->width, ft_bitmap->rows, 0, GL_RED, GL_UNSIGNED_BYTE, ft_bitmap->buffer);
 
-      glyph->interior_dimension = fvec2(ft_bitmap->width, ft_bitmap->rows);
-      glyph->interior_bearing = fvec2(ft_bitmap_glyph->left, ft_bitmap_glyph->top);
+      glyph_value.interior_dimension = fvec2(ft_bitmap->width, ft_bitmap->rows);
+      glyph_value.interior_bearing = fvec2(ft_bitmap_glyph->left, ft_bitmap_glyph->top);
 
       // It would be nice if somebody to point to the documentation in freetype that say that it is in 16.16 format.
-      glyph->advance = ft_glyph->advance.x / (float)(1 << 16);
+      glyph_value.advance = ft_glyph->advance.x / (float)(1 << 16);
 
       FT_Done_Glyph(ft_glyph);
     }
 
     /// Cache the rendered glpyh and return
-    glyph_hash_table_insert_unchecked(&font_set->glyphs, glyph);
-    return glyph;
+    hmput(font_set->glyphs, glyph_key, glyph_value);
+
+    ptrdiff_t i = hmgeti(font_set->glyphs, glyph_key);
+    assert(i != -1);
+    return &font_set->glyphs[i];
   }
 
   LOG_WARN("No font found for character %c", c);
-  free(glyph);
   return NULL;
 }
 

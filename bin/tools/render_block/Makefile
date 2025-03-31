@@ -17,6 +17,10 @@ LDFLAGS += -Wl,--rpath,'$$ORIGIN/../../../lib/gfx'
 LIBS += -L../../../lib/gfx
 LIBS += -lgfx
 
+CFLAGS += -I../../../lib/external/include
+LIBS += -L../../../lib/external
+LIBS += -lexternal
+
 CFLAGS += $(shell pkg-config --cflags libpng)
 LIBS += $(shell pkg-config --libs libpng)
 

@@ -16,20 +16,14 @@ struct voxy_block_registry;
 /// can draw trasparent blocks after opaque blocks.
 struct block_render_info
 {
-  size_t                     hash;
-  struct block_render_info *next;
-
-  ivec3_t position;
-
   struct block_mesh opaque_mesh;
   struct block_mesh transparent_mesh;
-
   bool culled;
 };
 
 /// Create/destroy blocks render info.
-struct block_render_info *block_render_info_create(void);
-void block_render_info_destroy(struct block_render_info *block_render_info);
+struct block_render_info block_render_info_create(void);
+void block_render_info_destroy(struct block_render_info block_render_info);
 
 /// Update blocks render info for block group.
 ///
@@ -42,16 +36,6 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 /// Determine if a block group can be culled when rendered with the given camera.
 ///
 /// The result would be stored in the cull variable.
-void block_render_info_update_cull(struct block_render_info *block_render_info, const struct camera *camera);
-
-#define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_PREFIX block_render_info
-#define SC_HASH_TABLE_NODE_TYPE struct block_render_info
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_NODE_TYPE
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_INTERFACE
+void block_render_info_update_cull(ivec3_t position, struct block_render_info *block_render_info, const struct camera *camera);
 
 #endif // RENDER_BLOCK_RENDER_INFO_H

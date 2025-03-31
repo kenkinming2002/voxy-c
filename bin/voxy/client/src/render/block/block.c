@@ -37,7 +37,7 @@ int block_renderer_init(struct block_renderer *block_renderer, const struct voxy
   if(gl_array_texture_2d_load(&block_renderer->texture, textures.item_count, textures.items) != 0)
     goto error1;
 
-  block_render_info_hash_table_init(&block_renderer->render_infos);
+  block_renderer->render_info_nodes = NULL;
   return 0;
 
 error1:
@@ -49,7 +49,7 @@ error0:
 
 void block_renderer_fini(struct block_renderer *block_renderer)
 {
-  block_render_info_hash_table_dispose(&block_renderer->render_infos);
+  hmfree(block_renderer->render_info_nodes);
   gl_array_texture_2d_fini(&block_renderer->texture);
   gl_program_fini(&block_renderer->program);
 }
@@ -62,26 +62,19 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
   unsigned discard_count = 0;
   unsigned update_count = 0;
 
-  // Discard render info for block groups outside of render distance.
-  for(size_t i=0; i<SC_HASH_TABLE_BUCKET_COUNT_FROM_ORDER(block_renderer->render_infos.bucket_order); ++i)
+  struct block_render_info_node *new_render_info_nodes = NULL;
+  for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
   {
-    struct block_render_info **render_info = &block_renderer->render_infos.buckets[i].head;
-    while(*render_info)
-    {
-      const ivec3_t position = (*render_info)->position;
-      if(ivec3_length_squared(ivec3_sub(position, center)) > radius * radius)
-      {
-        struct block_render_info *old_render_info = *render_info;
-        *render_info = (*render_info)->next;
-        block_renderer->render_infos.load -= 1;
-        block_render_info_destroy(old_render_info);
-
-        discard_count += 1;
-      }
-      else
-        render_info = &(*render_info)->next;
-    }
+    ivec3_t position = block_renderer->render_info_nodes[i].key;
+    struct block_render_info render_info = block_renderer->render_info_nodes[i].value;
+    if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
+      hmput(new_render_info_nodes, position, render_info);
+    else
+      block_render_info_destroy(render_info);
   }
+
+  hmfree(block_renderer->render_info_nodes);
+  block_renderer->render_info_nodes = new_render_info_nodes;
 
   // Create render info for block groups inside render distance.
   for(int z = center.z - radius + 1; z <= center.z + radius - 1; ++z)
@@ -96,21 +89,25 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
             continue;
 
           struct block_group *block_group = block_manager->block_group_nodes[i].value;
-          struct block_render_info *render_info = block_render_info_hash_table_lookup(&block_renderer->render_infos, position);
-          if(!render_info)
+
+          ptrdiff_t j = hmgeti(block_renderer->render_info_nodes, position);
+          if(j == -1)
           {
-            render_info = block_render_info_create();
-            render_info->position = position;
-            block_render_info_hash_table_insert_unchecked(&block_renderer->render_infos, render_info);
-            block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
+            struct block_render_info render_info = block_render_info_create();
+            block_render_info_update(&render_info, block_registry, block_renderer, position, block_group);
+            hmput(block_renderer->render_info_nodes, position, render_info);
+
+            block_group->remesh = false;
+            update_count += 1;
           }
           else if(block_group->remesh)
+          {
+            struct block_render_info *render_info = &block_renderer->render_info_nodes[j].value;
             block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
-          else
-            continue;
 
-          block_group->remesh = false;
-          update_count += 1;
+            block_group->remesh = false;
+            update_count += 1;
+          }
         }
       }
 
@@ -123,8 +120,6 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
 
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager)
 {
-  struct block_render_info *render_info;
-
   fmat4_t VP = fmat4_identity();
   VP = fmat4_mul(camera_view_matrix(&camera_manager->camera),       VP);
   VP = fmat4_mul(camera_projection_matrix(&camera_manager->camera), VP);
@@ -142,13 +137,13 @@ void block_renderer_render(struct block_renderer *block_renderer, struct camera_
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D_ARRAY, block_renderer->texture.id);
 
-  SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
-    block_render_info_update_cull(render_info, &camera_manager->camera);
+  for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
+    block_render_info_update_cull(block_renderer->render_info_nodes[i].key, &block_renderer->render_info_nodes[i].value, &camera_manager->camera);
 
-  SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
-    block_mesh_render(&render_info->opaque_mesh);
+  for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
+    block_mesh_render(&block_renderer->render_info_nodes[i].value.opaque_mesh);
 
-  SC_HASH_TABLE_FOREACH(block_renderer->render_infos, render_info)
-    block_mesh_render(&render_info->transparent_mesh);
+  for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
+    block_mesh_render(&block_renderer->render_info_nodes[i].value.transparent_mesh);
 }
 

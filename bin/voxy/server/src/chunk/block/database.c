@@ -11,49 +11,13 @@
 #include <libcore/profile.h>
 #include <libcore/unreachable.h>
 
+#include <stb_ds.h>
+
 #include <string.h>
 #include <errno.h>
 
 #include <fcntl.h>
 #include <unistd.h>
-
-#define SC_HASH_TABLE_IMPLEMENTATION
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-
-#define SC_HASH_TABLE_PREFIX voxy_block_database_load_wrapper
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_database_load_wrapper
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-
-#define SC_HASH_TABLE_PREFIX voxy_block_database_save_wrapper
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_database_save_wrapper
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_INTERFACE
-
-ivec3_t voxy_block_database_load_wrapper_key(struct voxy_block_database_load_wrapper *wrapper) { return wrapper->position; }
-size_t voxy_block_database_load_wrapper_hash(ivec3_t position) { return ivec3_hash(position); }
-int voxy_block_database_load_wrapper_compare(ivec3_t position1, ivec3_t position2) { return ivec3_compare(position1, position2); }
-void voxy_block_database_load_wrapper_dispose(struct voxy_block_database_load_wrapper *wrapper)
-{
-  if(wrapper->path) free(wrapper->path);
-  if(wrapper->block_group) voxy_block_group_destroy(wrapper->block_group);
-  free(wrapper);
-}
-
-ivec3_t voxy_block_database_save_wrapper_key(struct voxy_block_database_save_wrapper *wrapper) { return wrapper->position; }
-size_t voxy_block_database_save_wrapper_hash(ivec3_t position) { return ivec3_hash(position); }
-int voxy_block_database_save_wrapper_compare(ivec3_t position1, ivec3_t position2) { return ivec3_compare(position1, position2); }
-void voxy_block_database_save_wrapper_dispose(struct voxy_block_database_save_wrapper *wrapper)
-{
-  for(unsigned i=0; i<3; ++i) if(wrapper->dirs[i]) free(wrapper->dirs[i]);
-  if(wrapper->path) free(wrapper->path);
-  free(wrapper);
-}
 
 #define block_group_dir0(directory, position) "%s/%d",            directory, position.x
 #define block_group_dir1(directory, position) "%s/%d/%d/",        directory, position.x, position.y
@@ -75,8 +39,8 @@ void voxy_block_database_init(struct voxy_block_database *block_database, const 
     exit(EXIT_FAILURE);
   }
 
-  voxy_block_database_load_wrapper_hash_table_init(&block_database->load_wrappers);
-  voxy_block_database_save_wrapper_hash_table_init(&block_database->save_wrappers);
+  block_database->load_entries = NULL;
+  block_database->save_entries = NULL;
 }
 
 void voxy_block_database_fini(struct voxy_block_database *block_database)
@@ -85,8 +49,8 @@ void voxy_block_database_fini(struct voxy_block_database *block_database)
   io_uring_queue_exit(&block_database->ring);
 
   free(block_database->directory);
-  voxy_block_database_load_wrapper_hash_table_dispose(&block_database->load_wrappers);
-  voxy_block_database_save_wrapper_hash_table_dispose(&block_database->save_wrappers);
+  hmfree(block_database->load_entries);
+  hmfree(block_database->save_entries);
 }
 
 enum tag
@@ -140,16 +104,14 @@ struct block_group_future voxy_block_database_load(struct voxy_block_database *b
 {
   profile_scope;
 
-  struct voxy_block_database_load_wrapper *wrapper;
-  if(!(wrapper = voxy_block_database_load_wrapper_hash_table_lookup(&block_database->load_wrappers, position)))
+  ptrdiff_t i = hmgeti(block_database->load_entries, position);
+  if(i == -1)
   {
     int fixed_file = alloc_fixed_file(block_database);
     if(fixed_file == -1)
       return block_group_future_pending;
 
-    wrapper = malloc(sizeof *wrapper);
-
-    wrapper->position = position;
+    struct block_database_load_wrapper *wrapper = malloc(sizeof *wrapper);
 
     wrapper->fixed_file = fixed_file;
 
@@ -183,16 +145,16 @@ struct block_group_future voxy_block_database_load(struct voxy_block_database *b
     io_uring_prep_close_direct(sqe, wrapper->fixed_file);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_LOAD_CLOSE_DIRECT));
 
-    voxy_block_database_load_wrapper_hash_table_insert(&block_database->load_wrappers, wrapper);
-
+    hmput(block_database->load_entries, position, wrapper);
     return block_group_future_pending;
   }
 
+  struct block_database_load_wrapper *wrapper = block_database->load_entries[i].value;
   if(!wrapper->done)
     return block_group_future_pending;
 
   struct voxy_block_group *block_group = wrapper->block_group;
-  voxy_block_database_load_wrapper_hash_table_remove(&block_database->load_wrappers, wrapper->position);
+  hmdel(block_database->load_entries, position);
   free(wrapper);
   return block_group_future_ready(block_group);
 }
@@ -201,16 +163,14 @@ struct unit_future voxy_block_database_save(struct voxy_block_database *block_da
 {
   profile_scope;
 
-  struct voxy_block_database_save_wrapper *wrapper;
-  if(!(wrapper = voxy_block_database_save_wrapper_hash_table_lookup(&block_database->save_wrappers, position)))
+  ptrdiff_t i = hmgeti(block_database->save_entries, position);
+  if(i == -1)
   {
     int fixed_file = alloc_fixed_file(block_database);
     if(fixed_file == -1)
       return unit_future_pending;
 
-    wrapper = malloc(sizeof *wrapper);
-
-    wrapper->position = position;
+    struct block_database_save_wrapper *wrapper = malloc(sizeof *wrapper);
 
     wrapper->fixed_file = fixed_file;
 
@@ -252,15 +212,15 @@ struct unit_future voxy_block_database_save(struct voxy_block_database *block_da
     io_uring_prep_close_direct(sqe, wrapper->fixed_file);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_SAVE_CLOSE_DIRECT));
 
-    voxy_block_database_save_wrapper_hash_table_insert(&block_database->save_wrappers, wrapper);
-
+    hmput(block_database->save_entries, position, wrapper);
     return unit_future_pending;
   }
 
+  struct block_database_save_wrapper *wrapper = block_database->save_entries[i].value;
   if(!wrapper->done)
     return unit_future_pending;
 
-  voxy_block_database_save_wrapper_hash_table_remove(&block_database->save_wrappers, wrapper->position);
+  hmdel(block_database->save_entries, position);
   free(wrapper);
   return unit_future_ready;
 }
@@ -281,7 +241,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
     {
     case TAG_LOAD_OPEN_DIRECT:
       {
-        struct voxy_block_database_load_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
+        struct block_database_load_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
 
         if(cqe->res == -ENOENT)
         {
@@ -304,7 +264,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
       break;
     case TAG_LOAD_READV:
       {
-        struct voxy_block_database_load_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
+        struct block_database_load_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
 
         if(cqe->res == -ECANCELED)
           break;
@@ -324,7 +284,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
       break;
     case TAG_LOAD_CLOSE_DIRECT:
       {
-        struct voxy_block_database_load_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
+        struct block_database_load_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
 
         if(cqe->res == -ECANCELED)
           break;
@@ -345,7 +305,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
       break;
     case TAG_SAVE_MKDIR:
       {
-        struct voxy_block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
+        struct block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
 
         if(cqe->res == -ECANCELED)
           break;
@@ -362,7 +322,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
       break;
     case TAG_SAVE_OPEN_DIRECT:
       {
-        struct voxy_block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
+        struct block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
 
         if(cqe->res < 0)
         {
@@ -373,7 +333,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
       break;
     case TAG_SAVE_READV:
       {
-        struct voxy_block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
+        struct block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
 
         if(cqe->res == -ECANCELED)
           break;
@@ -393,7 +353,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
       break;
     case TAG_SAVE_CLOSE_DIRECT:
       {
-        struct voxy_block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
+        struct block_database_save_wrapper *wrapper = tagged_ptr_value(tagged_ptr);
 
         if(cqe->res == -ECANCELED)
           break;

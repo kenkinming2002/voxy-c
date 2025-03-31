@@ -15,13 +15,8 @@
 
 struct voxy_block_group;
 
-struct voxy_block_database_load_wrapper
+struct block_database_load_wrapper
 {
-  struct voxy_block_database_load_wrapper *next;
-  size_t hash;
-
-  ivec3_t position;
-
   int fixed_file;
 
   char *path;
@@ -31,13 +26,14 @@ struct voxy_block_database_load_wrapper
   bool done;
 };
 
-struct voxy_block_database_save_wrapper
+struct block_database_load_entry
 {
-  struct voxy_block_database_save_wrapper *next;
-  size_t hash;
+  ivec3_t key;
+  struct block_database_load_wrapper *value;
+};
 
-  ivec3_t position;
-
+struct block_database_save_wrapper
+{
   int fixed_file;
 
   char *dirs[3];
@@ -47,23 +43,11 @@ struct voxy_block_database_save_wrapper
   bool done;
 };
 
-#define SC_HASH_TABLE_INTERFACE
-#define SC_HASH_TABLE_KEY_TYPE ivec3_t
-
-#define SC_HASH_TABLE_PREFIX voxy_block_database_load_wrapper
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_database_load_wrapper
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-
-#define SC_HASH_TABLE_PREFIX voxy_block_database_save_wrapper
-#define SC_HASH_TABLE_NODE_TYPE struct voxy_block_database_save_wrapper
-#include <sc/hash_table.h>
-#undef SC_HASH_TABLE_PREFIX
-#undef SC_HASH_TABLE_NODE_TYPE
-
-#undef SC_HASH_TABLE_KEY_TYPE
-#undef SC_HASH_TABLE_INTERFACE
+struct block_database_save_entry
+{
+  ivec3_t key;
+  struct block_database_save_wrapper *value;
+};
 
 struct voxy_block_database
 {
@@ -71,8 +55,8 @@ struct voxy_block_database
   size_t fixed_file_bitmaps[CHUNK_DATABASE_LOAD_LIMIT / SIZE_WIDTH];
 
   char *directory;
-  struct voxy_block_database_load_wrapper_hash_table load_wrappers;
-  struct voxy_block_database_save_wrapper_hash_table save_wrappers;
+  struct block_database_load_entry *load_entries;
+  struct block_database_save_entry *save_entries;
 };
 
 void voxy_block_database_init(struct voxy_block_database *block_database, const char *world_directory);

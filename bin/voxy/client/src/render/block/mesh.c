@@ -2,6 +2,8 @@
 
 #include <libcore/log.h>
 
+#include <stb_ds.h>
+
 void block_mesh_init(struct block_mesh *block_mesh)
 {
   glGenVertexArrays(1, &block_mesh->vao);
@@ -15,14 +17,14 @@ void block_mesh_fini(struct block_mesh *block_mesh)
   glDeleteBuffers(1, &block_mesh->vbo);
 }
 
-void block_mesh_update(struct block_mesh *block_mesh, struct block_vertices vertices)
+void block_mesh_update(struct block_mesh *block_mesh, struct block_vertex *vertices)
 {
   glBindVertexArray(block_mesh->vao);
 
   // Vertices
   {
     glBindBuffer(GL_ARRAY_BUFFER, block_mesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.item_count * sizeof *vertices.items, vertices.items, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, arrlenu(vertices) * sizeof *vertices, vertices, GL_DYNAMIC_DRAW);
   }
 
   // Indices
@@ -57,7 +59,7 @@ void block_mesh_update(struct block_mesh *block_mesh, struct block_vertices vert
     glVertexAttribDivisor(3, 1);
   }
 
-  block_mesh->count = vertices.item_count;
+  block_mesh->count = arrlenu(vertices);
 }
 
 void block_mesh_render(const struct block_mesh *block_mesh)

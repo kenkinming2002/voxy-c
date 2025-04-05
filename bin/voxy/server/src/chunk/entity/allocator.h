@@ -5,15 +5,14 @@
 #include "entity.h"
 
 #include <voxy/server/chunk/entity/manager.h>
-#include <libcore/dynamic_array.h>
 
 /// Entity allocator.
 ///
 /// This takes care of allocating a unique handle for each entity.
 struct entity_allocator
 {
-  DYNAMIC_ARRAY_DEFINE(,struct voxy_entity) entities;
-  DYNAMIC_ARRAY_DEFINE(,entity_handle_t) orphans;
+  struct voxy_entity *entities;
+  entity_handle_t *orphans;
 };
 
 void entity_allocator_init(struct entity_allocator *entity_allocator);

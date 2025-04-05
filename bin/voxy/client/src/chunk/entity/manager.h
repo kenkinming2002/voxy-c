@@ -12,7 +12,7 @@ typedef uint32_t entity_handle_t;
 
 struct entity_manager
 {
-  DYNAMIC_ARRAY_DEFINE(,struct voxy_entity) entities;
+  struct voxy_entity *entities;
 };
 
 void entity_manager_init(struct entity_manager *entity_manager);

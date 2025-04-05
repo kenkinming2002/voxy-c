@@ -7,6 +7,8 @@
 #include <libcore/profile.h>
 #include <libcore/utils.h>
 
+#include <stb_ds.h>
+
 #include <stdbool.h>
 
 #define GRAVITY 9.8f
@@ -39,7 +41,7 @@ static bool entity_physics_resolve_collision_once(
     float dt)
 {
   // Figure out all the contacts and sort them.
-  DYNAMIC_ARRAY_DECLARE(contacts, struct contact3);
+  struct contact3 *contacts = NULL;
   {
     const fvec3_t offset = fvec3_mul_scalar(entity->velocity, dt);
 
@@ -63,18 +65,18 @@ static bool entity_physics_resolve_collision_once(
             struct contact3 contact2;
             if(swept_aabb3(entity_hitbox, block_hitbox, offset, &contact1, &contact2))
               if(0.0f <= contact1.time && contact1.time < 1.0f)
-                DYNAMIC_ARRAY_APPEND(contacts, contact1);
+                arrput(contacts, contact1);
           }
         }
 
-    qsort(contacts.items, contacts.item_count, sizeof *contacts.items, compar);
+    qsort(contacts, arrlenu(contacts), sizeof *contacts, compar);
   }
 
   // Resolve collision based on contacts.
   bool resolved = false;
-  for(size_t i=0; i<contacts.item_count; ++i)
+  for(size_t i=0; i<arrlenu(contacts); ++i)
   {
-    const float nice = fvec3_dot(entity->velocity, contacts.items[i].normal);
+    const float nice = fvec3_dot(entity->velocity, contacts[i].normal);
     if(nice < 0.0f)
     {
       // We need to increase the strength of our impulse a bit by multiplying it
@@ -83,8 +85,8 @@ static bool entity_physics_resolve_collision_once(
       // adjustment can be noticeable if our speed is high.
       //
       // FIXME: This is still incorrect.
-      const float strength = -nice * (1.0f - contacts.items[i].time) * 1.0001f;
-      const fvec3_t impulse = fvec3_mul_scalar(contacts.items[i].normal, strength);
+      const float strength = -nice * (1.0f - contacts[i].time) * 1.0001f;
+      const fvec3_t impulse = fvec3_mul_scalar(contacts[i].normal, strength);
       entity->velocity = fvec3_add(entity->velocity, impulse);
 
       resolved = true;
@@ -92,7 +94,7 @@ static bool entity_physics_resolve_collision_once(
     }
   }
 
-  DYNAMIC_ARRAY_CLEAR(contacts);
+  arrfree(contacts);
   return resolved;
 }
 
@@ -169,9 +171,9 @@ void physics_update(
 {
   profile_scope;
 
-  for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
+  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->allocator.entities.items[handle];
+    struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
     if(!entity->alive)
       continue;
 

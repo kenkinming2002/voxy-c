@@ -13,19 +13,19 @@
 
 void voxy_light_manager_init(struct voxy_light_manager *light_manager)
 {
-  DYNAMIC_ARRAY_INIT(light_manager->light_creation_updates);
-  DYNAMIC_ARRAY_INIT(light_manager->light_destruction_updates);
+  light_manager->light_creation_updates = NULL;
+  light_manager->light_destruction_updates = NULL;
 }
 
 void voxy_light_manager_fini(struct voxy_light_manager *light_manager)
 {
-  DYNAMIC_ARRAY_CLEAR(light_manager->light_destruction_updates);
-  DYNAMIC_ARRAY_CLEAR(light_manager->light_creation_updates);
+  arrfree(light_manager->light_creation_updates);
+  arrfree(light_manager->light_destruction_updates);
 }
 
 void voxy_light_manager_enqueue_destruction_update_at(struct voxy_light_manager *light_manager, struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level)
 {
-  DYNAMIC_ARRAY_APPEND(light_manager->light_destruction_updates, ((struct light_destruction_update){
+  arrput(light_manager->light_destruction_updates, ((struct light_destruction_update){
       .block_group = block_group,
       .x = position.x,
       .y = position.y,
@@ -36,7 +36,7 @@ void voxy_light_manager_enqueue_destruction_update_at(struct voxy_light_manager 
 
 void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *light_manager, struct voxy_block_group *block_group, ivec3_t position)
 {
-  DYNAMIC_ARRAY_APPEND(light_manager->light_destruction_updates, ((struct light_destruction_update){
+  arrput(light_manager->light_creation_updates, ((struct light_creation_update){
       .block_group = block_group,
       .x = position.x,
       .y = position.y,
@@ -155,8 +155,8 @@ static inline struct cursor traverse(struct cursor cursor, direction_t direction
 
 static inline void process_light_destruction_update(
     struct voxy_block_registry *block_registry,
-    struct light_destruction_updates *new_light_destruction_updates,
-    struct light_creation_updates *new_light_creation_updates,
+    struct light_destruction_update **new_light_destruction_updates,
+    struct light_creation_update **new_light_creation_updates,
     struct light_destruction_update update, direction_t direction)
 {
   struct cursor neighbour_cursor = traverse((struct cursor) { update.block_group, ivec3(update.x, update.y, update.z) } , direction);
@@ -189,7 +189,7 @@ static inline void process_light_destruction_update(
       new_update.y = neighbour_position.y;
       new_update.z = neighbour_position.z;
       new_update.old_light_level = neighbour_old_light_level;
-      DYNAMIC_ARRAY_APPEND(*new_light_destruction_updates, new_update);
+      arrput(*new_light_destruction_updates, new_update);
       return;
     }
     else
@@ -199,14 +199,14 @@ static inline void process_light_destruction_update(
       new_update.x = neighbour_position.x;
       new_update.y = neighbour_position.y;
       new_update.z = neighbour_position.z;
-      DYNAMIC_ARRAY_APPEND(*new_light_creation_updates, new_update);
+      arrput(*new_light_creation_updates, new_update);
       return;
     }
 }
 
 static inline void process_light_creation_update(
     struct voxy_block_registry *block_registry,
-    struct light_creation_updates *new_light_creation_updates,
+    struct light_creation_update **new_light_creation_updates,
     struct light_creation_update update, direction_t direction)
 {
   struct cursor neighbour_cursor = traverse((struct cursor) { update.block_group, ivec3(update.x, update.y, update.z) } , direction);
@@ -238,7 +238,7 @@ static inline void process_light_creation_update(
       new_update.x = neighbour_position.x;
       new_update.y = neighbour_position.y;
       new_update.z = neighbour_position.z;
-      DYNAMIC_ARRAY_APPEND(*new_light_creation_updates, new_update);
+      arrput(*new_light_creation_updates, new_update);
       return;
     }
   }
@@ -249,40 +249,42 @@ static void process_light_destruction_updates(struct voxy_light_manager *light_m
   profile_begin();
 
   size_t count = 0;
-  while(light_manager->light_destruction_updates.item_count != 0)
+  while(arrlenu(light_manager->light_destruction_updates) != 0)
+  {
+    const size_t light_destruction_update_count = arrlenu(light_manager->light_destruction_updates);
+    arrsetlen(light_manager->light_destruction_updates, 0);
+    count += light_destruction_update_count;
+
+    _Atomic size_t new_light_creation_update_count = arrlenu(light_manager->light_creation_updates);
+    _Atomic size_t new_light_destruction_update_count = 0;
+
     #pragma omp parallel
     {
-      struct light_destruction_updates new_light_destruction_updates = {0};
-      struct light_creation_updates new_light_creation_updates = {0};
+      struct light_destruction_update *new_light_destruction_updates = NULL;
+      struct light_creation_update *new_light_creation_updates = NULL;
 
       #pragma omp for
-      for(size_t i=0; i<light_manager->light_destruction_updates.item_count; ++i)
+      for(size_t i=0; i<light_destruction_update_count; ++i)
         #pragma omp unroll
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
-          process_light_destruction_update(block_registry, &new_light_destruction_updates, &new_light_creation_updates, light_manager->light_destruction_updates.items[i], direction);
+          process_light_destruction_update(block_registry, &new_light_destruction_updates, &new_light_creation_updates, light_manager->light_destruction_updates[i], direction);
 
-      #pragma omp single
-      {
-        count += light_manager->light_destruction_updates.item_count;
-        light_manager->light_destruction_updates.item_count = 0;
-      }
-
-      const size_t light_creation_index    = atomic_fetch_add_explicit((_Atomic size_t *)&light_manager->light_creation_updates.item_count,    new_light_creation_updates.item_count,    memory_order_relaxed);
-      const size_t light_destruction_index = atomic_fetch_add_explicit((_Atomic size_t *)&light_manager->light_destruction_updates.item_count, new_light_destruction_updates.item_count, memory_order_relaxed);
-
+      const size_t light_creation_index    = atomic_fetch_add_explicit(&new_light_creation_update_count,    arrlenu(new_light_creation_updates),    memory_order_relaxed);
+      const size_t light_destruction_index = atomic_fetch_add_explicit(&new_light_destruction_update_count, arrlenu(new_light_destruction_updates), memory_order_relaxed);
       #pragma omp barrier
       #pragma omp single
       {
-        DYNAMIC_ARRAY_RESERVE(light_manager->light_creation_updates,    light_manager->light_creation_updates.item_count);
-        DYNAMIC_ARRAY_RESERVE(light_manager->light_destruction_updates, light_manager->light_destruction_updates.item_count);
+        arrsetlen(light_manager->light_creation_updates,    new_light_creation_update_count);
+        arrsetlen(light_manager->light_destruction_updates, new_light_destruction_update_count);
       }
 
-      memcpy(&light_manager->light_creation_updates.items[light_creation_index], new_light_creation_updates.items, new_light_creation_updates.item_count * sizeof new_light_creation_updates.items[0]);
-      free(new_light_creation_updates.items);
+      memcpy(&light_manager->light_creation_updates   [light_creation_index],    new_light_creation_updates,    arrlenu(new_light_creation_updates)    * sizeof *new_light_creation_updates);
+      memcpy(&light_manager->light_destruction_updates[light_destruction_index], new_light_destruction_updates, arrlenu(new_light_destruction_updates) * sizeof *new_light_destruction_updates);
 
-      memcpy(&light_manager->light_destruction_updates.items[light_destruction_index], new_light_destruction_updates.items, new_light_destruction_updates.item_count * sizeof new_light_destruction_updates.items[0]);
-      free(new_light_destruction_updates.items);
+      arrfree(new_light_creation_updates);
+      arrfree(new_light_destruction_updates);
     }
+  }
 
   if(count != 0)
     LOG_INFO("Processed %zu light destruction updates", count);
@@ -295,34 +297,35 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
   profile_begin();
 
   size_t count = 0;
-  while(light_manager->light_creation_updates.item_count != 0)
+  while(arrlenu(light_manager->light_creation_updates) != 0)
+  {
+    const size_t light_creation_update_count = arrlenu(light_manager->light_creation_updates);
+    arrsetlen(light_manager->light_creation_updates, 0);
+    count += light_creation_update_count;
+
+    _Atomic size_t new_light_creation_update_count = 0;
+
     #pragma omp parallel
     {
-      struct light_creation_updates new_light_creation_updates = {0};
+      struct light_creation_update *new_light_creation_updates = NULL;
 
       #pragma omp for
-      for(size_t i=0; i<light_manager->light_creation_updates.item_count; ++i)
+      for(size_t i=0; i<light_creation_update_count; ++i)
         #pragma omp unroll
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
-          process_light_creation_update(block_registry, &new_light_creation_updates, light_manager->light_creation_updates.items[i], direction);
+          process_light_creation_update(block_registry, &new_light_creation_updates, light_manager->light_creation_updates[i], direction);
 
-      #pragma omp single
-      {
-        count += light_manager->light_creation_updates.item_count;
-        light_manager->light_creation_updates.item_count = 0;
-      }
-
-      const size_t light_creation_index = atomic_fetch_add_explicit((_Atomic size_t *)&light_manager->light_creation_updates.item_count, new_light_creation_updates.item_count,    memory_order_relaxed);
-
+      const size_t light_creation_index = atomic_fetch_add_explicit(&new_light_creation_update_count, arrlenu(new_light_creation_updates), memory_order_relaxed);
       #pragma omp barrier
       #pragma omp single
       {
-        DYNAMIC_ARRAY_RESERVE(light_manager->light_creation_updates, light_manager->light_creation_updates.item_count);
+        arrsetlen(light_manager->light_creation_updates, new_light_creation_update_count);
       }
 
-      memcpy(&light_manager->light_creation_updates.items[light_creation_index], new_light_creation_updates.items, new_light_creation_updates.item_count * sizeof new_light_creation_updates.items[0]);
-      free(new_light_creation_updates.items);
+      memcpy(&light_manager->light_creation_updates[light_creation_index], new_light_creation_updates, arrlenu(new_light_creation_updates) * sizeof *new_light_creation_updates);
+      arrfree(new_light_creation_updates);
     }
+  }
 
   if(count != 0)
     LOG_INFO("Processed %zu light creation updates", count);

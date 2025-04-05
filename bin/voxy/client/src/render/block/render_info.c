@@ -4,6 +4,8 @@
 #include <libmath/direction.h>
 #include <libgfx/gl.h>
 
+#include <stb_ds.h>
+
 struct block_render_info block_render_info_create(void)
 {
   struct block_render_info block_render_info = {0};
@@ -41,8 +43,8 @@ static uint8_t get_prefetched(uint8_t infos[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH
 
 void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, ivec3_t position, const struct block_group *block_group)
 {
-  struct block_vertices opaque_vertices = {0};
-  struct block_vertices transparent_vertices = {0};
+  struct block_vertex *opaque_vertices = NULL;
+  struct block_vertex *transparent_vertices = NULL;
 
   // Cache block ids
   uint8_t ids[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2];
@@ -183,15 +185,15 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
           vertex.damage = 0.0f;
 
-          DYNAMIC_ARRAY_APPEND(opaque_vertices, vertex);
+          arrput(opaque_vertices, vertex);
         }
       }
 
   block_mesh_update(&block_render_info->opaque_mesh, opaque_vertices);
   block_mesh_update(&block_render_info->transparent_mesh, transparent_vertices);
 
-  DYNAMIC_ARRAY_CLEAR(opaque_vertices);
-  DYNAMIC_ARRAY_CLEAR(transparent_vertices);
+  arrfree(opaque_vertices);
+  arrfree(transparent_vertices);
 }
 
 void block_render_info_update_cull(ivec3_t position, struct block_render_info *block_render_info, const struct camera *camera)

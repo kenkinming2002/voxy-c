@@ -2,7 +2,6 @@
 #define RENDER_BLOCK_MESH_H
 
 #include <libmath/vector.h>
-#include <libcore/dynamic_array.h>
 #include <glad/glad.h>
 
 struct block_vertex
@@ -19,7 +18,6 @@ struct block_vertex
 
   float damage;
 };
-DYNAMIC_ARRAY_DEFINE(block_vertices, struct block_vertex);
 
 struct block_mesh
 {
@@ -31,7 +29,7 @@ struct block_mesh
 void block_mesh_init(struct block_mesh *block_mesh);
 void block_mesh_fini(struct block_mesh *block_mesh);
 
-void block_mesh_update(struct block_mesh *block_mesh, struct block_vertices vertices);
+void block_mesh_update(struct block_mesh *block_mesh, struct block_vertex *vertices);
 void block_mesh_render(const struct block_mesh *block_mesh);
 
 #endif // RENDER_BLOCK_MESH_H

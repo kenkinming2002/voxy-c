@@ -2,6 +2,7 @@
 #define SQLITE3_UTILS_H
 
 #include <sqlite3.h>
+#include <stddef.h>
 
 enum sqlite3_utils_type
 {
@@ -28,6 +29,12 @@ enum sqlite3_utils_return_type
   SQLITE3_UTILS_RETURN_TYPE_ARRAY_BLOB,
 };
 
+struct sqlite3_utils_blob
+{
+  void *data;
+  size_t length;
+};
+
 /// Prepare a sqlite statement.
 ///
 /// Basically the same as sqlite3_prepare_v2() without the shenanigan.
@@ -48,8 +55,8 @@ int sqlite3_utils_prepare_once(sqlite3 *db, sqlite3_stmt **stmt, const char *sql
 /// constant from enum sqlite_utils_type to specify its type, followed by the
 /// actual value.
 ///
-/// For SQLITE3_UTILS_TYPE_BLOB, both the data pointer and the data length of
-/// type size_t need to be passed in.
+/// For SQLITE3_UTILS_TYPE_BLOB, the corresponding type is struct
+/// sqlite3_utils_blob.
 ///
 /// The end of the specification is indicated by the sentinel
 /// SQLITE3_UTILS_TYPE_NONE.
@@ -63,10 +70,8 @@ int sqlite3_utils_prepare_once(sqlite3 *db, sqlite3_stmt **stmt, const char *sql
 /// the data pointer and data length of type size_t need to be passed in. The
 /// returned buffer need to be freed with a call to free(3).
 ///
-/// For SQLITE3_UTILS_RETURN_TYPE_ARRAY_*, the arguments of be passed in a
-/// pointer to the storage location of data pointer(s), count and capacity
-/// found in a dynamic array. The data pointer need to be freed with a call to
-/// free(3).
+/// For SQLITE3_UTILS_RETURN_TYPE_ARRAY_*, the arguments of be passed is a
+/// pointer to array from stb_ds of corresponding type.
 ///
 /// The end of the specification is indicated by the sentinel
 /// SQLITE3_UTILS_RETURN_TYPE_NONE.

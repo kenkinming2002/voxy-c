@@ -1,8 +1,9 @@
 #include <libgfx/mesh.h>
 
 #include <libcore/log.h>
-#include <libcore/dynamic_array.h>
 #include <libmath/vector.h>
+
+#include <stb_ds.h>
 
 #include <assert.h>
 #include <stdbool.h>
@@ -69,10 +70,10 @@ int mesh_load(struct mesh *mesh, const char *filepath)
 
   int result = 0;
 
-  DYNAMIC_ARRAY_DECLARE(vertices, struct mesh_vertex);
-  DYNAMIC_ARRAY_DECLARE(positions, fvec3_t);
-  DYNAMIC_ARRAY_DECLARE(normals, fvec3_t);
-  DYNAMIC_ARRAY_DECLARE(uvs, fvec2_t);
+  struct mesh_vertex *vertices = NULL;
+  fvec3_t            *positions = NULL;
+  fvec3_t            *normals = NULL;
+  fvec2_t            *uvs = NULL;
 
   char buffer[1024];
   char *line;
@@ -83,21 +84,21 @@ int mesh_load(struct mesh *mesh, const char *filepath)
     fvec3_t position;
     if(sscanf(line, "v %f %f %f %c", &position.x, &position.y, &position.z, &c) == 3)
     {
-      DYNAMIC_ARRAY_APPEND(positions, position);
+      arrput(positions, position);
       continue;
     }
 
     fvec3_t normal;
     if(sscanf(line, "vn %f %f %f %c", &normal.x, &normal.y, &normal.z, &c) == 3)
     {
-      DYNAMIC_ARRAY_APPEND(normals, normal);
+      arrput(normals, normal);
       continue;
     }
 
     fvec2_t uv;
     if(sscanf(line, "vt %f %f %c", &uv.x, &uv.y, &c) == 2)
     {
-      DYNAMIC_ARRAY_APPEND(uvs, uv);
+      arrput(uvs, uv);
       continue;
     }
 
@@ -113,32 +114,32 @@ int mesh_load(struct mesh *mesh, const char *filepath)
 
       for(size_t j=0; j<3; ++j)
       {
-        if(position_indices[j] >= positions.item_count + 1)
+        if(position_indices[j] >= arrlenu(positions) + 1)
         {
-          LOG_ERROR("Out of bound position index(1-based): %zu in array of length %zu", position_indices[j], positions.item_count);
+          LOG_ERROR("Out of bound position index(1-based): %zu in array of length %zu", position_indices[j], arrlenu(positions));
           result = -1;
           goto out;
         }
 
-        if(normal_indices[j] >= normals.item_count + 1)
+        if(normal_indices[j] >= arrlenu(normals) + 1)
         {
-          LOG_ERROR("Out of bound normal index(1-based): %zu in array of length %zu", normal_indices[j], normals.item_count);
+          LOG_ERROR("Out of bound normal index(1-based): %zu in array of length %zu", normal_indices[j], arrlenu(normals));
           result = -1;
           goto out;
         }
 
-        if(uv_indices[j] >= uvs.item_count + 1)
+        if(uv_indices[j] >= arrlenu(uvs) + 1)
         {
-          LOG_ERROR("Out of bound uv index(1-based): %zu in array of length %zu", uv_indices[j], uvs.item_count);
+          LOG_ERROR("Out of bound uv index(1-based): %zu in array of length %zu", uv_indices[j], arrlenu(uvs));
           result = -1;
           goto out;
         }
 
         struct mesh_vertex vertex;
-        vertex.position = positions.items[position_indices[j]-1];
-        vertex.normal   = normals  .items[normal_indices  [j]-1];
-        vertex.uv       = uvs      .items[uv_indices      [j]-1];
-        DYNAMIC_ARRAY_APPEND(vertices, vertex);
+        vertex.position = positions[position_indices[j]-1];
+        vertex.normal   = normals  [normal_indices  [j]-1];
+        vertex.uv       = uvs      [uv_indices      [j]-1];
+        arrput(vertices, vertex);
       }
       continue;
     }
@@ -156,13 +157,13 @@ int mesh_load(struct mesh *mesh, const char *filepath)
     goto out;
   }
 
-  mesh_update(mesh, vertices.items, vertices.item_count);
+  mesh_update(mesh, vertices, arrlenu(vertices));
 
 out:
-  free(positions.items);
-  free(normals.items);
-  free(uvs.items);
-  free(vertices.items);
+  arrfree(positions);
+  arrfree(normals);
+  arrfree(uvs);
+  arrfree(vertices);
   return result;
 }
 

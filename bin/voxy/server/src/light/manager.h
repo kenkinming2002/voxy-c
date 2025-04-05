@@ -5,8 +5,6 @@
 
 #include "chunk/block/manager.h"
 
-#include <libcore/dynamic_array.h>
-
 #include <stdint.h>
 
 /// References:
@@ -31,9 +29,6 @@ struct light_creation_update
   uint8_t z;
 };
 
-DYNAMIC_ARRAY_DEFINE(light_creation_updates, struct light_creation_update);
-DYNAMIC_ARRAY_DEFINE(light_destruction_updates, struct light_destruction_update);
-
 /// Light manager.
 ///
 /// Yes, I do realize that I am naming everything manager, but I do not really
@@ -44,8 +39,8 @@ DYNAMIC_ARRAY_DEFINE(light_destruction_updates, struct light_destruction_update)
 /// everywhere.
 struct voxy_light_manager
 {
-  struct light_creation_updates light_creation_updates;
-  struct light_destruction_updates light_destruction_updates;
+  struct light_creation_update *light_creation_updates;
+  struct light_destruction_update *light_destruction_updates;
 };
 
 void voxy_light_manager_init(struct voxy_light_manager *light_manager);

@@ -6,7 +6,6 @@
 #include "registry/entity.h"
 
 #include <libmath/vector.h>
-#include <libcore/dynamic_array.h>
 
 #include <stdbool.h>
 
@@ -26,7 +25,5 @@ struct voxy_entity
 
   void *opaque;
 };
-
-DYNAMIC_ARRAY_DEFINE(voxy_entities, struct voxy_entity);
 
 #endif // CHUNK_ENTITY_ENTITY_H

@@ -6,7 +6,6 @@
 #include "registry/entity.h"
 
 #include <libmath/vector.h>
-#include <libcore/dynamic_array.h>
 
 #include <stdbool.h>
 

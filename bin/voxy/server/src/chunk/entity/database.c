@@ -183,7 +183,7 @@ int voxy_entity_database_save(struct voxy_entity_database *database, struct voxy
 
   static sqlite3_stmt *stmt = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt, "UPDATE entities SET data = (?) WHERE id = (?);") != 0) { rc = -1; goto out_free_buf; }
-  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_BLOB, buf, len, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out_free_buf; }
+  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_BLOB, (struct sqlite3_utils_blob){ .data = buf, .length = len, }, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out_free_buf; }
 
 out_free_buf:
   free(buf);
@@ -194,14 +194,13 @@ out:
 int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity)
 {
   int rc = 0;
-  char *buf;
-  size_t len;
+  struct sqlite3_utils_blob blob;
 
   static sqlite3_stmt *stmt = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt, "SELECT data FROM entities WHERE id = (?);") != 0) { rc = -1; goto out; }
-  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_BLOB, &buf, &len, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_BLOB, &blob, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(entity_deserialize(entity_registry, entity, buf, len) != 0)
+  if(entity_deserialize(entity_registry, entity, blob.data, blob.length) != 0)
   {
     LOG_ERROR("Failed to deserialize entity");
     rc = -1;
@@ -209,7 +208,7 @@ int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy
   }
 
 out_free_buf:
-  free(buf);
+  free(blob.data);
 out:
   return rc;
 }
@@ -246,13 +245,13 @@ out:
   return rc;
 }
 
-int voxy_entity_database_load_active(struct voxy_entity_database *database, struct db_ids *db_ids)
+int voxy_entity_database_load_active(struct voxy_entity_database *database, int64_t **db_ids)
 {
   int rc = 0;
 
   static sqlite3_stmt *stmt_insert = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt_insert, "SELECT id FROM active_entities;") != 0) { rc = -1; goto out; }
-  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64, &db_ids->items, &db_ids->item_count, &db_ids->item_capacity, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64, db_ids, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
   static sqlite3_stmt *stmt_delete = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt_delete, "DELETE FROM active_entities WHERE id = (?)") != 0) { rc = -1; goto out; }
@@ -262,13 +261,13 @@ out:
   return rc;
 }
 
-int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, struct db_ids *db_ids)
+int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, int64_t **db_ids)
 {
   int rc = 0;
 
   static sqlite3_stmt *stmt_insert = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt_insert, "SELECT id FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);") != 0) { rc = -1; goto out; }
-  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_INT, chunk_position.x, SQLITE3_UTILS_TYPE_INT, chunk_position.y, SQLITE3_UTILS_TYPE_INT, chunk_position.z, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64, &db_ids->items, &db_ids->item_count, &db_ids->item_capacity, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
+  if(sqlite3_utils_run(database->conn, stmt_insert, SQLITE3_UTILS_TYPE_INT, chunk_position.x, SQLITE3_UTILS_TYPE_INT, chunk_position.y, SQLITE3_UTILS_TYPE_INT, chunk_position.z, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64, db_ids, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
   static sqlite3_stmt *stmt_delete = NULL;
   if(sqlite3_utils_prepare_once(database->conn, &stmt_delete, "DELETE FROM inactive_entities WHERE x = (?) AND y = (?) AND z = (?);") != 0) { rc = -1; goto out; }

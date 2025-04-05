@@ -78,8 +78,6 @@ int voxy_entity_database_uncommit(struct voxy_entity_database *database, int64_t
 /// Return non-zero on error;
 int voxy_entity_database_commit(struct voxy_entity_database *database, int64_t db_id, ivec3_t chunk_position);
 
-DYNAMIC_ARRAY_DEFINE(db_ids, int64_t);
-
 /// Load all active entities in database.
 ///
 /// This should be called after the game restart in case of arupt server
@@ -87,13 +85,13 @@ DYNAMIC_ARRAY_DEFINE(db_ids, int64_t);
 /// state.
 ///
 /// Return non-zero on error;
-int voxy_entity_database_load_active(struct voxy_entity_database *database, struct db_ids *db_ids);
+int voxy_entity_database_load_active(struct voxy_entity_database *database, int64_t **db_ids);
 
 /// Load all inactive entities in database at specified chunk position.
 ///
 /// This should be called whenever a chunk is loaded.
 ///
 /// Return non-zero on error;
-int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, struct db_ids *db_ids);
+int voxy_entity_database_load_inactive(struct voxy_entity_database *database, ivec3_t chunk_position, int64_t **db_ids);
 
 #endif // CHUNK_ENTITY_DATABASE_H

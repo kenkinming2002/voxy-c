@@ -3,11 +3,9 @@
 
 #include "mod.h"
 
-#include <libcore/dynamic_array.h>
-
 struct mod_manager
 {
-  DYNAMIC_ARRAY_DEFINE(, struct mod) mods;
+  struct mod *mods;
 };
 
 void mod_manager_init(struct mod_manager *mod_manager);

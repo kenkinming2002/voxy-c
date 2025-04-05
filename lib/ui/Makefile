@@ -6,6 +6,7 @@ CFLAGS += -Iinclude
 
 CFLAGS += $(shell pkg-config --cflags fontconfig)
 
+CFLAGS += -I ../external/include
 CFLAGS += -I ../core/include
 CFLAGS += -I ../math/include
 CFLAGS += -I ../gfx/include

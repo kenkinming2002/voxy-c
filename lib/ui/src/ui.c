@@ -4,7 +4,7 @@
 #include <libgfx/font_set.h>
 #include <libgfx/window.h>
 
-#include <libcore/dynamic_array.h>
+#include <stb_ds.h>
 
 #include <assert.h>
 
@@ -24,13 +24,13 @@ struct textured_quad
   GLuint  texture;
 };
 
-static DYNAMIC_ARRAY_DECLARE(colored_quads, struct colored_quad);
-static DYNAMIC_ARRAY_DECLARE(textured_quads, struct textured_quad);
+static struct colored_quad *colored_quads = NULL;
+static struct textured_quad *textured_quads = NULL;
 
 void ui_reset(void)
 {
-  colored_quads.item_count = 0;
-  textured_quads.item_count = 0;
+  arrsetlen(colored_quads, 0);
+  arrsetlen(textured_quads, 0);
 }
 
 void ui_quad_colored(fvec2_t position, fvec2_t dimension, float rounding, fvec4_t color)
@@ -40,7 +40,7 @@ void ui_quad_colored(fvec2_t position, fvec2_t dimension, float rounding, fvec4_
   colored_quad.dimension = dimension;
   colored_quad.rounding = rounding;
   colored_quad.color = color;
-  DYNAMIC_ARRAY_APPEND(colored_quads, colored_quad);
+  arrput(colored_quads, colored_quad);
 }
 
 void ui_rect_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuint texture)
@@ -50,7 +50,7 @@ void ui_rect_textured(fvec2_t position, fvec2_t dimension, float rounding, GLuin
   textured_quad.dimension = dimension;
   textured_quad.rounding = rounding;
   textured_quad.texture = texture;
-  DYNAMIC_ARRAY_APPEND(textured_quads, textured_quad);
+  arrput(textured_quads, textured_quad);
 }
 
 static struct font_set font_set;
@@ -190,9 +190,9 @@ void ui_render(void)
     struct gl_program program = GL_PROGRAM_LOAD(lib/ui/assets/shaders/quad_rounded);
     glUseProgram(program.id);
     glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
-    for(size_t i=0; i<colored_quads.item_count; ++i)
+    for(size_t i=0; i<arrlenu(colored_quads); ++i)
     {
-      struct colored_quad quad = colored_quads.items[i];
+      struct colored_quad quad = colored_quads[i];
 
       glUniform2f(glGetUniformLocation(program.id, "position"), quad.position.x, quad.position.y);
       glUniform2f(glGetUniformLocation(program.id, "dimension"), quad.dimension.x, quad.dimension.y);
@@ -207,9 +207,9 @@ void ui_render(void)
     struct gl_program program = GL_PROGRAM_LOAD(lib/ui/assets/shaders/quad_textured);
     glUseProgram(program.id);
     glUniform2f(glGetUniformLocation(program.id, "window_size"), window_size.x, window_size.y);
-    for(size_t i=0; i<textured_quads.item_count; ++i)
+    for(size_t i=0; i<arrlenu(textured_quads); ++i)
     {
-      struct textured_quad quad = textured_quads.items[i];
+      struct textured_quad quad = textured_quads[i];
 
       glUniform2f(glGetUniformLocation(program.id, "position"), quad.position.x, quad.position.y);
       glUniform2f(glGetUniformLocation(program.id, "dimension"), quad.dimension.x, quad.dimension.y);

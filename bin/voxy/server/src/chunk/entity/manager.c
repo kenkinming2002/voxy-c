@@ -28,16 +28,16 @@ void voxy_entity_manager_fini(struct voxy_entity_manager *entity_manager)
 
 void voxy_entity_manager_start(struct voxy_entity_manager *entity_manager, struct voxy_entity_registry *entity_registry, struct voxy_entity_database *entity_database, libnet_server_t server)
 {
-  struct db_ids db_ids = {0};
+  int64_t *db_ids;
   if(voxy_entity_database_load_active(entity_database, &db_ids) != 0)
   {
     LOG_WARN("Failed to load active entitites at startup. Continuing anyway...");
     goto hack;
   }
 
-  for(size_t i=0; i<db_ids.item_count; ++i)
+  for(size_t i=0; i<arrlenu(db_ids); ++i)
   {
-    const int64_t db_id = db_ids.items[i];
+    const int64_t db_id = db_ids[i];
 
     struct voxy_entity entity;
     entity.db_id = db_id;
@@ -51,7 +51,7 @@ void voxy_entity_manager_start(struct voxy_entity_manager *entity_manager, struc
     voxy_entity_manager_create_entity(entity_manager, entity.db_id, entity.id, entity.position, entity.rotation, entity.opaque, server);
   }
 
-  DYNAMIC_ARRAY_CLEAR(db_ids);
+  arrfree(db_ids);
 
 hack:
 
@@ -107,16 +107,16 @@ static void load_entities(
     {
       hmput(entity_manager->loaded_chunks, position, (struct empty){});
 
-      struct db_ids db_ids = {0};
+      int64_t *db_ids;
       if(voxy_entity_database_load_inactive(entity_database, position, &db_ids) != 0)
       {
         LOG_WARN("Failed to load inactive entitites for chunk at (%d, %d, %d). Continuing anyway...", position.x, position.y, position.z);
         continue;
       }
 
-      for(size_t i=0; i<db_ids.item_count; ++i)
+      for(size_t i=0; i<arrlenu(db_ids); ++i)
       {
-        const int64_t db_id = db_ids.items[i];
+        const int64_t db_id = db_ids[i];
 
         struct voxy_entity entity;
         entity.db_id = db_id;
@@ -137,7 +137,7 @@ static void load_entities(
         load_count += 1;
       }
 
-      DYNAMIC_ARRAY_CLEAR(db_ids);
+      arrfree(db_ids);
     }
   }
 
@@ -167,9 +167,9 @@ static void discard_entities(
   hmfree(entity_manager->loaded_chunks);
   entity_manager->loaded_chunks = new_loaded_chunks;
 
-  for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
+  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->allocator.entities.items[handle];
+    struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
     if(!entity->alive)
       continue;
 
@@ -195,9 +195,9 @@ static void flush_entities(
 {
   profile_scope;
 
-  for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
+  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->allocator.entities.items[handle];
+    struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
     if(entity->alive)
     {
       voxy_entity_database_save(entity_database, entity_registry, entity);
@@ -221,9 +221,9 @@ void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, stru
 
 void voxy_entity_manager_on_client_connected(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
-  for(entity_handle_t handle=0; handle<entity_manager->allocator.entities.item_count; ++handle)
+  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
   {
-    const struct voxy_entity *entity = &entity_manager->allocator.entities.items[handle];
+    const struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
     if(entity->alive)
       voxy_entity_network_update(handle, entity, server, client_proxy);
   }

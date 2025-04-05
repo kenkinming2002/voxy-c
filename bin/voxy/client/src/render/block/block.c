@@ -8,33 +8,33 @@
 
 int block_renderer_init(struct block_renderer *block_renderer, const struct voxy_block_registry *block_registry)
 {
-  DYNAMIC_ARRAY_DECLARE(textures, const char *);
+  const char **textures = NULL;
 
   GLenum program_targets[] = {GL_VERTEX_SHADER, GL_FRAGMENT_SHADER};
   const char *program_filepaths[] = {"bin/voxy/client/src/render/block/block.vert", "bin/voxy/client/src/render/block/block.frag"};
   if(gl_program_load(&block_renderer->program, 2, program_targets, program_filepaths) != 0)
     goto error0;
 
-  block_renderer->texture_indices = malloc(block_registry->infos.item_count * sizeof *block_renderer->texture_indices);
-  for(voxy_block_id_t id=0; id<block_registry->infos.item_count; ++id)
+  block_renderer->texture_indices = malloc(arrlenu(block_registry->infos) * sizeof *block_renderer->texture_indices);
+  for(voxy_block_id_t id=0; id<arrlenu(block_registry->infos); ++id)
     for(direction_t direction=0; direction<DIRECTION_COUNT; ++direction)
     {
-      const char *texture = block_registry->infos.items[id].textures[direction];
+      const char *texture = block_registry->infos[id].textures[direction];
       if(texture)
       {
         uint32_t i;
-        for(i=0; i<textures.item_count; ++i)
-          if(strcmp(texture, textures.items[i]) == 0)
+        for(i=0; i<arrlenu(textures); ++i)
+          if(strcmp(texture, textures[i]) == 0)
             break;
 
-        if(i == textures.item_count)
-          DYNAMIC_ARRAY_APPEND(textures, texture);
+        if(i == arrlenu(textures))
+          arrput(textures, texture);
 
         block_renderer->texture_indices[id][direction] = i;
       }
     }
 
-  if(gl_array_texture_2d_load(&block_renderer->texture, textures.item_count, textures.items) != 0)
+  if(gl_array_texture_2d_load(&block_renderer->texture, arrlenu(textures), textures) != 0)
     goto error1;
 
   block_renderer->render_info_nodes = NULL;
@@ -43,7 +43,7 @@ int block_renderer_init(struct block_renderer *block_renderer, const struct voxy
 error1:
   gl_program_fini(&block_renderer->program);
 error0:
-  DYNAMIC_ARRAY_CLEAR(textures);
+  arrfree(textures);
   return -1;
 }
 

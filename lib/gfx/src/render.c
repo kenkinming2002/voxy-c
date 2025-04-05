@@ -1,7 +1,8 @@
 #include <libgfx/render.h>
 
 #include <libcore/log.h>
-#include <libcore/dynamic_array.h>
+
+#include <stb_ds.h>
 
 struct renderable
 {
@@ -13,7 +14,7 @@ struct renderable
   float light;
 };
 
-static DYNAMIC_ARRAY_DECLARE(renderables, struct renderable);
+struct renderable *renderables = NULL;
 
 void render(const struct camera *camera, const struct mesh *mesh, const struct gl_texture_2d *texture, transform_t transform, float light)
 {
@@ -23,7 +24,7 @@ void render(const struct camera *camera, const struct mesh *mesh, const struct g
   renderable.texture = texture;
   renderable.transform = transform;
   renderable.light = light;
-  DYNAMIC_ARRAY_APPEND(renderables, renderable);
+  arrput(renderables, renderable);
 }
 
 static int compar(const void *item1, const void *item2)
@@ -46,7 +47,7 @@ static int compar(const void *item1, const void *item2)
 void render_end(void)
 {
   // Sort renderable by camera, mesh and texture.
-  qsort(renderables.items, renderables.item_count, sizeof *renderables.items, &compar);
+  qsort(renderables, arrlenu(renderables), sizeof *renderables, &compar);
 
   // Draw calls
   {
@@ -54,16 +55,16 @@ void render_end(void)
     glUseProgram(program.id);
 
     size_t i=0;
-    while(i < renderables.item_count)
+    while(i < arrlenu(renderables))
     {
       size_t j=i+1;
-      while(j < renderables.item_count && compar(&renderables.items[i], &renderables.items[j]) == 0)
+      while(j < arrlenu(renderables) && compar(&renderables[i], &renderables[j]) == 0)
         ++j;
 
       {
-        const struct camera *camera = renderables.items[i].camera;
-        const struct mesh *mesh = renderables.items[i].mesh;
-        const struct gl_texture_2d *texture = renderables.items[i].texture;
+        const struct camera *camera = renderables[i].camera;
+        const struct mesh *mesh = renderables[i].mesh;
+        const struct gl_texture_2d *texture = renderables[i].texture;
 
         // View projection matrix.
         fmat4_t VP = fmat4_identity();
@@ -77,21 +78,21 @@ void render_end(void)
 
         // Mesh
         {
-          DYNAMIC_ARRAY_DECLARE(vertices_instanced, struct mesh_vertex_instanced);
+          struct mesh_vertex_instanced *vertices_instanced = NULL;
 
           for(size_t k=i; k<j; ++k)
           {
             struct mesh_vertex_instanced vertex_instanced;
-            vertex_instanced.transform = transform_matrix(renderables.items[k].transform);
-            vertex_instanced.light = renderables.items[k].light;
-            DYNAMIC_ARRAY_APPEND(vertices_instanced, vertex_instanced);
+            vertex_instanced.transform = transform_matrix(renderables[k].transform);
+            vertex_instanced.light = renderables[k].light;
+            arrput(vertices_instanced, vertex_instanced);
           }
-          mesh_update_instanced(mesh, vertices_instanced.items, vertices_instanced.item_count);
+          mesh_update_instanced(mesh, vertices_instanced, arrlenu(vertices_instanced));
 
           glBindVertexArray(mesh->vao);
-          glDrawArraysInstanced(GL_TRIANGLES, 0, mesh->count, vertices_instanced.item_count);
+          glDrawArraysInstanced(GL_TRIANGLES, 0, mesh->count, arrlenu(vertices_instanced));
 
-          DYNAMIC_ARRAY_CLEAR(vertices_instanced);
+          arrfree(vertices_instanced);
         }
       }
 
@@ -100,6 +101,6 @@ void render_end(void)
   }
 
   // Clear
-  DYNAMIC_ARRAY_CLEAR(renderables);
+  arrfree(renderables);
 }
 

@@ -8,6 +8,8 @@
 #include <libcore/log.h>
 #include <libcore/profile.h>
 
+#include <stb_ds.h>
+
 #include <stdio.h>
 
 int application_init(struct application *application, int argc, char *argv[])
@@ -138,9 +140,9 @@ void application_on_update(libnet_server_t server)
 
   voxy_chunk_manager_reset_active_chunks(&application->chunk_manager);
 
-  for(entity_handle_t handle=0; handle<application->entity_manager.allocator.entities.item_count; ++handle)
+  for(entity_handle_t handle=0; handle<arrlenu(application->entity_manager.allocator.entities); ++handle)
   {
-    struct voxy_entity *entity = &application->entity_manager.allocator.entities.items[handle];
+    struct voxy_entity *entity = &application->entity_manager.allocator.entities[handle];
     if(!entity->alive)
       continue;
 

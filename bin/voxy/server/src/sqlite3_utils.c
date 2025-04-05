@@ -2,6 +2,8 @@
 
 #include <libcore/log.h>
 
+#include <stb_ds.h>
+
 #include <stdarg.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -19,33 +21,6 @@ static void *memdup(const void *buf, size_t len)
   memcpy(res, buf, len);
   return res;
 }
-
-#define dynamic_array_append(values, count, capacity, value) \
-  do \
-  { \
-    if((capacity) == (count)) \
-    { \
-      (capacity) = (capacity) != 0 ? (capacity) * 2 : 1; \
-      (values) = realloc((values), (capacity) * sizeof *(values)); \
-    } \
-    (values)[(count)++] = (value); \
-  } \
-  while(0)
-
-#define dynamic_array_append2(values1, values2, count, capacity, value1, value2) \
-  do \
-  { \
-    if((capacity) == (count)) \
-    { \
-      (capacity) = (capacity) != 0 ? (capacity) * 2 : 1; \
-      (values1) = realloc((values1), (capacity) * sizeof *(values1)); \
-      (values2) = realloc((values2), (capacity) * sizeof *(values2)); \
-    } \
-    (values1)[(count)] = (value1); \
-    (values2)[(count)] = (value2); \
-    (count)++; \
-  } \
-  while(0)
 
 int sqlite3_utils_prepare_once(sqlite3 *db, sqlite3_stmt **stmt, const char *sql)
 {
@@ -92,9 +67,8 @@ int sqlite3_utils_run(sqlite3 *db, sqlite3_stmt *stmt, ...)
       }
     case SQLITE3_UTILS_TYPE_BLOB:
       {
-        const void *buf = va_arg(ap, void *);
-        const size_t len = va_arg(ap, size_t);
-        result = sqlite3_bind_blob(stmt, index, buf, len, SQLITE_STATIC);
+        struct sqlite3_utils_blob blob = va_arg(ap, struct sqlite3_utils_blob);
+        result = sqlite3_bind_blob(stmt, index, blob.data, blob.length, SQLITE_STATIC);
         break;
       }
     case SQLITE3_UTILS_TYPE_NONE:
@@ -124,16 +98,8 @@ int sqlite3_utils_run(sqlite3 *db, sqlite3_stmt *stmt, ...)
     case SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT:
     case SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64:
     case SQLITE3_UTILS_RETURN_TYPE_ARRAY_DOUBLE:
-      *va_arg(ap_init, void **) = NULL;
-      *va_arg(ap_init, size_t *) = 0;
-      *va_arg(ap_init, size_t *) = 0;
-      break;
-
     case SQLITE3_UTILS_RETURN_TYPE_ARRAY_BLOB:
       *va_arg(ap_init, void **) = NULL;
-      *va_arg(ap_init, void **) = NULL;
-      *va_arg(ap_init, size_t *) = 0;
-      *va_arg(ap_init, size_t *) = 0;
       break;
 
     case SQLITE3_UTILS_RETURN_TYPE_NONE:
@@ -172,55 +138,40 @@ done_init:
             break;
           case SQLITE3_UTILS_RETURN_TYPE_BLOB:
             {
-              const void **buf = va_arg(ap_step, const void **);
-              size_t *len = va_arg(ap_step, size_t *);
-              *buf = sqlite3_column_blob(stmt, index);
-              *len = sqlite3_column_bytes(stmt, index);
-              *buf = memdup(*buf, *len);
+              struct sqlite3_utils_blob *value = va_arg(ap_step, struct sqlite3_utils_blob *);
+              value->data = sqlite3_column_blob(stmt, index);
+              value->length = sqlite3_column_bytes(stmt, index);
+              value->data = memdup(value->data, value->length);
             }
             break;
 
           case SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT:
             {
               int **values = va_arg(ap_step, int **);
-              size_t *count = va_arg(ap_step, size_t *);
-              size_t *capacity = va_arg(ap_step, size_t *);
-
               int value = sqlite3_column_int(stmt, index);
-              dynamic_array_append(*values, *count, *capacity, value);
+              arrput(*values, value);
             }
             break;
           case SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64:
             {
               int64_t **values = va_arg(ap_step, int64_t **);
-              size_t *count = va_arg(ap_step, size_t *);
-              size_t *capacity = va_arg(ap_step, size_t *);
-
               int64_t value = sqlite3_column_int64(stmt, index);
-              dynamic_array_append(*values, *count, *capacity, value);
+              arrput(*values, value);
             }
             break;
           case SQLITE3_UTILS_RETURN_TYPE_ARRAY_DOUBLE:
             {
               double **values = va_arg(ap_step, double **);
-              size_t *count = va_arg(ap_step, size_t *);
-              size_t *capacity = va_arg(ap_step, size_t *);
-
               double value = sqlite3_column_double(stmt, index);
-              dynamic_array_append(*values, *count, *capacity, value);
+              arrput(*values, value);
             }
             break;
           case SQLITE3_UTILS_RETURN_TYPE_ARRAY_BLOB:
             {
-              const void ***bufs = va_arg(ap_step, const void ***);
-              size_t **lens = va_arg(ap_step, size_t **);
-              size_t *count = va_arg(ap_step, size_t *);
-              size_t *capacity = va_arg(ap_step, size_t *);
-
-              const void *buf = sqlite3_column_blob(stmt, index);
-              size_t len = sqlite3_column_bytes(stmt, index);
-              buf = memdup(buf, len);
-              dynamic_array_append2(*bufs, *lens, *count, *capacity, buf, len);
+              struct sqlite3_utils_blob **values = va_arg(ap_step, struct sqlite3_utils_blob **);
+              struct sqlite3_utils_blob value = { .data = sqlite3_column_blob(stmt, index), .length = sqlite3_column_bytes(stmt, index), };
+              value.data = memdup(value.data, value.length);
+              arrput(*values, value);
             }
             break;
           case SQLITE3_UTILS_RETURN_TYPE_NONE:
@@ -262,17 +213,10 @@ out_reset:
       case SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT:
       case SQLITE3_UTILS_RETURN_TYPE_ARRAY_INT64:
       case SQLITE3_UTILS_RETURN_TYPE_ARRAY_DOUBLE:
-        free(va_arg(ap_free, void **));
-        va_arg(ap_free, size_t *);
-        va_arg(ap_free, size_t *);
+      case SQLITE3_UTILS_RETURN_TYPE_ARRAY_BLOB:
+        arrfree(*va_arg(ap_free, void **));
         break;
 
-      case SQLITE3_UTILS_RETURN_TYPE_ARRAY_BLOB:
-        free(va_arg(ap_free, void **));
-        free(va_arg(ap_free, void **));
-        va_arg(ap_free, size_t *);
-        va_arg(ap_free, size_t *);
-        break;
       case SQLITE3_UTILS_RETURN_TYPE_NONE:
         goto done_free;
       }

@@ -1,6 +1,8 @@
 #include "block.h"
 
 #include <libcore/log.h>
+#include <libcore/profile.h>
+#include <libcore/format.h>
 
 #include <stb_ds.h>
 
@@ -54,13 +56,11 @@ void block_renderer_fini(struct block_renderer *block_renderer)
   gl_program_fini(&block_renderer->program);
 }
 
-void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct block_manager *block_manager, struct camera_manager *camera_manager)
+static void discard_render_infos(struct block_renderer *block_renderer, ivec3_t center, int radius)
 {
-  const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(camera_manager->camera.transform.translation), VOXY_CHUNK_WIDTH);
-  const int radius = 8;
+  profile_begin();
 
-  unsigned discard_count = 0;
-  unsigned update_count = 0;
+  size_t count = 0;
 
   struct block_render_info_node *new_render_info_nodes = NULL;
   for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
@@ -75,6 +75,18 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
 
   hmfree(block_renderer->render_info_nodes);
   block_renderer->render_info_nodes = new_render_info_nodes;
+
+  if(count != 0)
+    LOG_INFO("Render: Discard render infos for %zu block groups", count);
+
+  profile_end("count", tformat("%zu", count));
+}
+
+static void update_render_infos(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct block_manager *block_manager, ivec3_t center, int radius)
+{
+  profile_begin();
+
+  size_t count = 0;
 
   // Create render info for block groups inside render distance.
   for(int z = center.z - radius + 1; z <= center.z + radius - 1; ++z)
@@ -98,7 +110,7 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
             hmput(block_renderer->render_info_nodes, position, render_info);
 
             block_group->remesh = false;
-            update_count += 1;
+            count += 1;
           }
           else if(block_group->remesh)
           {
@@ -106,16 +118,24 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
             block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
 
             block_group->remesh = false;
-            update_count += 1;
+            count += 1;
           }
         }
       }
 
-  if(discard_count != 0)
-    LOG_INFO("Render: Discard meshes for %u block groups", discard_count);
+  if(count != 0)
+    LOG_INFO("Render: Updated render infos for %zu block groups", count);
 
-  if(update_count != 0)
-    LOG_INFO("Render: Updated meshes for %u block groups", update_count);
+  profile_end("count", tformat("%zu", count));
+}
+
+void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct block_manager *block_manager, struct camera_manager *camera_manager)
+{
+  const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(camera_manager->camera.transform.translation), VOXY_CHUNK_WIDTH);
+  const int radius = 8;
+
+  discard_render_infos(block_renderer, center, radius);
+  update_render_infos(block_renderer, block_registry, block_manager, center, radius);
 }
 
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager)

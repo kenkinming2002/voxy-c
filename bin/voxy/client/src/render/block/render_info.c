@@ -1,6 +1,8 @@
 #include "render_info.h"
 #include "block.h"
 
+#include <libcore/profile.h>
+
 #include <libmath/direction.h>
 #include <libgfx/gl.h>
 
@@ -43,6 +45,8 @@ static uint8_t get_prefetched(uint8_t infos[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH
 
 void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, ivec3_t position, const struct block_group *block_group)
 {
+  profile_scope;
+
   struct block_vertex *opaque_vertices = NULL;
   struct block_vertex *transparent_vertices = NULL;
 

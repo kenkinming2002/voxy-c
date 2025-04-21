@@ -16,8 +16,9 @@ $ openssl x509 -req -in csr.pem -signkey key.pem -out cert.pem
 
 Compile:
 ```shell
-$ export CFLAGS=...
-$ make -j
+$ cc build.c -o build                        # Bootstrap the build system
+$ CC=<YOUR_CC> CFLAGS=<YOUR_CFLAGS> ./build  # Generate ninja build file
+$ ninja                                      # Invoke ninja build
 ```
 
 Run:

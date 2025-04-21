@@ -1,4 +1,4 @@
-/voxy-server
+/voxy_server
 /include/voxy/server/registry/block.h
 /include/voxy/server/registry/entity.h
 /include/voxy/server/registry/item.h

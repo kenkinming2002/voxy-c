@@ -2,5 +2,8 @@
 /key.pem
 /csr.pem
 /cert.pem
+/build.ninja
+/.ninja_log
+/.ninja_deps
 *.d
 *.o

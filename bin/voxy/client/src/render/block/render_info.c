@@ -77,7 +77,16 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
           const uint8_t neighbour_block_id = get_prefetched(ids, ivec3_add(local_position, normal));
           const enum voxy_block_type neighbour_block_type = voxy_block_registry_query_block(block_registry, neighbour_block_id).type;
 
-          if(block_type == VOXY_BLOCK_TYPE_INVISIBLE || neighbour_block_type != VOXY_BLOCK_TYPE_INVISIBLE)
+          // ----------------------------------------------------
+          // |             | opaque | transparent | invisible   |
+          // ----------------------------------------------------
+          // | opaque      |        | opaque      | opaque      |
+          // ----------------------------------------------------
+          // | transparent |        |             | transparent |
+          // ----------------------------------------------------
+          // | invisible   |        |             |             |
+          // ----------------------------------------------------
+          if(block_type <= neighbour_block_type)
             continue;
 
           const ivec3_t center = global_position;
@@ -189,7 +198,17 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
           vertex.damage = 0.0f;
 
-          arrput(opaque_vertices, vertex);
+          switch(block_type)
+          {
+          case VOXY_BLOCK_TYPE_OPAQUE:
+            arrput(opaque_vertices, vertex);
+            break;
+          case VOXY_BLOCK_TYPE_TRANSPARENT:
+            arrput(transparent_vertices, vertex);
+            break;
+          case VOXY_BLOCK_TYPE_INVISIBLE:
+            break;
+          }
         }
       }
 

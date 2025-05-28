@@ -65,6 +65,18 @@ void *mod_create_instance(struct voxy_context *context)
     .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/grass_top.png",
   });
 
+  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+    .mod = "base",
+    .name = "water",
+    .type = VOXY_BLOCK_TYPE_TRANSPARENT,
+    .textures[DIRECTION_LEFT]   = "bin/mod/assets/textures/water.png",
+    .textures[DIRECTION_RIGHT]  = "bin/mod/assets/textures/water.png",
+    .textures[DIRECTION_BACK]   = "bin/mod/assets/textures/water.png",
+    .textures[DIRECTION_FRONT]  = "bin/mod/assets/textures/water.png",
+    .textures[DIRECTION_BOTTOM] = "bin/mod/assets/textures/water.png",
+    .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/water.png",
+  });
+
   voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
     .mod = "base",
     .name = "player",

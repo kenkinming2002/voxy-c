@@ -29,7 +29,6 @@ static void generate_block(ivec3_t chunk_position, struct voxy_block_group *bloc
       heights[y][x] = noise_perlin2_ex(seed, ivec2_as_fvec2(position), 0.008f, 2.0f, 0.3f, 8) * 50.0f;
     }
 
-
   // Populate block ids and light levels.
   for(int z=0; z<VOXY_CHUNK_WIDTH; ++z)
     for(int y=0; y<VOXY_CHUNK_WIDTH; ++y)
@@ -38,7 +37,7 @@ static void generate_block(ivec3_t chunk_position, struct voxy_block_group *bloc
         const int height = VOXY_CHUNK_WIDTH * chunk_position.z + z;
         const uint8_t id
           = height > 64 ? 1
-          : height > heights[y][x] ? 0
+          : height > heights[y][x] ? (height < 0 ? 4 : 0)
           : height > heights[y][x] - 1 ? 3
           : 2;
 
@@ -156,6 +155,13 @@ void *mod_create_instance(struct voxy_context *context)
     .mod = "base",
     .name = "grass",
     .collide = true,
+    .light_level = 0,
+  });
+
+  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+    .mod = "base",
+    .name = "water",
+    .collide = false,
     .light_level = 0,
   });
 

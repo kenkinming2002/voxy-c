@@ -15,8 +15,10 @@ static int         thread_count;
 static pthread_t  *threads;
 static atomic_bool thread_shutdown;
 
-static void *thread_pool_func()
+static void *thread_pool_func(void *data)
 {
+  (void)data;
+
   struct thread_pool_job *job;
   bool                    shutdown;
   for(;;)

@@ -96,27 +96,24 @@ static void update_render_infos(struct block_renderer *block_renderer, struct vo
         const ivec3_t position = ivec3(x, y, z);
         if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
         {
-          ptrdiff_t i = hmgeti(block_manager->block_group_nodes, position);
-          if(i == -1)
+          struct block_group_node *block_group_node = hmgetp_null(block_manager->block_group_nodes, position);
+          if(!block_group_node)
             continue;
 
-          struct block_group *block_group = block_manager->block_group_nodes[i].value;
+          struct block_group *block_group = block_group_node->value;
 
-          ptrdiff_t j = hmgeti(block_renderer->render_info_nodes, position);
-          if(j == -1)
+          struct block_render_info_node *render_info_node = hmgetp_null(block_renderer->render_info_nodes, position);
+          if(!render_info_node)
           {
-            struct block_render_info render_info = block_render_info_create();
-            block_render_info_update(&render_info, block_registry, block_renderer, position, block_group);
-            hmput(block_renderer->render_info_nodes, position, render_info);
-
-            block_group->remesh = false;
-            count += 1;
+            hmput(block_renderer->render_info_nodes, position, block_render_info_create());
+            render_info_node = hmgetp_null(block_renderer->render_info_nodes, position);
           }
-          else if(block_group->remesh)
-          {
-            struct block_render_info *render_info = &block_renderer->render_info_nodes[j].value;
-            block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
 
+          struct block_render_info *render_info = &render_info_node->value;
+
+          if(count < 25 && block_group->remesh)
+          {
+            block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
             block_group->remesh = false;
             count += 1;
           }

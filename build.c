@@ -339,9 +339,9 @@ int main()
 
   struct strings systems = STRINGS("server", "client");
   struct registries registries = REGISTRIES(
-    REGISTRY( .lower_name = "entity", .upper_name = "entity", ),
-    REGISTRY( .lower_name = "block",  .upper_name = "block",  ),
-    REGISTRY( .lower_name = "item",   .upper_name = "item",   ),
+    REGISTRY( .lower_name = "entity", .upper_name = "ENTITY", ),
+    REGISTRY( .lower_name = "block",  .upper_name = "BLOCK",  ),
+    REGISTRY( .lower_name = "item",   .upper_name = "ITEM",   ),
   );
 
 

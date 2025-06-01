@@ -1,5 +1,5 @@
 #version 460 core
-layout(location = 0) in ivec3 v_center;
+layout(location = 0) in uint  v_center;
 layout(location = 1) in uint  v_metadata1;
 layout(location = 2) in uint  v_metadata2;
 layout(location = 3) in float v_damage;
@@ -12,8 +12,8 @@ out mat2 f_luminances;
 out float f_visibility;
 out float f_damage;
 
-uniform mat4 VP;
-uniform mat4 V;
+uniform mat4 MVP;
+uniform mat4 MV;
 
 const float fogDensity  = 0.01;
 const float fogGradient = 1.0;
@@ -57,6 +57,11 @@ vec2 get_texture_coords()
 
 void main()
 {
+  ivec3 center = ivec3(
+      bitfieldExtract(v_center, 0, 4),
+      bitfieldExtract(v_center, 4, 4),
+      bitfieldExtract(v_center, 8, 4));
+
   uint normal_index = bitfieldExtract(v_metadata2, 16, 3);
   uint texture_index = bitfieldExtract(v_metadata2, 19, 13);
 
@@ -70,9 +75,9 @@ void main()
   vec3 dir1 = axis1 * (texture_coords.x * 2.0 - 1.0);
   vec3 dir2 = axis2 * (texture_coords.y * 2.0 - 1.0);
 
-  vec3 position = vec3(v_center) + 0.5 * (normal + dir1 + dir2);
+  vec3 position = vec3(center) + 0.5 * (normal + dir1 + dir2);
 
-  gl_Position = VP * vec4(position, 1.0);
+  gl_Position = MVP * vec4(position, 1.0);
 
   f_texture_coords = texture_coords;
   f_texture_index  = texture_index;
@@ -88,7 +93,7 @@ void main()
     }
 
 
-  vec4  view_position = V * vec4(position, 1.0);
+  vec4  view_position = MV * vec4(position, 1.0);
   float view_distance = length(view_position.xyz);
   f_visibility = clamp(exp(-pow(view_distance * fogDensity, fogGradient)), 0.0, 1.0);
 

@@ -64,7 +64,6 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
       for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
       {
         const ivec3_t local_position = ivec3(x, y, z);
-        const ivec3_t global_position = ivec3_add(ivec3_mul_scalar(position, VOXY_CHUNK_WIDTH), local_position);
 
         const uint8_t block_id = get_prefetched(ids, local_position);
         const enum voxy_block_type block_type = voxy_block_registry_query_block(block_registry, block_id).type;
@@ -89,7 +88,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
           if(block_type <= neighbour_block_type)
             continue;
 
-          const ivec3_t center = global_position;
+          const ivec3_t center = local_position;
 
           const uint32_t normal_index = direction;
           const uint32_t texture_index = block_renderer->texture_indices[block_id][direction];
@@ -177,7 +176,9 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
 
           struct block_vertex vertex;
 
-          vertex.center = center;
+          vertex.center = 0;
+          for(unsigned i=0; i<3; ++i)
+            vertex.center |= center.values[i] << (i * 4);
 
           vertex.metadata1 = 0;
 

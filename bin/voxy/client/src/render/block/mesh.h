@@ -6,7 +6,8 @@
 
 struct block_vertex
 {
-  ivec3_t center;
+  // Center: 3 * 4 bits
+  uint16_t center;
 
   // Light levels: 4 * 6 bits = 24 bits
   uint32_t metadata1;

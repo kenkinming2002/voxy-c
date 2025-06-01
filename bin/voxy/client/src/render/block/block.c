@@ -137,19 +137,14 @@ void block_renderer_update(struct block_renderer *block_renderer, struct voxy_bl
 
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager)
 {
-  fmat4_t VP = fmat4_identity();
-  VP = fmat4_mul(camera_view_matrix(&camera_manager->camera),       VP);
-  VP = fmat4_mul(camera_projection_matrix(&camera_manager->camera), VP);
-
-  fmat4_t V = fmat4_identity();
-  V = fmat4_mul(camera_view_matrix(&camera_manager->camera), V);
+  const fmat4_t V = camera_view_matrix(&camera_manager->camera);
+  const fmat4_t P = camera_projection_matrix(&camera_manager->camera);
+  const fmat4_t VP = fmat4_mul(P, V);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
   glUseProgram(block_renderer->program.id);
-  glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "VP"), 1, GL_TRUE, (const float *)&VP);
-  glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "V"),  1, GL_TRUE, (const float *)&V);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D_ARRAY, block_renderer->texture.id);
@@ -158,9 +153,27 @@ void block_renderer_render(struct block_renderer *block_renderer, struct camera_
     block_render_info_update_cull(block_renderer->render_info_nodes[i].key, &block_renderer->render_info_nodes[i].value, &camera_manager->camera);
 
   for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
+  {
+    const fmat4_t M = fmat4_translate(ivec3_as_fvec3(ivec3_mul_scalar(block_renderer->render_info_nodes[i].key, VOXY_CHUNK_WIDTH)));
+    const fmat4_t MV  = fmat4_mul(V, M);
+    const fmat4_t MVP = fmat4_mul(VP, M);
+
+    glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "MV"),  1, GL_TRUE, (const float *)&MV);
+    glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "MVP"), 1, GL_TRUE, (const float *)&MVP);
+
     block_mesh_render(&block_renderer->render_info_nodes[i].value.opaque_mesh);
+  }
 
   for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
+  {
+    const fmat4_t M = fmat4_translate(ivec3_as_fvec3(ivec3_mul_scalar(block_renderer->render_info_nodes[i].key, VOXY_CHUNK_WIDTH)));
+    const fmat4_t MV  = fmat4_mul(V, M);
+    const fmat4_t MVP = fmat4_mul(VP, M);
+
+    glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "MV"),  1, GL_TRUE, (const float *)&MV);
+    glUniformMatrix4fv(glGetUniformLocation(block_renderer->program.id, "MVP"), 1, GL_TRUE, (const float *)&MVP);
+
     block_mesh_render(&block_renderer->render_info_nodes[i].value.transparent_mesh);
+  }
 }
 

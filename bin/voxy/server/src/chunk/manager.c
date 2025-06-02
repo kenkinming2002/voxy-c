@@ -1,24 +1,17 @@
 #include "manager.h"
 
 #include <stb_ds.h>
+#include <empty.h>
 
-void voxy_chunk_manager_init(struct voxy_chunk_manager *chunk_manager)
+struct active_chunk *active_chunks;
+
+void voxy_reset_active_chunks(void)
 {
-  chunk_manager->active_chunks = NULL;
+  hmfree(active_chunks);
 }
 
-void voxy_chunk_manager_fini(struct voxy_chunk_manager *chunk_manager)
+void voxy_add_active_chunk(ivec3_t position)
 {
-  hmfree(chunk_manager->active_chunks);
-}
-
-void voxy_chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager)
-{
-  hmfree(chunk_manager->active_chunks);
-}
-
-void voxy_chunk_manager_add_active_chunk(struct voxy_chunk_manager *chunk_manager, ivec3_t position)
-{
-  hmput(chunk_manager->active_chunks, position, (struct empty){});
+  hmput(active_chunks, position, (struct empty){});
 }
 

@@ -2,6 +2,8 @@
 #define CHUNK_MANAGER_H
 
 #include <voxy/server/chunk/manager.h>
+
+#include <stb_ds.h>
 #include <empty.h>
 
 struct active_chunk
@@ -10,17 +12,11 @@ struct active_chunk
   struct empty value;
 };
 
-struct voxy_chunk_manager
-{
-  struct active_chunk *active_chunks;
-};
-
-void voxy_chunk_manager_init(struct voxy_chunk_manager *chunk_manager);
-void voxy_chunk_manager_fini(struct voxy_chunk_manager *chunk_manager);
+extern struct active_chunk *active_chunks;
 
 /// Reset the list of active chunks.
 ///
 /// This need to be called per-frame
-void voxy_chunk_manager_reset_active_chunks(struct voxy_chunk_manager *chunk_manager);
+void voxy_reset_active_chunks(void);
 
 #endif // CHUNK_MANAGER_H

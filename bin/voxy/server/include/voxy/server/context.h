@@ -1,8 +1,6 @@
 #ifndef VOXY_SERVER_CONTEXT_H
 #define VOXY_SERVER_CONTEXT_H
 
-#include "chunk/manager.h"
-
 #include "chunk/block/manager.h"
 #include "chunk/block/generator.h"
 
@@ -19,8 +17,6 @@
 struct voxy_context
 {
   libnet_server_t server;
-
-  struct voxy_chunk_manager *chunk_manager;
 
   struct voxy_block_manager *block_manager;
   struct voxy_block_generator *block_generator;

@@ -93,15 +93,14 @@ void voxy_entity_manager_destroy_entity(struct voxy_entity_manager *entity_manag
 static void load_entities(
     struct voxy_entity_manager *entity_manager,
     struct voxy_entity_database *entity_database,
-    struct voxy_chunk_manager *chunk_manager,
     libnet_server_t server)
 {
   profile_scope;
 
   size_t load_count = 0;
-  for(ptrdiff_t i=0; i<hmlen(chunk_manager->active_chunks); ++i)
+  for(ptrdiff_t i=0; i<hmlen(active_chunks); ++i)
   {
-    ivec3_t position = chunk_manager->active_chunks[i].key;
+    ivec3_t position = active_chunks[i].key;
     if(hmgeti(entity_manager->loaded_chunks, position) == -1)
     {
       hmput(entity_manager->loaded_chunks, position, (struct empty){});
@@ -147,7 +146,6 @@ static void load_entities(
 static void discard_entities(
     struct voxy_entity_manager *entity_manager,
     struct voxy_entity_database *entity_database,
-    struct voxy_chunk_manager *chunk_manager,
     libnet_server_t server)
 {
   profile_scope;
@@ -158,7 +156,7 @@ static void discard_entities(
   for(ptrdiff_t i=0; i<hmlen(entity_manager->loaded_chunks); ++i)
   {
     ivec3_t position = entity_manager->loaded_chunks[i].key;
-    if(hmgeti(chunk_manager->active_chunks, position) != -1)
+    if(hmgeti(active_chunks, position) != -1)
       hmput(new_loaded_chunks, position, (struct empty){});
   }
 
@@ -203,15 +201,15 @@ static void flush_entities(
   }
 }
 
-void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, struct voxy_entity_database *entity_database, struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
+void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, struct voxy_entity_database *entity_database, libnet_server_t server)
 {
   profile_scope;
 
   if(voxy_entity_database_begin_transaction(entity_database) != 0) LOG_ERROR("Failed to begin transaction");
   {
-    load_entities(entity_manager, entity_database, chunk_manager, server);
+    load_entities(entity_manager, entity_database, server);
     flush_entities(entity_manager, entity_database, server);
-    discard_entities(entity_manager, entity_database, chunk_manager, server);
+    discard_entities(entity_manager, entity_database, server);
   }
   if(voxy_entity_database_end_transaction(entity_database) != 0) LOG_ERROR("Failed to begin transaction");
 }

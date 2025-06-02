@@ -4,6 +4,7 @@
 
 #include <voxy/server/registry/block.h>
 
+#include <voxy/server/chunk/manager.h>
 #include <voxy/server/chunk/block/group.h>
 #include <voxy/server/chunk/block/generator.h>
 #include <voxy/server/chunk/entity/entity.h>
@@ -82,7 +83,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
         {
           const ivec3_t position = ivec3(x, y, z);
           if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
-            voxy_chunk_manager_add_active_chunk(context->chunk_manager, position);
+            voxy_add_active_chunk(position);
         }
   }
 

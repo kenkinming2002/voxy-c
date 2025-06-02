@@ -3,8 +3,6 @@
 
 #include <libnet/server.h>
 
-#include "chunk/manager.h"
-
 #include "chunk/block/manager.h"
 #include "chunk/block/database.h"
 #include "chunk/block/generator.h"
@@ -21,8 +19,6 @@
 struct application
 {
   libnet_server_t server;
-
-  struct voxy_chunk_manager chunk_manager;
 
   struct voxy_block_manager block_manager;
   struct voxy_block_database block_database;

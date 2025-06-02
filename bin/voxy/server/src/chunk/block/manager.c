@@ -1,7 +1,7 @@
 #include "manager.h"
 
 #include "chunk/coordinates.h"
-
+#include "chunk/manager.h"
 #include "database.h"
 #include "network.h"
 
@@ -132,16 +132,16 @@ static struct block_group_future load_or_generate_block(ivec3_t position, struct
   return block_group_future_ready(NULL);
 }
 
-static void load_or_generate_blocks(struct voxy_block_manager *block_manager, struct voxy_chunk_manager *chunk_manager, struct voxy_block_database *block_database , struct voxy_block_generator *block_generator, struct voxy_light_manager *light_manager, const struct voxy_context *context)
+static void load_or_generate_blocks(struct voxy_block_manager *block_manager, struct voxy_block_database *block_database , struct voxy_block_generator *block_generator, struct voxy_light_manager *light_manager, const struct voxy_context *context)
 {
   profile_begin();
 
   size_t load_count = 0;
   size_t generate_count = 0;
 
-  for(ptrdiff_t i=0; i<hmlen(chunk_manager->active_chunks); ++i)
+  for(ptrdiff_t i=0; i<hmlen(active_chunks); ++i)
   {
-    ivec3_t position = chunk_manager->active_chunks[i].key;
+    ivec3_t position = active_chunks[i].key;
     if(hmgeti(block_manager->block_group_nodes, position) != -1)
       continue;
 
@@ -214,7 +214,7 @@ static void flush_blocks(struct voxy_block_manager *block_manager, struct voxy_b
               "save_count", tformat("%zu", save_count));
 }
 
-static void discard_blocks(struct voxy_block_manager *block_manager, struct voxy_chunk_manager *chunk_manager, libnet_server_t server)
+static void discard_blocks(struct voxy_block_manager *block_manager, libnet_server_t server)
 {
   profile_begin();
 
@@ -226,7 +226,7 @@ static void discard_blocks(struct voxy_block_manager *block_manager, struct voxy
     ivec3_t position = block_manager->block_group_nodes[i].key;
     struct voxy_block_group *block_group = block_manager->block_group_nodes[i].value;
 
-    if(hmgeti(chunk_manager->active_chunks, position) == -1 && !block_group->disk_dirty)
+    if(hmgeti(active_chunks, position) == -1 && !block_group->disk_dirty)
     {
       for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         if(block_group->neighbours[direction])
@@ -249,13 +249,13 @@ static void discard_blocks(struct voxy_block_manager *block_manager, struct voxy
   profile_end("discard_count", tformat("%zu", discard_count));
 }
 
-void voxy_block_manager_update(struct voxy_block_manager *block_manager, struct voxy_chunk_manager *chunk_manager, struct voxy_block_database *block_database, struct voxy_block_generator *block_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context)
+void voxy_block_manager_update(struct voxy_block_manager *block_manager, struct voxy_block_database *block_database, struct voxy_block_generator *block_generator, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context)
 {
   profile_scope;
 
-  load_or_generate_blocks(block_manager, chunk_manager, block_database, block_generator, light_manager, context);
+  load_or_generate_blocks(block_manager, block_database, block_generator, light_manager, context);
   flush_blocks(block_manager, block_database, server);
-  discard_blocks(block_manager, chunk_manager, server);
+  discard_blocks(block_manager, server);
 }
 
 void voxy_block_manager_on_client_connected(struct voxy_block_manager *block_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)

@@ -1,5 +1,5 @@
-#ifndef LIGHT_MANAGER_H
-#define LIGHT_MANAGER_H
+#ifndef LIGHT_LIGHT_H
+#define LIGHT_LIGHT_H
 
 #include <libmath/vector.h>
 #include <stdint.h>
@@ -14,4 +14,4 @@ void enqueue_light_creation_update(ivec3_t position);
 
 void light_update(void);
 
-#endif // LIGHT_MANAGER_H
+#endif // LIGHT_LIGHT_H

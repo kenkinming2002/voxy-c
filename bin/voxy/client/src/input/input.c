@@ -1,4 +1,4 @@
-#include "manager.h"
+#include "input.h"
 
 #include <voxy/protocol/client.h>
 
@@ -6,23 +6,24 @@
 
 #include <stdbool.h>
 
-int input_manager_init(struct input_manager *input_manager)
+struct state
 {
-  input_manager->key_left = 0;
-  input_manager->key_right = 0;
-  input_manager->key_back = 0;
-  input_manager->key_front = 0;
-  input_manager->key_bottom = 0;
-  input_manager->key_top = 0;
-  return 0;
-}
+  /// Keys.
+  uint8_t key_left : 1;
+  uint8_t key_right : 1;
+  uint8_t key_back : 1;
+  uint8_t key_front : 1;
+  uint8_t key_bottom : 1;
+  uint8_t key_top : 1;
 
-void input_manager_fini(struct input_manager *input_manager)
-{
-  (void)input_manager;
-}
+  /// Mouse buttons.
+  uint8_t mouse_button_left : 1;
+  uint8_t mouse_button_right : 1;
+};
 
-void input_manager_update(struct input_manager *input_manager, libnet_client_t client)
+static struct state state;
+
+void input_update(libnet_client_t client)
 {
   const uint8_t key_left = input_state(KEY_A);
   const uint8_t key_right = input_state(KEY_D);
@@ -36,51 +37,51 @@ void input_manager_update(struct input_manager *input_manager, libnet_client_t c
 
   bool changed = false;
 
-  if(input_manager->key_left != key_left)
+  if(state.key_left != key_left)
   {
-    input_manager->key_left = key_left;
+    state.key_left = key_left;
     changed = true;
   }
 
-  if(input_manager->key_right != key_right)
+  if(state.key_right != key_right)
   {
-    input_manager->key_right = key_right;
+    state.key_right = key_right;
     changed = true;
   }
 
-  if(input_manager->key_back != key_back)
+  if(state.key_back != key_back)
   {
-    input_manager->key_back = key_back;
+    state.key_back = key_back;
     changed = true;
   }
 
-  if(input_manager->key_front != key_front)
+  if(state.key_front != key_front)
   {
-    input_manager->key_front = key_front;
+    state.key_front = key_front;
     changed = true;
   }
 
-  if(input_manager->key_bottom != key_bottom)
+  if(state.key_bottom != key_bottom)
   {
-    input_manager->key_bottom = key_bottom;
+    state.key_bottom = key_bottom;
     changed = true;
   }
 
-  if(input_manager->key_top != key_top)
+  if(state.key_top != key_top)
   {
-    input_manager->key_top = key_top;
+    state.key_top = key_top;
     changed = true;
   }
 
-  if(input_manager->mouse_button_left != mouse_button_left)
+  if(state.mouse_button_left != mouse_button_left)
   {
-    input_manager->mouse_button_left = mouse_button_left;
+    state.mouse_button_left = mouse_button_left;
     changed = true;
   }
 
-  if(input_manager->mouse_button_right != mouse_button_right)
+  if(state.mouse_button_right != mouse_button_right)
   {
-    input_manager->mouse_button_right = mouse_button_right;
+    state.mouse_button_right = mouse_button_right;
     changed = true;
   }
 

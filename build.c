@@ -282,7 +282,7 @@ int main()
       ),
       .sources = STRINGS(
         "camera/main",
-        "input/manager",
+        "input/input",
         "registry/block",
         "registry/entity",
         "registry/item",

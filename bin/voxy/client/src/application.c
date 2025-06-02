@@ -1,6 +1,7 @@
 #include "application.h"
 #include "camera/main.h"
 #include "chunk/block/manager.h"
+#include "input/input.h"
 
 #include <ui/manager.h>
 
@@ -41,9 +42,6 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_client_set_opaque(application->client, application);
   libnet_client_set_on_message_received(application->client, application_on_message_received);
 
-  if(input_manager_init(&application->input_manager) != 0)
-    goto error1;
-
   main_camera_init();
   mod_manager_init(&application->mod_manager);
 
@@ -59,8 +57,6 @@ int application_init(struct application *application, int argc, char *argv[])
 
 error5:
   mod_manager_fini(&application->mod_manager, &context);
-  input_manager_fini(&application->input_manager);
-error1:
   libnet_client_destroy(application->client);
 error0:
   return -1;
@@ -78,7 +74,6 @@ void application_fini(struct application *application)
 
   world_renderer_fini(&application->world_renderer);
   mod_manager_fini(&application->mod_manager, &context);
-  input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
 }
 
@@ -96,7 +91,7 @@ static void application_update(struct application *application)
 
   application_update_network(application);
 
-  input_manager_update(&application->input_manager, application->client);
+  input_update(application->client);
   main_camera_update();
 
   world_renderer_update(&application->world_renderer);

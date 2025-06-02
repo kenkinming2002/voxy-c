@@ -3,8 +3,6 @@
 
 #include <libnet/client.h>
 
-#include "input/manager.h"
-
 #include "render/world.h"
 
 #include "mod/manager.h"
@@ -12,8 +10,6 @@
 struct application
 {
   libnet_client_t client;
-
-  struct input_manager input_manager;
 
   struct mod_manager mod_manager;
 

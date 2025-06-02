@@ -2,7 +2,6 @@
 #define VOXY_SERVER_CONTEXT_H
 
 #include "chunk/block/manager.h"
-#include "chunk/block/generator.h"
 
 #include "chunk/entity/manager.h"
 #include "chunk/entity/database.h"
@@ -17,9 +16,6 @@
 struct voxy_context
 {
   libnet_server_t server;
-
-  struct voxy_block_manager *block_manager;
-  struct voxy_block_generator *block_generator;
 
   struct voxy_entity_manager *entity_manager;
   struct voxy_entity_database *entity_database;

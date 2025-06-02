@@ -30,12 +30,12 @@ entity_handle_t entity_allocator_alloc(struct entity_allocator *entity_manager)
   return handle;
 }
 
-void entity_allocator_free(struct entity_allocator *entity_allocator, struct voxy_entity_registry *entity_registry, entity_handle_t handle)
+void entity_allocator_free(struct entity_allocator *entity_allocator, entity_handle_t handle)
 {
   assert(handle < arrlenu(entity_allocator->entities));
 
   struct voxy_entity *entity = &entity_allocator->entities[handle];
-  struct voxy_entity_info info = voxy_entity_registry_query_entity(entity_registry, entity->id);
+  struct voxy_entity_info info = voxy_query_entity(entity->id);
   info.destroy_opaque(entity->opaque);
 
   if(handle == arrlenu(entity_allocator->entities) - 1)

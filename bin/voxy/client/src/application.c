@@ -27,10 +27,6 @@ int application_init(struct application *application, int argc, char *argv[])
 
   window_init("client", 1024, 720);
 
-  voxy_block_registry_init(&application->block_registry);
-  voxy_entity_registry_init(&application->entity_registry);
-  voxy_item_registry_init(&application->item_registry);
-
   if(!(application->client = libnet_client_create(argv[1], argv[2])))
     goto error0;
 
@@ -61,7 +57,7 @@ int application_init(struct application *application, int argc, char *argv[])
     if(mod_manager_load(&application->mod_manager, argv[i], &context) != 0)
       goto error5;
 
-  if(world_renderer_init(&application->world_renderer, &application->block_registry) != 0)
+  if(world_renderer_init(&application->world_renderer) != 0)
     goto error5;
 
   return 0;
@@ -77,18 +73,12 @@ error2:
 error1:
   libnet_client_destroy(application->client);
 error0:
-  voxy_item_registry_fini(&application->item_registry);
-  voxy_entity_registry_fini(&application->entity_registry);
-  voxy_block_registry_fini(&application->block_registry);
   return -1;
 }
 
 struct voxy_context application_get_context(struct application *application)
 {
   struct voxy_context context;
-  context.block_registry = &application->block_registry;
-  context.entity_registry = &application->entity_registry;
-  context.item_registry = &application->item_registry;
   return context;
 }
 
@@ -103,9 +93,6 @@ void application_fini(struct application *application)
   camera_manager_fini(&application->camera_manager);
   input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
-  voxy_item_registry_fini(&application->item_registry);
-  voxy_entity_registry_fini(&application->entity_registry);
-  voxy_block_registry_fini(&application->block_registry);
 }
 
 static void application_update_network(struct application *application)
@@ -128,7 +115,7 @@ static void application_update(struct application *application)
   block_manager_update(&application->block_manager);
   entity_manager_update(&application->entity_manager);
 
-  world_renderer_update(&application->world_renderer, &application->block_registry, &application->block_manager, &application->camera_manager);
+  world_renderer_update(&application->world_renderer, &application->block_manager, &application->camera_manager);
 
   ui_manager_update();
 
@@ -136,7 +123,7 @@ static void application_update(struct application *application)
   glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  world_renderer_render(&application->world_renderer, &application->entity_registry, &application->entity_manager, &application->camera_manager);
+  world_renderer_render(&application->world_renderer, &application->entity_manager, &application->camera_manager);
   render_end();
 
   ui_render();

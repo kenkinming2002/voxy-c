@@ -1,8 +1,7 @@
 #include "group.h"
 
 #include <voxy/config.h>
-
-#include "registry/block.h"
+#include <voxy/server/registry/block.h>
 
 #include <limits.h>
 #include <stdatomic.h>
@@ -104,9 +103,9 @@ bool voxy_block_group_set_block_light_level_atomic(struct voxy_block_group *bloc
   return true;
 }
 
-void voxy_block_group_set_block(struct voxy_block_group *block_group, struct voxy_block_registry *block_registry, ivec3_t position, uint8_t id)
+void voxy_block_group_set_block(struct voxy_block_group *block_group, ivec3_t position, uint8_t id)
 {
-  const uint8_t light_level = voxy_block_registry_query_block(block_registry, id).light_level;
+  const uint8_t light_level = voxy_query_block(id).light_level;
   voxy_block_group_set_block_id(block_group, position, id);
   voxy_block_group_set_block_light_level(block_group, position, light_level);
 }

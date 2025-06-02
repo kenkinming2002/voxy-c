@@ -1,7 +1,8 @@
 #ifndef RENDER_BLOCK_BLOCK_H
 #define RENDER_BLOCK_BLOCK_H
 
-#include "registry/block.h"
+#include <voxy/client/registry/block.h>
+
 #include "chunk/block/manager.h"
 #include "camera/manager.h"
 #include "render_info.h"
@@ -24,10 +25,10 @@ struct block_renderer
   struct block_render_info_node *render_info_nodes;
 };
 
-int block_renderer_init(struct block_renderer *block_renderer, const struct voxy_block_registry *block_registry);
+int block_renderer_init(struct block_renderer *block_renderer);
 void block_renderer_fini(struct block_renderer *block_renderer);
 
-void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct block_manager *block_manager, struct camera_manager *camera_manager);
+void block_renderer_update(struct block_renderer *block_renderer, struct block_manager *block_manager, struct camera_manager *camera_manager);
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager);
 
 #endif // RENDER_BLOCK_BLOCK_H

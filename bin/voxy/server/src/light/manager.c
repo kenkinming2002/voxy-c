@@ -1,5 +1,7 @@
 #include "manager.h"
 
+#include <voxy/server/registry/block.h>
+
 #include "chunk/coordinates.h"
 
 #include <libcore/profile.h>
@@ -154,7 +156,6 @@ static inline struct cursor traverse(struct cursor cursor, direction_t direction
 }
 
 static inline void process_light_destruction_update(
-    struct voxy_block_registry *block_registry,
     struct light_destruction_update **new_light_destruction_updates,
     struct light_creation_update **new_light_creation_updates,
     struct light_destruction_update update, direction_t direction)
@@ -166,7 +167,7 @@ static inline void process_light_destruction_update(
     return;
 
   const uint8_t neighbour_id = voxy_block_group_get_block_id(neighbour_block_group, neighbour_position);
-  const struct voxy_block_info neighbour_info = voxy_block_registry_query_block(block_registry, neighbour_id);
+  const struct voxy_block_info neighbour_info = voxy_query_block(neighbour_id);
   if(neighbour_info.collide)
     return;
 
@@ -205,7 +206,6 @@ static inline void process_light_destruction_update(
 }
 
 static inline void process_light_creation_update(
-    struct voxy_block_registry *block_registry,
     struct light_creation_update **new_light_creation_updates,
     struct light_creation_update update, direction_t direction)
 {
@@ -216,7 +216,7 @@ static inline void process_light_creation_update(
     return;
 
   const uint8_t neighbour_id = voxy_block_group_get_block_id(neighbour_block_group, neighbour_position);
-  const struct voxy_block_info neighbour_info = voxy_block_registry_query_block(block_registry, neighbour_id);
+  const struct voxy_block_info neighbour_info = voxy_query_block(neighbour_id);
   if(neighbour_info.collide)
     return;
 
@@ -244,7 +244,7 @@ static inline void process_light_creation_update(
   }
 }
 
-static void process_light_destruction_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry)
+static void process_light_destruction_updates(struct voxy_light_manager *light_manager)
 {
   profile_begin();
 
@@ -267,7 +267,7 @@ static void process_light_destruction_updates(struct voxy_light_manager *light_m
       for(size_t i=0; i<light_destruction_update_count; ++i)
         #pragma omp unroll
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
-          process_light_destruction_update(block_registry, &new_light_destruction_updates, &new_light_creation_updates, light_manager->light_destruction_updates[i], direction);
+          process_light_destruction_update(&new_light_destruction_updates, &new_light_creation_updates, light_manager->light_destruction_updates[i], direction);
 
       const size_t light_creation_index    = atomic_fetch_add_explicit(&new_light_creation_update_count,    arrlenu(new_light_creation_updates),    memory_order_relaxed);
       const size_t light_destruction_index = atomic_fetch_add_explicit(&new_light_destruction_update_count, arrlenu(new_light_destruction_updates), memory_order_relaxed);
@@ -292,7 +292,7 @@ static void process_light_destruction_updates(struct voxy_light_manager *light_m
   profile_end("count", tformat("%zd", count));
 }
 
-static void process_light_creation_updates(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry)
+static void process_light_creation_updates(struct voxy_light_manager *light_manager)
 {
   profile_begin();
 
@@ -313,7 +313,7 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
       for(size_t i=0; i<light_creation_update_count; ++i)
         #pragma omp unroll
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
-          process_light_creation_update(block_registry, &new_light_creation_updates, light_manager->light_creation_updates[i], direction);
+          process_light_creation_update(&new_light_creation_updates, light_manager->light_creation_updates[i], direction);
 
       const size_t light_creation_index = atomic_fetch_add_explicit(&new_light_creation_update_count, arrlenu(new_light_creation_updates), memory_order_relaxed);
       #pragma omp barrier
@@ -333,10 +333,10 @@ static void process_light_creation_updates(struct voxy_light_manager *light_mana
   profile_end("count", tformat("%zd", count));
 }
 
-void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry)
+void voxy_light_manager_update(struct voxy_light_manager *light_manager)
 {
   profile_scope;
 
-  process_light_destruction_updates(light_manager, block_registry);
-  process_light_creation_updates(light_manager, block_registry);
+  process_light_destruction_updates(light_manager);
+  process_light_creation_updates(light_manager);
 }

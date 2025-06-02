@@ -1,7 +1,6 @@
 #include "database.h"
 
-#include "chunk/coordinates.h"
-#include "registry/entity.h"
+#include <voxy/server/registry/entity.h>
 
 #include "sqlite3_utils.h"
 
@@ -79,7 +78,7 @@ int voxy_entity_database_end_transaction(struct voxy_entity_database *database)
   return 0;
 }
 
-static int entity_serialize(struct voxy_entity_registry *registry, const struct voxy_entity *entity, char **buf, size_t *len)
+static int entity_serialize(const struct voxy_entity *entity, char **buf, size_t *len)
 {
   libserde_serializer_t serializer = libserde_serializer_create_mem(buf, len);
   if(!serializer)
@@ -91,7 +90,7 @@ static int entity_serialize(struct voxy_entity_registry *registry, const struct 
   libserde_serializer_try_write(serializer, entity->velocity, err_write);
   libserde_serializer_try_write(serializer, entity->grounded, err_write);
 
-  const struct voxy_entity_info info = voxy_entity_registry_query_entity(registry, entity->id);
+  const struct voxy_entity_info info = voxy_query_entity(entity->id);
   if(info.serialize_opaque(serializer, entity->opaque) != 0)
     goto err_write;
 
@@ -105,7 +104,7 @@ err_create:
   return -1;
 }
 
-static int entity_deserialize(struct voxy_entity_registry *registry, struct voxy_entity *entity, const char *buf, size_t len)
+static int entity_deserialize(struct voxy_entity *entity, const char *buf, size_t len)
 {
   libserde_deserializer_t deserializer = libserde_deserializer_create_mem(buf, len);
   if(!deserializer)
@@ -117,7 +116,7 @@ static int entity_deserialize(struct voxy_entity_registry *registry, struct voxy
   libserde_deserializer_try_read(deserializer, entity->velocity, err_read);
   libserde_deserializer_try_read(deserializer, entity->grounded, err_read);
 
-  const struct voxy_entity_info info = voxy_entity_registry_query_entity(registry, entity->id);
+  const struct voxy_entity_info info = voxy_query_entity(entity->id);
   if(info.deserialize_opaque(deserializer, &entity->opaque) != 0)
     goto err_read;
 
@@ -130,13 +129,13 @@ err_create:
   return -1;
 }
 
-int voxy_entity_database_create(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity)
+int voxy_entity_database_create(struct voxy_entity_database *database, struct voxy_entity *entity)
 {
   int rc = 0;
 
   char *buf;
   size_t len;
-  if((rc = entity_serialize(entity_registry, entity, &buf, &len) != 0))
+  if((rc = entity_serialize(entity, &buf, &len) != 0))
   {
     rc = -1;
     goto out;
@@ -168,13 +167,13 @@ out:
   return rc;
 }
 
-int voxy_entity_database_save(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, const struct voxy_entity *entity)
+int voxy_entity_database_save(struct voxy_entity_database *database, const struct voxy_entity *entity)
 {
   int rc = 0;
   char *buf;
   size_t len;
 
-  if((rc = entity_serialize(entity_registry, entity, &buf, &len) != 0))
+  if((rc = entity_serialize(entity, &buf, &len) != 0))
   {
     LOG_ERROR("Failed to serialize entity");
     rc = -1;
@@ -191,7 +190,7 @@ out:
   return rc;
 }
 
-int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity)
+int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity *entity)
 {
   int rc = 0;
   struct sqlite3_utils_blob blob;
@@ -200,7 +199,7 @@ int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy
   if(sqlite3_utils_prepare_once(database->conn, &stmt, "SELECT data FROM entities WHERE id = (?);") != 0) { rc = -1; goto out; }
   if(sqlite3_utils_run(database->conn, stmt, SQLITE3_UTILS_TYPE_INT64, entity->db_id, SQLITE3_UTILS_TYPE_NONE, SQLITE3_UTILS_RETURN_TYPE_BLOB, &blob, SQLITE3_UTILS_RETURN_TYPE_NONE) != 0) { rc = -1; goto out; }
 
-  if(entity_deserialize(entity_registry, entity, blob.data, blob.length) != 0)
+  if(entity_deserialize(entity, blob.data, blob.length) != 0)
   {
     LOG_ERROR("Failed to deserialize entity");
     rc = -1;

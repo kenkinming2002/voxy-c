@@ -20,10 +20,6 @@ int application_init(struct application *application, int argc, char *argv[])
     return -1;
   }
 
-  voxy_block_registry_init(&application->block_registry);
-  voxy_entity_registry_init(&application->entity_registry);
-  voxy_item_registry_init(&application->item_registry);
-
   if(!(application->server = libnet_server_create(argv[1], argv[2], argv[3], FIXED_DT * 1e9)))
     goto error0;
 
@@ -70,9 +66,6 @@ error1:
 
   libnet_server_destroy(application->server);
 error0:
-  voxy_item_registry_fini(&application->item_registry);
-  voxy_entity_registry_fini(&application->entity_registry);
-  voxy_block_registry_fini(&application->block_registry);
   return -1;
 }
 
@@ -94,10 +87,6 @@ void application_fini(struct application *application)
   voxy_chunk_manager_fini(&application->chunk_manager);
 
   libnet_server_destroy(application->server);
-
-  voxy_item_registry_fini(&application->item_registry);
-  voxy_entity_registry_fini(&application->entity_registry);
-  voxy_block_registry_fini(&application->block_registry);
 }
 
 struct voxy_context application_get_context(struct application *application)
@@ -105,10 +94,6 @@ struct voxy_context application_get_context(struct application *application)
   struct voxy_context context;
 
   context.server = application->server;
-
-  context.block_registry = &application->block_registry;
-  context.entity_registry = &application->entity_registry;
-  context.item_registry = &application->item_registry;
 
   context.chunk_manager = &application->chunk_manager;
 
@@ -126,7 +111,7 @@ struct voxy_context application_get_context(struct application *application)
 
 void application_run(struct application *application)
 {
-  voxy_entity_manager_start(&application->entity_manager, &application->entity_registry, &application->entity_database, application->server);
+  voxy_entity_manager_start(&application->entity_manager, &application->entity_database, application->server);
   libnet_server_run(application->server);
 }
 
@@ -146,17 +131,17 @@ void application_on_update(libnet_server_t server)
     if(!entity->alive)
       continue;
 
-    struct voxy_entity_info info = voxy_entity_registry_query_entity(&application->entity_registry, entity->id);
+    struct voxy_entity_info info = voxy_query_entity(entity->id);
     if(info.update && !info.update(entity, FIXED_DT, &context))
-      voxy_entity_manager_despawn(&application->entity_manager, &application->entity_registry, &application->entity_database, handle, server);
+      voxy_entity_manager_despawn(&application->entity_manager, &application->entity_database, handle, server);
   }
 
-  physics_update(&application->block_registry, &application->entity_registry, &application->block_manager, &application->entity_manager, FIXED_DT);
-  voxy_light_manager_update(&application->light_manager, &application->block_registry);
+  physics_update(&application->block_manager, &application->entity_manager, FIXED_DT);
+  voxy_light_manager_update(&application->light_manager);
 
   voxy_block_database_update(&application->block_database);
   voxy_block_manager_update(&application->block_manager, &application->chunk_manager, &application->block_database, &application->block_generator, &application->light_manager, application->server, &context);
-  voxy_entity_manager_update(&application->entity_manager, &application->entity_registry, &application->entity_database, &application->chunk_manager, application->server);
+  voxy_entity_manager_update(&application->entity_manager, &application->entity_database, &application->chunk_manager, application->server);
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)

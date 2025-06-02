@@ -1,9 +1,8 @@
 #ifndef CHUNK_ENTITY_ENTITY_H
 #define CHUNK_ENTITY_ENTITY_H
 
+#include <voxy/client/registry/entity.h>
 #include <voxy/client/entity/entity.h>
-
-#include "registry/entity.h"
 
 #include <libmath/vector.h>
 

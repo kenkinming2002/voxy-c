@@ -37,7 +37,6 @@ VOXY_SERVER_EXPORT void voxy_block_manager_set_block_light_level(struct voxy_blo
 /// manager..
 VOXY_SERVER_EXPORT void voxy_block_manager_set_block(
     struct voxy_block_manager *block_manager,
-    struct voxy_block_registry *block_registry,
     struct voxy_light_manager *light_manager,
     ivec3_t position,
     uint8_t id);

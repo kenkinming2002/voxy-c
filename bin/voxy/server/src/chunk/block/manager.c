@@ -5,7 +5,7 @@
 #include "database.h"
 #include "network.h"
 
-#include "registry/block.h"
+#include <voxy/server/registry/block.h>
 #include "light/manager.h"
 
 #include <voxy/protocol/server.h>
@@ -68,7 +68,6 @@ void voxy_block_manager_set_block_light_level(struct voxy_block_manager *block_m
 /// manager..
 VOXY_SERVER_EXPORT void voxy_block_manager_set_block(
     struct voxy_block_manager *block_manager,
-    struct voxy_block_registry *block_registry,
     struct voxy_light_manager *light_manager,
     ivec3_t position,
     uint8_t id)
@@ -78,7 +77,7 @@ VOXY_SERVER_EXPORT void voxy_block_manager_set_block(
     return;
 
   const uint8_t old_light_level = voxy_block_group_get_block_light_level(block_group, global_position_to_local_position_i(position));
-  const uint8_t light_level = voxy_block_registry_query_block(block_registry, id).light_level;
+  const uint8_t light_level = voxy_query_block(id).light_level;
 
   voxy_block_group_set_block_id(block_group, global_position_to_local_position_i(position), id);
   voxy_block_group_set_block_light_level(block_group, global_position_to_local_position_i(position), light_level);

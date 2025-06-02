@@ -1,5 +1,8 @@
 #include <voxy/config.h>
+
 #include <voxy/server/context.h>
+
+#include <voxy/server/registry/block.h>
 
 #include <voxy/server/chunk/block/group.h>
 #include <voxy/server/chunk/block/generator.h>
@@ -41,7 +44,7 @@ static void generate_block(ivec3_t chunk_position, struct voxy_block_group *bloc
           : height > heights[y][x] - 1 ? 3
           : 2;
 
-        voxy_block_group_set_block(block_group, context->block_registry, ivec3(x, y, z), id);
+        voxy_block_group_set_block(block_group, ivec3(x, y, z), id);
       }
 }
 
@@ -50,7 +53,7 @@ static void on_new_player(struct voxy_player *player, const struct voxy_context 
   // FIXME: We need to load the player from disk.
   const fvec3_t position = fvec3(0.0f, 0.0f, 50.0f);
   const fvec3_t rotation = fvec3_zero();
-  const entity_handle_t handle = voxy_entity_manager_spawn(context->entity_manager, context->entity_registry, context->entity_database, 0, position, rotation, voxy_player_get_weak(player), context->server);
+  const entity_handle_t handle = voxy_entity_manager_spawn(context->entity_manager, context->entity_database, 0, position, rotation, voxy_player_get_weak(player), context->server);
   voxy_player_set_camera_follow_entity(player, handle);
 }
 
@@ -113,11 +116,11 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
       if(id == 0xFF)
         continue;
 
-      const struct voxy_block_info info = voxy_block_registry_query_block(context->block_registry, id);
+      const struct voxy_block_info info = voxy_query_block(id);
       if(!info.collide)
         continue;
 
-      voxy_block_manager_set_block(context->block_manager, context->block_registry, context->light_manager, ray_cast.iposition, 0);
+      voxy_block_manager_set_block(context->block_manager, context->light_manager, ray_cast.iposition, 0);
       break;
     }
   }
@@ -130,42 +133,42 @@ void *mod_create_instance(struct voxy_context *context)
 {
   voxy_block_generator_set_generate_block(context->block_generator, generate_block);
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "air",
     .collide = false,
     .light_level = 0,
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "ether",
     .collide = false,
     .light_level = 15,
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "stone",
     .collide = true,
     .light_level = 0,
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "grass",
     .collide = true,
     .light_level = 0,
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "water",
     .collide = false,
     .light_level = 0,
   });
 
-  voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
+  voxy_register_entity((struct voxy_entity_info) {
     .mod = "base",
     .name = "player",
     .update = player_entity_update,
@@ -176,7 +179,7 @@ void *mod_create_instance(struct voxy_context *context)
     .deserialize_opaque = voxy_entity_deserialize_opaque_default,
   });
 
-  voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
+  voxy_register_entity((struct voxy_entity_info) {
     .mod = "base",
     .name = "dummy",
     .update = NULL,

@@ -1,5 +1,7 @@
 #include "block.h"
 
+#include <voxy/client/registry/block.h>
+
 #include <libcore/log.h>
 #include <libcore/profile.h>
 #include <libcore/format.h>
@@ -8,7 +10,7 @@
 
 #include <string.h>
 
-int block_renderer_init(struct block_renderer *block_renderer, const struct voxy_block_registry *block_registry)
+int block_renderer_init(struct block_renderer *block_renderer)
 {
   const char **textures = NULL;
 
@@ -17,11 +19,12 @@ int block_renderer_init(struct block_renderer *block_renderer, const struct voxy
   if(gl_program_load(&block_renderer->program, 2, program_targets, program_filepaths) != 0)
     goto error0;
 
-  block_renderer->texture_indices = malloc(arrlenu(block_registry->infos) * sizeof *block_renderer->texture_indices);
-  for(voxy_block_id_t id=0; id<arrlenu(block_registry->infos); ++id)
+  const struct voxy_block_info *infos = voxy_query_block_all();
+  block_renderer->texture_indices = malloc(arrlenu(infos) * sizeof *block_renderer->texture_indices);
+  for(voxy_block_id_t id=0; id<arrlenu(infos); ++id)
     for(direction_t direction=0; direction<DIRECTION_COUNT; ++direction)
     {
-      const char *texture = block_registry->infos[id].textures[direction];
+      const char *texture = infos[id].textures[direction];
       if(texture)
       {
         uint32_t i;
@@ -82,7 +85,7 @@ static void discard_render_infos(struct block_renderer *block_renderer, ivec3_t 
   profile_end("count", tformat("%zu", count));
 }
 
-static void update_render_infos(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct block_manager *block_manager, ivec3_t center, int radius)
+static void update_render_infos(struct block_renderer *block_renderer, struct block_manager *block_manager, ivec3_t center, int radius)
 {
   profile_begin();
 
@@ -115,7 +118,7 @@ static void update_render_infos(struct block_renderer *block_renderer, struct vo
             if(remesh)
             {
               struct block_render_info *render_info = &render_info_node->value;
-              block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
+              block_render_info_update(render_info, block_renderer, position, block_group);
               block_group->remesh = false;
 
               count += 1;
@@ -129,13 +132,13 @@ static void update_render_infos(struct block_renderer *block_renderer, struct vo
   profile_end("count", tformat("%zu", count));
 }
 
-void block_renderer_update(struct block_renderer *block_renderer, struct voxy_block_registry *block_registry, struct block_manager *block_manager, struct camera_manager *camera_manager)
+void block_renderer_update(struct block_renderer *block_renderer, struct block_manager *block_manager, struct camera_manager *camera_manager)
 {
   const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(camera_manager->camera.transform.translation), VOXY_CHUNK_WIDTH);
   const int radius = 8;
 
   discard_render_infos(block_renderer, center, radius);
-  update_render_infos(block_renderer, block_registry, block_manager, center, radius);
+  update_render_infos(block_renderer, block_manager, center, radius);
 }
 
 void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager)

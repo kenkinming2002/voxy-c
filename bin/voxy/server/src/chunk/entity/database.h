@@ -39,7 +39,7 @@ int voxy_entity_database_end_transaction(struct voxy_entity_database *database);
 /// for populating entity->db_id.
 ///
 /// Return non-zero on error;
-int voxy_entity_database_create(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity);
+int voxy_entity_database_create(struct voxy_entity_database *database, struct voxy_entity *entity);
 
 /// Destroy an entity in database.
 ///
@@ -53,12 +53,12 @@ int voxy_entity_database_destroy(struct voxy_entity_database *database, struct v
 /// Save an entity to database.
 ///
 /// Return non-zero on error;
-int voxy_entity_database_save(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, const struct voxy_entity *entity);
+int voxy_entity_database_save(struct voxy_entity_database *database, const struct voxy_entity *entity);
 
 /// Load an entity from database.
 ///
 /// Return non-zero on error;
-int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity_registry *entity_registry, struct voxy_entity *entity);
+int voxy_entity_database_load(struct voxy_entity_database *database, struct voxy_entity *entity);
 
 /// Uncommit entity in database.
 ///

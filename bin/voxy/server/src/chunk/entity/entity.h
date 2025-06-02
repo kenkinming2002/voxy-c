@@ -2,8 +2,7 @@
 #define CHUNK_ENTITY_ENTITY_H
 
 #include <voxy/server/chunk/entity/entity.h>
-
-#include "registry/entity.h"
+#include <voxy/server/registry/entity.h>
 
 #include <libmath/vector.h>
 

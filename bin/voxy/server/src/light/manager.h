@@ -1,8 +1,6 @@
 #ifndef LIGHT_MANAGER_H
 #define LIGHT_MANAGER_H
 
-#include "registry/block.h"
-
 #include "chunk/block/manager.h"
 
 #include <stdint.h>
@@ -52,6 +50,6 @@ void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *li
 void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position, uint8_t light_level);
 void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position);
 
-void voxy_light_manager_update(struct voxy_light_manager *light_manager, struct voxy_block_registry *block_registry);
+void voxy_light_manager_update(struct voxy_light_manager *light_manager);
 
 #endif // LIGHT_MANAGER_H

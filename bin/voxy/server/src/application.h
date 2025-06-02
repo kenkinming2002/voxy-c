@@ -3,10 +3,6 @@
 
 #include <libnet/server.h>
 
-#include "registry/block.h"
-#include "registry/entity.h"
-#include "registry/item.h"
-
 #include "chunk/manager.h"
 
 #include "chunk/block/manager.h"
@@ -24,10 +20,6 @@
 
 struct application
 {
-  struct voxy_block_registry block_registry;
-  struct voxy_entity_registry entity_registry;
-  struct voxy_item_registry item_registry;
-
   libnet_server_t server;
 
   struct voxy_chunk_manager chunk_manager;

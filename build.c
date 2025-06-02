@@ -405,11 +405,6 @@ int main()
         "  lower_name=%2$s\n"
         "  upper_name=%3$s\n"
         "\n"
-        "generated_sources =$generated_sources build bin/voxy/%1$s/src/registry/%2$s.h\n"
-        "build bin/voxy/%1$s/src/registry/%2$s.h: sed_registry bin/voxy/%1$s/src/registry/registry.h\n"
-        "  lower_name=%2$s\n"
-        "  upper_name=%3$s\n"
-        "\n"
         "generated_sources =$generated_sources build bin/voxy/%1$s/src/registry/%2$s.c\n"
         "build bin/voxy/%1$s/src/registry/%2$s.c: sed_registry bin/voxy/%1$s/src/registry/registry.c\n"
         "  lower_name=%2$s\n"
@@ -424,8 +419,7 @@ int main()
     REGISTRIES_FOREACH(registries, registry) {
       fprintf(build,
         " bin/voxy/%1$s/include/voxy/%1$s/registry/%2$s.h"
-        " build bin/voxy/%1$s/src/registry/%2$s.h"
-        " build bin/voxy/%1$s/src/registry/%2$s.c",
+        " bin/voxy/%1$s/src/registry/%2$s.c",
         *system, registry->lower_name);
     }
   }

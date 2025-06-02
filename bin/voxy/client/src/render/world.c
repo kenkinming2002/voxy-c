@@ -11,9 +11,9 @@ void world_renderer_fini(struct world_renderer *world_renderer)
   block_renderer_fini(&world_renderer->block);
 }
 
-void world_renderer_update(struct world_renderer *world_renderer, struct block_manager *block_manager)
+void world_renderer_update(struct world_renderer *world_renderer)
 {
-  block_renderer_update(&world_renderer->block, block_manager);
+  block_renderer_update(&world_renderer->block);
 }
 
 void world_renderer_render(struct world_renderer *world_renderer, struct entity_manager *entity_manager)

@@ -5,7 +5,6 @@
 
 #include "input/manager.h"
 
-#include "chunk/block/manager.h"
 #include "chunk/entity/manager.h"
 
 #include "render/world.h"
@@ -18,7 +17,6 @@ struct application
 
   struct input_manager input_manager;
 
-  struct block_manager block_manager;
   struct entity_manager entity_manager;
 
   struct mod_manager mod_manager;

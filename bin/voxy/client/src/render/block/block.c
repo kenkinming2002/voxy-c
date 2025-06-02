@@ -1,5 +1,6 @@
 #include "block.h"
 #include "camera/main.h"
+#include "chunk/block/manager.h"
 
 #include <voxy/client/registry/block.h>
 
@@ -86,7 +87,7 @@ static void discard_render_infos(struct block_renderer *block_renderer, ivec3_t 
   profile_end("count", tformat("%zu", count));
 }
 
-static void update_render_infos(struct block_renderer *block_renderer, struct block_manager *block_manager, ivec3_t center, int radius)
+static void update_render_infos(struct block_renderer *block_renderer, ivec3_t center, int radius)
 {
   profile_begin();
 
@@ -101,11 +102,10 @@ static void update_render_infos(struct block_renderer *block_renderer, struct bl
           const ivec3_t position = ivec3(x, y, z);
           if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
           {
-            struct block_group_node *block_group_node = hmgetp_null(block_manager->block_group_nodes, position);
-            if(!block_group_node)
-              continue;
+            struct block_group *block_group = get_block_group(position);
+            if(!block_group)
+              continue;;
 
-            struct block_group *block_group = block_group_node->value;
             bool remesh = block_group->remesh;
 
             struct block_render_info_node *render_info_node = hmgetp_null(block_renderer->render_info_nodes, position);
@@ -133,13 +133,13 @@ static void update_render_infos(struct block_renderer *block_renderer, struct bl
   profile_end("count", tformat("%zu", count));
 }
 
-void block_renderer_update(struct block_renderer *block_renderer, struct block_manager *block_manager)
+void block_renderer_update(struct block_renderer *block_renderer)
 {
   const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(get_main_camera().transform.translation), VOXY_CHUNK_WIDTH);
   const int radius = 8;
 
   discard_render_infos(block_renderer, center, radius);
-  update_render_infos(block_renderer, block_manager, center, radius);
+  update_render_infos(block_renderer, center, radius);
 }
 
 void block_renderer_render(struct block_renderer *block_renderer)

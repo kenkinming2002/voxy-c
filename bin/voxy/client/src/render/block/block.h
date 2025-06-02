@@ -3,7 +3,6 @@
 
 #include <voxy/client/registry/block.h>
 
-#include "chunk/block/manager.h"
 #include "render_info.h"
 
 #include <libgfx/gl.h>
@@ -27,7 +26,7 @@ struct block_renderer
 int block_renderer_init(struct block_renderer *block_renderer);
 void block_renderer_fini(struct block_renderer *block_renderer);
 
-void block_renderer_update(struct block_renderer *block_renderer, struct block_manager *block_manager);
+void block_renderer_update(struct block_renderer *block_renderer);
 void block_renderer_render(struct block_renderer *block_renderer);
 
 #endif // RENDER_BLOCK_BLOCK_H

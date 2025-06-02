@@ -9,6 +9,8 @@
 #include <voxy/server/chunk/block/generator.h>
 #include <voxy/server/chunk/entity/entity.h>
 
+#include <voxy/server/chunk/block/manager.h>
+
 #include <voxy/server/player/player.h>
 #include <voxy/server/player/manager.h>
 
@@ -122,7 +124,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
       if(!info.collide)
         continue;
 
-      voxy_set_block(context->light_manager, ray_cast.iposition, 0);
+      voxy_set_block(ray_cast.iposition, 0);
       break;
     }
   }

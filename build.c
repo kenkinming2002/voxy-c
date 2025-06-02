@@ -239,7 +239,7 @@ int main()
         "registry/block",
         "registry/entity",
         "registry/item",
-        "light/manager",
+        "light/light",
         "physics/physics",
         "physics/swept",
         "chunk/coordinates",

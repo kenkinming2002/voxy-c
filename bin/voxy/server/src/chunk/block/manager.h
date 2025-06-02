@@ -28,7 +28,7 @@ struct voxy_light_manager;
 bool voxy_block_manager_get_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
-void voxy_block_manager_update(struct voxy_block_database *block_database, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context);
+void voxy_block_manager_update(struct voxy_block_database *block_database, libnet_server_t server, const struct voxy_context *context);
 
 void voxy_block_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy);
 

@@ -1,12 +1,14 @@
 #include "manager.h"
 
+#include <voxy/server/registry/block.h>
+
 #include "chunk/coordinates.h"
 #include "chunk/manager.h"
+
+#include "light/light.h"
+
 #include "database.h"
 #include "network.h"
-
-#include <voxy/server/registry/block.h>
-#include "light/manager.h"
 
 #include <voxy/protocol/server.h>
 
@@ -64,10 +66,7 @@ void voxy_set_block_light_level(ivec3_t position, uint8_t light_level)
 /// The light level of the block_group will be derived from light info in block_group
 /// registry. This will also enqueue any necessary light updates to light
 /// manager..
-VOXY_SERVER_EXPORT void voxy_set_block(
-    struct voxy_light_manager *light_manager,
-    ivec3_t position,
-    uint8_t id)
+VOXY_SERVER_EXPORT void voxy_set_block(ivec3_t position, uint8_t id)
 {
   struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
   if(!block_group)
@@ -80,12 +79,12 @@ VOXY_SERVER_EXPORT void voxy_set_block(
   voxy_block_group_set_block_light_level(block_group, global_position_to_local_position_i(position), light_level);
 
   if(old_light_level < light_level)
-    voxy_light_manager_enqueue_creation_update(light_manager, position);
+    enqueue_light_creation_update(position);
 
   //// FIXME: Light destroy update really only support the case if light level
   ////        changes to 0. This happens to be the only possible cases for now.
   if(old_light_level >= light_level)
-    voxy_light_manager_enqueue_destruction_update(light_manager, position, old_light_level);
+    enqueue_light_destruction_update(position, old_light_level);
 }
 
 bool voxy_block_manager_get_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp)
@@ -129,7 +128,7 @@ static struct block_group_future load_or_generate_block(ivec3_t position, struct
   return block_group_future_ready(NULL);
 }
 
-static void load_or_generate_blocks(struct voxy_block_database *block_database, struct voxy_light_manager *light_manager, const struct voxy_context *context)
+static void load_or_generate_blocks(struct voxy_block_database *block_database, const struct voxy_context *context)
 {
   profile_begin();
 
@@ -159,9 +158,9 @@ static void load_or_generate_blocks(struct voxy_block_database *block_database, 
             const ivec3_t local_position = ivec3(x, y, z);
             const ivec3_t global_position = local_position_to_global_position_i(local_position, position);
             if(voxy_block_group_get_block_light_level(block_group, local_position) != 0)
-              voxy_light_manager_enqueue_creation_update(light_manager, global_position);
+              enqueue_light_creation_update(global_position);
             else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
-              voxy_light_manager_enqueue_destruction_update(light_manager, global_position, 0);
+              enqueue_light_destruction_update(global_position, 0);
           }
     }
   }
@@ -246,11 +245,11 @@ static void discard_blocks(libnet_server_t server)
   profile_end("discard_count", tformat("%zu", discard_count));
 }
 
-void voxy_block_manager_update(struct voxy_block_database *block_database, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context)
+void voxy_block_manager_update(struct voxy_block_database *block_database, libnet_server_t server, const struct voxy_context *context)
 {
   profile_scope;
 
-  load_or_generate_blocks(block_database, light_manager, context);
+  load_or_generate_blocks(block_database, context);
   flush_blocks(block_database, server);
   discard_blocks(server);
 }

@@ -5,7 +5,6 @@
 
 #include <libmath/vector.h>
 
-struct voxy_light_manager;
 struct voxy_block_group;
 
 /// Get the block group at given chunk position.
@@ -31,9 +30,6 @@ VOXY_SERVER_EXPORT void voxy_set_block_light_level(ivec3_t position, uint8_t lig
 /// The light level of the block will be derived from light info in block
 /// registry. This will also enqueue any necessary light updates to light
 /// manager..
-VOXY_SERVER_EXPORT void voxy_set_block(
-    struct voxy_light_manager *light_manager,
-    ivec3_t position,
-    uint8_t id);
+VOXY_SERVER_EXPORT void voxy_set_block(ivec3_t position, uint8_t id);
 
 #endif // VOXY_SERVER_CHUNK_BLOCK_MANAGER_H

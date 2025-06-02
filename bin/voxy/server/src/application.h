@@ -3,10 +3,7 @@
 
 #include <libnet/server.h>
 
-#include "chunk/block/manager.h"
 #include "chunk/block/database.h"
-
-#include "light/manager.h"
 
 #include "mod/manager.h"
 
@@ -15,8 +12,6 @@ struct application
   libnet_server_t server;
 
   struct voxy_block_database block_database;
-
-  struct voxy_light_manager light_manager;
 
   struct mod_manager mod_manager;
 };

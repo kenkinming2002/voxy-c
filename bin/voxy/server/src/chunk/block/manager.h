@@ -1,7 +1,6 @@
 #ifndef CHUNK_BLOCK_MANAGER_H
 #define CHUNK_BLOCK_MANAGER_H
 
-#include <voxy/server/context.h>
 #include <voxy/server/chunk/block/manager.h>
 
 #include <libnet/server.h>
@@ -22,7 +21,7 @@
 bool voxy_block_manager_get_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
-void voxy_block_manager_update(const struct voxy_context *context);
+void voxy_block_manager_update(void);
 
 void voxy_block_manager_on_client_connected(libnet_client_proxy_t client_proxy);
 

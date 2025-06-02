@@ -1,7 +1,5 @@
 #include <voxy/config.h>
 
-#include <voxy/server/context.h>
-
 #include <voxy/server/registry/block.h>
 
 #include <voxy/server/chunk/manager.h>
@@ -25,7 +23,7 @@
 #define MOVE_SPEED_AIR 3.0f
 #define JUMP_STRENGTH 5.5f
 
-static void generate_block(ivec3_t chunk_position, struct voxy_block_group *block_group, seed_t seed, const struct voxy_context *context)
+static void generate_block(ivec3_t chunk_position, struct voxy_block_group *block_group, seed_t seed)
 {
   // Generate height map
   float heights[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH];
@@ -52,7 +50,7 @@ static void generate_block(ivec3_t chunk_position, struct voxy_block_group *bloc
       }
 }
 
-static void on_new_player(struct voxy_player *player, const struct voxy_context *context)
+static void on_new_player(struct voxy_player *player)
 {
   // FIXME: We need to load the player from disk.
   const fvec3_t position = fvec3(0.0f, 0.0f, 50.0f);
@@ -61,7 +59,7 @@ static void on_new_player(struct voxy_player *player, const struct voxy_context 
   voxy_player_set_camera_follow_entity(player, handle);
 }
 
-static bool player_entity_update(struct voxy_entity *entity, float dt, const struct voxy_context *context)
+static bool player_entity_update(struct voxy_entity *entity, float dt)
 {
   // The stored opaque pointer could become NULL after a
   // serialization/deserialization cycle, possibly after server restart.
@@ -133,7 +131,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
   return true;
 }
 
-int mod_init(struct voxy_context *context)
+int mod_init(void)
 {
   voxy_set_generate_block(generate_block);
 
@@ -197,11 +195,5 @@ int mod_init(struct voxy_context *context)
   voxy_set_on_new_player(on_new_player);
 
   return 0;
-}
-
-void mod_destroy_instance(struct voxy_context *context, void *instance)
-{
-  (void)context;
-  (void)instance;
 }
 

@@ -6,10 +6,9 @@
 
 #include <libmath/vector.h>
 
-struct voxy_context;
 struct voxy_player;
 
-typedef void(*voxy_on_new_player)(struct voxy_player *player, const struct voxy_context *context);
+typedef void(*voxy_on_new_player)(struct voxy_player *player);
 
 /// Set the callback function used to spawn a player entity.
 VOXY_SERVER_EXPORT void voxy_set_on_new_player(voxy_on_new_player on_new_player);

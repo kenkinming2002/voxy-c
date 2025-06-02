@@ -29,7 +29,7 @@ void voxy_player_manager_on_client_disconnected(libnet_client_proxy_t client_pro
   voxy_player_put(player);
 }
 
-void voxy_player_manager_on_message_received(libnet_client_proxy_t client_proxy, const struct libnet_message *_message, const struct voxy_context *context)
+void voxy_player_manager_on_message_received(libnet_client_proxy_t client_proxy, const struct libnet_message *_message)
 {
   {
     const struct voxy_client_login_message *message = voxy_get_client_login_message(_message);
@@ -40,7 +40,7 @@ void voxy_player_manager_on_message_received(libnet_client_proxy_t client_proxy,
 
       printf("Player %s logs in\n", player->name);
       if(on_new_player)
-        on_new_player(player, context);
+        on_new_player(player);
 
     }
   }

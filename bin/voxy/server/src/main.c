@@ -36,7 +36,7 @@ void on_update(void)
       continue;
 
     struct voxy_entity_info info = voxy_query_entity(entity->id);
-    if(info.update && !info.update(entity, FIXED_DT, NULL))
+    if(info.update && !info.update(entity, FIXED_DT))
       voxy_entity_despawn(handle);
   }
 
@@ -44,7 +44,7 @@ void on_update(void)
   light_update();
 
   voxy_block_database_update();
-  voxy_block_manager_update(NULL);
+  voxy_block_manager_update();
   voxy_entity_manager_update();
 }
 
@@ -62,7 +62,7 @@ void on_client_disconnected(libnet_client_proxy_t client_proxy)
 
 void on_message_received(libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
-  voxy_player_manager_on_message_received(client_proxy, message, NULL);
+  voxy_player_manager_on_message_received(client_proxy, message);
 }
 
 static void init(int argc, char *argv[])
@@ -85,7 +85,7 @@ static void init(int argc, char *argv[])
   voxy_entity_database_init(argv[4]);
 
   for(int i=5; i<argc; ++i)
-    mod_load(argv[i], NULL);
+    mod_load(argv[i]);
 }
 
 static void deinit(void)

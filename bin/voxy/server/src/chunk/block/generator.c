@@ -2,8 +2,6 @@
 
 #include "group.h"
 
-#include <voxy/server/context.h>
-
 #include <libcore/format.h>
 #include <libcore/fs.h>
 #include <libcore/log.h>
@@ -80,8 +78,6 @@ struct block_generator_job
 {
   struct thread_pool_job job;
 
-  struct voxy_context context;
-
   ivec3_t position;
   struct voxy_block_group * _Atomic block_group;
 };
@@ -94,7 +90,7 @@ static void job_invoke(struct thread_pool_job *job)
   block_group->disk_dirty = true;
   block_group->network_dirty = true;
 
-  generate_block(real_job->position, block_group, seed, &real_job->context);
+  generate_block(real_job->position, block_group, seed);
 
   atomic_store_explicit(&real_job->block_group, block_group, memory_order_release);
 }
@@ -106,14 +102,12 @@ static void job_destroy(struct thread_pool_job *job)
   (void)job;
 }
 
-static struct block_generator_job *job_create(ivec3_t position, const struct voxy_context *context)
+static struct block_generator_job *job_create(ivec3_t position)
 {
   struct block_generator_job *job = malloc(sizeof *job);
 
   job->job.invoke = job_invoke;
   job->job.destroy = job_destroy;
-
-  memcpy(&job->context, context, sizeof *context);
 
   job->position = position;
   atomic_init(&job->block_group, NULL);
@@ -121,7 +115,7 @@ static struct block_generator_job *job_create(ivec3_t position, const struct vox
   return job;
 }
 
-struct block_group_future voxy_block_group_generate(ivec3_t position, const struct voxy_context *context)
+struct block_group_future voxy_block_group_generate(ivec3_t position)
 {
   profile_scope;
 
@@ -130,7 +124,7 @@ struct block_group_future voxy_block_group_generate(ivec3_t position, const stru
   ptrdiff_t i = hmgeti(wrappers, position);
   if(i == -1)
   {
-    job = job_create(position, context);
+    job = job_create(position);
     thread_pool_enqueue(&job->job);
     hmput(wrappers, position, job);
   }

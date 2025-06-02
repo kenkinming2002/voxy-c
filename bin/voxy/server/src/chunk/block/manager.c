@@ -106,7 +106,7 @@ bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *
   return block_group ? voxy_block_group_set_block_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp) : false;
 }
 
-static struct block_group_future load_or_generate_block(ivec3_t position, const struct voxy_context *context, size_t *load_count, size_t *generate_count)
+static struct block_group_future load_or_generate_block(ivec3_t position, size_t *load_count, size_t *generate_count)
 {
   profile_scope;
 
@@ -119,7 +119,7 @@ static struct block_group_future load_or_generate_block(ivec3_t position, const 
     return result;
   }
 
-  result = voxy_block_group_generate(position, context);
+  result = voxy_block_group_generate(position);
   if(result.value || result.pending)
   {
     *generate_count += !result.pending;
@@ -129,7 +129,7 @@ static struct block_group_future load_or_generate_block(ivec3_t position, const 
   return block_group_future_ready(NULL);
 }
 
-static void load_or_generate_blocks(const struct voxy_context *context)
+static void load_or_generate_blocks(void)
 {
   profile_begin();
 
@@ -142,7 +142,7 @@ static void load_or_generate_blocks(const struct voxy_context *context)
     if(hmgeti(block_group_nodes, position) != -1)
       continue;
 
-    struct block_group_future block_group_future = load_or_generate_block(position, context, &load_count, &generate_count);
+    struct block_group_future block_group_future = load_or_generate_block(position, &load_count, &generate_count);
     struct voxy_block_group *block_group;
     if((block_group = block_group_future.value))
     {
@@ -246,11 +246,11 @@ static void discard_blocks(void)
   profile_end("discard_count", tformat("%zu", discard_count));
 }
 
-void voxy_block_manager_update(const struct voxy_context *context)
+void voxy_block_manager_update(void)
 {
   profile_scope;
 
-  load_or_generate_blocks(context);
+  load_or_generate_blocks();
   flush_blocks();
   discard_blocks();
 }

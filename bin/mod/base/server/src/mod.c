@@ -133,7 +133,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
   return true;
 }
 
-void *mod_create_instance(struct voxy_context *context)
+int mod_init(struct voxy_context *context)
 {
   voxy_set_generate_block(generate_block);
 
@@ -196,7 +196,7 @@ void *mod_create_instance(struct voxy_context *context)
 
   voxy_set_on_new_player(on_new_player);
 
-  return NULL;
+  return 0;
 }
 
 void mod_destroy_instance(struct voxy_context *context, void *instance)

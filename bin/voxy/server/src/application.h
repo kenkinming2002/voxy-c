@@ -3,12 +3,9 @@
 
 #include <libnet/server.h>
 
-#include "mod/manager.h"
-
 struct application
 {
   libnet_server_t server;
-  struct mod_manager mod_manager;
 };
 
 /// Initialize/finalize application.

@@ -259,7 +259,6 @@ int main()
         "player/player",
         "player/manager",
         "mod/mod",
-        "mod/manager",
       ),
       .pkg_configs = STRINGS(
         "sqlite3",

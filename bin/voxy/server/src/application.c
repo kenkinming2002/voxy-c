@@ -14,6 +14,8 @@
 
 #include "player/manager.h"
 
+#include "mod/mod.h"
+
 #include <voxy/server/context.h>
 
 #include <libcore/log.h>
@@ -42,20 +44,13 @@ int application_init(struct application *application, int argc, char *argv[])
 
   voxy_block_database_init(argv[4]);
   voxy_block_generator_init(argv[4]);
-
   voxy_entity_database_init(argv[4]);
-
-  mod_manager_init(&application->mod_manager);
 
   struct voxy_context context = application_get_context(application);
   for(int i=5; i<argc; ++i)
-    if(mod_manager_load(&application->mod_manager, argv[i], &context) != 0)
-      goto error2;
+    mod_load(argv[i], &context);
 
   return 0;
-
-error2:
-  mod_manager_fini(&application->mod_manager, &context);
 
   libnet_server_destroy(application->server);
 error0:
@@ -64,8 +59,6 @@ error0:
 
 void application_fini(struct application *application)
 {
-  struct voxy_context context = application_get_context(application);
-  mod_manager_fini(&application->mod_manager, &context);
   libnet_server_destroy(application->server);
 }
 

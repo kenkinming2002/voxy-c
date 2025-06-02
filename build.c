@@ -254,7 +254,6 @@ int main()
         "chunk/entity/entity",
         "chunk/entity/allocator",
         "chunk/entity/manager",
-        "application",
         "main",
         "player/player",
         "player/manager",

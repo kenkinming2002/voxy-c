@@ -2,6 +2,7 @@
 
 #include <voxy/server/registry/block.h>
 
+#include "chunk/block/generator.h"
 #include "chunk/coordinates.h"
 #include "chunk/manager.h"
 
@@ -105,13 +106,13 @@ bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *
   return block_group ? voxy_block_group_set_block_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp) : false;
 }
 
-static struct block_group_future load_or_generate_block(ivec3_t position, struct voxy_block_database *block_database, const struct voxy_context *context, size_t *load_count, size_t *generate_count)
+static struct block_group_future load_or_generate_block(ivec3_t position, const struct voxy_context *context, size_t *load_count, size_t *generate_count)
 {
   profile_scope;
 
   struct block_group_future result;
 
-  result = voxy_block_database_load(block_database, position);
+  result = voxy_block_database_load(position);
   if(result.value || result.pending)
   {
     *load_count += !result.pending;
@@ -128,7 +129,7 @@ static struct block_group_future load_or_generate_block(ivec3_t position, struct
   return block_group_future_ready(NULL);
 }
 
-static void load_or_generate_blocks(struct voxy_block_database *block_database, const struct voxy_context *context)
+static void load_or_generate_blocks(const struct voxy_context *context)
 {
   profile_begin();
 
@@ -141,7 +142,7 @@ static void load_or_generate_blocks(struct voxy_block_database *block_database, 
     if(hmgeti(block_group_nodes, position) != -1)
       continue;
 
-    struct block_group_future block_group_future = load_or_generate_block(position, block_database, context, &load_count, &generate_count);
+    struct block_group_future block_group_future = load_or_generate_block(position, context, &load_count, &generate_count);
     struct voxy_block_group *block_group;
     if((block_group = block_group_future.value))
     {
@@ -173,7 +174,7 @@ static void load_or_generate_blocks(struct voxy_block_database *block_database, 
               "total_count", tformat("%zu", load_count + generate_count));
 }
 
-static void flush_blocks(struct voxy_block_database *block_database, libnet_server_t server)
+static void flush_blocks(libnet_server_t server)
 {
   profile_begin();
 
@@ -187,7 +188,7 @@ static void flush_blocks(struct voxy_block_database *block_database, libnet_serv
 
     if(block_group->disk_dirty)
     {
-      struct unit_future result = voxy_block_database_save(block_database, position, block_group);
+      struct unit_future result = voxy_block_database_save(position, block_group);
       if(!result.pending)
       {
         block_group->disk_dirty = false;
@@ -245,12 +246,12 @@ static void discard_blocks(libnet_server_t server)
   profile_end("discard_count", tformat("%zu", discard_count));
 }
 
-void voxy_block_manager_update(struct voxy_block_database *block_database, libnet_server_t server, const struct voxy_context *context)
+void voxy_block_manager_update(libnet_server_t server, const struct voxy_context *context)
 {
   profile_scope;
 
-  load_or_generate_blocks(block_database, context);
-  flush_blocks(block_database, server);
+  load_or_generate_blocks(context);
+  flush_blocks(server);
   discard_blocks(server);
 }
 

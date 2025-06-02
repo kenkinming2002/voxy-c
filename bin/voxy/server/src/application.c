@@ -3,6 +3,7 @@
 
 #include "chunk/manager.h"
 #include "chunk/block/manager.h"
+#include "chunk/block/database.h"
 #include "chunk/block/generator.h"
 #include "chunk/entity/allocator.h"
 #include "chunk/entity/manager.h"
@@ -39,7 +40,7 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_server_set_on_client_disconnected(application->server, application_on_client_disconnected);
   libnet_server_set_on_message_received(application->server, application_on_message_received);
 
-  voxy_block_database_init(&application->block_database, argv[4]);
+  voxy_block_database_init(argv[4]);
   voxy_block_generator_init(argv[4]);
 
   voxy_entity_database_init(argv[4]);
@@ -56,8 +57,6 @@ int application_init(struct application *application, int argc, char *argv[])
 error2:
   mod_manager_fini(&application->mod_manager, &context);
 
-  voxy_block_database_fini(&application->block_database);
-
   libnet_server_destroy(application->server);
 error0:
   return -1;
@@ -67,9 +66,6 @@ void application_fini(struct application *application)
 {
   struct voxy_context context = application_get_context(application);
   mod_manager_fini(&application->mod_manager, &context);
-
-  voxy_block_database_fini(&application->block_database);
-
   libnet_server_destroy(application->server);
 }
 
@@ -113,8 +109,8 @@ void application_on_update(libnet_server_t server)
   physics_update(FIXED_DT);
   light_update();
 
-  voxy_block_database_update(&application->block_database);
-  voxy_block_manager_update(&application->block_database, application->server, &context);
+  voxy_block_database_update();
+  voxy_block_manager_update(application->server, &context);
   voxy_entity_manager_update(application->server);
 }
 

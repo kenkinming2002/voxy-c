@@ -1,16 +1,10 @@
 #ifndef CHUNK_BLOCK_MANAGER_H
 #define CHUNK_BLOCK_MANAGER_H
 
+#include <voxy/server/context.h>
 #include <voxy/server/chunk/block/manager.h>
 
-#include "group.h"
-#include "database.h"
-#include "generator.h"
-
 #include <libnet/server.h>
-
-struct voxy_block_registry;
-struct voxy_light_manager;
 
 /// Atomic getters/setters.
 ///
@@ -28,7 +22,7 @@ struct voxy_light_manager;
 bool voxy_block_manager_get_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
-void voxy_block_manager_update(struct voxy_block_database *block_database, libnet_server_t server, const struct voxy_context *context);
+void voxy_block_manager_update(libnet_server_t server, const struct voxy_context *context);
 
 void voxy_block_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy);
 

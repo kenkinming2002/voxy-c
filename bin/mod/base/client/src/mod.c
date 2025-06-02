@@ -1,5 +1,3 @@
-#include <voxy/client/context.h>
-
 #include <voxy/client/registry/block.h>
 #include <voxy/client/registry/entity.h>
 
@@ -29,7 +27,7 @@ static void test_render(const struct voxy_entity *entity, const struct camera *c
   render(camera, &mesh, &texture, transform, 1.0f);
 }
 
-int mod_init(struct voxy_context *context)
+int mod_init(void)
 {
   voxy_register_block((struct voxy_block_info){
     .mod = "base",

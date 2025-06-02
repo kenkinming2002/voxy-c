@@ -39,7 +39,7 @@ static void init(int argc, char *argv[])
   main_camera_init();
 
   for(int i=4; i<argc; ++i)
-    mod_load(argv[i], NULL);
+    mod_load(argv[i]);
 
   world_renderer_init();
 

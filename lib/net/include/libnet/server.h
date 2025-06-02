@@ -12,9 +12,6 @@ typedef struct libnet_client_proxy *libnet_client_proxy_t;
 void libnet_client_proxy_set_opaque(libnet_client_proxy_t client_proxy, void *opaque);
 void *libnet_client_proxy_get_opaque(libnet_client_proxy_t client_proxy);
 
-/// Server type.
-typedef struct libnet_server *libnet_server_t;
-
 /// Create a libnet server.
 ///
 /// The provided service name has the same semantic as the parameter to
@@ -28,41 +25,41 @@ typedef struct libnet_server *libnet_server_t;
 ///
 /// The certficiate parameter is path to the server certificate used for TLS
 /// connection.
-libnet_server_t libnet_server_create(const char *service, const char *cert, const char *key, unsigned long long nsec);
+void libnet_server_init(const char *service, const char *cert, const char *key, unsigned long long nsec);
 
 /// Destroy a libnet server.
-void libnet_server_destroy(libnet_server_t server);
+void libnet_server_deinit(void);
 
 /// Opaque pointer.
-void libnet_server_set_opaque(libnet_server_t server, void *opaque);
-void *libnet_server_get_opaque(libnet_server_t server);
+void libnet_server_set_opaque(void *opaque);
+void *libnet_server_get_opaque(void);
 
 /// Event callbacks.
-typedef void(*libnet_server_on_update)(libnet_server_t server);
-typedef void(*libnet_server_on_client_connected_t)(libnet_server_t server, libnet_client_proxy_t client_proxy);
-typedef void(*libnet_server_on_client_disconnected_t)(libnet_server_t server, libnet_client_proxy_t client_proxy);
-typedef void(*libnet_server_on_message_received_t)(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message);
+typedef void(*libnet_server_on_update)(void);
+typedef void(*libnet_server_on_client_connected_t)(libnet_client_proxy_t client_proxy);
+typedef void(*libnet_server_on_client_disconnected_t)(libnet_client_proxy_t client_proxy);
+typedef void(*libnet_server_on_message_received_t)(libnet_client_proxy_t client_proxy, const struct libnet_message *message);
 
 /// Event callbacks setters.
-void libnet_server_set_on_update(libnet_server_t server, libnet_server_on_update cb);
-void libnet_server_set_on_client_connected(libnet_server_t server, libnet_server_on_client_connected_t cb);
-void libnet_server_set_on_client_disconnected(libnet_server_t server, libnet_server_on_client_disconnected_t cb);
-void libnet_server_set_on_message_received(libnet_server_t server, libnet_server_on_message_received_t cb);
+void libnet_server_set_on_update(libnet_server_on_update cb);
+void libnet_server_set_on_client_connected(libnet_server_on_client_connected_t cb);
+void libnet_server_set_on_client_disconnected(libnet_server_on_client_disconnected_t cb);
+void libnet_server_set_on_message_received(libnet_server_on_message_received_t cb);
 
 /// Run the server.
-void libnet_server_run(libnet_server_t server);
+void libnet_server_run(void);
 
 /// Execute a callback on each currently connected client.
-void libnet_server_foreach_client(libnet_server_t server, void(*cb)(libnet_server_t server, libnet_client_proxy_t client, void *data), void *data);
+void libnet_server_foreach_client(void(*cb)(libnet_client_proxy_t client, void *data), void *data);
 
 /// Send a message to all connected clients.
 ///
 /// TODO: Determine if this should block/Determine a buffering strategy.
-void libnet_server_send_message_all(libnet_server_t server, const struct libnet_message *message);
+void libnet_server_send_message_all(const struct libnet_message *message);
 
 /// Send a message to the given client.
 ///
 /// TODO: Determine if this should block/Determine a buffering strategy.
-void libnet_server_send_message(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message);
+void libnet_server_send_message(libnet_client_proxy_t client_proxy, const struct libnet_message *message);
 
 #endif // LIBNET_SERVER_H

@@ -30,7 +30,7 @@ void main_camera_update(void)
   }
 }
 
-void main_camera_on_message_received(libnet_client_t client, const struct libnet_message *_message)
+void main_camera_on_message_received(const struct libnet_message *_message)
 {
   struct voxy_server_camera_follow_entity_message *message = voxy_get_server_camera_follow_entity_message(_message);
   if(message)

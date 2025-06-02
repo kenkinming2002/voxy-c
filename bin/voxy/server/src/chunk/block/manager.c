@@ -174,7 +174,7 @@ static void load_or_generate_blocks(const struct voxy_context *context)
               "total_count", tformat("%zu", load_count + generate_count));
 }
 
-static void flush_blocks(libnet_server_t server)
+static void flush_blocks(void)
 {
   profile_begin();
 
@@ -198,7 +198,7 @@ static void flush_blocks(libnet_server_t server)
 
     if(block_group->network_dirty)
     {
-      voxy_block_network_update(position, block_group, server);
+      voxy_block_network_update(position, block_group);
       block_group->network_dirty = false;
       send_count += 1;
     }
@@ -211,7 +211,7 @@ static void flush_blocks(libnet_server_t server)
               "save_count", tformat("%zu", save_count));
 }
 
-static void discard_blocks(libnet_server_t server)
+static void discard_blocks(void)
 {
   profile_begin();
 
@@ -229,7 +229,7 @@ static void discard_blocks(libnet_server_t server)
         if(block_group->neighbours[direction])
           block_group->neighbours[direction]->neighbours[direction_reverse(direction)] = NULL;
 
-      voxy_block_network_remove(position, server);
+      voxy_block_network_remove(position);
       voxy_block_group_destroy(block_group);
 
       discard_count += 1;
@@ -246,16 +246,16 @@ static void discard_blocks(libnet_server_t server)
   profile_end("discard_count", tformat("%zu", discard_count));
 }
 
-void voxy_block_manager_update(libnet_server_t server, const struct voxy_context *context)
+void voxy_block_manager_update(const struct voxy_context *context)
 {
   profile_scope;
 
   load_or_generate_blocks(context);
-  flush_blocks(server);
-  discard_blocks(server);
+  flush_blocks();
+  discard_blocks();
 }
 
-void voxy_block_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void voxy_block_manager_on_client_connected(libnet_client_proxy_t client_proxy)
 {
   for(ptrdiff_t i=0; i<hmlen(block_group_nodes); ++i)
   {
@@ -268,6 +268,6 @@ void voxy_block_manager_on_client_connected(libnet_server_t server, libnet_clien
     message.position = position;
     memcpy(&message.block_ids, &block_group->ids, sizeof block_group->ids);
     memcpy(&message.block_light_levels, &block_group->light_levels, sizeof block_group->light_levels);
-    libnet_server_send_message(server, client_proxy, &message.message.message);
+    libnet_server_send_message(client_proxy, &message.message.message);
   }
 }

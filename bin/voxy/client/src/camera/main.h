@@ -8,7 +8,7 @@
 
 void main_camera_init(void);
 void main_camera_update(void);
-void main_camera_on_message_received(libnet_client_t client, const struct libnet_message *_message);
+void main_camera_on_message_received(const struct libnet_message *_message);
 
 struct camera get_main_camera(void);
 entity_handle_t get_main_camera_target(void);

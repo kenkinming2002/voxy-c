@@ -24,7 +24,7 @@ struct loaded_chunk
 
 static struct loaded_chunk *loaded_chunks;
 
-void voxy_entity_manager_start(libnet_server_t server)
+void voxy_entity_manager_start(void)
 {
   int64_t *db_ids;
   if(voxy_entity_database_load_active(&db_ids) != 0)
@@ -46,7 +46,7 @@ void voxy_entity_manager_start(libnet_server_t server)
       continue;
     }
 
-    voxy_entity_create(entity.db_id, entity.id, entity.position, entity.rotation, entity.opaque, server);
+    voxy_entity_create(entity.db_id, entity.id, entity.position, entity.rotation, entity.opaque);
   }
 
   arrfree(db_ids);
@@ -54,14 +54,14 @@ void voxy_entity_manager_start(libnet_server_t server)
 hack:
 
   for(unsigned i=0; i<100; ++i)
-    voxy_entity_spawn(1, fvec3(i, i, i), fvec3(i, i, i), NULL, server);
+    voxy_entity_spawn(1, fvec3(i, i, i), fvec3(i, i, i), NULL);
 }
 
 /// Create entity.
 ///
 /// This takes care of allocating the entity and synchronizing the new state
 /// over the network.
-entity_handle_t voxy_entity_create(int64_t db_id, voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
+entity_handle_t voxy_entity_create(int64_t db_id, voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque)
 {
   entity_handle_t handle = entity_alloc();
 
@@ -73,7 +73,7 @@ entity_handle_t voxy_entity_create(int64_t db_id, voxy_entity_id_t id, fvec3_t p
   entity->velocity = fvec3_zero();
   entity->grounded = false;
   entity->opaque = opaque;
-  voxy_entity_network_update_all(handle, entity, server);
+  voxy_entity_network_update_all(handle, entity);
 
   return handle;
 }
@@ -82,13 +82,13 @@ entity_handle_t voxy_entity_create(int64_t db_id, voxy_entity_id_t id, fvec3_t p
 ///
 /// This takes care of deallocating the entity and synchronizing the new state
 /// over the network.
-void voxy_entity_destroy(entity_handle_t handle, libnet_server_t server)
+void voxy_entity_destroy(entity_handle_t handle)
 {
-  voxy_entity_network_remove_all(handle, server);
+  voxy_entity_network_remove_all(handle);
   entity_free(handle);
 }
 
-static void load_entities(libnet_server_t server)
+static void load_entities(void)
 {
   profile_scope;
 
@@ -126,7 +126,7 @@ static void load_entities(libnet_server_t server)
           continue;
         }
 
-        voxy_entity_create(entity.db_id, entity.id, entity.position, entity.rotation, entity.opaque, server);
+        voxy_entity_create(entity.db_id, entity.id, entity.position, entity.rotation, entity.opaque);
         load_count += 1;
       }
 
@@ -138,7 +138,7 @@ static void load_entities(libnet_server_t server)
     LOG_INFO("Entity Manager: Loaded %zu entities", load_count);
 }
 
-static void discard_entities(libnet_server_t server)
+static void discard_entities(void)
 {
   profile_scope;
 
@@ -167,7 +167,7 @@ static void discard_entities(libnet_server_t server)
       continue;
 
     if(voxy_entity_database_commit(entity->db_id, chunk_position) != 0) LOG_WARN("Failed to commit active entity for chunk at (%d, %d, %d). Continuing anyway...", chunk_position.x, chunk_position.y, chunk_position.z);
-    voxy_entity_destroy(handle, server);
+    voxy_entity_destroy(handle);
 
     discard_count += 1;
   }
@@ -176,7 +176,7 @@ static void discard_entities(libnet_server_t server)
     LOG_INFO("Entity Manager: Discarded %zu entities", discard_count);
 }
 
-static void flush_entities(libnet_server_t server)
+static void flush_entities(void)
 {
   profile_scope;
 
@@ -187,50 +187,50 @@ static void flush_entities(libnet_server_t server)
     if(entity->alive)
     {
       voxy_entity_database_save(entity);
-      voxy_entity_network_update_all(handle, entity, server);
+      voxy_entity_network_update_all(handle, entity);
     }
   }
 }
 
-void voxy_entity_manager_update(libnet_server_t server)
+void voxy_entity_manager_update(void)
 {
   profile_scope;
 
   if(voxy_entity_database_begin_transaction() != 0) LOG_ERROR("Failed to begin transaction");
   {
-    load_entities(server);
-    flush_entities(server);
-    discard_entities(server);
+    load_entities();
+    flush_entities();
+    discard_entities();
   }
   if(voxy_entity_database_end_transaction() != 0) LOG_ERROR("Failed to begin transaction");
 }
 
-void voxy_entity_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void voxy_entity_manager_on_client_connected(libnet_client_proxy_t client_proxy)
 {
   struct voxy_entity *entities = entity_get_all();
   for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
   {
     const struct voxy_entity *entity = &entities[handle];
     if(entity->alive)
-      voxy_entity_network_update(handle, entity, server, client_proxy);
+      voxy_entity_network_update(handle, entity, client_proxy);
   }
 }
 
-entity_handle_t voxy_entity_spawn(voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
+entity_handle_t voxy_entity_spawn(voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque)
 {
   // FIXME: We use 0 as placeholder for db_id, before we call
   //        voxy_entity_database_create() to hopefully get a real entity->db_id.
   //        This can have all sort of unexpected consequences if
   //        voxy_entity_database_create() failed.
-  entity_handle_t handle = voxy_entity_create(0, id, position, rotation, opaque, server);
+  entity_handle_t handle = voxy_entity_create(0, id, position, rotation, opaque);
   if(voxy_entity_database_create(voxy_entity_get(handle)) != 0) LOG_WARN("Failed to create entity in database. Continuing anyway...");
   return handle;
 }
 
-void voxy_entity_despawn(entity_handle_t handle, libnet_server_t server)
+void voxy_entity_despawn(entity_handle_t handle)
 {
   if(voxy_entity_database_destroy(voxy_entity_get(handle)) != 0) LOG_WARN("Failed to destroy entity in database. Continuing anyway...");
-  voxy_entity_destroy(handle, server);
+  voxy_entity_destroy(handle);
 }
 
 struct voxy_entity *voxy_entity_get(entity_handle_t handle)

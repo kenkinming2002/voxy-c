@@ -31,18 +31,16 @@ int application_init(struct application *application, int argc, char *argv[])
   }
 
   window_init("client", 1024, 720);
-
-  if(!(application->client = libnet_client_create(argv[1], argv[2])))
-    return -1;
+  libnet_client_init(argv[1], argv[2]);
 
   struct voxy_client_login_message *message = alloca(sizeof *message + strlen(argv[3]));
   message->message.tag = VOXY_CLIENT_MESSAGE_LOGIN;
   message->message.message.size = LIBNET_MESSAGE_SIZE(*message) + strlen(argv[3]);
   memcpy(message->player_name, argv[3], strlen(argv[3]));
-  libnet_client_send_message(application->client, &message->message.message);
+  libnet_client_send_message(&message->message.message);
 
-  libnet_client_set_opaque(application->client, application);
-  libnet_client_set_on_message_received(application->client, application_on_message_received);
+  libnet_client_set_opaque(application);
+  libnet_client_set_on_message_received(application_on_message_received);
 
   main_camera_init();
 
@@ -63,13 +61,13 @@ struct voxy_context application_get_context(struct application *application)
 
 void application_fini(struct application *application)
 {
-  libnet_client_destroy(application->client);
+  libnet_client_deinit();
 }
 
 static void application_update_network(struct application *application)
 {
   profile_scope;
-  libnet_client_update(application->client);
+  libnet_client_update();
 }
 
 static void application_update(struct application *application)
@@ -80,7 +78,7 @@ static void application_update(struct application *application)
 
   application_update_network(application);
 
-  input_update(application->client);
+  input_update();
   main_camera_update();
 
   world_renderer_update();
@@ -105,11 +103,11 @@ void application_run(struct application *application)
     application_update(application);
 }
 
-void application_on_message_received(libnet_client_t client, const struct libnet_message *message)
+void application_on_message_received(const struct libnet_message *message)
 {
-  struct application *application = libnet_client_get_opaque(client);
-  main_camera_on_message_received(client, message);
-  block_manager_on_message_received(client, message);
-  entity_manager_on_message_received(client, message);
+  struct application *application = libnet_client_get_opaque();
+  main_camera_on_message_received(message);
+  block_manager_on_message_received(message);
+  entity_manager_on_message_received(message);
 }
 

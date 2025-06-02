@@ -23,7 +23,7 @@ struct state
 
 static struct state state;
 
-void input_update(libnet_client_t client)
+void input_update(void)
 {
   const uint8_t key_left = input_state(KEY_A);
   const uint8_t key_right = input_state(KEY_D);
@@ -107,7 +107,7 @@ void input_update(libnet_client_t client)
 
     message.mouse_motion = mouse_motion;
 
-    libnet_client_send_message(client, &message.message.message);
+    libnet_client_send_message(&message.message.message);
   }
 }
 

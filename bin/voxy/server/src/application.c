@@ -33,14 +33,13 @@ int application_init(struct application *application, int argc, char *argv[])
     return -1;
   }
 
-  if(!(application->server = libnet_server_create(argv[1], argv[2], argv[3], FIXED_DT * 1e9)))
-    goto error0;
+  libnet_server_init(argv[1], argv[2], argv[3], FIXED_DT * 1e9);
 
-  libnet_server_set_opaque(application->server, application);
-  libnet_server_set_on_update(application->server, application_on_update);
-  libnet_server_set_on_client_connected(application->server, application_on_client_connected);
-  libnet_server_set_on_client_disconnected(application->server, application_on_client_disconnected);
-  libnet_server_set_on_message_received(application->server, application_on_message_received);
+  libnet_server_set_opaque(application);
+  libnet_server_set_on_update(application_on_update);
+  libnet_server_set_on_client_connected(application_on_client_connected);
+  libnet_server_set_on_client_disconnected(application_on_client_disconnected);
+  libnet_server_set_on_message_received(application_on_message_received);
 
   voxy_block_database_init(argv[4]);
   voxy_block_generator_init(argv[4]);
@@ -51,37 +50,30 @@ int application_init(struct application *application, int argc, char *argv[])
     mod_load(argv[i], &context);
 
   return 0;
-
-  libnet_server_destroy(application->server);
-error0:
-  return -1;
 }
 
 void application_fini(struct application *application)
 {
-  libnet_server_destroy(application->server);
+  libnet_server_deinit();
 }
 
 struct voxy_context application_get_context(struct application *application)
 {
   struct voxy_context context;
-
-  context.server = application->server;
-
   return context;
 }
 
 void application_run(struct application *application)
 {
-  voxy_entity_manager_start(application->server);
-  libnet_server_run(application->server);
+  voxy_entity_manager_start();
+  libnet_server_run();
 }
 
-void application_on_update(libnet_server_t server)
+void application_on_update(void)
 {
   profile_scope;
 
-  struct application *application = libnet_server_get_opaque(server);
+  struct application *application = libnet_server_get_opaque();
 
   const struct voxy_context context = application_get_context(application);
 
@@ -96,33 +88,33 @@ void application_on_update(libnet_server_t server)
 
     struct voxy_entity_info info = voxy_query_entity(entity->id);
     if(info.update && !info.update(entity, FIXED_DT, &context))
-      voxy_entity_despawn(handle, server);
+      voxy_entity_despawn(handle);
   }
 
   physics_update(FIXED_DT);
   light_update();
 
   voxy_block_database_update();
-  voxy_block_manager_update(application->server, &context);
-  voxy_entity_manager_update(application->server);
+  voxy_block_manager_update(&context);
+  voxy_entity_manager_update();
 }
 
-void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void application_on_client_connected(libnet_client_proxy_t client_proxy)
 {
-  voxy_block_manager_on_client_connected(server, client_proxy);
-  voxy_entity_manager_on_client_connected(server, client_proxy);
-  voxy_player_manager_on_client_connected(server, client_proxy);
+  voxy_block_manager_on_client_connected(client_proxy);
+  voxy_entity_manager_on_client_connected(client_proxy);
+  voxy_player_manager_on_client_connected(client_proxy);
 }
 
-void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void application_on_client_disconnected(libnet_client_proxy_t client_proxy)
 {
-  voxy_player_manager_on_client_disconnected(server, client_proxy);
+  voxy_player_manager_on_client_disconnected(client_proxy);
 }
 
-void application_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)
+void application_on_message_received(libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
-  struct application *application = libnet_server_get_opaque(server);
+  struct application *application = libnet_server_get_opaque();
   const struct voxy_context context = application_get_context(application);
-  voxy_player_manager_on_message_received(server, client_proxy, message, &context);
+  voxy_player_manager_on_message_received(client_proxy, message, &context);
 }
 

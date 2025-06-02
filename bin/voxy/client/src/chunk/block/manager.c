@@ -48,7 +48,7 @@ void block_manager_remove_block_group(ivec3_t chunk_position)
   hmdel(block_group_nodes, chunk_position);
 }
 
-void block_manager_on_message_received(libnet_client_t client, const struct libnet_message *_message)
+void block_manager_on_message_received(const struct libnet_message *_message)
 {
   {
     const struct voxy_server_block_group_update_message *message = voxy_get_server_block_group_update_message(_message);

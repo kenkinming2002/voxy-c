@@ -10,10 +10,8 @@
 
 static struct voxy_entity *entities;
 
-void entity_manager_on_message_received(libnet_client_t client, const struct libnet_message *_message)
+void entity_manager_on_message_received(const struct libnet_message *_message)
 {
-  (void)client;
-
   {
     struct voxy_server_entity_update_message *message = voxy_get_server_entity_update_message(_message);
     if(message)

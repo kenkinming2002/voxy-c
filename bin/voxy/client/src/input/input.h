@@ -4,6 +4,6 @@
 #include <libnet/client.h>
 #include <stdint.h>
 
-void input_update(libnet_client_t client);
+void input_update(void);
 
 #endif // INPUT_MANAGER_H

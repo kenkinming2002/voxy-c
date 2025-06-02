@@ -17,19 +17,19 @@ void voxy_set_on_new_player(voxy_on_new_player _on_new_player)
   on_new_player = _on_new_player;
 }
 
-void voxy_player_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void voxy_player_manager_on_client_connected(libnet_client_proxy_t client_proxy)
 {
-  struct voxy_player *player = voxy_player_create(server, client_proxy);
+  struct voxy_player *player = voxy_player_create(client_proxy);
   libnet_client_proxy_set_opaque(client_proxy, player);
 }
 
-void voxy_player_manager_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
+void voxy_player_manager_on_client_disconnected(libnet_client_proxy_t client_proxy)
 {
   struct voxy_player *player = libnet_client_proxy_get_opaque(client_proxy);
   voxy_player_put(player);
 }
 
-void voxy_player_manager_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *_message, const struct voxy_context *context)
+void voxy_player_manager_on_message_received(libnet_client_proxy_t client_proxy, const struct libnet_message *_message, const struct voxy_context *context)
 {
   {
     const struct voxy_client_login_message *message = voxy_get_client_login_message(_message);

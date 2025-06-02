@@ -5,7 +5,6 @@
 
 struct application
 {
-  libnet_client_t client;
 };
 
 /// Initialize/finalize application.
@@ -19,6 +18,6 @@ struct voxy_context application_get_context(struct application *application);
 void application_run(struct application *application);
 
 /// Network callback.
-void application_on_message_received(libnet_client_t client, const struct libnet_message *message);
+void application_on_message_received(const struct libnet_message *message);
 
 #endif // APPLICATION_H

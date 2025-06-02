@@ -22,8 +22,8 @@
 bool voxy_block_manager_get_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
-void voxy_block_manager_update(libnet_server_t server, const struct voxy_context *context);
+void voxy_block_manager_update(const struct voxy_context *context);
 
-void voxy_block_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy);
+void voxy_block_manager_on_client_connected(libnet_client_proxy_t client_proxy);
 
 #endif // CHUNK_BLOCK_MANAGER_H

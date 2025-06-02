@@ -7,14 +7,13 @@
 
 #include <stdlib.h>
 
-struct voxy_player *voxy_player_create(libnet_server_t server, libnet_client_proxy_t client_proxy)
+struct voxy_player *voxy_player_create(libnet_client_proxy_t client_proxy)
 {
   struct voxy_player *player = malloc(sizeof *player);
 
   player->count = 1;
   player->weak_count = 0;
 
-  player->server = server;
   player->client_proxy = client_proxy;
 
   player->name = NULL;
@@ -78,7 +77,7 @@ void voxy_player_set_camera_follow_entity(struct voxy_player *player, entity_han
   message.message.message.size = LIBNET_MESSAGE_SIZE(message);
   message.message.tag = VOXY_SERVER_MESSAGE_CAMERA_FOLLOW_ENTITY;
   message.handle = handle;
-  libnet_server_send_message(player->server, player->client_proxy, &message.message.message);
+  libnet_server_send_message(player->client_proxy, &message.message.message);
 }
 
 fvec3_t voxy_player_get_movement_input(struct voxy_player *player)

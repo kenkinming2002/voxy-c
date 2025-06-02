@@ -1,16 +1,18 @@
 #include "entity.h"
 #include "camera/main.h"
+#include "chunk/entity/manager.h"
 
 #include <stb_ds.h>
 
 #include <stdbool.h>
 
-void entity_renderer_render(struct entity_manager *entity_manager)
+void entity_renderer_render(void)
 {
-  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->entities); ++handle)
+  struct voxy_entity *entities = entity_get_all();
+  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
     if(handle != get_main_camera_target())
     {
-      const struct voxy_entity *entity = &entity_manager->entities[handle];
+      const struct voxy_entity *entity = &entities[handle];
       if(entity->alive)
       {
         const struct voxy_entity_info info = voxy_query_entity(entity->id);

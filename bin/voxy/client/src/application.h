@@ -5,8 +5,6 @@
 
 #include "input/manager.h"
 
-#include "chunk/entity/manager.h"
-
 #include "render/world.h"
 
 #include "mod/manager.h"
@@ -16,8 +14,6 @@ struct application
   libnet_client_t client;
 
   struct input_manager input_manager;
-
-  struct entity_manager entity_manager;
 
   struct mod_manager mod_manager;
 

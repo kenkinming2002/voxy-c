@@ -16,6 +16,6 @@ int world_renderer_init(struct world_renderer *world_renderer);
 void world_renderer_fini(struct world_renderer *world_renderer);
 
 void world_renderer_update(struct world_renderer *world_renderer);
-void world_renderer_render(struct world_renderer *world_renderer, struct entity_manager *entity_manager);
+void world_renderer_render(struct world_renderer *world_renderer);
 
 #endif // RENDER_WORLD_H

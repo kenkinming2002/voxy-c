@@ -3,8 +3,6 @@
 
 #include <voxy/client/registry/entity.h>
 
-#include "chunk/entity/manager.h"
-
-void entity_renderer_render(struct entity_manager *entity_manager);
+void entity_renderer_render(void);
 
 #endif // RENDER_ENTITY_ENTITY_H

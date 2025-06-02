@@ -19,12 +19,12 @@ void main_camera_init(void)
   target = ENTITY_HANDLE_NULL;
 }
 
-void main_camera_update(struct entity_manager *entity_manager)
+void main_camera_update(void)
 {
   camera.aspect = (float)window_size.x / (float)window_size.y;
   if(target != ENTITY_HANDLE_NULL)
   {
-    const struct voxy_entity *entity = entity_manager_get(entity_manager, target);
+    const struct voxy_entity *entity = entity_get(target);
     camera.transform.translation = entity->position;
     camera.transform.rotation = entity->rotation;
   }

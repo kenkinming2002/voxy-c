@@ -45,9 +45,6 @@ int application_init(struct application *application, int argc, char *argv[])
     goto error1;
 
   main_camera_init();
-
-  entity_manager_init(&application->entity_manager);
-
   mod_manager_init(&application->mod_manager);
 
   struct voxy_context context = application_get_context(application);
@@ -62,7 +59,6 @@ int application_init(struct application *application, int argc, char *argv[])
 
 error5:
   mod_manager_fini(&application->mod_manager, &context);
-  entity_manager_fini(&application->entity_manager);
   input_manager_fini(&application->input_manager);
 error1:
   libnet_client_destroy(application->client);
@@ -82,7 +78,6 @@ void application_fini(struct application *application)
 
   world_renderer_fini(&application->world_renderer);
   mod_manager_fini(&application->mod_manager, &context);
-  entity_manager_fini(&application->entity_manager);
   input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
 }
@@ -102,9 +97,8 @@ static void application_update(struct application *application)
   application_update_network(application);
 
   input_manager_update(&application->input_manager, application->client);
-  main_camera_update(&application->entity_manager);
+  main_camera_update();
 
-  entity_manager_update(&application->entity_manager);
   world_renderer_update(&application->world_renderer);
 
   ui_manager_update();
@@ -113,7 +107,7 @@ static void application_update(struct application *application)
   glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  world_renderer_render(&application->world_renderer, &application->entity_manager);
+  world_renderer_render(&application->world_renderer);
   render_end();
 
   ui_render();
@@ -132,6 +126,6 @@ void application_on_message_received(libnet_client_t client, const struct libnet
   struct application *application = libnet_client_get_opaque(client);
   main_camera_on_message_received(client, message);
   block_manager_on_message_received(client, message);
-  entity_manager_on_message_received(&application->entity_manager, client, message);
+  entity_manager_on_message_received(client, message);
 }
 

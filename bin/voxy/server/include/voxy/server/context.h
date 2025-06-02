@@ -3,8 +3,6 @@
 
 #include "chunk/block/manager.h"
 
-#include "chunk/entity/database.h"
-
 #include "player/manager.h"
 
 #include "light/manager.h"
@@ -15,8 +13,6 @@
 struct voxy_context
 {
   libnet_server_t server;
-
-  struct voxy_entity_database *entity_database;
 
   struct voxy_player_manager *player_manager;
 

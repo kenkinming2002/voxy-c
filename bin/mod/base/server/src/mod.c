@@ -54,7 +54,7 @@ static void on_new_player(struct voxy_player *player, const struct voxy_context 
   // FIXME: We need to load the player from disk.
   const fvec3_t position = fvec3(0.0f, 0.0f, 50.0f);
   const fvec3_t rotation = fvec3_zero();
-  const entity_handle_t handle = voxy_entity_spawn(context->entity_database, 0, position, rotation, voxy_player_get_weak(player), context->server);
+  const entity_handle_t handle = voxy_entity_spawn(0, position, rotation, voxy_player_get_weak(player), context->server);
   voxy_player_set_camera_follow_entity(player, handle);
 }
 

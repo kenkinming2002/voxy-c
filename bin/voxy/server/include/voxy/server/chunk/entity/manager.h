@@ -4,7 +4,6 @@
 #include <voxy/server/registry/entity.h>
 
 #include "entity.h"
-#include "database.h"
 
 #include <voxy/server/export.h>
 
@@ -16,8 +15,8 @@
 struct voxy_entity_manager;
 
 /// Spawn/despawn entity.
-VOXY_SERVER_EXPORT entity_handle_t voxy_entity_spawn(struct voxy_entity_database *entity_database, voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server);
-VOXY_SERVER_EXPORT void voxy_entity_despawn(struct voxy_entity_database *entity_database, entity_handle_t handle, libnet_server_t server);
+VOXY_SERVER_EXPORT entity_handle_t voxy_entity_spawn(voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server);
+VOXY_SERVER_EXPORT void voxy_entity_despawn(entity_handle_t handle, libnet_server_t server);
 
 /// Get pointer to entity from handle.
 ///

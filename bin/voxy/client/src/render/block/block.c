@@ -92,33 +92,36 @@ static void update_render_infos(struct block_renderer *block_renderer, struct vo
   for(int z = center.z - radius + 1; z <= center.z + radius - 1; ++z)
     for(int y = center.y - radius + 1; y <= center.y + radius - 1; ++y)
       for(int x = center.x - radius + 1; x <= center.x + radius - 1; ++x)
-      {
-        const ivec3_t position = ivec3(x, y, z);
-        if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
+        if(count < 25)
         {
-          struct block_group_node *block_group_node = hmgetp_null(block_manager->block_group_nodes, position);
-          if(!block_group_node)
-            continue;
-
-          struct block_group *block_group = block_group_node->value;
-
-          struct block_render_info_node *render_info_node = hmgetp_null(block_renderer->render_info_nodes, position);
-          if(!render_info_node)
+          const ivec3_t position = ivec3(x, y, z);
+          if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
           {
-            hmput(block_renderer->render_info_nodes, position, block_render_info_create());
-            render_info_node = hmgetp_null(block_renderer->render_info_nodes, position);
-          }
+            struct block_group_node *block_group_node = hmgetp_null(block_manager->block_group_nodes, position);
+            if(!block_group_node)
+              continue;
 
-          struct block_render_info *render_info = &render_info_node->value;
+            struct block_group *block_group = block_group_node->value;
+            bool remesh = block_group->remesh;
 
-          if(count < 25 && block_group->remesh)
-          {
-            block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
-            block_group->remesh = false;
-            count += 1;
+            struct block_render_info_node *render_info_node = hmgetp_null(block_renderer->render_info_nodes, position);
+            if(!render_info_node)
+            {
+              hmput(block_renderer->render_info_nodes, position, block_render_info_create());
+              render_info_node = hmgetp_null(block_renderer->render_info_nodes, position);
+              remesh = true;
+            }
+
+            if(remesh)
+            {
+              struct block_render_info *render_info = &render_info_node->value;
+              block_render_info_update(render_info, block_registry, block_renderer, position, block_group);
+              block_group->remesh = false;
+
+              count += 1;
+            }
           }
         }
-      }
 
   if(count != 0)
     LOG_INFO("Render: Updated render infos for %zu block groups", count);

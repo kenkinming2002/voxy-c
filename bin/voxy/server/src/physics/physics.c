@@ -6,6 +6,8 @@
 #include <voxy/server/registry/block.h>
 #include <voxy/server/registry/entity.h>
 
+#include <voxy/server/chunk/block/manager.h>
+
 #include <libmath/aabb.h>
 #include <libmath/direction.h>
 #include <libcore/log.h>
@@ -144,7 +146,7 @@ static void entity_update_physics(struct voxy_entity *entity, float dt)
   entity_physics_update_grounded(entity);
 }
 
-void physics_update(struct voxy_entity_manager *entity_manager, float dt)
+void physics_update(float dt)
 {
   profile_scope;
 

@@ -1,8 +1,10 @@
 #include "application.h"
 #include "config.h"
 
+#include "chunk/manager.h"
 #include "chunk/block/generator.h"
 #include "chunk/entity/allocator.h"
+#include "chunk/entity/manager.h"
 #include "physics/physics.h"
 
 #include <voxy/server/context.h>
@@ -34,7 +36,6 @@ int application_init(struct application *application, int argc, char *argv[])
   voxy_block_database_init(&application->block_database, argv[4]);
   voxy_block_generator_init(argv[4]);
 
-  voxy_entity_manager_init(&application->entity_manager);
   if(voxy_entity_database_init(&application->entity_database, argv[4]) != 0) goto error1;
   voxy_player_manager_init(&application->player_manager);
 
@@ -55,7 +56,6 @@ error2:
   voxy_player_manager_fini(&application->player_manager);
 error1:
   voxy_entity_database_fini(&application->entity_database);
-  voxy_entity_manager_fini(&application->entity_manager);
 
   voxy_block_database_fini(&application->block_database);
 
@@ -73,7 +73,6 @@ void application_fini(struct application *application)
 
   voxy_player_manager_fini(&application->player_manager);
   voxy_entity_database_fini(&application->entity_database);
-  voxy_entity_manager_fini(&application->entity_manager);
 
   voxy_block_database_fini(&application->block_database);
 
@@ -86,7 +85,6 @@ struct voxy_context application_get_context(struct application *application)
 
   context.server = application->server;
 
-  context.entity_manager = &application->entity_manager;
   context.entity_database = &application->entity_database;
 
   context.player_manager = &application->player_manager;
@@ -97,7 +95,7 @@ struct voxy_context application_get_context(struct application *application)
 
 void application_run(struct application *application)
 {
-  voxy_entity_manager_start(&application->entity_manager, &application->entity_database, application->server);
+  voxy_entity_manager_start(&application->entity_database, application->server);
   libnet_server_run(application->server);
 }
 
@@ -120,15 +118,15 @@ void application_on_update(libnet_server_t server)
 
     struct voxy_entity_info info = voxy_query_entity(entity->id);
     if(info.update && !info.update(entity, FIXED_DT, &context))
-      voxy_entity_manager_despawn(&application->entity_manager, &application->entity_database, handle, server);
+      voxy_entity_despawn(&application->entity_database, handle, server);
   }
 
-  physics_update(&application->entity_manager, FIXED_DT);
+  physics_update(FIXED_DT);
   voxy_light_manager_update(&application->light_manager);
 
   voxy_block_database_update(&application->block_database);
   voxy_block_manager_update(&application->block_database, &application->light_manager, application->server, &context);
-  voxy_entity_manager_update(&application->entity_manager, &application->entity_database, application->server);
+  voxy_entity_manager_update(&application->entity_database, application->server);
 }
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
@@ -136,7 +134,7 @@ void application_on_client_connected(libnet_server_t server, libnet_client_proxy
   struct application *application = libnet_server_get_opaque(server);
 
   voxy_block_manager_on_client_connected(server, client_proxy);
-  voxy_entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
+  voxy_entity_manager_on_client_connected(server, client_proxy);
   voxy_player_manager_on_client_connected(&application->player_manager, server, client_proxy);
 }
 

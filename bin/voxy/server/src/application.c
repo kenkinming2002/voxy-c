@@ -30,7 +30,6 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_server_set_on_client_disconnected(application->server, application_on_client_disconnected);
   libnet_server_set_on_message_received(application->server, application_on_message_received);
 
-  voxy_block_manager_init(&application->block_manager);
   voxy_block_database_init(&application->block_database, argv[4]);
   voxy_block_generator_init(argv[4]);
 
@@ -58,7 +57,6 @@ error1:
   voxy_entity_manager_fini(&application->entity_manager);
 
   voxy_block_database_fini(&application->block_database);
-  voxy_block_manager_fini(&application->block_manager);
 
   libnet_server_destroy(application->server);
 error0:
@@ -77,7 +75,6 @@ void application_fini(struct application *application)
   voxy_entity_manager_fini(&application->entity_manager);
 
   voxy_block_database_fini(&application->block_database);
-  voxy_block_manager_fini(&application->block_manager);
 
   libnet_server_destroy(application->server);
 }
@@ -87,8 +84,6 @@ struct voxy_context application_get_context(struct application *application)
   struct voxy_context context;
 
   context.server = application->server;
-
-  context.block_manager = &application->block_manager;
 
   context.entity_manager = &application->entity_manager;
   context.entity_database = &application->entity_database;
@@ -126,11 +121,11 @@ void application_on_update(libnet_server_t server)
       voxy_entity_manager_despawn(&application->entity_manager, &application->entity_database, handle, server);
   }
 
-  physics_update(&application->block_manager, &application->entity_manager, FIXED_DT);
+  physics_update(&application->entity_manager, FIXED_DT);
   voxy_light_manager_update(&application->light_manager);
 
   voxy_block_database_update(&application->block_database);
-  voxy_block_manager_update(&application->block_manager, &application->block_database, &application->light_manager, application->server, &context);
+  voxy_block_manager_update(&application->block_database, &application->light_manager, application->server, &context);
   voxy_entity_manager_update(&application->entity_manager, &application->entity_database, application->server);
 }
 
@@ -138,7 +133,7 @@ void application_on_client_connected(libnet_server_t server, libnet_client_proxy
 {
   struct application *application = libnet_server_get_opaque(server);
 
-  voxy_block_manager_on_client_connected(&application->block_manager, server, client_proxy);
+  voxy_block_manager_on_client_connected(server, client_proxy);
   voxy_entity_manager_on_client_connected(&application->entity_manager, server, client_proxy);
   voxy_player_manager_on_client_connected(&application->player_manager, server, client_proxy);
 }

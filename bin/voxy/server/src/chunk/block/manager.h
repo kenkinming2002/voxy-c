@@ -12,20 +12,6 @@
 struct voxy_block_registry;
 struct voxy_light_manager;
 
-struct block_group_node
-{
-  ivec3_t key;
-  struct voxy_block_group *value;
-};
-
-struct voxy_block_manager
-{
-  struct block_group_node *block_group_nodes;
-};
-
-void voxy_block_manager_init(struct voxy_block_manager *block_manager);
-void voxy_block_manager_fini(struct voxy_block_manager *block_manager);
-
 /// Atomic getters/setters.
 ///
 /// What is so hard about atomicity you may ask? The problem we have is that
@@ -39,11 +25,11 @@ void voxy_block_manager_fini(struct voxy_block_manager *block_manager);
 ///
 /// Note: This need not be exposed to mod, since it is really only used in the
 ///       implementation of our light system.
-bool voxy_block_manager_get_block_light_level_atomic(struct voxy_block_manager *block_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
-bool voxy_block_manager_set_block_light_level_atomic(struct voxy_block_manager *block_manager, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+bool voxy_block_manager_get_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
-void voxy_block_manager_update(struct voxy_block_manager *block_manager, struct voxy_block_database *block_database, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context);
+void voxy_block_manager_update(struct voxy_block_database *block_database, struct voxy_light_manager *light_manager, libnet_server_t server, const struct voxy_context *context);
 
-void voxy_block_manager_on_client_connected(struct voxy_block_manager *block_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
+void voxy_block_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy);
 
 #endif // CHUNK_BLOCK_MANAGER_H

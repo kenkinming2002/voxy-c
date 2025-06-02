@@ -47,8 +47,8 @@ void voxy_light_manager_fini(struct voxy_light_manager *light_manager);
 void voxy_light_manager_enqueue_destruction_update_at(struct voxy_light_manager *light_manager, struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level);
 void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *light_manager, struct voxy_block_group *block_group, ivec3_t position);
 
-void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position, uint8_t light_level);
-void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position);
+void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, ivec3_t position, uint8_t light_level);
+void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, ivec3_t position);
 
 void voxy_light_manager_update(struct voxy_light_manager *light_manager);
 

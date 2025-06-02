@@ -47,28 +47,24 @@ void voxy_light_manager_enqueue_creation_update_at(struct voxy_light_manager *li
 }
 
 
-void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position, uint8_t light_level)
+void voxy_light_manager_enqueue_destruction_update(struct voxy_light_manager *light_manager, ivec3_t position, uint8_t light_level)
 {
   ivec3_t chunk_position = get_chunk_position_i(position);
   ivec3_t local_position = global_position_to_local_position_i(position);
 
-  ptrdiff_t i = hmgeti(block_manager->block_group_nodes, chunk_position);
-  if(i == -1)
-    return;
-
-  voxy_light_manager_enqueue_destruction_update_at(light_manager, block_manager->block_group_nodes[i].value, local_position, light_level);
+  struct voxy_block_group *block_group = voxy_get_block_group(chunk_position);
+  if(block_group)
+    voxy_light_manager_enqueue_destruction_update_at(light_manager, block_group, local_position, light_level);
 }
 
-void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, struct voxy_block_manager *block_manager, ivec3_t position)
+void voxy_light_manager_enqueue_creation_update(struct voxy_light_manager *light_manager, ivec3_t position)
 {
   ivec3_t chunk_position = get_chunk_position_i(position);
   ivec3_t local_position = global_position_to_local_position_i(position);
 
-  ptrdiff_t i = hmgeti(block_manager->block_group_nodes, chunk_position);
-  if(i == -1)
-    return;
-
-  voxy_light_manager_enqueue_creation_update_at(light_manager, block_manager->block_group_nodes[i].value, local_position);
+  struct voxy_block_group *block_group = voxy_get_block_group(chunk_position);
+  if(block_group)
+    voxy_light_manager_enqueue_creation_update_at(light_manager, block_group, local_position);
 }
 
 /// Compute new light level after propagation in direction.

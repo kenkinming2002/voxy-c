@@ -19,7 +19,6 @@ struct application
 {
   libnet_server_t server;
 
-  struct voxy_block_manager block_manager;
   struct voxy_block_database block_database;
 
   struct voxy_entity_manager entity_manager;

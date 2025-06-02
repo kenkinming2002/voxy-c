@@ -113,7 +113,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
     struct ray_cast ray_cast;
     for(ray_cast_init(&ray_cast, position); ray_cast.distance < 10.0f; ray_cast_step(&ray_cast, direction))
     {
-      const uint8_t id = voxy_block_manager_get_block_id(context->block_manager, ray_cast.iposition, 0xFF);
+      const uint8_t id = voxy_get_block_id(ray_cast.iposition, 0xFF);
       if(id == 0xFF)
         continue;
 
@@ -121,7 +121,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
       if(!info.collide)
         continue;
 
-      voxy_block_manager_set_block(context->block_manager, context->light_manager, ray_cast.iposition, 0);
+      voxy_set_block(context->light_manager, ray_cast.iposition, 0);
       break;
     }
   }

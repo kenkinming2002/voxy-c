@@ -1,26 +1,19 @@
 #ifndef CHUNK_ENTITY_ALLOCATOR_H
 #define CHUNK_ENTITY_ALLOCATOR_H
 
+/// Entity allocator module that is well - responsible for allocating entity. We
+/// need this over plain malloc(3)/free(3) because we need a persistent id to
+/// identify and synchronize entities over network.
+
 #include <voxy/server/registry/entity.h>
 #include <voxy/server/chunk/entity/manager.h>
 
 #include "entity.h"
 
-/// Entity allocator.
-///
-/// This takes care of allocating a unique handle for each entity.
-struct entity_allocator
-{
-  struct voxy_entity *entities;
-  entity_handle_t *orphans;
-};
+entity_handle_t entity_alloc(void);
+void entity_free(entity_handle_t handle);
 
-void entity_allocator_init(struct entity_allocator *entity_allocator);
-void entity_allocator_fini(struct entity_allocator *entity_allocator);
-
-entity_handle_t entity_allocator_alloc(struct entity_allocator *entity_allocator);
-void entity_allocator_free(struct entity_allocator *entity_allocator, entity_handle_t handle);
-
-struct voxy_entity *entity_allocator_get(struct entity_allocator *entity_allocator, entity_handle_t handle);
+struct voxy_entity *entity_get(entity_handle_t handle);
+struct voxy_entity *entity_get_all(void);
 
 #endif // CHUNK_ENTITY_ALLOCATOR_H

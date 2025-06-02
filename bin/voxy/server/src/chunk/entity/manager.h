@@ -7,7 +7,6 @@
 
 #include "chunk/manager.h"
 
-#include "allocator.h"
 #include "database.h"
 
 #include <libnet/server.h>
@@ -26,7 +25,6 @@ struct loaded_chunk
 /// synchronizing them over the network.
 struct voxy_entity_manager
 {
-  struct entity_allocator allocator;
   struct loaded_chunk *loaded_chunks;
 };
 

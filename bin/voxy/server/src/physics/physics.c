@@ -1,6 +1,8 @@
 #include "physics.h"
 #include "swept.h"
 
+#include "chunk/entity/allocator.h"
+
 #include <voxy/server/registry/block.h>
 #include <voxy/server/registry/entity.h>
 
@@ -146,9 +148,10 @@ void physics_update(struct voxy_entity_manager *entity_manager, float dt)
 {
   profile_scope;
 
-  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
+  struct voxy_entity *entities = entity_get_all();
+  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
+    struct voxy_entity *entity = &entities[handle];
     if(!entity->alive)
       continue;
 

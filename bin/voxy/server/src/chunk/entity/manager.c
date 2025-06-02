@@ -1,5 +1,6 @@
 #include "manager.h"
 
+#include "allocator.h"
 #include "database.h"
 #include "network.h"
 
@@ -16,14 +17,12 @@
 
 void voxy_entity_manager_init(struct voxy_entity_manager *entity_manager)
 {
-  entity_allocator_init(&entity_manager->allocator);
   entity_manager->loaded_chunks = NULL;
 }
 
 void voxy_entity_manager_fini(struct voxy_entity_manager *entity_manager)
 {
   hmfree(entity_manager->loaded_chunks);
-  entity_allocator_fini(&entity_manager->allocator);
 }
 
 void voxy_entity_manager_start(struct voxy_entity_manager *entity_manager, struct voxy_entity_database *entity_database, libnet_server_t server)
@@ -65,7 +64,7 @@ hack:
 /// over the network.
 entity_handle_t voxy_entity_manager_create_entity(struct voxy_entity_manager *entity_manager, int64_t db_id, voxy_entity_id_t id, fvec3_t position, fvec3_t rotation, void *opaque, libnet_server_t server)
 {
-  entity_handle_t handle = entity_allocator_alloc(&entity_manager->allocator);
+  entity_handle_t handle = entity_alloc();
 
   struct voxy_entity *entity = voxy_entity_manager_get(entity_manager, handle);
   entity->db_id = db_id;
@@ -87,7 +86,7 @@ entity_handle_t voxy_entity_manager_create_entity(struct voxy_entity_manager *en
 void voxy_entity_manager_destroy_entity(struct voxy_entity_manager *entity_manager, entity_handle_t handle, libnet_server_t server)
 {
   voxy_entity_network_remove_all(handle, server);
-  entity_allocator_free(&entity_manager->allocator, handle);
+  entity_free(handle);
 }
 
 static void load_entities(
@@ -163,9 +162,10 @@ static void discard_entities(
   hmfree(entity_manager->loaded_chunks);
   entity_manager->loaded_chunks = new_loaded_chunks;
 
-  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
+  struct voxy_entity *entities = entity_get_all();
+  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
+    struct voxy_entity *entity = &entities[handle];
     if(!entity->alive)
       continue;
 
@@ -190,9 +190,10 @@ static void flush_entities(
 {
   profile_scope;
 
-  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
+  struct voxy_entity *entities = entity_get_all();
+  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
+    struct voxy_entity *entity = &entities[handle];
     if(entity->alive)
     {
       voxy_entity_database_save(entity_database, entity);
@@ -216,9 +217,10 @@ void voxy_entity_manager_update(struct voxy_entity_manager *entity_manager, stru
 
 void voxy_entity_manager_on_client_connected(struct voxy_entity_manager *entity_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
-  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
+  struct voxy_entity *entities = entity_get_all();
+  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
   {
-    const struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
+    const struct voxy_entity *entity = &entities[handle];
     if(entity->alive)
       voxy_entity_network_update(handle, entity, server, client_proxy);
   }
@@ -243,6 +245,6 @@ void voxy_entity_manager_despawn(struct voxy_entity_manager *entity_manager, str
 
 struct voxy_entity *voxy_entity_manager_get(struct voxy_entity_manager *entity_manager, entity_handle_t handle)
 {
-  return entity_allocator_get(&entity_manager->allocator, handle);
+  return entity_get(handle);
 }
 

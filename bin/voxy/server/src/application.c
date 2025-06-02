@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include "chunk/block/generator.h"
+#include "chunk/entity/allocator.h"
 #include "physics/physics.h"
 
 #include <voxy/server/context.h>
@@ -110,9 +111,10 @@ void application_on_update(libnet_server_t server)
 
   voxy_reset_active_chunks();
 
-  for(entity_handle_t handle=0; handle<arrlenu(application->entity_manager.allocator.entities); ++handle)
+  struct voxy_entity *entities = entity_get_all();
+  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
   {
-    struct voxy_entity *entity = &application->entity_manager.allocator.entities[handle];
+    struct voxy_entity *entity = &entities[handle];
     if(!entity->alive)
       continue;
 

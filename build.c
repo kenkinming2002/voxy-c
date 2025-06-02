@@ -298,7 +298,6 @@ int main()
         "application",
         "main",
         "mod/mod",
-        "mod/manager",
         "ui/manager",
       ),
       .extra_int_cflags = "-Ibin/voxy/config/include -Ibin/voxy/protocol/include",

@@ -5,14 +5,9 @@
 
 #include "render/world.h"
 
-#include "mod/manager.h"
-
 struct application
 {
   libnet_client_t client;
-
-  struct mod_manager mod_manager;
-
   struct world_renderer world_renderer;
 };
 

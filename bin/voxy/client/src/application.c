@@ -2,6 +2,7 @@
 #include "camera/main.h"
 #include "chunk/block/manager.h"
 #include "input/input.h"
+#include "mod/mod.h"
 
 #include <ui/manager.h>
 
@@ -43,12 +44,10 @@ int application_init(struct application *application, int argc, char *argv[])
   libnet_client_set_on_message_received(application->client, application_on_message_received);
 
   main_camera_init();
-  mod_manager_init(&application->mod_manager);
 
   struct voxy_context context = application_get_context(application);
   for(int i=4; i<argc; ++i)
-    if(mod_manager_load(&application->mod_manager, argv[i], &context) != 0)
-      goto error5;
+    mod_load(argv[i], &context);
 
   if(world_renderer_init(&application->world_renderer) != 0)
     goto error5;
@@ -56,7 +55,6 @@ int application_init(struct application *application, int argc, char *argv[])
   return 0;
 
 error5:
-  mod_manager_fini(&application->mod_manager, &context);
   libnet_client_destroy(application->client);
 error0:
   return -1;
@@ -70,10 +68,7 @@ struct voxy_context application_get_context(struct application *application)
 
 void application_fini(struct application *application)
 {
-  struct voxy_context context = application_get_context(application);
-
   world_renderer_fini(&application->world_renderer);
-  mod_manager_fini(&application->mod_manager, &context);
   libnet_client_destroy(application->client);
 }
 

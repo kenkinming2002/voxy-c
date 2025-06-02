@@ -29,7 +29,7 @@ static void test_render(const struct voxy_entity *entity, const struct camera *c
   render(camera, &mesh, &texture, transform, 1.0f);
 }
 
-void *mod_create_instance(struct voxy_context *context)
+int mod_init(struct voxy_context *context)
 {
   voxy_register_block((struct voxy_block_info){
     .mod = "base",
@@ -93,12 +93,6 @@ void *mod_create_instance(struct voxy_context *context)
     .render = test_render,
   });
 
-  return NULL;
-}
-
-void mod_destroy_instance(struct voxy_context *context, void *instance)
-{
-  (void)context;
-  (void)instance;
+  return 0;
 }
 

@@ -86,6 +86,8 @@ static void init(int argc, char *argv[])
 
   for(int i=5; i<argc; ++i)
     mod_load(argv[i]);
+
+  voxy_entity_manager_start();
 }
 
 static void deinit(void)

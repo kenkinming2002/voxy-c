@@ -6,9 +6,9 @@
 #include <libgfx/gl.h>
 
 void block_renderer_init(void);
-
 void block_renderer_update(void);
-void block_renderer_render(void);
+
+void render_block(void);
 
 uint32_t block_renderer_get_texture_index(voxy_block_id_t id, direction_t direction);
 

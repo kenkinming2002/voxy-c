@@ -13,8 +13,8 @@ void world_renderer_update(void)
   block_renderer_update();
 }
 
-void world_renderer_render(void)
+void render_world(void)
 {
-  block_renderer_render();
-  entity_renderer_render();
+  render_block();
+  render_entity();
 }

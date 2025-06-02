@@ -3,6 +3,7 @@
 
 void world_renderer_init(void);
 void world_renderer_update(void);
-void world_renderer_render(void);
+
+void render_world(void);
 
 #endif // RENDER_WORLD_H

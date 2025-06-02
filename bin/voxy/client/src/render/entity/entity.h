@@ -3,6 +3,6 @@
 
 #include <voxy/client/registry/entity.h>
 
-void entity_renderer_render(void);
+void render_entity(void);
 
 #endif // RENDER_ENTITY_ENTITY_H

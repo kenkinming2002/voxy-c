@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 
-void entity_renderer_render(void)
+void render_entity(void)
 {
   struct voxy_entity *entities = entity_get_all();
   for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)

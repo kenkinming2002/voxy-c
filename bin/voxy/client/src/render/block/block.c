@@ -142,7 +142,7 @@ void block_renderer_update(void)
   update_render_infos(center, radius);
 }
 
-void block_renderer_render(void)
+void render_block(void)
 {
   const struct camera camera = get_main_camera();
 

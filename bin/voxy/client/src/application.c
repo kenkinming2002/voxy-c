@@ -91,7 +91,7 @@ static void application_update(struct application *application)
   glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  world_renderer_render();
+  render_world();
   render_end();
 
   ui_render();

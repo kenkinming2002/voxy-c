@@ -1,6 +1,7 @@
 #include "application.h"
 #include "config.h"
 
+#include "chunk/block/generator.h"
 #include "physics/physics.h"
 
 #include <voxy/server/context.h>
@@ -31,7 +32,7 @@ int application_init(struct application *application, int argc, char *argv[])
 
   voxy_block_manager_init(&application->block_manager);
   voxy_block_database_init(&application->block_database, argv[4]);
-  voxy_block_generator_init(&application->block_generator, argv[4]);
+  voxy_block_generator_init(argv[4]);
 
   voxy_entity_manager_init(&application->entity_manager);
   if(voxy_entity_database_init(&application->entity_database, argv[4]) != 0) goto error1;
@@ -56,7 +57,6 @@ error1:
   voxy_entity_database_fini(&application->entity_database);
   voxy_entity_manager_fini(&application->entity_manager);
 
-  voxy_block_generator_fini(&application->block_generator);
   voxy_block_database_fini(&application->block_database);
   voxy_block_manager_fini(&application->block_manager);
 
@@ -76,7 +76,6 @@ void application_fini(struct application *application)
   voxy_entity_database_fini(&application->entity_database);
   voxy_entity_manager_fini(&application->entity_manager);
 
-  voxy_block_generator_fini(&application->block_generator);
   voxy_block_database_fini(&application->block_database);
   voxy_block_manager_fini(&application->block_manager);
 
@@ -90,7 +89,6 @@ struct voxy_context application_get_context(struct application *application)
   context.server = application->server;
 
   context.block_manager = &application->block_manager;
-  context.block_generator = &application->block_generator;
 
   context.entity_manager = &application->entity_manager;
   context.entity_database = &application->entity_database;
@@ -132,7 +130,7 @@ void application_on_update(libnet_server_t server)
   voxy_light_manager_update(&application->light_manager);
 
   voxy_block_database_update(&application->block_database);
-  voxy_block_manager_update(&application->block_manager, &application->block_database, &application->block_generator, &application->light_manager, application->server, &context);
+  voxy_block_manager_update(&application->block_manager, &application->block_database, &application->light_manager, application->server, &context);
   voxy_entity_manager_update(&application->entity_manager, &application->entity_database, application->server);
 }
 

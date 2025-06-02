@@ -132,7 +132,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt, const str
 
 void *mod_create_instance(struct voxy_context *context)
 {
-  voxy_block_generator_set_generate_block(context->block_generator, generate_block);
+  voxy_set_generate_block(generate_block);
 
   voxy_register_block((struct voxy_block_info){
     .mod = "base",

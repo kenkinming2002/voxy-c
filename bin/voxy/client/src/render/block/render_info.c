@@ -43,7 +43,7 @@ static uint8_t get_prefetched(uint8_t infos[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH
   return infos[position.z+1][position.y+1][position.x+1];
 }
 
-void block_render_info_update(struct block_render_info *block_render_info, struct block_renderer *block_renderer, ivec3_t position, const struct block_group *block_group)
+void block_render_info_update(struct block_render_info *block_render_info, ivec3_t position, const struct block_group *block_group)
 {
   profile_scope;
 
@@ -91,7 +91,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
           const ivec3_t center = local_position;
 
           const uint32_t normal_index = direction;
-          const uint32_t texture_index = block_renderer->texture_indices[block_id][direction];
+          const uint32_t texture_index = block_renderer_get_texture_index(block_id, direction);
 
           const ivec3_t outer_axis3 = normal;                                               // z-axis
           const ivec3_t outer_axis2 = outer_axis3.z != 0 ? ivec3(1, 0, 0) : ivec3(0, 0, 1); // y-axis

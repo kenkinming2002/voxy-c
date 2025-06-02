@@ -3,30 +3,13 @@
 
 #include <voxy/client/registry/block.h>
 
-#include "render_info.h"
-
 #include <libgfx/gl.h>
 
-struct block_render_info_node
-{
-  ivec3_t key;
-  struct block_render_info value;
-};
+void block_renderer_init(void);
 
-struct block_renderer
-{
-  struct gl_program program;
+void block_renderer_update(void);
+void block_renderer_render(void);
 
-  struct gl_array_texture_2d texture;
-  uint32_t (*texture_indices)[DIRECTION_COUNT];
-
-  struct block_render_info_node *render_info_nodes;
-};
-
-int block_renderer_init(struct block_renderer *block_renderer);
-void block_renderer_fini(struct block_renderer *block_renderer);
-
-void block_renderer_update(struct block_renderer *block_renderer);
-void block_renderer_render(struct block_renderer *block_renderer);
+uint32_t block_renderer_get_texture_index(voxy_block_id_t id, direction_t direction);
 
 #endif // RENDER_BLOCK_BLOCK_H

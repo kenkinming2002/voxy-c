@@ -281,7 +281,7 @@ int main()
         "ui",
       ),
       .sources = STRINGS(
-        "camera/manager",
+        "camera/main",
         "input/manager",
         "registry/block",
         "registry/entity",

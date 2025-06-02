@@ -4,7 +4,6 @@
 #include <libnet/client.h>
 
 #include "input/manager.h"
-#include "camera/manager.h"
 
 #include "chunk/block/manager.h"
 #include "chunk/entity/manager.h"
@@ -18,7 +17,6 @@ struct application
   libnet_client_t client;
 
   struct input_manager input_manager;
-  struct camera_manager camera_manager;
 
   struct block_manager block_manager;
   struct entity_manager entity_manager;

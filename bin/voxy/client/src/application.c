@@ -1,4 +1,5 @@
 #include "application.h"
+#include "camera/main.h"
 
 #include <ui/manager.h>
 
@@ -42,8 +43,7 @@ int application_init(struct application *application, int argc, char *argv[])
   if(input_manager_init(&application->input_manager) != 0)
     goto error1;
 
-  if(camera_manager_init(&application->camera_manager) != 0)
-    goto error2;
+  main_camera_init();
 
   if(block_manager_init(&application->block_manager) != 0)
     goto error3;
@@ -67,8 +67,6 @@ error5:
   entity_manager_fini(&application->entity_manager);
   block_manager_fini(&application->block_manager);
 error3:
-  camera_manager_fini(&application->camera_manager);
-error2:
   input_manager_fini(&application->input_manager);
 error1:
   libnet_client_destroy(application->client);
@@ -90,7 +88,6 @@ void application_fini(struct application *application)
   mod_manager_fini(&application->mod_manager, &context);
   entity_manager_fini(&application->entity_manager);
   block_manager_fini(&application->block_manager);
-  camera_manager_fini(&application->camera_manager);
   input_manager_fini(&application->input_manager);
   libnet_client_destroy(application->client);
 }
@@ -110,12 +107,12 @@ static void application_update(struct application *application)
   application_update_network(application);
 
   input_manager_update(&application->input_manager, application->client);
-  camera_manager_update(&application->camera_manager, &application->entity_manager);
+  main_camera_update(&application->entity_manager);
 
   block_manager_update(&application->block_manager);
   entity_manager_update(&application->entity_manager);
 
-  world_renderer_update(&application->world_renderer, &application->block_manager, &application->camera_manager);
+  world_renderer_update(&application->world_renderer, &application->block_manager);
 
   ui_manager_update();
 
@@ -123,7 +120,7 @@ static void application_update(struct application *application)
   glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  world_renderer_render(&application->world_renderer, &application->entity_manager, &application->camera_manager);
+  world_renderer_render(&application->world_renderer, &application->entity_manager);
   render_end();
 
   ui_render();
@@ -140,7 +137,7 @@ void application_run(struct application *application)
 void application_on_message_received(libnet_client_t client, const struct libnet_message *message)
 {
   struct application *application = libnet_client_get_opaque(client);
-  camera_manager_on_message_received(&application->camera_manager, client, message);
+  main_camera_on_message_received(client, message);
   block_manager_on_message_received(&application->block_manager, client, message);
   entity_manager_on_message_received(&application->entity_manager, client, message);
 }

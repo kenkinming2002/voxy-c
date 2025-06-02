@@ -1,4 +1,5 @@
 #include "block.h"
+#include "camera/main.h"
 
 #include <voxy/client/registry/block.h>
 
@@ -132,19 +133,21 @@ static void update_render_infos(struct block_renderer *block_renderer, struct bl
   profile_end("count", tformat("%zu", count));
 }
 
-void block_renderer_update(struct block_renderer *block_renderer, struct block_manager *block_manager, struct camera_manager *camera_manager)
+void block_renderer_update(struct block_renderer *block_renderer, struct block_manager *block_manager)
 {
-  const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(camera_manager->camera.transform.translation), VOXY_CHUNK_WIDTH);
+  const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(get_main_camera().transform.translation), VOXY_CHUNK_WIDTH);
   const int radius = 8;
 
   discard_render_infos(block_renderer, center, radius);
   update_render_infos(block_renderer, block_manager, center, radius);
 }
 
-void block_renderer_render(struct block_renderer *block_renderer, struct camera_manager *camera_manager)
+void block_renderer_render(struct block_renderer *block_renderer)
 {
-  const fmat4_t V = camera_view_matrix(&camera_manager->camera);
-  const fmat4_t P = camera_projection_matrix(&camera_manager->camera);
+  const struct camera camera = get_main_camera();
+
+  const fmat4_t V = camera_view_matrix(&camera);
+  const fmat4_t P = camera_projection_matrix(&camera);
   const fmat4_t VP = fmat4_mul(P, V);
 
   glEnable(GL_DEPTH_TEST);
@@ -156,7 +159,7 @@ void block_renderer_render(struct block_renderer *block_renderer, struct camera_
   glBindTexture(GL_TEXTURE_2D_ARRAY, block_renderer->texture.id);
 
   for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
-    block_render_info_update_cull(block_renderer->render_info_nodes[i].key, &block_renderer->render_info_nodes[i].value, &camera_manager->camera);
+    block_render_info_update_cull(block_renderer->render_info_nodes[i].key, &block_renderer->render_info_nodes[i].value, &camera);
 
   for(ptrdiff_t i=0; i<hmlen(block_renderer->render_info_nodes); ++i)
   {

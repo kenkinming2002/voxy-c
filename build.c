@@ -295,7 +295,6 @@ int main()
         "chunk/block/manager",
         "chunk/entity/entity",
         "chunk/entity/manager",
-        "application",
         "main",
         "mod/mod",
         "ui/manager",

@@ -1,13 +1,89 @@
-#include "application.h"
+#include "camera/main.h"
+#include "chunk/block/manager.h"
+#include "input/input.h"
+#include "mod/mod.h"
+#include "render/world.h"
+#include "ui/manager.h"
 
-#include <stdlib.h>
+#include <voxy/protocol/client.h>
+
+#include <libcore/profile.h>
+#include <libgfx/render.h>
+#include <libgfx/window.h>
+#include <libnet/client.h>
+#include <libui/ui.h>
+
+#include <stdio.h>
+#include <string.h>
+
+static void application_on_message_received(const struct libnet_message *message)
+{
+  main_camera_on_message_received(message);
+  block_manager_on_message_received(message);
+  entity_manager_on_message_received(message);
+}
+
+static void init(int argc, char *argv[])
+{
+  window_init("client", 1024, 720);
+
+  libnet_client_init(argv[1], argv[2]);
+  libnet_client_set_on_message_received(application_on_message_received);
+
+  struct voxy_client_login_message *message = alloca(sizeof *message + strlen(argv[3]));
+  message->message.tag = VOXY_CLIENT_MESSAGE_LOGIN;
+  message->message.message.size = LIBNET_MESSAGE_SIZE(*message) + strlen(argv[3]);
+  memcpy(message->player_name, argv[3], strlen(argv[3]));
+  libnet_client_send_message(&message->message.message);
+
+  main_camera_init();
+
+  for(int i=4; i<argc; ++i)
+    mod_load(argv[i], NULL);
+
+  world_renderer_init();
+
+}
+
+static void deinit(void)
+{
+  libnet_client_deinit();
+}
+
+static void update(void)
+{
+  profile_scope;
+
+  window_update();
+
+  input_update();
+  main_camera_update();
+  world_renderer_update();
+  ui_manager_update();
+
+  glViewport(0, 0, window_size.x, window_size.y);
+  glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  render_world();
+  render_end();
+  ui_render();
+
+  window_present();
+}
 
 int main(int argc, char *argv[])
 {
-  struct application application;
-  if(application_init(&application, argc, argv) != 0)
-    return EXIT_FAILURE;
+  if(argc < 4)
+  {
+    fprintf(stderr, "Usage: %s SERVICE CERT KEY PLAYER_NAME [MOD]...", argv[0]);
+    return -1;
+  }
 
-  application_run(&application);
-  application_fini(&application);
+  init(argc, argv);
+
+  while(!window_should_close() && !libnet_client_update())
+    update();
+
+  deinit();
 }

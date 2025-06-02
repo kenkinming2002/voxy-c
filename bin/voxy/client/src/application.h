@@ -3,12 +3,9 @@
 
 #include <libnet/client.h>
 
-#include "render/world.h"
-
 struct application
 {
   libnet_client_t client;
-  struct world_renderer world_renderer;
 };
 
 /// Initialize/finalize application.

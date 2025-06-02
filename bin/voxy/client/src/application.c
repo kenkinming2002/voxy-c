@@ -3,6 +3,7 @@
 #include "chunk/block/manager.h"
 #include "input/input.h"
 #include "mod/mod.h"
+#include "render/world.h"
 
 #include <ui/manager.h>
 
@@ -32,7 +33,7 @@ int application_init(struct application *application, int argc, char *argv[])
   window_init("client", 1024, 720);
 
   if(!(application->client = libnet_client_create(argv[1], argv[2])))
-    goto error0;
+    return -1;
 
   struct voxy_client_login_message *message = alloca(sizeof *message + strlen(argv[3]));
   message->message.tag = VOXY_CLIENT_MESSAGE_LOGIN;
@@ -49,15 +50,9 @@ int application_init(struct application *application, int argc, char *argv[])
   for(int i=4; i<argc; ++i)
     mod_load(argv[i], &context);
 
-  if(world_renderer_init(&application->world_renderer) != 0)
-    goto error5;
+  world_renderer_init();
 
   return 0;
-
-error5:
-  libnet_client_destroy(application->client);
-error0:
-  return -1;
 }
 
 struct voxy_context application_get_context(struct application *application)
@@ -68,7 +63,6 @@ struct voxy_context application_get_context(struct application *application)
 
 void application_fini(struct application *application)
 {
-  world_renderer_fini(&application->world_renderer);
   libnet_client_destroy(application->client);
 }
 
@@ -89,7 +83,7 @@ static void application_update(struct application *application)
   input_update(application->client);
   main_camera_update();
 
-  world_renderer_update(&application->world_renderer);
+  world_renderer_update();
 
   ui_manager_update();
 
@@ -97,7 +91,7 @@ static void application_update(struct application *application)
   glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  world_renderer_render(&application->world_renderer);
+  world_renderer_render();
   render_end();
 
   ui_render();

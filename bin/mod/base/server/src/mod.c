@@ -10,6 +10,7 @@
 #include <voxy/server/chunk/entity/entity.h>
 
 #include <voxy/server/player/player.h>
+#include <voxy/server/player/manager.h>
 
 #include <libmath/matrix_transform.h>
 #include <libmath/ray_cast.h>
@@ -191,7 +192,7 @@ void *mod_create_instance(struct voxy_context *context)
     .deserialize_opaque = voxy_entity_deserialize_opaque_default,
   });
 
-  voxy_player_manager_set_on_new_player(context->player_manager, on_new_player);
+  voxy_set_on_new_player(on_new_player);
 
   return NULL;
 }

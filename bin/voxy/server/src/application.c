@@ -7,6 +7,7 @@
 #include "chunk/entity/manager.h"
 #include "chunk/entity/database.h"
 #include "physics/physics.h"
+#include "player/manager.h"
 
 #include <voxy/server/context.h>
 
@@ -38,7 +39,6 @@ int application_init(struct application *application, int argc, char *argv[])
   voxy_block_generator_init(argv[4]);
 
   voxy_entity_database_init(argv[4]);
-  voxy_player_manager_init(&application->player_manager);
 
   voxy_light_manager_init(&application->light_manager);
 
@@ -54,7 +54,6 @@ int application_init(struct application *application, int argc, char *argv[])
 error2:
   mod_manager_fini(&application->mod_manager, &context);
   voxy_light_manager_fini(&application->light_manager);
-  voxy_player_manager_fini(&application->player_manager);
 
   voxy_block_database_fini(&application->block_database);
 
@@ -70,8 +69,6 @@ void application_fini(struct application *application)
 
   voxy_light_manager_fini(&application->light_manager);
 
-  voxy_player_manager_fini(&application->player_manager);
-
   voxy_block_database_fini(&application->block_database);
 
   libnet_server_destroy(application->server);
@@ -83,7 +80,6 @@ struct voxy_context application_get_context(struct application *application)
 
   context.server = application->server;
 
-  context.player_manager = &application->player_manager;
   context.light_manager = &application->light_manager;
 
   return context;
@@ -127,24 +123,20 @@ void application_on_update(libnet_server_t server)
 
 void application_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
-  struct application *application = libnet_server_get_opaque(server);
-
   voxy_block_manager_on_client_connected(server, client_proxy);
   voxy_entity_manager_on_client_connected(server, client_proxy);
-  voxy_player_manager_on_client_connected(&application->player_manager, server, client_proxy);
+  voxy_player_manager_on_client_connected(server, client_proxy);
 }
 
 void application_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy)
 {
-  struct application *application = libnet_server_get_opaque(server);
-
-  voxy_player_manager_on_client_disconnected(&application->player_manager, server, client_proxy);
+  voxy_player_manager_on_client_disconnected(server, client_proxy);
 }
 
 void application_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
   struct application *application = libnet_server_get_opaque(server);
   const struct voxy_context context = application_get_context(application);
-  voxy_player_manager_on_message_received(&application->player_manager, server, client_proxy, message, &context);
+  voxy_player_manager_on_message_received(server, client_proxy, message, &context);
 }
 

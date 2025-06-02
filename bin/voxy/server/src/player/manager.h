@@ -5,16 +5,8 @@
 
 #include <libnet/server.h>
 
-struct voxy_player_manager
-{
-  voxy_on_new_player on_new_player;
-};
-
-void voxy_player_manager_init(struct voxy_player_manager *player_manager);
-void voxy_player_manager_fini(struct voxy_player_manager *player_manager);
-
-void voxy_player_manager_on_client_connected(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
-void voxy_player_manager_on_client_disconnected(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy);
-void voxy_player_manager_on_message_received(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message, const struct voxy_context *context);
+void voxy_player_manager_on_client_connected(libnet_server_t server, libnet_client_proxy_t client_proxy);
+void voxy_player_manager_on_client_disconnected(libnet_server_t server, libnet_client_proxy_t client_proxy);
+void voxy_player_manager_on_message_received(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message, const struct voxy_context *context);
 
 #endif // PLAYER_MANAGER_H

@@ -2,38 +2,25 @@
 
 #include <libcore/log.h>
 
+#include <stdlib.h>
 #include <dlfcn.h>
 
-int mod_load(struct mod *mod, const char *file, const struct voxy_context *context)
+void mod_load(const char *file)
 {
-  if(!(mod->handle = dlopen(file, RTLD_LAZY | RTLD_LOCAL)))
+  void *handle = dlopen(file, RTLD_LAZY | RTLD_LOCAL);
+
+  int(*mod_init)(void) = dlsym(handle, "mod_init");
+  if(!mod_init)
   {
-    LOG_ERROR("Failed to load mod: %s", dlerror());
-    goto error0;
+    LOG_ERROR("Missing mod_init symbol from mod: %s", dlerror());
+    exit(EXIT_FAILURE);
   }
 
-  if(!(mod->create_instance = dlsym(mod->handle, "mod_create_instance")))
+  int result = mod_init();
+  if(result != 0)
   {
-    LOG_ERROR("Missing mod_create_instance symbol from mod: %s", dlerror());
-    goto error1;
+    LOG_ERROR("Failed to initialize mod: %d", result);
+    exit(EXIT_FAILURE);
   }
-
-  if(!(mod->destroy_instance = dlsym(mod->handle, "mod_destroy_instance")))
-  {
-    LOG_ERROR("Missing mod_destroy_instance symbol from mod: %s", dlerror());
-    goto error1;
-  }
-
-  mod->instance = mod->create_instance(context);
-  return 0;
-
-error1:
-  dlclose(mod->handle);
-error0:
-  return -1;
 }
 
-void mod_unload(struct mod *mod, const struct voxy_context *context)
-{
-  mod->destroy_instance(context, mod->instance);
-}

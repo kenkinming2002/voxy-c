@@ -1,29 +1,24 @@
-#include "name.h"
-
-#include <stb_ds.h>
+#include <voxy/server/registry/name.h>
 
 #include <assert.h>
+#include <stb_ds.h>
 
-void voxy_name_registry_init(struct voxy_name_registry *registry)
-{
-  registry->infos = NULL;
-}
+static struct voxy_name_info *name_infos;
 
-void voxy_name_registry_fini(struct voxy_name_registry *registry)
+voxy_name_id_t voxy_register_name(struct voxy_name_info name_info)
 {
-  arrfree(registry->infos);
-}
-
-voxy_name_id_t voxy_name_registry_register_name(struct voxy_name_registry *registry, struct voxy_name_info name_info)
-{
-  const voxy_name_id_t id = arrlenu(registry->infos);
-  arrput(registry->infos, name_info);
+  const voxy_name_id_t id = arrlenu(name_infos);
+  arrput(name_infos, name_info);
   return id;
 }
 
-struct voxy_name_info voxy_name_registry_query_name(struct voxy_name_registry *registry, voxy_name_id_t id)
+struct voxy_name_info voxy_query_name(voxy_name_id_t id)
 {
-  assert(id < arrlenu(registry->infos));
-  return registry->infos[id];
+  assert(id < arrlenu(name_infos));
+  return name_infos[id];
 }
 
+const struct voxy_name_info *voxy_query_name_all(void)
+{
+  return name_infos;
+}

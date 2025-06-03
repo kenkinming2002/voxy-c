@@ -3,7 +3,6 @@
 
 struct voxy_entity;
 struct voxy_item_stack;
-struct voxy_context;
 
 struct voxy_item_info
 {

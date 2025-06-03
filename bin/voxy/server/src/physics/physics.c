@@ -1,6 +1,13 @@
 #include "physics.h"
 #include "swept.h"
 
+#include "chunk/entity/allocator.h"
+
+#include <voxy/server/registry/block.h>
+#include <voxy/server/registry/entity.h>
+
+#include <voxy/server/chunk/block/manager.h>
+
 #include <libmath/aabb.h>
 #include <libmath/direction.h>
 #include <libcore/log.h>
@@ -33,19 +40,14 @@ static int compar(const void *ptr1, const void *ptr2)
   return -contact3_compare(*contact1, *contact2);
 }
 
-static bool entity_physics_resolve_collision_once(
-    struct voxy_block_registry *block_registry,
-    struct voxy_entity_registry *entity_registry,
-    struct voxy_block_manager *block_manager,
-    struct voxy_entity *entity,
-    float dt)
+static bool entity_physics_resolve_collision_once(struct voxy_entity *entity, float dt)
 {
   // Figure out all the contacts and sort them.
   struct contact3 *contacts = NULL;
   {
     const fvec3_t offset = fvec3_mul_scalar(entity->velocity, dt);
 
-    const struct voxy_entity_info entity_info = voxy_entity_registry_query_entity(entity_registry, entity->id);
+    const struct voxy_entity_info entity_info = voxy_query_entity(entity->id);
     const aabb3_t entity_hitbox = aabb3(fvec3_add(entity->position, entity_info.hitbox_offset), entity_info.hitbox_dimension);
     const aabb3_t entity_hitbox_expanded = aabb3_expand(entity_hitbox, offset);
 
@@ -56,8 +58,8 @@ static bool entity_physics_resolve_collision_once(
         for(int x=block_position_min.x; x<=block_position_max.x; ++x)
         {
           const ivec3_t block_position = ivec3(x, y, z);
-          const uint8_t block_id = voxy_block_manager_get_block_id(block_manager, block_position, UINT8_MAX);
-          if(block_id != UINT8_MAX && voxy_block_registry_query_block(block_registry, block_id).collide)
+          const uint8_t block_id = voxy_get_block_id(block_position, UINT8_MAX);
+          if(block_id != UINT8_MAX && voxy_query_block(block_id).collide)
           {
             const aabb3_t block_hitbox = aabb3(ivec3_as_fvec3(block_position), fvec3(1.0f, 1.0f, 1.0f));
 
@@ -98,14 +100,9 @@ static bool entity_physics_resolve_collision_once(
   return resolved;
 }
 
-static void entity_physics_resolve_collision(
-    struct voxy_block_registry *block_registry,
-    struct voxy_entity_registry *entity_registry,
-    struct voxy_block_manager *block_manager,
-    struct voxy_entity *entity,
-    float dt)
+static void entity_physics_resolve_collision(struct voxy_entity *entity, float dt)
 {
-  while(entity_physics_resolve_collision_once(block_registry, entity_registry, block_manager, entity, dt));
+  while(entity_physics_resolve_collision_once(entity, dt));
 }
 
 static void entity_physics_integrate(struct voxy_entity *entity, float dt)
@@ -113,13 +110,9 @@ static void entity_physics_integrate(struct voxy_entity *entity, float dt)
   entity->position = fvec3_add(entity->position, fvec3_mul_scalar(entity->velocity, dt));
 }
 
-static bool entity_is_grounded(
-    struct voxy_block_registry *block_registry,
-    struct voxy_entity_registry *entity_registry,
-    struct voxy_block_manager *block_manager,
-    struct voxy_entity *entity)
+static bool entity_is_grounded(struct voxy_entity *entity)
 {
-  const struct voxy_entity_info entity_info = voxy_entity_registry_query_entity(entity_registry, entity->id);
+  const struct voxy_entity_info entity_info = voxy_query_entity(entity->id);
   aabb3_t entity_hitbox = aabb3(fvec3_add(entity->position, entity_info.hitbox_offset), entity_info.hitbox_dimension);
   entity_hitbox.dimension.x *= 0.999f;
   entity_hitbox.dimension.y *= 0.999f;
@@ -132,51 +125,38 @@ static bool entity_is_grounded(
       for(int x=block_position_min.x; x<=block_position_max.x; ++x)
       {
         const ivec3_t block_position = ivec3(x, y, z);
-        const uint8_t block_id = voxy_block_manager_get_block_id(block_manager, block_position, UINT8_MAX);
-        if(block_id != UINT8_MAX && voxy_block_registry_query_block(block_registry, block_id).collide)
+        const uint8_t block_id = voxy_get_block_id(block_position, UINT8_MAX);
+        if(block_id != UINT8_MAX && voxy_query_block(block_id).collide)
           return true;
       }
 
   return false;
 }
 
-static void entity_physics_update_grounded(
-    struct voxy_block_registry *block_registry,
-    struct voxy_entity_registry *entity_registry,
-    struct voxy_block_manager *block_manager,
-    struct voxy_entity *entity)
+static void entity_physics_update_grounded(struct voxy_entity *entity)
 {
-  entity->grounded = entity_is_grounded(block_registry, entity_registry, block_manager, entity);
+  entity->grounded = entity_is_grounded(entity);
 }
 
-static void entity_update_physics(
-    struct voxy_block_registry *block_registry,
-    struct voxy_entity_registry *entity_registry,
-    struct voxy_block_manager *block_manager,
-    struct voxy_entity *entity,
-    float dt)
+static void entity_update_physics(struct voxy_entity *entity, float dt)
 {
   entity_physics_apply_law(entity, dt);
-  entity_physics_resolve_collision(block_registry, entity_registry, block_manager, entity, dt);
+  entity_physics_resolve_collision(entity, dt);
   entity_physics_integrate(entity, dt);
-  entity_physics_update_grounded(block_registry, entity_registry, block_manager, entity);
+  entity_physics_update_grounded(entity);
 }
 
-void physics_update(
-    struct voxy_block_registry *block_registry,
-    struct voxy_entity_registry *entity_registry,
-    struct voxy_block_manager *block_manager,
-    struct voxy_entity_manager *entity_manager,
-    float dt)
+void physics_update(float dt)
 {
   profile_scope;
 
-  for(entity_handle_t handle=0; handle<arrlenu(entity_manager->allocator.entities); ++handle)
+  struct voxy_entity *entities = entity_get_all();
+  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
   {
-    struct voxy_entity *entity = &entity_manager->allocator.entities[handle];
+    struct voxy_entity *entity = &entities[handle];
     if(!entity->alive)
       continue;
 
-    entity_update_physics(block_registry, entity_registry, block_manager, entity, dt);
+    entity_update_physics(entity, dt);
   }
 }

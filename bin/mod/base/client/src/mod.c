@@ -1,4 +1,6 @@
-#include <voxy/client/context.h>
+#include <voxy/client/registry/block.h>
+#include <voxy/client/registry/entity.h>
+
 #include <voxy/client/entity/entity.h>
 
 #include <libgfx/gl.h>
@@ -25,23 +27,23 @@ static void test_render(const struct voxy_entity *entity, const struct camera *c
   render(camera, &mesh, &texture, transform, 1.0f);
 }
 
-void *mod_create_instance(struct voxy_context *context)
+int mod_init(void)
 {
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "air",
     .type = VOXY_BLOCK_TYPE_INVISIBLE,
     .textures = {0},
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "ether",
     .type = VOXY_BLOCK_TYPE_INVISIBLE,
     .textures = {0},
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "stone",
     .type = VOXY_BLOCK_TYPE_OPAQUE,
@@ -53,7 +55,7 @@ void *mod_create_instance(struct voxy_context *context)
     .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/stone.png",
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "grass",
     .type = VOXY_BLOCK_TYPE_OPAQUE,
@@ -65,7 +67,7 @@ void *mod_create_instance(struct voxy_context *context)
     .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/grass_top.png",
   });
 
-  voxy_block_registry_register_block(context->block_registry, (struct voxy_block_info){
+  voxy_register_block((struct voxy_block_info){
     .mod = "base",
     .name = "water",
     .type = VOXY_BLOCK_TYPE_TRANSPARENT,
@@ -77,24 +79,18 @@ void *mod_create_instance(struct voxy_context *context)
     .textures[DIRECTION_TOP]    = "bin/mod/assets/textures/water.png",
   });
 
-  voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
+  voxy_register_entity((struct voxy_entity_info) {
     .mod = "base",
     .name = "player",
     .render = test_render,
   });
 
-  voxy_entity_registry_register_entity(context->entity_registry, (struct voxy_entity_info) {
+  voxy_register_entity((struct voxy_entity_info) {
     .mod = "base",
     .name = "dummy",
     .render = test_render,
   });
 
-  return NULL;
-}
-
-void mod_destroy_instance(struct voxy_context *context, void *instance)
-{
-  (void)context;
-  (void)instance;
+  return 0;
 }
 

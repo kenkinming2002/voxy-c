@@ -17,7 +17,6 @@ struct voxy_player
   unsigned count;
   unsigned weak_count;
 
-  libnet_server_t server;
   libnet_client_proxy_t client_proxy;
 
   char *name;
@@ -36,6 +35,6 @@ struct voxy_player
 };
 
 /// Create player.
-struct voxy_player *voxy_player_create(libnet_server_t server, libnet_client_proxy_t client_proxy);
+struct voxy_player *voxy_player_create(libnet_client_proxy_t client_proxy);
 
 #endif // PLAYER_PLAYER_H

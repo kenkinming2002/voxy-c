@@ -15,13 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct libnet_client
-{
-  struct ssl_socket socket;
+static struct ssl_socket ssl_socket;
 
-  void *opaque;
-  libnet_client_on_message_received_t on_message_received;
-};
+static void *opaque;
+static libnet_client_on_message_received_t on_message_received;
 
 static SSL_CTX *create_ssl_ctx(void)
 {
@@ -90,84 +87,69 @@ static int socket_connect(const char *node, const char *service)
   return fd;
 }
 
-libnet_client_t libnet_client_create(const char *node, const char *service)
+void libnet_client_init(const char *node, const char *service)
 {
-  libnet_client_t client = malloc(sizeof *client);
-
   SSL_CTX *ssl_ctx = create_ssl_ctx();
   if(!ssl_ctx)
-    goto err_free_client;
+    exit(EXIT_FAILURE);
 
   int fd;
   if((fd = socket_connect(node, service)) == -1)
-    goto err_free_ssl_ctx;
+    exit(EXIT_FAILURE);
 
-  if(ssl_socket_connect(&client->socket, fd, ssl_ctx) != 0)
-    goto err_close_fd;
+  if(ssl_socket_connect(&ssl_socket, fd, ssl_ctx) != 0)
+    exit(EXIT_FAILURE);
 
   SSL_CTX_free(ssl_ctx);
-
-  client->opaque = NULL;
-  client->on_message_received = NULL;
-  return client;
-
-err_close_fd:
-  close(fd);
-err_free_ssl_ctx:
-  SSL_CTX_free(ssl_ctx);
-err_free_client:
-  free(client);
-  return NULL;
 }
 
-void libnet_client_destroy(libnet_client_t client)
+void libnet_client_deinit(void)
 {
-  ssl_socket_destroy(&client->socket);
-  free(client);
+  ssl_socket_destroy(&ssl_socket);
 }
 
-void libnet_client_set_opaque(libnet_client_t client, void *opaque)
+void libnet_client_set_opaque(void *_opaque)
 {
-  client->opaque = opaque;
+  opaque = _opaque;
 }
 
-void *libnet_client_get_opaque(libnet_client_t client)
+void *libnet_client_get_opaque(void)
 {
-  return client->opaque;
+  return opaque;
 }
 
-void libnet_client_set_on_message_received(libnet_client_t client, libnet_client_on_message_received_t cb)
+void libnet_client_set_on_message_received(libnet_client_on_message_received_t cb)
 {
-  client->on_message_received = cb;
+  on_message_received = cb;
 }
 
-bool libnet_client_update(libnet_client_t client)
+bool libnet_client_update(void)
 {
   bool connection_closed = false;
 
-  if(ssl_socket_try_recv(&client->socket, &connection_closed) != 0)
+  if(ssl_socket_try_recv(&ssl_socket, &connection_closed) != 0)
     return true;
 
-  if(ssl_socket_try_decrypt(&client->socket) != 0)
+  if(ssl_socket_try_decrypt(&ssl_socket) != 0)
     return true;
 
-  struct ssl_socket_message_iter iter = ssl_socket_message_iter_begin(&client->socket);
+  struct ssl_socket_message_iter iter = ssl_socket_message_iter_begin(&ssl_socket);
   const struct libnet_message *message;
   while((message = ssl_socket_message_iter_next(&iter)))
-    if(client->on_message_received)
-      client->on_message_received(client, message);
+    if(on_message_received)
+      on_message_received(message);
 
-  if(ssl_socket_try_encrypt(&client->socket) != 0)
+  if(ssl_socket_try_encrypt(&ssl_socket) != 0)
     return true;
 
-  if(ssl_socket_try_send(&client->socket) != 0)
+  if(ssl_socket_try_send(&ssl_socket) != 0)
     return true;
 
   return connection_closed;
 }
 
-void libnet_client_send_message(struct libnet_client *client, struct libnet_message *message)
+void libnet_client_send_message(struct libnet_message *message)
 {
-  ssl_socket_enqueue_message(&client->socket, message);
+  ssl_socket_enqueue_message(&ssl_socket, message);
 }
 

@@ -36,6 +36,23 @@ struct libnet_client_proxy
 LIST_HEAD(libnet_client_proxy_list, libnet_client_proxy);
 LIST_HEAD(libnet_client_proxy_slist, libnet_client_proxy);
 
+static SSL_CTX *ssl_ctx;
+
+static int server_socket;
+static int server_timerfd;
+static int server_signalfd;
+
+static int server_epollfd;
+
+static struct libnet_client_proxy_list client_proxies = LIST_HEAD_INITIALIZER(client_proxies);
+static struct libnet_client_proxy_slist interested_client_proxies = LIST_HEAD_INITIALIZER(interested_client_proxies);
+
+static void *opaque;
+static libnet_server_on_update on_update;
+static libnet_server_on_client_connected_t on_client_connected;
+static libnet_server_on_client_disconnected_t on_client_disconnected;
+static libnet_server_on_message_received_t on_message_received;
+
 static libnet_client_proxy_t client_proxy_create(int fd, SSL_CTX *ssl_ctx)
 {
   libnet_client_proxy_t client_proxy = malloc(sizeof *client_proxy);
@@ -65,59 +82,33 @@ void *libnet_client_proxy_get_opaque(libnet_client_proxy_t client_proxy)
   return client_proxy->opaque;
 }
 
-struct libnet_server
+static void create_ssl_ctx(const char *cert, const char *key)
 {
-  SSL_CTX *ssl_ctx;
-
-  int socket;
-  int timerfd;
-  int signalfd;
-
-  int epollfd;
-
-  struct libnet_client_proxy_list client_proxies;
-  struct libnet_client_proxy_slist interested_client_proxies;
-
-  void *opaque;
-  libnet_server_on_update on_update;
-  libnet_server_on_client_connected_t on_client_connected;
-  libnet_server_on_client_disconnected_t on_client_disconnected;
-  libnet_server_on_message_received_t on_message_received;
-};
-
-static SSL_CTX *create_ssl_ctx(const char *cert, const char *key)
-{
-  SSL_CTX *ssl_ctx = SSL_CTX_new(TLS_server_method());
+  ssl_ctx = SSL_CTX_new(TLS_server_method());
   if(!ssl_ctx)
-    goto err;
+    exit(EXIT_FAILURE);
 
   if(SSL_CTX_use_certificate_file(ssl_ctx, cert, SSL_FILETYPE_PEM) <= 0)
   {
     fprintf(stderr, "libnet: Error: Failed to load SSL certificate from %s: %s\n", cert, ERR_error_string(ERR_get_error(), NULL));
-    goto err_free_ctx;
+    exit(EXIT_FAILURE);
   }
 
   if(SSL_CTX_use_PrivateKey_file(ssl_ctx, key, SSL_FILETYPE_PEM) <= 0)
   {
     fprintf(stderr, "libnet: Error: Failed to load SSL private key from %s: %s\n", key, ERR_error_string(ERR_get_error(), NULL));
-    goto err_free_ctx;
+    exit(EXIT_FAILURE);
   }
 
   if(!SSL_CTX_check_private_key(ssl_ctx))
   {
     fprintf(stderr, "libnet: Error: Failed to check SSL private key: %s\n", ERR_error_string(ERR_get_error(), NULL));
-    goto err_free_ctx;
+    exit(EXIT_FAILURE);
   }
 
   SSL_CTX_set_max_proto_version(ssl_ctx, TLS1_2_VERSION);
   SSL_CTX_set_security_level(ssl_ctx, 1);
   SSL_CTX_clear_options(ssl_ctx, SSL_OP_NO_COMPRESSION);
-  return ssl_ctx;
-
-err_free_ctx:
-  SSL_CTX_free(ssl_ctx);
-err:
-  return NULL;
 }
 
 static void set_nonblock(int fd)
@@ -161,7 +152,7 @@ err_close_fd:
   return -1;
 }
 
-static int socket_bind(const char *service)
+static void socket_bind(const char *service)
 {
   struct addrinfo hints = {0};
   hints.ai_family = AF_UNSPEC;
@@ -173,25 +164,27 @@ static int socket_bind(const char *service)
   if((result = getaddrinfo(NULL, service, &hints, &res)) != 0)
   {
     fprintf(stderr, "libnet: Error: Failed to resolve %s: %s\n", service, gai_strerror(result));
-    return -1;
+    exit(EXIT_FAILURE);
   }
 
-  int fd = -1;
+  server_socket = -1;
   for(struct addrinfo *p = res; p; p = p->ai_next)
-    if((fd = socket_bind_impl(p)) != -1)
+    if((server_socket = socket_bind_impl(p)) != -1)
       break;
 
+  if(server_socket == -1)
+    exit(EXIT_FAILURE);
+
   freeaddrinfo(res);
-  return fd;
 }
 
-static int create_timerfd(unsigned long long nsec)
+static void create_timerfd(unsigned long long nsec)
 {
-  int fd = fd = timerfd_create(CLOCK_MONOTONIC, 0);
-  if(fd == -1)
+  server_timerfd = timerfd_create(CLOCK_MONOTONIC, 0);
+  if(server_timerfd == -1)
   {
     fprintf(stderr, "libnet: Error: Failed to create timer file descriptor: %s\n", strerror(errno));
-    return -1;
+    exit(EXIT_FAILURE);
   }
 
   struct itimerspec itimerspec;
@@ -199,45 +192,40 @@ static int create_timerfd(unsigned long long nsec)
   itimerspec.it_value.tv_nsec = nsec;
   itimerspec.it_interval.tv_sec = 0;
   itimerspec.it_interval.tv_nsec = nsec;
-  if(timerfd_settime(fd, 0, &itimerspec, NULL) == -1)
+  if(timerfd_settime(server_timerfd, 0, &itimerspec, NULL) == -1)
   {
     fprintf(stderr, "libnet: Error: Failed to configure timer file descriptor: %s\n", strerror(errno));
-    close(fd);
-    return -1;
+    exit(EXIT_FAILURE);
   }
 
-  set_nonblock(fd);
-  return fd;
+  set_nonblock(server_timerfd);
 }
 
-static int create_signalfd(void)
+static void create_signalfd(void)
 {
   sigset_t mask;
   sigemptyset(&mask);
   sigaddset(&mask, SIGINT);
 
-  int fd = signalfd(-1, &mask, SFD_NONBLOCK);
-  if(fd == -1)
+  server_signalfd = signalfd(-1, &mask, SFD_NONBLOCK);
+  if(server_signalfd == -1)
   {
     fprintf(stderr, "libnet: Error: Failed to create signal file descriptor: %s\n", strerror(errno));
-    return -1;
+    exit(EXIT_FAILURE);
   }
-
-  return fd;
 }
 
-static int create_epollfd(void)
+static void create_epollfd(void)
 {
-  int fd = epoll_create1(0);
-  if(fd == -1)
+  server_epollfd = epoll_create1(0);
+  if(server_epollfd == -1)
   {
     fprintf(stderr, "libnet: Error: Failed to create epoll file descriptor: %s\n", strerror(errno));
-    return -1;
+    exit(EXIT_FAILURE);
   }
-  return fd;
 }
 
-static int configure_epollfd_in(int fd, int *rfd)
+static void configure_epollfd_in(int fd, int *rfd)
 {
   struct epoll_event epoll_event;
   epoll_event.events = EPOLLET | EPOLLIN;
@@ -245,107 +233,71 @@ static int configure_epollfd_in(int fd, int *rfd)
   if(epoll_ctl(fd, EPOLL_CTL_ADD, *rfd, &epoll_event) == -1)
   {
     fprintf(stderr, "libnet: Error: Failed to configure epoll file descriptor: %s\n", strerror(errno));
-    return -1;
+    exit(EXIT_FAILURE);
   }
-  return 0;
 }
 
-libnet_server_t libnet_server_create(const char *service, const char *cert, const char *key, unsigned long long nsec)
+void libnet_server_init(const char *service, const char *cert, const char *key, unsigned long long nsec)
 {
-  libnet_server_t server = malloc(sizeof *server);
+  create_ssl_ctx(cert, key);
+  socket_bind(service);
 
-  if(!(server->ssl_ctx = create_ssl_ctx(cert, key)))
-    goto err_free_server;
+  create_timerfd(nsec);
+  create_signalfd();
 
-  if((server->socket = socket_bind(service)) == -1)
-    goto err_free_ssl_ctx;
+  create_epollfd();
+  configure_epollfd_in(server_epollfd, &server_socket);
+  configure_epollfd_in(server_epollfd, &server_timerfd);
+  configure_epollfd_in(server_epollfd, &server_signalfd);
 
-  if((server->timerfd = create_timerfd(nsec)) == -1)
-    goto err_close_socket;
+  LIST_INIT(&client_proxies);
+  LIST_INIT(&interested_client_proxies);
 
-  if((server->signalfd = create_signalfd()) == -1)
-    goto err_close_timerfd;
-
-  if((server->epollfd = create_epollfd()) == -1)
-    goto err_close_signalfd;
-
-  if(configure_epollfd_in(server->epollfd, &server->socket) != 0)
-    goto err_close_epollfd;
-
-  if(configure_epollfd_in(server->epollfd, &server->timerfd) != 0)
-    goto err_close_epollfd;
-
-  if(configure_epollfd_in(server->epollfd, &server->signalfd) != 0)
-    goto err_close_epollfd;
-
-  LIST_INIT(&server->client_proxies);
-  LIST_INIT(&server->interested_client_proxies);
-
-  server->opaque = NULL;
-  server->on_client_connected = NULL;
-  server->on_client_disconnected = NULL;
-  server->on_message_received = NULL;
-  return server;
-
-err_close_epollfd:
-  close(server->epollfd);
-err_close_signalfd:
-  close(server->signalfd);
-err_close_timerfd:
-  close(server->timerfd);
-err_close_socket:
-  close(server->socket);
-err_free_ssl_ctx:
-  SSL_CTX_free(server->ssl_ctx);
-err_free_server:
-  free(server);
-  return NULL;
 }
 
-void libnet_server_destroy(libnet_server_t server)
+void libnet_server_deinit(void)
 {
   libnet_client_proxy_t client_proxy;
-  while((client_proxy = LIST_FIRST(&server->client_proxies)))
+  while((client_proxy = LIST_FIRST(&client_proxies)))
   {
     LIST_REMOVE(client_proxy, entry);
     client_proxy_destroy(client_proxy);
   }
 
-  close(server->epollfd);
-  close(server->socket);
-  close(server->timerfd);
-  close(server->signalfd);
-  free(server);
+  close(server_epollfd);
+  close(server_socket);
+  close(server_timerfd);
+  close(server_signalfd);
 }
 
-void libnet_server_set_opaque(libnet_server_t server, void *opaque)
+void libnet_server_set_opaque(void *_opaque)
 {
-  server->opaque = opaque;
+  opaque = _opaque;
 }
 
-void *libnet_server_get_opaque(libnet_server_t server)
+void *libnet_server_get_opaque(void)
 {
-  return server->opaque;
+  return opaque;
 }
 
-void libnet_server_set_on_update(libnet_server_t server, libnet_server_on_update cb)
+void libnet_server_set_on_update(libnet_server_on_update cb)
 {
-  server->on_update = cb;
+  on_update = cb;
 }
 
-void libnet_server_set_on_client_connected(libnet_server_t server, libnet_server_on_client_connected_t cb)
+void libnet_server_set_on_client_connected(libnet_server_on_client_connected_t cb)
 {
-  server->on_client_connected = cb;
+  on_client_connected = cb;
 }
 
-void libnet_server_set_on_client_disconnected(libnet_server_t server, libnet_server_on_client_disconnected_t cb)
+void libnet_server_set_on_client_disconnected(libnet_server_on_client_disconnected_t cb)
 {
-  server->on_client_disconnected = cb;
+  on_client_disconnected = cb;
 }
 
-void libnet_server_set_on_message_received(libnet_server_t server, libnet_server_on_message_received_t cb)
+void libnet_server_set_on_message_received(libnet_server_on_message_received_t cb)
 {
-  server->on_message_received = cb;
+  on_message_received = cb;
 }
 
 static int accept_client(int fd)
@@ -396,32 +348,32 @@ static int read_signalfd(int fd, struct signalfd_siginfo *siginfo)
   return read_special(fd, siginfo, sizeof *siginfo, "signalfd");
 }
 
-static void libnet_server_insert_client_proxy(libnet_server_t server, libnet_client_proxy_t client_proxy)
+static void libnet_server_insert_client_proxy(libnet_client_proxy_t client_proxy)
 {
   struct epoll_event epoll_event;
   epoll_event.events = EPOLLET | EPOLLIN;
   epoll_event.data.ptr = client_proxy;
-  if(epoll_ctl(server->epollfd, EPOLL_CTL_ADD, client_proxy->socket.fd, &epoll_event))
+  if(epoll_ctl(server_epollfd, EPOLL_CTL_ADD, client_proxy->socket.fd, &epoll_event))
   {
     fprintf(stderr, "libnet: Error: Failed to configure epoll file descriptor: %s\n", strerror(errno));
     abort();
   }
 
-  LIST_INSERT_HEAD(&server->client_proxies, client_proxy, entry);
-  if(server->on_client_connected) server->on_client_connected(server, client_proxy);
+  LIST_INSERT_HEAD(&client_proxies, client_proxy, entry);
+  if(on_client_connected) on_client_connected(client_proxy);
 }
 
-static void libnet_server_remove_client_proxy(libnet_server_t server, libnet_client_proxy_t client_proxy)
+static void libnet_server_remove_client_proxy(libnet_client_proxy_t client_proxy)
 {
-  if(server->on_client_disconnected)
-    server->on_client_disconnected(server, client_proxy);
+  if(on_client_disconnected)
+    on_client_disconnected(client_proxy);
 
   LIST_REMOVE(client_proxy, entry);
   if(client_proxy->interested)
     LIST_REMOVE(client_proxy, interested_entry);
 
   struct epoll_event epoll_event;
-  if(epoll_ctl(server->epollfd, EPOLL_CTL_DEL, client_proxy->socket.fd, &epoll_event) != 0)
+  if(epoll_ctl(server_epollfd, EPOLL_CTL_DEL, client_proxy->socket.fd, &epoll_event) != 0)
   {
     fprintf(stderr, "libnet: Error: Failed to configure epoll file descriptor: %s\n", strerror(errno));
     abort();
@@ -433,7 +385,7 @@ static bool begin_handle_client_proxy(libnet_client_proxy_t client_proxy)
   return ssl_socket_want_send(&client_proxy->socket);
 }
 
-static void end_handle_client_proxy(libnet_server_t server, libnet_client_proxy_t client_proxy, bool value)
+static void end_handle_client_proxy(libnet_client_proxy_t client_proxy, bool value)
 {
   const bool new_value = ssl_socket_want_send(&client_proxy->socket);
   if(new_value != value)
@@ -441,7 +393,7 @@ static void end_handle_client_proxy(libnet_server_t server, libnet_client_proxy_
     struct epoll_event epoll_event;
     epoll_event.events = EPOLLET | EPOLLIN | (new_value ? EPOLLOUT : 0);
     epoll_event.data.ptr = client_proxy;
-    if(epoll_ctl(server->epollfd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) != 0)
+    if(epoll_ctl(server_epollfd, EPOLL_CTL_MOD, client_proxy->socket.fd, &epoll_event) != 0)
     {
       fprintf(stderr, "libnet: Error: Failed to configure epoll file descriptor: %s\n", strerror(errno));
       abort();
@@ -449,7 +401,7 @@ static void end_handle_client_proxy(libnet_server_t server, libnet_client_proxy_
   }
 }
 
-void libnet_server_run(libnet_server_t server)
+void libnet_server_run(void)
 {
   sigset_t mask;
   sigset_t oldmask;
@@ -461,7 +413,7 @@ void libnet_server_run(libnet_server_t server)
   for(;;)
   {
     struct epoll_event epoll_events[32];
-    int epoll_event_count = epoll_wait(server->epollfd, epoll_events, sizeof epoll_events / sizeof epoll_events[0], -1);
+    int epoll_event_count = epoll_wait(server_epollfd, epoll_events, sizeof epoll_events / sizeof epoll_events[0], -1);
     if(epoll_event_count == -1)
     {
       fprintf(stderr, "libnet: Warn: Failed to wait on epoll file descriptor: %s\n", strerror(errno));
@@ -471,30 +423,30 @@ void libnet_server_run(libnet_server_t server)
     for(int i=0; i<epoll_event_count; ++i)
     {
       const struct epoll_event epoll_event = epoll_events[i];
-      if(epoll_event.data.ptr == &server->socket)
+      if(epoll_event.data.ptr == &server_socket)
       {
         int client_fd;
-        while((client_fd = accept_client(server->socket)) != -1)
+        while((client_fd = accept_client(server_socket)) != -1)
         {
-          libnet_client_proxy_t client_proxy = client_proxy_create(client_fd, server->ssl_ctx);
+          libnet_client_proxy_t client_proxy = client_proxy_create(client_fd, ssl_ctx);
           if(!client_proxy) continue;
-          libnet_server_insert_client_proxy(server, client_proxy);
+          libnet_server_insert_client_proxy(client_proxy);
         }
       }
-      else if(epoll_event.data.ptr == &server->timerfd)
+      else if(epoll_event.data.ptr == &server_timerfd)
       {
         uint64_t total = 0;
         uint64_t count;
-        while(read_timerfd(server->timerfd, &count) == 0)
+        while(read_timerfd(server_timerfd, &count) == 0)
           total += count;
 
         if(total > 0)
-          server->on_update(server);
+          on_update();
       }
-      else if(epoll_event.data.ptr == &server->signalfd)
+      else if(epoll_event.data.ptr == &server_signalfd)
       {
         struct signalfd_siginfo siginfo;
-        while(read_signalfd(server->signalfd, &siginfo) == 0)
+        while(read_signalfd(server_signalfd, &siginfo) == 0)
         {
           fprintf(stderr, "libnet: Info: Caught %s... Exiting.\n", strsignal(siginfo.ssi_signo));
           goto out;
@@ -508,14 +460,14 @@ void libnet_server_run(libnet_server_t server)
           bool connection_closed = 0;
           if(epoll_event.events & EPOLLIN && ssl_socket_try_recv(&client_proxy->socket, &connection_closed) != 0)
           {
-            libnet_server_remove_client_proxy(server, client_proxy);
+            libnet_server_remove_client_proxy(client_proxy);
             client_proxy_destroy(client_proxy);
             continue;
           }
 
           if(ssl_socket_try_decrypt(&client_proxy->socket) != 0)
           {
-            libnet_server_remove_client_proxy(server, client_proxy);
+            libnet_server_remove_client_proxy(client_proxy);
             client_proxy_destroy(client_proxy);
             continue;
           }
@@ -523,70 +475,70 @@ void libnet_server_run(libnet_server_t server)
           struct ssl_socket_message_iter iter = ssl_socket_message_iter_begin(&client_proxy->socket);
           const struct libnet_message *message;
           while((message = ssl_socket_message_iter_next(&iter)))
-            if(server->on_message_received)
-              server->on_message_received(server, client_proxy, message);
+            if(on_message_received)
+              on_message_received(client_proxy, message);
 
           if(connection_closed)
           {
-            libnet_server_remove_client_proxy(server, client_proxy);
+            libnet_server_remove_client_proxy(client_proxy);
             client_proxy_destroy(client_proxy);
             continue;
           }
 
           if(ssl_socket_try_encrypt(&client_proxy->socket) != 0)
           {
-            libnet_server_remove_client_proxy(server, client_proxy);
+            libnet_server_remove_client_proxy(client_proxy);
             client_proxy_destroy(client_proxy);
             continue;
           }
 
           if(epoll_event.events & EPOLLOUT && ssl_socket_try_send(&client_proxy->socket) != 0)
           {
-            libnet_server_remove_client_proxy(server, client_proxy);
+            libnet_server_remove_client_proxy(client_proxy);
             client_proxy_destroy(client_proxy);
             continue;
           }
         }
-        end_handle_client_proxy(server, client_proxy, value);
+        end_handle_client_proxy(client_proxy, value);
       }
     }
 
     libnet_client_proxy_t interested_client_proxy;
-    LIST_FOREACH(interested_client_proxy, &server->interested_client_proxies, interested_entry)
+    LIST_FOREACH(interested_client_proxy, &interested_client_proxies, interested_entry)
     {
       interested_client_proxy->interested = false;
 
       const bool value = begin_handle_client_proxy(interested_client_proxy);
       if(ssl_socket_try_encrypt(&interested_client_proxy->socket) != 0)
       {
-        libnet_server_remove_client_proxy(server, interested_client_proxy);
+        libnet_server_remove_client_proxy(interested_client_proxy);
         client_proxy_destroy(interested_client_proxy);
         continue;
       }
-      end_handle_client_proxy(server, interested_client_proxy, value);
+      end_handle_client_proxy(interested_client_proxy, value);
     }
-    LIST_INIT(&server->interested_client_proxies);
+    LIST_INIT(&interested_client_proxies);
   }
 
 out:
   pthread_sigmask(SIG_SETMASK, &oldmask, NULL);
 }
 
-void libnet_server_foreach_client(libnet_server_t server, void(*cb)(libnet_server_t server, libnet_client_proxy_t client, void *data), void *data)
+void libnet_server_foreach_client(void(*cb)(libnet_client_proxy_t client, void *data), void *data)
 {
   libnet_client_proxy_t client_proxy;
-  LIST_FOREACH(client_proxy, &server->client_proxies, entry)
-    cb(server, client_proxy, data);
+  LIST_FOREACH(client_proxy, &client_proxies, entry)
+    cb(client_proxy, data);
 }
 
-void libnet_server_send_message_all(libnet_server_t server, const struct libnet_message *message)
+void libnet_server_send_message_all(const struct libnet_message *message)
 {
   libnet_client_proxy_t client_proxy;
-  LIST_FOREACH(client_proxy, &server->client_proxies, entry)
-    libnet_server_send_message(server, client_proxy,  message);
+  LIST_FOREACH(client_proxy, &client_proxies, entry)
+    libnet_server_send_message(client_proxy,  message);
 }
 
-void libnet_server_send_message(libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *message)
+void libnet_server_send_message(libnet_client_proxy_t client_proxy, const struct libnet_message *message)
 {
   // Insert client proxy into the interested list if not already. This ensure
   // that we take a look at and try to send the enqueued message at the end of
@@ -637,7 +589,7 @@ void libnet_server_send_message(libnet_server_t server, libnet_client_proxy_t cl
   if(!client_proxy->interested)
   {
     client_proxy->interested = true;
-    LIST_INSERT_HEAD(&server->interested_client_proxies, client_proxy, interested_entry);
+    LIST_INSERT_HEAD(&interested_client_proxies, client_proxy, interested_entry);
   }
   ssl_socket_enqueue_message(&client_proxy->socket, message);
 }

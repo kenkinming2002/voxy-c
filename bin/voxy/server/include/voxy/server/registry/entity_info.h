@@ -8,7 +8,6 @@
 #include <stdbool.h>
 
 struct voxy_entity;
-struct voxy_context;
 
 struct voxy_entity_info
 {
@@ -22,7 +21,7 @@ struct voxy_entity_info
   ///
   /// Called once per frame for each entity. Return false if entity should be
   /// removed.
-  bool(*update)(struct voxy_entity *entity, float dt, const struct voxy_context *context);
+  bool(*update)(struct voxy_entity *entity, float dt);
 
   /// Callback function to destroy entity opaque pointer.
   void(*destroy_opaque)(void *opaque);

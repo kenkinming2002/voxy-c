@@ -2,6 +2,8 @@
 
 #include "group.h"
 
+#include <voxy/config.h>
+
 #include <libserde/serializer.h>
 #include <libserde/deserializer.h>
 
@@ -11,6 +13,8 @@
 #include <libcore/profile.h>
 #include <libcore/unreachable.h>
 
+#include <liburing.h>
+
 #include <stb_ds.h>
 
 #include <string.h>
@@ -19,6 +23,51 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define CHUNK_DATABASE_LOAD_LIMIT 512
+
+struct voxy_block_group;
+
+struct block_database_load_wrapper
+{
+  int fixed_file;
+
+  char *path;
+  struct voxy_block_group *block_group;
+  struct iovec iovecs[2];
+
+  bool done;
+};
+
+struct block_database_load_entry
+{
+  ivec3_t key;
+  struct block_database_load_wrapper *value;
+};
+
+struct block_database_save_wrapper
+{
+  int fixed_file;
+
+  char *dirs[3];
+  char *path;
+  struct iovec iovecs[2];
+
+  bool done;
+};
+
+struct block_database_save_entry
+{
+  ivec3_t key;
+  struct block_database_save_wrapper *value;
+};
+
+static struct io_uring ring;
+static size_t fixed_file_bitmaps[CHUNK_DATABASE_LOAD_LIMIT / SIZE_WIDTH];
+
+static char *directory;
+static struct block_database_load_entry *load_entries;
+static struct block_database_save_entry *save_entries;
+
 #define block_group_dir0(directory, position) "%s/%d",            directory, position.x
 #define block_group_dir1(directory, position) "%s/%d/%d/",        directory, position.x, position.y
 #define block_group_dir2(directory, position) "%s/%d/%d/%d",      directory, position.x, position.y, position.z
@@ -26,31 +75,21 @@
 
 #define block_group_size (sizeof ((struct voxy_block_group *)0)->ids + sizeof ((struct voxy_block_group *)0)->light_levels)
 
-void voxy_block_database_init(struct voxy_block_database *block_database, const char *world_directory)
+void voxy_block_database_init(const char *world_directory)
 {
-  io_uring_queue_init(512, &block_database->ring, 0);
-  io_uring_register_files_sparse(&block_database->ring, CHUNK_DATABASE_LOAD_LIMIT);
-  memset(&block_database->fixed_file_bitmaps, 0, sizeof block_database->fixed_file_bitmaps);
+  io_uring_queue_init(512, &ring, 0);
+  io_uring_register_files_sparse(&ring, CHUNK_DATABASE_LOAD_LIMIT);
+  memset(&fixed_file_bitmaps, 0, sizeof fixed_file_bitmaps);
 
-  block_database->directory = aformat("%s/chunks/blocks", world_directory);
-  if(mkdir_recursive(block_database->directory) != 0)
+  directory = aformat("%s/chunks/blocks", world_directory);
+  if(mkdir_recursive(directory) != 0)
   {
-    LOG_ERROR("Failed to create directory: %s", block_database->directory);
+    LOG_ERROR("Failed to create directory: %s", directory);
     exit(EXIT_FAILURE);
   }
 
-  block_database->load_entries = NULL;
-  block_database->save_entries = NULL;
-}
-
-void voxy_block_database_fini(struct voxy_block_database *block_database)
-{
-  io_uring_register_sync_cancel(&block_database->ring, &(struct io_uring_sync_cancel_reg){ .flags = IORING_ASYNC_CANCEL_ANY, .timeout = { .tv_sec = -1, .tv_nsec = -1 } });
-  io_uring_queue_exit(&block_database->ring);
-
-  free(block_database->directory);
-  hmfree(block_database->load_entries);
-  hmfree(block_database->save_entries);
+  load_entries = NULL;
+  save_entries = NULL;
 }
 
 enum tag
@@ -73,25 +112,25 @@ enum tag
 #define tagged_ptr_value(tagged_ptr) ((void *)((tagged_ptr) & ~TAG_MASK))
 #define tagged_ptr_tag(tagged_ptr) (enum tag)((tagged_ptr) & TAG_MASK)
 
-static int alloc_fixed_file(struct voxy_block_database *block_database)
+static int alloc_fixed_file(void)
 {
   for(int i=0; i<CHUNK_DATABASE_LOAD_LIMIT/SIZE_WIDTH; ++i)
-    if(block_database->fixed_file_bitmaps[i] != SIZE_MAX)
+    if(fixed_file_bitmaps[i] != SIZE_MAX)
       for(int j=0; j<SIZE_WIDTH; ++j)
-        if(!(block_database->fixed_file_bitmaps[i] & (size_t)((size_t)1 << j)))
+        if(!(fixed_file_bitmaps[i] & (size_t)((size_t)1 << j)))
         {
-          block_database->fixed_file_bitmaps[i] |= (size_t)((size_t)1 << j);
+          fixed_file_bitmaps[i] |= (size_t)((size_t)1 << j);
           return i * SIZE_WIDTH + j;
         }
 
   return -1;
 }
 
-static void free_fixed_file(struct voxy_block_database *block_database, int fixed_file)
+static void free_fixed_file(int fixed_file)
 {
   int i = fixed_file / SIZE_WIDTH;
   int j = fixed_file % SIZE_WIDTH;
-  block_database->fixed_file_bitmaps[i] &= ~(size_t)((size_t)1 << j);
+  fixed_file_bitmaps[i] &= ~(size_t)((size_t)1 << j);
 }
 
 static void io_uring_sq_ensure_space(struct io_uring *ring, unsigned n)
@@ -100,14 +139,14 @@ static void io_uring_sq_ensure_space(struct io_uring *ring, unsigned n)
     io_uring_submit(ring);
 }
 
-struct block_group_future voxy_block_database_load(struct voxy_block_database *block_database, ivec3_t position)
+struct block_group_future voxy_block_database_load(ivec3_t position)
 {
   profile_scope;
 
-  ptrdiff_t i = hmgeti(block_database->load_entries, position);
+  ptrdiff_t i = hmgeti(load_entries, position);
   if(i == -1)
   {
-    int fixed_file = alloc_fixed_file(block_database);
+    int fixed_file = alloc_fixed_file();
     if(fixed_file == -1)
       return block_group_future_pending;
 
@@ -115,7 +154,7 @@ struct block_group_future voxy_block_database_load(struct voxy_block_database *b
 
     wrapper->fixed_file = fixed_file;
 
-    wrapper->path = aformat(block_group_file(block_database->directory, position));
+    wrapper->path = aformat(block_group_file(directory, position));
 
     wrapper->block_group = voxy_block_group_create();
     wrapper->block_group->disk_dirty = false;
@@ -129,44 +168,44 @@ struct block_group_future voxy_block_database_load(struct voxy_block_database *b
     wrapper->done = false;
 
     struct io_uring_sqe *sqe;
-    io_uring_sq_ensure_space(&block_database->ring, 3);
+    io_uring_sq_ensure_space(&ring, 3);
 
-    sqe = io_uring_get_sqe(&block_database->ring);
+    sqe = io_uring_get_sqe(&ring);
     io_uring_prep_open_direct(sqe, wrapper->path, O_RDONLY, 0, wrapper->fixed_file);
     io_uring_sqe_set_flags(sqe, IOSQE_IO_LINK);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_LOAD_OPEN_DIRECT));
 
-    sqe = io_uring_get_sqe(&block_database->ring);
+    sqe = io_uring_get_sqe(&ring);
     io_uring_prep_readv(sqe, wrapper->fixed_file, wrapper->iovecs, sizeof wrapper->iovecs / sizeof wrapper->iovecs[0], 0);
     io_uring_sqe_set_flags(sqe, IOSQE_IO_LINK | IOSQE_FIXED_FILE);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_LOAD_READV));
 
-    sqe = io_uring_get_sqe(&block_database->ring);
+    sqe = io_uring_get_sqe(&ring);
     io_uring_prep_close_direct(sqe, wrapper->fixed_file);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_LOAD_CLOSE_DIRECT));
 
-    hmput(block_database->load_entries, position, wrapper);
+    hmput(load_entries, position, wrapper);
     return block_group_future_pending;
   }
 
-  struct block_database_load_wrapper *wrapper = block_database->load_entries[i].value;
+  struct block_database_load_wrapper *wrapper = load_entries[i].value;
   if(!wrapper->done)
     return block_group_future_pending;
 
   struct voxy_block_group *block_group = wrapper->block_group;
-  hmdel(block_database->load_entries, position);
+  hmdel(load_entries, position);
   free(wrapper);
   return block_group_future_ready(block_group);
 }
 
-struct unit_future voxy_block_database_save(struct voxy_block_database *block_database, ivec3_t position, struct voxy_block_group *block_group)
+struct unit_future voxy_block_database_save(ivec3_t position, struct voxy_block_group *block_group)
 {
   profile_scope;
 
-  ptrdiff_t i = hmgeti(block_database->save_entries, position);
+  ptrdiff_t i = hmgeti(save_entries, position);
   if(i == -1)
   {
-    int fixed_file = alloc_fixed_file(block_database);
+    int fixed_file = alloc_fixed_file();
     if(fixed_file == -1)
       return unit_future_pending;
 
@@ -174,11 +213,11 @@ struct unit_future voxy_block_database_save(struct voxy_block_database *block_da
 
     wrapper->fixed_file = fixed_file;
 
-    wrapper->dirs[0] = aformat(block_group_dir0(block_database->directory, position));
-    wrapper->dirs[1] = aformat(block_group_dir1(block_database->directory, position));
-    wrapper->dirs[2] = aformat(block_group_dir2(block_database->directory, position));
+    wrapper->dirs[0] = aformat(block_group_dir0(directory, position));
+    wrapper->dirs[1] = aformat(block_group_dir1(directory, position));
+    wrapper->dirs[2] = aformat(block_group_dir2(directory, position));
 
-    wrapper->path = aformat(block_group_file(block_database->directory, position));
+    wrapper->path = aformat(block_group_file(directory, position));
 
     wrapper->iovecs[0].iov_base = block_group->ids;
     wrapper->iovecs[0].iov_len = sizeof block_group->ids;
@@ -188,53 +227,53 @@ struct unit_future voxy_block_database_save(struct voxy_block_database *block_da
     wrapper->done = false;
 
     struct io_uring_sqe *sqe;
-    io_uring_sq_ensure_space(&block_database->ring, 6);
+    io_uring_sq_ensure_space(&ring, 6);
 
     for(unsigned i=0; i<3; ++i)
     {
-      sqe = io_uring_get_sqe(&block_database->ring);
+      sqe = io_uring_get_sqe(&ring);
       io_uring_prep_mkdir(sqe, wrapper->dirs[i], 0755);
       io_uring_sqe_set_flags(sqe, IOSQE_IO_HARDLINK);
       io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_SAVE_MKDIR));
     }
 
-    sqe = io_uring_get_sqe(&block_database->ring);
+    sqe = io_uring_get_sqe(&ring);
     io_uring_prep_open_direct(sqe, wrapper->path, O_WRONLY | O_CREAT | O_TRUNC, 0644, wrapper->fixed_file);
     io_uring_sqe_set_flags(sqe, IOSQE_IO_LINK);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_SAVE_OPEN_DIRECT));
 
-    sqe = io_uring_get_sqe(&block_database->ring);
+    sqe = io_uring_get_sqe(&ring);
     io_uring_prep_writev(sqe, wrapper->fixed_file, wrapper->iovecs, sizeof wrapper->iovecs / sizeof wrapper->iovecs[0], 0);
     io_uring_sqe_set_flags(sqe, IOSQE_IO_LINK | IOSQE_FIXED_FILE);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_SAVE_READV));
 
-    sqe = io_uring_get_sqe(&block_database->ring);
+    sqe = io_uring_get_sqe(&ring);
     io_uring_prep_close_direct(sqe, wrapper->fixed_file);
     io_uring_sqe_set_data64(sqe, tagged_ptr(wrapper, TAG_SAVE_CLOSE_DIRECT));
 
-    hmput(block_database->save_entries, position, wrapper);
+    hmput(save_entries, position, wrapper);
     return unit_future_pending;
   }
 
-  struct block_database_save_wrapper *wrapper = block_database->save_entries[i].value;
+  struct block_database_save_wrapper *wrapper = save_entries[i].value;
   if(!wrapper->done)
     return unit_future_pending;
 
-  hmdel(block_database->save_entries, position);
+  hmdel(save_entries, position);
   free(wrapper);
   return unit_future_ready;
 }
 
-void voxy_block_database_update(struct voxy_block_database *block_database)
+void voxy_block_database_update(void)
 {
   profile_scope;
 
-  io_uring_submit(&block_database->ring);
+  io_uring_submit(&ring);
 
   struct io_uring_cqe *cqe;
   unsigned head;
   unsigned count = 0;
-  io_uring_for_each_cqe(&block_database->ring, head, cqe)
+  io_uring_for_each_cqe(&ring, head, cqe)
   {
     uintptr_t tagged_ptr = io_uring_cqe_get_data64(cqe);
     switch(tagged_ptr_tag(tagged_ptr))
@@ -245,7 +284,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
 
         if(cqe->res == -ENOENT)
         {
-          free_fixed_file(block_database, wrapper->fixed_file);
+          free_fixed_file(wrapper->fixed_file);
           free(wrapper->path);
           voxy_block_group_destroy(wrapper->block_group);
 
@@ -295,7 +334,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
           break;
         }
 
-        free_fixed_file(block_database, wrapper->fixed_file);
+        free_fixed_file(wrapper->fixed_file);
         free(wrapper->path);
 
         wrapper->path = NULL;
@@ -364,7 +403,7 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
           break;
         }
 
-        free_fixed_file(block_database, wrapper->fixed_file);
+        free_fixed_file(wrapper->fixed_file);
         for(unsigned i=0; i<3; ++i) free(wrapper->dirs[i]);
         free(wrapper->path);
 
@@ -378,5 +417,5 @@ void voxy_block_database_update(struct voxy_block_database *block_database)
 
     ++count;
   }
-  io_uring_cq_advance(&block_database->ring, count);
+  io_uring_cq_advance(&ring, count);
 }

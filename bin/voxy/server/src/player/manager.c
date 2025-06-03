@@ -10,34 +10,26 @@
 #include <string.h>
 #include <stdio.h>
 
-void voxy_player_manager_init(struct voxy_player_manager *player_manager)
+static voxy_on_new_player on_new_player;
+
+void voxy_set_on_new_player(voxy_on_new_player _on_new_player)
 {
-  player_manager->on_new_player = NULL;
+  on_new_player = _on_new_player;
 }
 
-void voxy_player_manager_fini(struct voxy_player_manager *player_manager)
+void voxy_player_manager_on_client_connected(libnet_client_proxy_t client_proxy)
 {
-  (void)player_manager;
-}
-
-void voxy_player_manager_set_on_new_player(struct voxy_player_manager *player_manager, voxy_on_new_player on_new_player)
-{
-  player_manager->on_new_player = on_new_player;
-}
-
-void voxy_player_manager_on_client_connected(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
-{
-  struct voxy_player *player = voxy_player_create(server, client_proxy);
+  struct voxy_player *player = voxy_player_create(client_proxy);
   libnet_client_proxy_set_opaque(client_proxy, player);
 }
 
-void voxy_player_manager_on_client_disconnected(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy)
+void voxy_player_manager_on_client_disconnected(libnet_client_proxy_t client_proxy)
 {
   struct voxy_player *player = libnet_client_proxy_get_opaque(client_proxy);
   voxy_player_put(player);
 }
 
-void voxy_player_manager_on_message_received(struct voxy_player_manager *player_manager, libnet_server_t server, libnet_client_proxy_t client_proxy, const struct libnet_message *_message, const struct voxy_context *context)
+void voxy_player_manager_on_message_received(libnet_client_proxy_t client_proxy, const struct libnet_message *_message)
 {
   {
     const struct voxy_client_login_message *message = voxy_get_client_login_message(_message);
@@ -47,8 +39,8 @@ void voxy_player_manager_on_message_received(struct voxy_player_manager *player_
       player->name = strndup(message->player_name, message->message.message.size + sizeof(struct libnet_message) - offsetof(struct voxy_client_login_message, player_name));
 
       printf("Player %s logs in\n", player->name);
-      if(player_manager->on_new_player)
-        player_manager->on_new_player(player, context);
+      if(on_new_player)
+        on_new_player(player);
 
     }
   }

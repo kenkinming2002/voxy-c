@@ -43,7 +43,7 @@ static uint8_t get_prefetched(uint8_t infos[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH
   return infos[position.z+1][position.y+1][position.x+1];
 }
 
-void block_render_info_update(struct block_render_info *block_render_info, struct voxy_block_registry *block_registry, struct block_renderer *block_renderer, ivec3_t position, const struct block_group *block_group)
+void block_render_info_update(struct block_render_info *block_render_info, ivec3_t position, const struct block_group *block_group)
 {
   profile_scope;
 
@@ -66,7 +66,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
         const ivec3_t local_position = ivec3(x, y, z);
 
         const uint8_t block_id = get_prefetched(ids, local_position);
-        const enum voxy_block_type block_type = voxy_block_registry_query_block(block_registry, block_id).type;
+        const enum voxy_block_type block_type = voxy_query_block(block_id).type;
 
         #pragma omp unroll
         for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
@@ -74,7 +74,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
           const ivec3_t normal = direction_as_ivec(direction);
 
           const uint8_t neighbour_block_id = get_prefetched(ids, ivec3_add(local_position, normal));
-          const enum voxy_block_type neighbour_block_type = voxy_block_registry_query_block(block_registry, neighbour_block_id).type;
+          const enum voxy_block_type neighbour_block_type = voxy_query_block(neighbour_block_id).type;
 
           // ----------------------------------------------------
           // |             | opaque | transparent | invisible   |
@@ -91,7 +91,7 @@ void block_render_info_update(struct block_render_info *block_render_info, struc
           const ivec3_t center = local_position;
 
           const uint32_t normal_index = direction;
-          const uint32_t texture_index = block_renderer->texture_indices[block_id][direction];
+          const uint32_t texture_index = block_renderer_get_texture_index(block_id, direction);
 
           const ivec3_t outer_axis3 = normal;                                               // z-axis
           const ivec3_t outer_axis2 = outer_axis3.z != 0 ? ivec3(1, 0, 0) : ivec3(0, 0, 1); // y-axis

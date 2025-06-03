@@ -8,60 +8,53 @@
 
 #include <string.h>
 
-int block_manager_init(struct block_manager *block_manager)
+struct block_group_node
 {
-  block_manager->block_group_nodes = NULL;
-  return 0;
+  ivec3_t key;
+  struct block_group *value;
+};
+
+
+static struct block_group_node *block_group_nodes;
+
+struct block_group *get_block_group(ivec3_t chunk_position)
+{
+  ptrdiff_t i = hmgeti(block_group_nodes, chunk_position);
+  return i != -1 ? block_group_nodes[i].value : NULL;
 }
 
-void block_manager_fini(struct block_manager *block_manager)
+struct block_group *get_or_insert_block_group(ivec3_t chunk_position)
 {
-  hmfree(block_manager->block_group_nodes);
-}
-
-static struct block_group *block_group_lookup(struct block_manager *block_manager, ivec3_t position)
-{
-  ptrdiff_t i = hmgeti(block_manager->block_group_nodes, position);
-  return i != -1 ? block_manager->block_group_nodes[i].value : NULL;
-}
-
-struct block_group *block_manager_get_block_group(struct block_manager *block_manager, ivec3_t position)
-{
-  struct block_group *block_group = block_group_lookup(block_manager, position);
+  struct block_group *block_group = get_block_group(chunk_position);
   if(!block_group)
   {
     block_group = block_group_create();
     for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
     {
-      const ivec3_t neighbour_position = ivec3_add(position, direction_as_ivec(direction));
-      struct block_group *neighbour_block_group = block_group_lookup(block_manager, neighbour_position);
+      const ivec3_t neighbour_position = ivec3_add(chunk_position, direction_as_ivec(direction));
+      struct block_group *neighbour_block_group = get_block_group(neighbour_position);
       block_group->neighbours[direction] = neighbour_block_group;
       if(neighbour_block_group)
         neighbour_block_group->neighbours[direction_reverse(direction)] = block_group;
     }
 
-    hmput(block_manager->block_group_nodes, position, block_group);
+    hmput(block_group_nodes, chunk_position, block_group);
   }
   return block_group;
 }
 
-void block_manager_remove_block_group(struct block_manager *block_manager, ivec3_t position)
+void block_manager_remove_block_group(ivec3_t chunk_position)
 {
-  hmdel(block_manager->block_group_nodes, position);
+  hmdel(block_group_nodes, chunk_position);
 }
 
-void block_manager_update(struct block_manager *block_manager)
-{
-  (void)block_manager;
-}
-
-void block_manager_on_message_received(struct block_manager *block_manager, libnet_client_t client, const struct libnet_message *_message)
+void block_manager_on_message_received(const struct libnet_message *_message)
 {
   {
     const struct voxy_server_block_group_update_message *message = voxy_get_server_block_group_update_message(_message);
     if(message)
     {
-      struct block_group *block_group = block_manager_get_block_group(block_manager, message->position);
+      struct block_group *block_group = get_or_insert_block_group(message->position);
 
       memcpy(&block_group->block_ids, &message->block_ids, sizeof message->block_ids);
       memcpy(&block_group->block_light_levels, &message->block_light_levels, sizeof message->block_light_levels);
@@ -76,7 +69,7 @@ void block_manager_on_message_received(struct block_manager *block_manager, libn
   {
     const struct voxy_server_block_group_remove_message *message = voxy_get_server_block_group_remove_message(_message);
     if(message)
-      block_manager_remove_block_group(block_manager, message->position);
+      block_manager_remove_block_group(message->position);
   }
 }
 

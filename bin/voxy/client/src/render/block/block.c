@@ -135,7 +135,7 @@ static void update_render_infos(ivec3_t center, int radius)
 
 void block_renderer_update(void)
 {
-  const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(get_main_camera().transform.translation), VOXY_CHUNK_WIDTH);
+  const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(get_main_camera()->transform.translation), VOXY_CHUNK_WIDTH);
   const int radius = 8;
 
   discard_render_infos(center, radius);
@@ -144,10 +144,10 @@ void block_renderer_update(void)
 
 void render_block(void)
 {
-  const struct camera camera = get_main_camera();
+  const struct camera *camera = get_main_camera();
 
-  const fmat4_t V = camera_view_matrix(&camera);
-  const fmat4_t P = camera_projection_matrix(&camera);
+  const fmat4_t V = camera_view_matrix(camera);
+  const fmat4_t P = camera_projection_matrix(camera);
   const fmat4_t VP = fmat4_mul(P, V);
 
   glEnable(GL_DEPTH_TEST);
@@ -159,7 +159,7 @@ void render_block(void)
   glBindTexture(GL_TEXTURE_2D_ARRAY, texture.id);
 
   for(ptrdiff_t i=0; i<hmlen(render_info_nodes); ++i)
-    block_render_info_update_cull(render_info_nodes[i].key, &render_info_nodes[i].value, &camera);
+    block_render_info_update_cull(render_info_nodes[i].key, &render_info_nodes[i].value, camera);
 
   for(ptrdiff_t i=0; i<hmlen(render_info_nodes); ++i)
   {

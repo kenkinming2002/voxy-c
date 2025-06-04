@@ -42,7 +42,7 @@ entity_handle_t get_main_camera_target(void)
   return target;
 }
 
-struct camera get_main_camera(void)
+const struct camera *get_main_camera(void)
 {
-  return camera;
+  return &camera;
 }

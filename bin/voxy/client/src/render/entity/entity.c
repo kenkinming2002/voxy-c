@@ -16,9 +16,9 @@ void render_entity(void)
       if(entity->alive)
       {
         const struct voxy_entity_info info = voxy_query_entity(entity->id);
-        const struct camera camera = get_main_camera();
+        const struct camera *camera = get_main_camera();
         if(info.render)
-          info.render(entity, &camera);
+          info.render(entity, camera);
       }
     }
 }

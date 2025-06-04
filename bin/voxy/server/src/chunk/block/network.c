@@ -12,7 +12,7 @@ void voxy_block_network_update(ivec3_t position, const struct voxy_block_group *
   message.position = position;
 
   memcpy(&message.block_ids, &block_group->ids, sizeof message.block_ids);
-  memcpy(&message.block_light_levels, &block_group->light_levels, sizeof message.block_light_levels);
+  memcpy(&message.block_lights, &block_group->lights, sizeof message.block_lights);
 
   libnet_server_send_message_all(&message.message.message);
 }

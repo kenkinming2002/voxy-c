@@ -25,16 +25,14 @@ uint8_t block_group_get_block_id(const struct block_group *block_group, ivec3_t 
   return block_group->block_ids[index];
 }
 
-uint8_t block_group_get_block_light_level(const struct block_group *block_group, ivec3_t position)
+voxy_light_t block_group_get_block_light(const struct block_group *block_group, ivec3_t position)
 {
   assert(0 <= position.x && position.x < VOXY_CHUNK_WIDTH);
   assert(0 <= position.y && position.y < VOXY_CHUNK_WIDTH);
   assert(0 <= position.z && position.z < VOXY_CHUNK_WIDTH);
 
   const unsigned index = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
-  const unsigned q = index / 2;
-  const unsigned r = index % 2;
-  return block_group->block_light_levels[q] >> (4 * r) & 0xF;
+  return block_group->block_lights[index];
 }
 
 static void traverse(const struct block_group **block_group, ivec3_t *position)
@@ -54,9 +52,9 @@ uint8_t block_group_get_block_id_ex(const struct block_group *block_group, ivec3
   return block_group ? block_group_get_block_id(block_group, position) : def;
 }
 
-uint8_t block_group_get_block_light_level_ex(const struct block_group *block_group, ivec3_t position, uint8_t def)
+voxy_light_t block_group_get_block_light_ex(const struct block_group *block_group, ivec3_t position, voxy_light_t def)
 {
   traverse(&block_group, &position);
-  return block_group ? block_group_get_block_light_level(block_group, position) : def;
+  return block_group ? block_group_get_block_light(block_group, position) : def;
 }
 

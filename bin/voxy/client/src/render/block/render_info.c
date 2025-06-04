@@ -35,7 +35,7 @@ static void prefetch_block_light_levels(const struct block_group *block_group, u
   for(int z = -1; z<VOXY_CHUNK_WIDTH+1; ++z)
     for(int y = -1; y<VOXY_CHUNK_WIDTH+1; ++y)
       for(int x = -1; x<VOXY_CHUNK_WIDTH+1; ++x)
-        ids[z+1][y+1][x+1] = block_group_get_block_light_level_ex(block_group, ivec3(x, y, z), 15);
+        ids[z+1][y+1][x+1] = block_group_get_block_light_ex(block_group, ivec3(x, y, z), (voxy_light_t) { .level = 15, .sol = 1, }).level;
 }
 
 static uint8_t get_prefetched(uint8_t infos[VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2][VOXY_CHUNK_WIDTH+2], ivec3_t position)

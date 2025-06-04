@@ -45,13 +45,13 @@ uint8_t voxy_get_block_id(ivec3_t position, uint8_t def)
   return voxy_block_group_get_id(block_group, global_position_to_local_position_i(position));
 }
 
-uint8_t voxy_get_block_light_level(ivec3_t position, uint8_t def)
+voxy_light_t voxy_get_block_light_level(ivec3_t position, voxy_light_t def)
 {
   struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
   if(!block_group)
     return def;
 
-  return voxy_block_group_get_light_level(block_group, global_position_to_local_position_i(position));
+  return voxy_block_group_get_light(block_group, global_position_to_local_position_i(position));
 }
 
 bool voxy_set_block(ivec3_t position, voxy_block_id_t id)
@@ -61,7 +61,7 @@ bool voxy_set_block(ivec3_t position, voxy_block_id_t id)
     return false;
 
   voxy_block_group_set_id(block_group, global_position_to_local_position_i(position), id);
-  voxy_block_group_set_light_level(block_group, global_position_to_local_position_i(position), voxy_query_block(id).light_level);
+  voxy_block_group_set_light(block_group, global_position_to_local_position_i(position), (voxy_light_t){ .level = voxy_query_block(id).light_level, .sol = 0});
   return true;
 }
 
@@ -75,33 +75,14 @@ bool voxy_set_block_id(ivec3_t position, voxy_block_id_t id)
   return true;
 }
 
-bool voxy_set_block_light_level(ivec3_t position, uint8_t light_level)
+bool voxy_set_block_light(ivec3_t position, voxy_light_t light)
 {
   struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
   if(!block_group)
     return false;
 
-  voxy_block_group_set_light_level(block_group, global_position_to_local_position_i(position), light_level);
+  voxy_block_group_set_light(block_group, global_position_to_local_position_i(position), light);
   return true;
-}
-
-bool voxy_get_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp)
-{
-  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  if(!block_group)
-    return false;
-
-  voxy_block_group_get_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp);
-  return true;
-}
-
-bool voxy_set_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp)
-{
-  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  if(!block_group)
-    return false;
-
-  return voxy_block_group_set_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp);
 }
 
 static struct block_group_future load_or_generate_block(ivec3_t position, size_t *load_count, size_t *generate_count)
@@ -155,10 +136,10 @@ static void load_or_generate_blocks(void)
           {
             const ivec3_t local_position = ivec3(x, y, z);
             const ivec3_t global_position = local_position_to_global_position_i(local_position, position);
-            if(voxy_block_group_get_light_level(block_group, local_position) != 0)
+            if(voxy_block_group_get_light(block_group, local_position).level != 0)
               enqueue_light_creation_update(global_position);
             else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
-              enqueue_light_destruction_update(global_position, 0);
+              enqueue_light_destruction_update(global_position, (voxy_light_t){ .level = 0, .sol = 0, });
           }
     }
   }
@@ -265,7 +246,7 @@ void voxy_block_manager_on_client_connected(libnet_client_proxy_t client_proxy)
     message.position = position;
 
     memcpy(&message.block_ids, &block_group->ids, sizeof message.block_ids);
-    memcpy(&message.block_light_levels, &block_group->light_levels, sizeof message.block_light_levels);
+    memcpy(&message.block_lights, &block_group->lights, sizeof message.block_lights);
 
     libnet_server_send_message(client_proxy, &message.message.message);
   }

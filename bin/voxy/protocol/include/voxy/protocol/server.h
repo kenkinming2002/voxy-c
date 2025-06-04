@@ -34,7 +34,7 @@ struct LIBNET_MESSAGE voxy_server_block_group_update_message
 
   ivec3_t position;
   voxy_block_id_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
-  uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
+  voxy_light_t block_lights[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
 };
 
 /// Sent from server to client to remove an entire block group

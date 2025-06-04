@@ -17,7 +17,7 @@
 /// block resides in has not yet been loaded/generated), value in def is
 /// returned.
 VOXY_SERVER_EXPORT voxy_block_id_t voxy_get_block_id(ivec3_t position, voxy_block_id_t def);
-VOXY_SERVER_EXPORT uint8_t voxy_get_block_light_level(ivec3_t position, uint8_t def);
+VOXY_SERVER_EXPORT voxy_light_t voxy_get_block_light_level(ivec3_t position, voxy_light_t def);
 
 /// Block setter.
 ///

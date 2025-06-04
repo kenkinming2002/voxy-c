@@ -28,7 +28,7 @@ struct light_destruction_update
   uint8_t x;
   uint8_t y;
   uint8_t z;
-  uint8_t old_light_level;
+  voxy_light_t old_light;
 };
 
 struct light_creation_update
@@ -42,14 +42,14 @@ struct light_creation_update
 static struct light_creation_update *light_creation_updates;
 static struct light_destruction_update *light_destruction_updates;
 
-void enqueue_light_destruction_update_at(struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level)
+void enqueue_light_destruction_update_at(struct voxy_block_group *block_group, ivec3_t position, voxy_light_t light)
 {
   arrput(light_destruction_updates, ((struct light_destruction_update){
       .block_group = block_group,
       .x = position.x,
       .y = position.y,
       .z = position.z,
-      .old_light_level = light_level,
+      .old_light = light,
   }));
 }
 
@@ -64,14 +64,14 @@ void enqueue_light_creation_update_at(struct voxy_block_group *block_group, ivec
 }
 
 
-void enqueue_light_destruction_update(ivec3_t position, uint8_t light_level)
+void enqueue_light_destruction_update(ivec3_t position, voxy_light_t light)
 {
   ivec3_t chunk_position = get_chunk_position_i(position);
   ivec3_t local_position = global_position_to_local_position_i(position);
 
   struct voxy_block_group *block_group = voxy_get_block_group(chunk_position);
   if(block_group)
-    enqueue_light_destruction_update_at(block_group, local_position, light_level);
+    enqueue_light_destruction_update_at(block_group, local_position, light);
 }
 
 void enqueue_light_creation_update(ivec3_t position)
@@ -84,16 +84,22 @@ void enqueue_light_creation_update(ivec3_t position)
     enqueue_light_creation_update_at(block_group, local_position);
 }
 
-/// Compute new light level after propagation in direction.
-static uint8_t propagate(uint8_t light_level, direction_t direction)
+static bool light_eql(voxy_light_t lhs, voxy_light_t rhs)
 {
-  if(direction == DIRECTION_BOTTOM && light_level == 15)
-    return 15;
+  return lhs.level == rhs.level && (bool)lhs.sol == (bool)rhs.sol;
+}
 
-  if(light_level != 0)
-    return light_level - 1;
+/// Compute new light level after propagation in direction.
+static voxy_light_t propagate(voxy_light_t light, direction_t direction)
+{
+  if(direction == DIRECTION_BOTTOM && light.sol)
+    return light;
 
-  return 0;
+  light.sol = 0;
+  if(light.level != 0)
+    --light.level;
+
+  return light;
 }
 
 struct cursor
@@ -184,27 +190,20 @@ static inline void process_light_destruction_update(
   if(neighbour_info.collide)
     return;
 
-  uint8_t tmp;
-
-  uint8_t neighbour_light_level;
-  voxy_block_group_get_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp);
-
-  while(neighbour_light_level != 0)
-    if(neighbour_light_level == propagate(update.old_light_level, direction))
+  voxy_light_t neighbour_light = voxy_block_group_get_light_atomic(neighbour_block_group, neighbour_position);
+  if(neighbour_light.level != 0)
+  {
+    if(light_eql(neighbour_light, propagate(update.old_light, direction)))
     {
-      uint8_t neighbour_old_light_level = neighbour_light_level;
-      neighbour_light_level = 0;
-      if(!voxy_block_group_set_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp))
-        continue;
+      voxy_block_group_set_light_atomic(neighbour_block_group, neighbour_position, (voxy_light_t){ .level = 0, .sol = 0 });
 
       struct light_destruction_update new_update;
       new_update.block_group = neighbour_block_group;
       new_update.x = neighbour_position.x;
       new_update.y = neighbour_position.y;
       new_update.z = neighbour_position.z;
-      new_update.old_light_level = neighbour_old_light_level;
+      new_update.old_light = neighbour_light;
       arrput(*new_light_destruction_updates, new_update);
-      return;
     }
     else
     {
@@ -214,8 +213,8 @@ static inline void process_light_destruction_update(
       new_update.y = neighbour_position.y;
       new_update.z = neighbour_position.z;
       arrput(*new_light_creation_updates, new_update);
-      return;
     }
+  }
 }
 
 static inline void process_light_creation_update(
@@ -233,27 +232,19 @@ static inline void process_light_creation_update(
   if(neighbour_info.collide)
     return;
 
-  uint8_t tmp;
-
-  uint8_t light_level;
-  voxy_block_group_get_light_level_atomic(update.block_group, ivec3(update.x, update.y, update.z), &light_level, &tmp);
-
-  uint8_t neighbour_light_level;
-  voxy_block_group_get_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp);
-
-  while(neighbour_light_level < propagate(light_level, direction))
+  voxy_light_t light = voxy_block_group_get_light_atomic(update.block_group, ivec3(update.x, update.y, update.z));
+  voxy_light_t neighbour_light = voxy_block_group_get_light_atomic(neighbour_block_group, neighbour_position);
+  voxy_light_t propagated_light = propagate(light, direction);
+  if(neighbour_light.level < propagated_light.level)
   {
-    neighbour_light_level = propagate(light_level, direction);
-    if(voxy_block_group_set_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp))
-    {
-      struct light_creation_update new_update;
-      new_update.block_group = neighbour_block_group;
-      new_update.x = neighbour_position.x;
-      new_update.y = neighbour_position.y;
-      new_update.z = neighbour_position.z;
-      arrput(*new_light_creation_updates, new_update);
-      return;
-    }
+    voxy_block_group_set_light_atomic(neighbour_block_group, neighbour_position, propagated_light);
+
+    struct light_creation_update new_update;
+    new_update.block_group = neighbour_block_group;
+    new_update.x = neighbour_position.x;
+    new_update.y = neighbour_position.y;
+    new_update.z = neighbour_position.z;
+    arrput(*new_light_creation_updates, new_update);
   }
 }
 

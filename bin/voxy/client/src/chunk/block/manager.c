@@ -57,7 +57,7 @@ void block_manager_on_message_received(const struct libnet_message *_message)
       struct block_group *block_group = get_or_insert_block_group(message->position);
 
       memcpy(&block_group->block_ids, &message->block_ids, sizeof message->block_ids);
-      memcpy(&block_group->block_light_levels, &message->block_light_levels, sizeof message->block_light_levels);
+      memcpy(&block_group->block_lights, &message->block_lights, sizeof message->block_lights);
 
       block_group->remesh = true;
       for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)

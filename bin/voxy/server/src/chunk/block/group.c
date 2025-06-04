@@ -6,6 +6,7 @@
 #include <libcore/unreachable.h>
 
 #include <limits.h>
+#include <stdalign.h>
 #include <stdatomic.h>
 #include <string.h>
 #include <stdlib.h>
@@ -42,61 +43,34 @@ void voxy_block_group_set_id(struct voxy_block_group *block_group, ivec3_t posit
   block_group->network_dirty = true;
 }
 
-uint8_t voxy_block_group_get_light_level(const struct voxy_block_group *block_group, ivec3_t position)
+voxy_light_t voxy_block_group_get_light(const struct voxy_block_group *block_group, ivec3_t position)
 {
   check_position(position);
-
-  const unsigned index = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
-  const unsigned q = index / 2;
-  const unsigned r = index % 2;
-  return (block_group->light_levels[q] >> (4 * r)) & 0xF;
+  return block_group->lights[position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x];
 }
 
-void voxy_block_group_set_light_level(struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level)
+void voxy_block_group_set_light(struct voxy_block_group *block_group, ivec3_t position, voxy_light_t light)
 {
   check_position(position);
-
-  const unsigned index = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
-  const unsigned q = index / 2;
-  const unsigned r = index % 2;
-  block_group->light_levels[q] &= ~(((1 << 4) - 1) << (r * 4));
-  block_group->light_levels[q] |= light_level << (r * 4);
-
+  block_group->lights[position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x] = light;
   block_group->disk_dirty = true;
   block_group->network_dirty = true;
 }
 
-void voxy_block_group_get_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+voxy_light_t voxy_block_group_get_light_atomic(const struct voxy_block_group *block_group, ivec3_t position)
 {
   check_position(position);
-
-  const size_t offset = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
-  const size_t q = offset / (CHAR_BIT / 4);
-  const size_t r = offset % (CHAR_BIT / 4);
-
-  *tmp = atomic_load((_Atomic unsigned char *)&block_group->light_levels[q]);
-  *light_level = (*tmp >> (r * 4)) & ((1 << 4) - 1);
+  return *(voxy_light_t *)&(uint8_t){atomic_load((_Atomic uint8_t *)&block_group->lights[position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x])};
 }
 
-bool voxy_block_group_set_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+void voxy_block_group_set_light_atomic(struct voxy_block_group *block_group, ivec3_t position, voxy_light_t light)
 {
+  static_assert(alignof(_Atomic uint8_t) == alignof(voxy_light_t), "");
+  static_assert(sizeof(_Atomic uint8_t) == sizeof(voxy_light_t), "");
+
   check_position(position);
-
-  const size_t offset = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
-  const size_t q = offset / (CHAR_BIT / 4);
-  const size_t r = offset % (CHAR_BIT / 4);
-
-  unsigned char desired = *tmp;
-  desired &= ~(((1 << 4) - 1) << (r * 4));
-  desired |= *light_level << (r * 4);
-  if(!atomic_compare_exchange_strong((_Atomic unsigned char *)&block_group->light_levels[q], tmp, desired))
-  {
-    *light_level = (*tmp >> (r * 4)) & ((1 << 4) - 1);
-    return false;
-  }
-
+  atomic_store((_Atomic uint8_t *)&block_group->lights[position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x], *(const uint8_t *)&light);
   atomic_store((_Atomic bool *)&block_group->disk_dirty, true);
   atomic_store((_Atomic bool *)&block_group->network_dirty, true);
-  return true;
 }
 

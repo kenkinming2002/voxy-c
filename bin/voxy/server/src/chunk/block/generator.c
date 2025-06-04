@@ -96,7 +96,10 @@ static void job_invoke(struct thread_pool_job *job)
       for(int x=0; x<VOXY_CHUNK_WIDTH; ++x)
       {
         voxy_block_group_set_id(block_group, ivec3(x, y, z), blocks[z][y][x]);
-        voxy_block_group_set_light_level(block_group, ivec3(x, y, z), voxy_query_block(blocks[z][y][x]).light_level);
+        voxy_block_group_set_light(block_group, ivec3(x, y, z), (voxy_light_t){
+          .level = voxy_query_block(blocks[z][y][x]).light_level,
+          .sol = voxy_query_block(blocks[z][y][x]).light_level == 15, // FIXME: this is a hack, whether there is sunlight should be from estimated height of highest non-opaque block
+        });
       }
 
   block_group->disk_dirty = true;

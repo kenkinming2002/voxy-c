@@ -73,7 +73,7 @@ static struct block_database_save_entry *save_entries;
 #define block_group_dir2(directory, position) "%s/%d/%d/%d",      directory, position.x, position.y, position.z
 #define block_group_file(directory, position) "%s/%d/%d/%d/data", directory, position.x, position.y, position.z
 
-#define block_group_size (sizeof ((struct voxy_block_group *)0)->ids + sizeof ((struct voxy_block_group *)0)->light_levels)
+#define block_group_size (sizeof ((struct voxy_block_group *)0)->ids + sizeof ((struct voxy_block_group *)0)->lights)
 
 void voxy_block_database_init(const char *world_directory)
 {
@@ -162,8 +162,8 @@ struct block_group_future voxy_block_database_load(ivec3_t position)
 
     wrapper->iovecs[0].iov_base = wrapper->block_group->ids;
     wrapper->iovecs[0].iov_len = sizeof wrapper->block_group->ids;
-    wrapper->iovecs[1].iov_base = wrapper->block_group->light_levels;
-    wrapper->iovecs[1].iov_len = sizeof wrapper->block_group->light_levels;
+    wrapper->iovecs[1].iov_base = wrapper->block_group->lights;
+    wrapper->iovecs[1].iov_len = sizeof wrapper->block_group->lights;
 
     wrapper->done = false;
 
@@ -221,8 +221,8 @@ struct unit_future voxy_block_database_save(ivec3_t position, struct voxy_block_
 
     wrapper->iovecs[0].iov_base = block_group->ids;
     wrapper->iovecs[0].iov_len = sizeof block_group->ids;
-    wrapper->iovecs[1].iov_base = block_group->light_levels;
-    wrapper->iovecs[1].iov_len = sizeof block_group->light_levels;
+    wrapper->iovecs[1].iov_base = block_group->lights;
+    wrapper->iovecs[1].iov_len = sizeof block_group->lights;
 
     wrapper->done = false;
 

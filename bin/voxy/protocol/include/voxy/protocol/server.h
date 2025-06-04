@@ -2,6 +2,7 @@
 #define VOXY_PROTOCOL_SERVER_H
 
 #include <voxy/config.h>
+#include <voxy/types.h>
 
 #include <libnet/message.h>
 #include <libmath/vector.h>
@@ -32,7 +33,7 @@ struct LIBNET_MESSAGE voxy_server_block_group_update_message
   struct voxy_server_message message;
 
   ivec3_t position;
-  uint8_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
+  voxy_block_id_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
   uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
 };
 

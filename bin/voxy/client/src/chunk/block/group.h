@@ -2,6 +2,7 @@
 #define CHUNK_BLOCK_GROUP_H
 
 #include <voxy/config.h>
+#include <voxy/types.h>
 
 #include <libmath/vector.h>
 #include <libmath/direction.h>
@@ -13,7 +14,7 @@ struct block_group
 {
   struct block_group *neighbours[DIRECTION_COUNT];
 
-  uint8_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
+  voxy_block_id_t block_ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
   uint8_t block_light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
 
   bool remesh;

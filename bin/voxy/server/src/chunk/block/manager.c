@@ -60,8 +60,20 @@ bool voxy_set_block(ivec3_t position, voxy_block_id_t id)
   if(!block_group)
     return false;
 
+  const voxy_light_t old_light = voxy_block_group_get_light(block_group, global_position_to_local_position_i(position));
+  const uint8_t light_level = voxy_query_block(id).light_level;
+
   voxy_block_group_set_id(block_group, global_position_to_local_position_i(position), id);
   voxy_block_group_set_light(block_group, global_position_to_local_position_i(position), (voxy_light_t){ .level = voxy_query_block(id).light_level, .sol = 0});
+
+  if(old_light.level < light_level)
+    enqueue_light_creation_update(position);
+
+  //// FIXME: Light destroy update really only support the case if light level
+  ////        changes to 0. This happens to be the only possible cases for now.
+  if(old_light.level >= light_level)
+    enqueue_light_destruction_update(position, old_light);
+
   return true;
 }
 

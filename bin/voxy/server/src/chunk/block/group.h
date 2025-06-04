@@ -30,7 +30,7 @@ struct voxy_block_group
 struct voxy_block_group *voxy_block_group_create(void);
 void voxy_block_group_destroy(struct voxy_block_group *block_group);
 
-/// Block getters/setters.
+/// Block id getter/setter.
 ///
 /// It is preferable to use voxy_block_group_fill_block_id() over
 /// voxy_block_group_set_block_id() if you know that the entire block group
@@ -40,11 +40,11 @@ void voxy_block_group_destroy(struct voxy_block_group *block_group);
 voxy_block_id_t voxy_block_group_get_id(const struct voxy_block_group *block_group, ivec3_t position);
 void voxy_block_group_set_id(struct voxy_block_group *block_group, ivec3_t position, voxy_block_id_t id);
 
-/// Light level getters/setters.
+/// Light level getter/setter.
 uint8_t voxy_block_group_get_light_level(const struct voxy_block_group *block_group, ivec3_t position);
 void voxy_block_group_set_light_level(struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level);
 
-/// Atomic light level getters/setters.
+/// Atomic light level getter/setter.
 ///
 /// What is so hard about atomicity you may ask? The problem we have is that
 /// light level for a block is technically a uint4_t but computers does not work

@@ -23,7 +23,7 @@
 #define MOVE_SPEED_AIR 3.0f
 #define JUMP_STRENGTH 5.5f
 
-static void generate_block(ivec3_t chunk_position, struct voxy_block_group *block_group, seed_t seed)
+static void generate_block(seed_t seed, ivec3_t chunk_position, voxy_block_id_t blocks[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH])
 {
   // Generate height map
   float heights[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH];
@@ -40,13 +40,10 @@ static void generate_block(ivec3_t chunk_position, struct voxy_block_group *bloc
       for(int x=0; x<VOXY_CHUNK_WIDTH; ++x)
       {
         const int height = VOXY_CHUNK_WIDTH * chunk_position.z + z;
-        const uint8_t id
-          = height > 64 ? 1
+        blocks[z][y][x] = height > 64 ? 1
           : height > heights[y][x] ? (height < 0 ? 4 : 0)
           : height > heights[y][x] - 1 ? 3
           : 2;
-
-        voxy_block_group_set_block(block_group, ivec3(x, y, z), id);
       }
 }
 

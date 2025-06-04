@@ -3,9 +3,19 @@
 #include <voxy/config.h>
 #include <voxy/server/registry/block.h>
 
+#include <libcore/unreachable.h>
+
 #include <limits.h>
 #include <stdatomic.h>
+#include <string.h>
 #include <stdlib.h>
+
+static void check_position(ivec3_t position)
+{
+  assert(0 <= position.x && position.x < VOXY_CHUNK_WIDTH);
+  assert(0 <= position.y && position.y < VOXY_CHUNK_WIDTH);
+  assert(0 <= position.z && position.z < VOXY_CHUNK_WIDTH);
+}
 
 struct voxy_block_group *voxy_block_group_create(void)
 {
@@ -18,23 +28,21 @@ void voxy_block_group_destroy(struct voxy_block_group *block_group)
   free(block_group);
 }
 
-static void check_position(ivec3_t position)
-{
-  assert(0 <= position.x && position.x < VOXY_CHUNK_WIDTH);
-  assert(0 <= position.y && position.y < VOXY_CHUNK_WIDTH);
-  assert(0 <= position.z && position.z < VOXY_CHUNK_WIDTH);
-
-}
-
-uint8_t voxy_block_group_get_block_id(const struct voxy_block_group *block_group, ivec3_t position)
+uint8_t voxy_block_group_get_id(const struct voxy_block_group *block_group, ivec3_t position)
 {
   check_position(position);
-
-  const unsigned index = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
-  return block_group->ids[index];
+  return block_group->ids[position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x];
 }
 
-uint8_t voxy_block_group_get_block_light_level(const struct voxy_block_group *block_group, ivec3_t position)
+void voxy_block_group_set_id(struct voxy_block_group *block_group, ivec3_t position, uint8_t id)
+{
+  check_position(position);
+  block_group->ids[position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x] = id;
+  block_group->disk_dirty = true;
+  block_group->network_dirty = true;
+}
+
+uint8_t voxy_block_group_get_light_level(const struct voxy_block_group *block_group, ivec3_t position)
 {
   check_position(position);
 
@@ -44,18 +52,7 @@ uint8_t voxy_block_group_get_block_light_level(const struct voxy_block_group *bl
   return (block_group->light_levels[q] >> (4 * r)) & 0xF;
 }
 
-void voxy_block_group_set_block_id(struct voxy_block_group *block_group, ivec3_t position, uint8_t id)
-{
-  check_position(position);
-
-  const unsigned index = position.z * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH + position.y * VOXY_CHUNK_WIDTH + position.x;
-  block_group->ids[index] = id;
-
-  block_group->disk_dirty = true;
-  block_group->network_dirty = true;
-}
-
-void voxy_block_group_set_block_light_level(struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level)
+void voxy_block_group_set_light_level(struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level)
 {
   check_position(position);
 
@@ -69,7 +66,7 @@ void voxy_block_group_set_block_light_level(struct voxy_block_group *block_group
   block_group->network_dirty = true;
 }
 
-void voxy_block_group_get_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+void voxy_block_group_get_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
 {
   check_position(position);
 
@@ -81,7 +78,7 @@ void voxy_block_group_get_block_light_level_atomic(struct voxy_block_group *bloc
   *light_level = (*tmp >> (r * 4)) & ((1 << 4) - 1);
 }
 
-bool voxy_block_group_set_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+bool voxy_block_group_set_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp)
 {
   check_position(position);
 
@@ -101,12 +98,5 @@ bool voxy_block_group_set_block_light_level_atomic(struct voxy_block_group *bloc
   atomic_store((_Atomic bool *)&block_group->disk_dirty, true);
   atomic_store((_Atomic bool *)&block_group->network_dirty, true);
   return true;
-}
-
-void voxy_block_group_set_block(struct voxy_block_group *block_group, ivec3_t position, uint8_t id)
-{
-  const uint8_t light_level = voxy_query_block(id).light_level;
-  voxy_block_group_set_block_id(block_group, position, id);
-  voxy_block_group_set_block_light_level(block_group, position, light_level);
 }
 

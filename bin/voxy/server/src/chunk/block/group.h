@@ -2,6 +2,8 @@
 #define CHUNK_BLOCK_GROUP_H
 
 #include <voxy/config.h>
+#include <voxy/protocol/server.h>
+#include <voxy/server/registry/block.h>
 #include <voxy/server/chunk/block/group.h>
 
 #include <libmath/vector.h>
@@ -10,32 +12,39 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/// Chunk.
 struct voxy_block_group
 {
   struct voxy_block_group *neighbours[DIRECTION_COUNT];
 
-  /// Blocks.
-  ///
-  /// We store block ids and light levels in separate arrays for better
-  /// "compression".
-  uint8_t ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
+  voxy_block_id_t ids[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH];
   uint8_t light_levels[VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH * VOXY_CHUNK_WIDTH / 2];
 
-  /// If we need to flush this block group to disk.
   bool disk_dirty;
-
-  /// If we need to synchronize this block_group over the network.
   bool network_dirty;
 };
 
-/// Create/destroy block group.
+/// Create/destroy a block group.
 ///
-/// No initialization of any plain old data member is performed.
+/// The initial content of a newly created block group should be treated as
+/// uninitialized.
 struct voxy_block_group *voxy_block_group_create(void);
 void voxy_block_group_destroy(struct voxy_block_group *block_group);
 
-/// Atomic getters/setters.
+/// Block getters/setters.
+///
+/// It is preferable to use voxy_block_group_fill_block_id() over
+/// voxy_block_group_set_block_id() if you know that the entire block group
+/// consist of blocks of same id. Not only is it stored more efficiently but
+/// some part of the game may also be optimized to act on the entire block group
+/// as a whole.
+voxy_block_id_t voxy_block_group_get_id(const struct voxy_block_group *block_group, ivec3_t position);
+void voxy_block_group_set_id(struct voxy_block_group *block_group, ivec3_t position, voxy_block_id_t id);
+
+/// Light level getters/setters.
+uint8_t voxy_block_group_get_light_level(const struct voxy_block_group *block_group, ivec3_t position);
+void voxy_block_group_set_light_level(struct voxy_block_group *block_group, ivec3_t position, uint8_t light_level);
+
+/// Atomic light level getters/setters.
 ///
 /// What is so hard about atomicity you may ask? The problem we have is that
 /// light level for a block is technically a uint4_t but computers does not work
@@ -48,7 +57,7 @@ void voxy_block_group_destroy(struct voxy_block_group *block_group);
 ///
 /// Note: This need not be exposed to mod, since it is really only used in the
 ///       implementation of our light system.
-void voxy_block_group_get_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
-bool voxy_block_group_set_block_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+void voxy_block_group_get_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
+bool voxy_block_group_set_light_level_atomic(struct voxy_block_group *block_group, ivec3_t position, uint8_t *light_level, uint8_t *tmp);
 
 #endif // CHUNK_BLOCK_GROUP_H

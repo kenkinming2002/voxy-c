@@ -1,6 +1,7 @@
 #include "network.h"
 
 #include <voxy/protocol/server.h>
+
 #include <string.h>
 
 void voxy_block_network_update(ivec3_t position, const struct voxy_block_group *block_group)
@@ -9,8 +10,10 @@ void voxy_block_network_update(ivec3_t position, const struct voxy_block_group *
   message.message.message.size = LIBNET_MESSAGE_SIZE(message);
   message.message.tag = VOXY_SERVER_MESSAGE_CHUNK_UPDATE;
   message.position = position;
-  memcpy(&message.block_ids, &block_group->ids, sizeof block_group->ids);
-  memcpy(&message.block_light_levels, &block_group->light_levels, sizeof block_group->light_levels);
+
+  memcpy(&message.block_ids, &block_group->ids, sizeof message.block_ids);
+  memcpy(&message.block_light_levels, &block_group->light_levels, sizeof message.block_light_levels);
+
   libnet_server_send_message_all(&message.message.message);
 }
 

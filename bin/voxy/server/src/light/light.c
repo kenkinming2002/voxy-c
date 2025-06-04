@@ -4,6 +4,7 @@
 #include <voxy/server/chunk/block/manager.h>
 #include <voxy/server/registry/block.h>
 
+#include "chunk/block/manager.h"
 #include "chunk/coordinates.h"
 #include "chunk/block/group.h"
 
@@ -178,7 +179,7 @@ static inline void process_light_destruction_update(
   if(!neighbour_block_group)
     return;
 
-  const uint8_t neighbour_id = voxy_block_group_get_block_id(neighbour_block_group, neighbour_position);
+  const uint8_t neighbour_id = voxy_block_group_get_id(neighbour_block_group, neighbour_position);
   const struct voxy_block_info neighbour_info = voxy_query_block(neighbour_id);
   if(neighbour_info.collide)
     return;
@@ -186,14 +187,14 @@ static inline void process_light_destruction_update(
   uint8_t tmp;
 
   uint8_t neighbour_light_level;
-  voxy_block_group_get_block_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp);
+  voxy_block_group_get_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp);
 
   while(neighbour_light_level != 0)
     if(neighbour_light_level == propagate(update.old_light_level, direction))
     {
       uint8_t neighbour_old_light_level = neighbour_light_level;
       neighbour_light_level = 0;
-      if(!voxy_block_group_set_block_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp))
+      if(!voxy_block_group_set_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp))
         continue;
 
       struct light_destruction_update new_update;
@@ -227,7 +228,7 @@ static inline void process_light_creation_update(
   if(!neighbour_block_group)
     return;
 
-  const uint8_t neighbour_id = voxy_block_group_get_block_id(neighbour_block_group, neighbour_position);
+  const voxy_block_id_t neighbour_id = voxy_block_group_get_id(neighbour_block_group, neighbour_position);
   const struct voxy_block_info neighbour_info = voxy_query_block(neighbour_id);
   if(neighbour_info.collide)
     return;
@@ -235,15 +236,15 @@ static inline void process_light_creation_update(
   uint8_t tmp;
 
   uint8_t light_level;
-  voxy_block_group_get_block_light_level_atomic(update.block_group, ivec3(update.x, update.y, update.z), &light_level, &tmp);
+  voxy_block_group_get_light_level_atomic(update.block_group, ivec3(update.x, update.y, update.z), &light_level, &tmp);
 
   uint8_t neighbour_light_level;
-  voxy_block_group_get_block_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp);
+  voxy_block_group_get_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp);
 
   while(neighbour_light_level < propagate(light_level, direction))
   {
     neighbour_light_level = propagate(light_level, direction);
-    if(voxy_block_group_set_block_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp))
+    if(voxy_block_group_set_light_level_atomic(neighbour_block_group, neighbour_position, &neighbour_light_level, &tmp))
     {
       struct light_creation_update new_update;
       new_update.block_group = neighbour_block_group;

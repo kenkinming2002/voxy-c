@@ -86,11 +86,21 @@ static void job_invoke(struct thread_pool_job *job)
 {
   struct block_generator_job *real_job = container_of(job, struct block_generator_job, job);
 
+  voxy_block_id_t blocks[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH];
+  generate_block(seed, real_job->position, blocks);
+
   struct voxy_block_group *block_group = voxy_block_group_create();
+
+  for(int z=0; z<VOXY_CHUNK_WIDTH; ++z)
+    for(int y=0; y<VOXY_CHUNK_WIDTH; ++y)
+      for(int x=0; x<VOXY_CHUNK_WIDTH; ++x)
+      {
+        voxy_block_group_set_id(block_group, ivec3(x, y, z), blocks[z][y][x]);
+        voxy_block_group_set_light_level(block_group, ivec3(x, y, z), voxy_query_block(blocks[z][y][x]).light_level);
+      }
+
   block_group->disk_dirty = true;
   block_group->network_dirty = true;
-
-  generate_block(real_job->position, block_group, seed);
 
   atomic_store_explicit(&real_job->block_group, block_group, memory_order_release);
 }

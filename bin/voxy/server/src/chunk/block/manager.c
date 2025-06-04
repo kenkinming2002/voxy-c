@@ -32,78 +32,76 @@ static struct block_group_node *block_group_nodes;
 
 struct voxy_block_group *voxy_get_block_group(ivec3_t chunk_position)
 {
-  ptrdiff_t i = hmgeti(block_group_nodes, chunk_position);
-  return i != -1 ? block_group_nodes[i].value : NULL;
+  struct block_group_node *block_group_node = hmgetp_null(block_group_nodes, chunk_position);
+  return block_group_node ? block_group_node->value : NULL;
 }
 
 uint8_t voxy_get_block_id(ivec3_t position, uint8_t def)
 {
   struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  return block_group ? voxy_block_group_get_block_id(block_group, global_position_to_local_position_i(position)) : def;
+  if(!block_group)
+    return def;
+
+  return voxy_block_group_get_id(block_group, global_position_to_local_position_i(position));
 }
 
 uint8_t voxy_get_block_light_level(ivec3_t position, uint8_t def)
 {
   struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  return block_group ? voxy_block_group_get_block_light_level(block_group, global_position_to_local_position_i(position)) : def;
+  if(!block_group)
+    return def;
+
+  return voxy_block_group_get_light_level(block_group, global_position_to_local_position_i(position));
 }
 
-void voxy_set_block_id(ivec3_t position, uint8_t id)
-{
-  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  if(block_group)
-    voxy_block_group_set_block_id(block_group, global_position_to_local_position_i(position), id);
-}
-
-void voxy_set_block_light_level(ivec3_t position, uint8_t light_level)
-{
-  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  if(block_group)
-    voxy_block_group_set_block_light_level(block_group, global_position_to_local_position_i(position), light_level);
-}
-
-/// Set block_group at given position.
-///
-/// The light level of the block_group will be derived from light info in block_group
-/// registry. This will also enqueue any necessary light updates to light
-/// manager..
-VOXY_SERVER_EXPORT void voxy_set_block(ivec3_t position, uint8_t id)
+bool voxy_set_block(ivec3_t position, voxy_block_id_t id)
 {
   struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
   if(!block_group)
-    return;
-
-  const uint8_t old_light_level = voxy_block_group_get_block_light_level(block_group, global_position_to_local_position_i(position));
-  const uint8_t light_level = voxy_query_block(id).light_level;
-
-  voxy_block_group_set_block_id(block_group, global_position_to_local_position_i(position), id);
-  voxy_block_group_set_block_light_level(block_group, global_position_to_local_position_i(position), light_level);
-
-  if(old_light_level < light_level)
-    enqueue_light_creation_update(position);
-
-  //// FIXME: Light destroy update really only support the case if light level
-  ////        changes to 0. This happens to be the only possible cases for now.
-  if(old_light_level >= light_level)
-    enqueue_light_destruction_update(position, old_light_level);
-}
-
-bool voxy_block_manager_get_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp)
-{
-  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  if(block_group)
-  {
-    voxy_block_group_get_block_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp);
-    return true;
-  }
-  else
     return false;
+
+  voxy_block_group_set_id(block_group, global_position_to_local_position_i(position), id);
+  voxy_block_group_set_light_level(block_group, global_position_to_local_position_i(position), voxy_query_block(id).light_level);
+  return true;
 }
 
-bool voxy_block_manager_set_block_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+bool voxy_set_block_id(ivec3_t position, voxy_block_id_t id)
 {
   struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
-  return block_group ? voxy_block_group_set_block_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp) : false;
+  if(!block_group)
+    return false;
+
+  voxy_block_group_set_id(block_group, global_position_to_local_position_i(position), id);
+  return true;
+}
+
+bool voxy_set_block_light_level(ivec3_t position, uint8_t light_level)
+{
+  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
+  if(!block_group)
+    return false;
+
+  voxy_block_group_set_light_level(block_group, global_position_to_local_position_i(position), light_level);
+  return true;
+}
+
+bool voxy_get_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+{
+  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
+  if(!block_group)
+    return false;
+
+  voxy_block_group_get_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp);
+  return true;
+}
+
+bool voxy_set_light_level_atomic(ivec3_t position, uint8_t *light_level, uint8_t *tmp)
+{
+  struct voxy_block_group *block_group = voxy_get_block_group(get_chunk_position_i(position));
+  if(!block_group)
+    return false;
+
+  return voxy_block_group_set_light_level_atomic(block_group, global_position_to_local_position_i(position), light_level, tmp);
 }
 
 static struct block_group_future load_or_generate_block(ivec3_t position, size_t *load_count, size_t *generate_count)
@@ -142,12 +140,11 @@ static void load_or_generate_blocks(void)
     if(hmgeti(block_group_nodes, position) != -1)
       continue;
 
-    struct block_group_future block_group_future = load_or_generate_block(position, &load_count, &generate_count);
-    struct voxy_block_group *block_group;
-    if((block_group = block_group_future.value))
+    struct block_group_future future = load_or_generate_block(position, &load_count, &generate_count);
+    struct voxy_block_group *block_group = future.value;
+    if(block_group)
     {
       hmput(block_group_nodes, position, block_group);
-
       for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         if((block_group->neighbours[direction] = voxy_get_block_group(ivec3_add(position, direction_as_ivec(direction)))))
           block_group->neighbours[direction]->neighbours[direction_reverse(direction)] = block_group;
@@ -158,7 +155,7 @@ static void load_or_generate_blocks(void)
           {
             const ivec3_t local_position = ivec3(x, y, z);
             const ivec3_t global_position = local_position_to_global_position_i(local_position, position);
-            if(voxy_block_group_get_block_light_level(block_group, local_position) != 0)
+            if(voxy_block_group_get_light_level(block_group, local_position) != 0)
               enqueue_light_creation_update(global_position);
             else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
               enqueue_light_destruction_update(global_position, 0);
@@ -266,8 +263,10 @@ void voxy_block_manager_on_client_connected(libnet_client_proxy_t client_proxy)
     message.message.message.size = LIBNET_MESSAGE_SIZE(message);
     message.message.tag = VOXY_SERVER_MESSAGE_CHUNK_UPDATE;
     message.position = position;
-    memcpy(&message.block_ids, &block_group->ids, sizeof block_group->ids);
-    memcpy(&message.block_light_levels, &block_group->light_levels, sizeof block_group->light_levels);
+
+    memcpy(&message.block_ids, &block_group->ids, sizeof message.block_ids);
+    memcpy(&message.block_light_levels, &block_group->light_levels, sizeof message.block_light_levels);
+
     libnet_server_send_message(client_proxy, &message.message.message);
   }
 }

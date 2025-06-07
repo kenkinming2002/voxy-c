@@ -41,10 +41,13 @@ void entity_manager_update_entity(entity_handle_t handle, voxy_entity_id_t id,  
   // FIXME: Maybe we need some protection against malicious server allocating a
   //        high entity handle.
   // FIXME: Potential integer overflow.
-  size_t old_len = arrlenu(entities);
-  arrsetlen(entities, handle+1);
-  for(size_t i=old_len; i<arrlenu(entities); ++i)
-    entities[i].alive = false;
+  if(handle >= arrlenu(entities))
+  {
+    size_t old_len = arrlenu(entities);
+    arrsetlen(entities, handle+1);
+    for(size_t i=old_len; i<arrlenu(entities); ++i)
+      entities[i].alive = false;
+  }
 
   entities[handle].alive = true;
   entities[handle].id = id;

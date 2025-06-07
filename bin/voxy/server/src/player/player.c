@@ -73,11 +73,11 @@ void voxy_player_put_weak(struct voxy_player *player)
 
 void voxy_player_set_camera_follow_entity(struct voxy_player *player, entity_handle_t handle)
 {
-  struct voxy_server_camera_follow_entity_message message;
-  message.message.message.size = LIBNET_MESSAGE_SIZE(message);
-  message.message.tag = VOXY_SERVER_MESSAGE_CAMERA_FOLLOW_ENTITY;
-  message.handle = handle;
-  libnet_server_send_message(player->client_proxy, &message.message.message);
+  struct voxy_server_camera_follow_entity_message *message = calloc(1, sizeof *message);
+  message->message.message.size = LIBNET_MESSAGE_SIZE(*message);
+  message->message.tag = VOXY_SERVER_MESSAGE_CAMERA_FOLLOW_ENTITY;
+  message->handle = handle;
+  libnet_server_send_message(player->client_proxy, &message->message.message);
 }
 
 fvec3_t voxy_player_get_movement_input(struct voxy_player *player)

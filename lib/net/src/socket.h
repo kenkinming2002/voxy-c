@@ -159,6 +159,30 @@ static int dispatch_socket_error(ssize_t n, const char *message)
   return 0;
 }
 
+/// Behave as recv(2) on socket.
+static ssize_t ssl_socket_recv(struct ssl_socket *socket)
+{
+  char buf[4096];
+  ssize_t n = recv(socket->fd, buf, sizeof buf, 0);
+  if(n > 0)
+    BIO_write(socket->rbio, buf, n);
+
+  return n;
+}
+
+/// Behave as send(2) on socket.
+static ssize_t ssl_socket_send(struct ssl_socket *socket)
+{
+  char *buf;
+  size_t len = BIO_get_mem_data(socket->wbio, &buf);
+
+  ssize_t n = send(socket->fd, buf, len, MSG_NOSIGNAL);
+  if(n > 0)
+    BIO_seek(socket->wbio, BIO_tell(socket->wbio) + n);
+
+  return n;
+}
+
 /// Try to recv data from socket.
 static int ssl_socket_try_recv(struct ssl_socket *socket, bool *connection_closed)
 {
@@ -271,7 +295,7 @@ static struct ssl_socket_message_iter ssl_socket_message_iter_begin(struct ssl_s
   return iter;
 }
 
-static const struct libnet_message *ssl_socket_message_iter_next(struct ssl_socket_message_iter *iter)
+static struct libnet_message *ssl_socket_message_iter_next(struct ssl_socket_message_iter *iter)
 {
   if(iter->len < sizeof(struct libnet_message))
     goto end;
@@ -283,7 +307,10 @@ static const struct libnet_message *ssl_socket_message_iter_next(struct ssl_sock
   iter->buf += sizeof(struct libnet_message) + message->size;
   iter->len -= sizeof(struct libnet_message) + message->size;
   iter->pos += sizeof(struct libnet_message) + message->size;
-  return message;
+
+  struct libnet_message *cloned_message = malloc(sizeof(struct libnet_message) + message->size);
+  memcpy(cloned_message, message, sizeof(struct libnet_message) + message->size);
+  return cloned_message;
 
 end:
   BIO_seek(iter->bio, iter->pos);

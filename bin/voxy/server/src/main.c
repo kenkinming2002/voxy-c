@@ -17,6 +17,7 @@
 
 #include "mod/mod.h"
 
+#include <libcore/time.h>
 #include <libcore/profile.h>
 
 #include <stdlib.h>
@@ -73,12 +74,7 @@ static void init(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  libnet_server_init(argv[1], argv[2], argv[3], FIXED_DT * 1e9);
-
-  libnet_server_set_on_update(on_update);
-  libnet_server_set_on_client_connected(on_client_connected);
-  libnet_server_set_on_client_disconnected(on_client_disconnected);
-  libnet_server_set_on_message_received(on_message_received);
+  libnet_server_run(argv[1], argv[2], argv[3]);
 
   voxy_block_database_init(argv[4]);
   voxy_block_generator_init(argv[4]);
@@ -90,15 +86,54 @@ static void init(int argc, char *argv[])
   voxy_entity_manager_start();
 }
 
-static void deinit(void)
-{
-  libnet_server_deinit();
-}
-
 int main(int argc, char *argv[])
 {
   init(argc, argv);
-  libnet_server_run();
-  deinit();
+
+  double compensation = 0.0f;
+  for(;;)
+  {
+    const double begin = time_get();
+
+    on_update();
+
+    struct libnet_server_event event;
+    while(libnet_server_poll_event(&event))
+      switch(event.type)
+      {
+      case LIBNET_SERVER_EVENT_CLIENT_CONNECTED:
+        libnet_server_ack_client_connected(event.client_proxy);
+        on_client_connected(event.client_proxy);
+        break;
+      case LIBNET_SERVER_EVENT_CLIENT_DISCONNECTED:
+        libnet_server_ack_client_disconnected(event.client_proxy);
+        on_client_disconnected(event.client_proxy);
+        break;
+      case LIBNET_SERVER_EVENT_MESSAGE_RECEIVED:
+        on_message_received(event.client_proxy, event.message);
+        free(event.message);
+        break;
+      }
+
+    const double end = time_get();
+    const double diff = end - begin + compensation;
+    if(diff > FIXED_DT)
+    {
+      // Compensation makes occasional frame stutter feel not as bad, because
+      // subsequent updates need not get delayed. (They are still noticeable
+      // though)
+      //
+      // However, we do not allow unbounded compensation. Otherwise, you will
+      // become sonic the hedgehog after a lag spike.
+      compensation = diff - FIXED_DT;
+      if(compensation > 1 * FIXED_DT)
+        compensation = 1 * FIXED_DT;
+    }
+    else
+    {
+      compensation = 0.0;
+      time_sleep(FIXED_DT - diff);
+    }
+  }
 }
 

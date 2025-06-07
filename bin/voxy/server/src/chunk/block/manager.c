@@ -138,6 +138,7 @@ static void load_or_generate_blocks(void)
     if(block_group)
     {
       hmput(block_group_nodes, position, block_group);
+
       for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
         if((block_group->neighbours[direction] = voxy_get_block_group(ivec3_add(position, direction_as_ivec(direction)))))
           block_group->neighbours[direction]->neighbours[direction_reverse(direction)] = block_group;
@@ -252,14 +253,14 @@ void voxy_block_manager_on_client_connected(libnet_client_proxy_t client_proxy)
     ivec3_t position = block_group_nodes[i].key;
     struct voxy_block_group *block_group = block_group_nodes[i].value;
 
-    struct voxy_server_block_group_update_message message;
-    message.message.message.size = LIBNET_MESSAGE_SIZE(message);
-    message.message.tag = VOXY_SERVER_MESSAGE_CHUNK_UPDATE;
-    message.position = position;
+    struct voxy_server_block_group_update_message *message = calloc(1, sizeof *message);
+    message->message.message.size = LIBNET_MESSAGE_SIZE(*message);
+    message->message.tag = VOXY_SERVER_MESSAGE_CHUNK_UPDATE;
+    message->position = position;
 
-    memcpy(&message.block_ids, &block_group->ids, sizeof message.block_ids);
-    memcpy(&message.block_lights, &block_group->lights, sizeof message.block_lights);
+    memcpy(&message->block_ids, &block_group->ids, sizeof message->block_ids);
+    memcpy(&message->block_lights, &block_group->lights, sizeof message->block_lights);
 
-    libnet_server_send_message(client_proxy, &message.message.message);
+    libnet_server_send_message(client_proxy, &message->message.message);
   }
 }

@@ -153,6 +153,7 @@ int main()
         "profile",
         "thread_pool",
         "fs",
+        "time",
       ),
     ),
     TARGET(
@@ -183,6 +184,10 @@ int main()
       .pkg_configs = STRINGS(
         "openssl",
       ),
+      .dependencies = STRINGS(
+        "core",
+        "external",
+      )
     ),
     TARGET(
       .name = "gfx",

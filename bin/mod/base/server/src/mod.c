@@ -98,7 +98,7 @@ static bool player_entity_update(struct voxy_entity *entity, float dt)
     voxy_entity_apply_impulse(entity, fvec3_mul_scalar(direction, (voxy_entity_is_grounded(entity) ? MOVE_SPEED_GROUND : MOVE_SPEED_AIR) * dt));
 
     if(voxy_entity_is_grounded(entity) && movement.z > 0.5f)
-      voxy_entity_apply_impulse(entity, fvec3(0.0f, 0.0f, 10.0f));
+      voxy_entity_apply_impulse(entity, fvec3(0.0f, 0.0f, JUMP_STRENGTH));
   }
 
   // Breaking block

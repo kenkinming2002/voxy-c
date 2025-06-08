@@ -410,9 +410,6 @@ err:
       event_client_disconnected(client_proxy);
     }
   }
-
-  return NULL;
-
 }
 
 void libnet_server_run(const char *service, const char *cert, const char *key)

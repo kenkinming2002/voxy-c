@@ -18,10 +18,17 @@
 
 #include <stdio.h>
 
+#ifdef VOXY_STRESS_TEST
+#define PAN_SPEED 0.002f
+#define MOVE_SPEED_GROUND 800.0f
+#define MOVE_SPEED_AIR 300.0f
+#define JUMP_STRENGTH 50.0f
+#else
 #define PAN_SPEED 0.002f
 #define MOVE_SPEED_GROUND 8.0f
 #define MOVE_SPEED_AIR 3.0f
 #define JUMP_STRENGTH 5.5f
+#endif
 
 static void generate_block(seed_t seed, ivec3_t chunk_position, voxy_block_id_t blocks[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH])
 {

@@ -83,6 +83,7 @@ static void run(void)
         return;
       case LIBNET_CLIENT_EVENT_MESSAGE_RECEIVED:
         on_message_received(event.message);
+        free(event.message);
         break;
       }
   }

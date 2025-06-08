@@ -119,6 +119,7 @@ static int socket_bind(const char *service)
       continue;
     }
 
+    freeaddrinfo(res);
     return fd;
   }
 

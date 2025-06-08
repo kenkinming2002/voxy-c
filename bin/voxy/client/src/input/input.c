@@ -90,24 +90,24 @@ void input_update(void)
 
   if(changed)
   {
-    struct voxy_client_input_message message;
+    struct voxy_client_input_message *message = calloc(1, sizeof *message);
 
-    message.message.tag = VOXY_CLIENT_MESSAGE_INPUT;
-    message.message.message.size = LIBNET_MESSAGE_SIZE(message);
+    message->message.tag = VOXY_CLIENT_MESSAGE_INPUT;
+    message->message.message.size = LIBNET_MESSAGE_SIZE(*message);
 
-    message.key_left = key_left;
-    message.key_right = key_right;
-    message.key_back = key_back;
-    message.key_front = key_front;
-    message.key_bottom = key_bottom;
-    message.key_top = key_top;
+    message->key_left = key_left;
+    message->key_right = key_right;
+    message->key_back = key_back;
+    message->key_front = key_front;
+    message->key_bottom = key_bottom;
+    message->key_top = key_top;
 
-    message.mouse_button_left = mouse_button_left;
-    message.mouse_button_right = mouse_button_right;
+    message->mouse_button_left = mouse_button_left;
+    message->mouse_button_right = mouse_button_right;
 
-    message.mouse_motion = mouse_motion;
+    message->mouse_motion = mouse_motion;
 
-    libnet_client_send_message(&message.message.message);
+    libnet_client_send_message(&message->message.message);
   }
 }
 

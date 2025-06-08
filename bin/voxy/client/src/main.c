@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static void application_on_message_received(const struct libnet_message *message)
+static void on_message_received(const struct libnet_message *message)
 {
   main_camera_on_message_received(message);
   block_manager_on_message_received(message);
@@ -27,10 +27,9 @@ static void init(int argc, char *argv[])
 {
   window_init("client", 1024, 720);
 
-  libnet_client_init(argv[1], argv[2]);
-  libnet_client_set_on_message_received(application_on_message_received);
+  libnet_client_run(argv[1], argv[2]);
 
-  struct voxy_client_login_message *message = alloca(sizeof *message + strlen(argv[3]));
+  struct voxy_client_login_message *message = calloc(1, sizeof *message + strlen(argv[3]));
   message->message.tag = VOXY_CLIENT_MESSAGE_LOGIN;
   message->message.message.size = LIBNET_MESSAGE_SIZE(*message) + strlen(argv[3]);
   memcpy(message->player_name, argv[3], strlen(argv[3]));
@@ -43,11 +42,6 @@ static void init(int argc, char *argv[])
 
   world_renderer_init();
 
-}
-
-static void deinit(void)
-{
-  libnet_client_deinit();
 }
 
 static void update(void)
@@ -72,6 +66,28 @@ static void update(void)
   window_present();
 }
 
+static void run(void)
+{
+  for(;;)
+  {
+    if(window_should_close())
+      return;
+
+    update();
+
+    struct libnet_client_event event;
+    while(libnet_client_poll_event(&event))
+      switch(event.type)
+      {
+      case LIBNET_CLIENT_EVENT_SERVER_DISCONNECTED:
+        return;
+      case LIBNET_CLIENT_EVENT_MESSAGE_RECEIVED:
+        on_message_received(event.message);
+        break;
+      }
+  }
+}
+
 int main(int argc, char *argv[])
 {
   if(argc < 4)
@@ -81,9 +97,5 @@ int main(int argc, char *argv[])
   }
 
   init(argc, argv);
-
-  while(!window_should_close() && !libnet_client_update())
-    update();
-
-  deinit();
+  run();
 }

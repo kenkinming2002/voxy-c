@@ -5,9 +5,21 @@
 
 #include <stdbool.h>
 
-/// Initialize libnet client.
-///
-/// This indicates that you wish to use libnet in client mode.
+/// Type of events for server.
+enum libnet_client_event_type
+{
+  LIBNET_CLIENT_EVENT_SERVER_DISCONNECTED,
+  LIBNET_CLIENT_EVENT_MESSAGE_RECEIVED,
+};
+
+/// Event for client
+struct libnet_client_event
+{
+  enum libnet_client_event_type type;
+  struct libnet_message *message;
+};
+
+/// Run the client.
 ///
 /// The provided node and service name has the same semantic as the parameter to
 /// getaddrinfo(3) for socket with type SOCK_STREAM.
@@ -15,33 +27,17 @@
 /// For example, node can be a domain name or ip address and service can be
 /// either a numeric string specifyin the port number, or name for one of the
 /// services founded in /etc/services on linux system.
-void libnet_client_init(const char *node, const char *service);
-
-/// Deinitialize libnet client.
 ///
-/// This is supposed to close down the connection cleanly but currently just
-/// reset the connection by calling close(2) on the socket.
-void libnet_client_deinit(void);
-
-/// Handle all pending network events.
+/// This will start handling connections and messages from clients and putting
+/// events into the event queue.
 ///
-/// Return non-zero value if connection was closed.
-bool libnet_client_update(void);
+/// This simply call exit(3) on error because why would you need otherwise?
+void libnet_client_run(const char *node, const char *service);
 
-/// Event callbacks.
-typedef void(*libnet_client_on_message_received_t)(const struct libnet_message *message);
+/// Poll for next event from the event queue.
+bool libnet_client_poll_event(struct libnet_client_event *event);
 
-/// Opaque pointer.
-void libnet_client_set_opaque(void *opaque);
-void *libnet_client_get_opaque(void);
-
-/// Event callbacks setters.
-void libnet_client_set_on_message_received(libnet_client_on_message_received_t cb);
-
-/// Send a message to the server.
-///
-/// This will buffer the message internally to be sent during the next call to
-/// libnet_client_update().
+/// Send message to server.
 void libnet_client_send_message(struct libnet_message *message);
 
 #endif // LIBNET_CLIENT_H

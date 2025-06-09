@@ -20,6 +20,8 @@
 #include <libcore/time.h>
 #include <libcore/profile.h>
 
+#include <stb_ds.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -27,7 +29,7 @@ void on_update(void)
 {
   profile_scope;
 
-  voxy_reset_active_chunks();
+  voxy_reset_chunk_regions();
 
   struct voxy_entity *entities = entity_get_all();
   for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)

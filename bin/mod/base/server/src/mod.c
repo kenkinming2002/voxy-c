@@ -80,16 +80,10 @@ static bool player_entity_update(struct voxy_entity *entity, float dt)
 
   // Chunk Loading
   {
-    const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(voxy_entity_get_position(entity)), 16);
-    const int radius = 10;
-    for(int z=center.z-radius; z<=center.z+radius; ++z)
-      for(int y=center.y-radius; y<=center.y+radius; ++y)
-        for(int x=center.x-radius; x<=center.x+radius; ++x)
-        {
-          const ivec3_t position = ivec3(x, y, z);
-          if(ivec3_length_squared(ivec3_sub(position, center)) <= radius * radius)
-            voxy_add_active_chunk(position);
-        }
+    const ivec3_t center = ivec3_div_scalar(fvec3_as_ivec3_round(voxy_entity_get_position(entity)), VOXY_CHUNK_WIDTH);
+    const int major_radius = 10;
+    const int minor_radius = 15;
+    voxy_add_chunk_region_sphere(center, major_radius, minor_radius);
   }
 
   // Movement controller

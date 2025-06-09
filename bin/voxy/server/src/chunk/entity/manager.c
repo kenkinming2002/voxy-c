@@ -88,121 +88,135 @@ void voxy_entity_destroy(entity_handle_t handle)
   entity_free(handle);
 }
 
-static void load_entities(void)
+struct major_chunk_statistic
 {
-  profile_scope;
+  size_t load_count;
+  size_t load_entity_count;
+};
 
-  size_t load_count = 0;
-  for(ptrdiff_t i=0; i<hmlen(active_chunks); ++i)
+static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
+{
+  struct major_chunk_statistic *statistic = data;
+
+  if(hmgetp_null(loaded_chunks, chunk_position))
+    return;
+
+  int64_t *db_ids;
+  if(voxy_entity_database_load_inactive(chunk_position, &db_ids) != 0)
   {
-    ivec3_t position = active_chunks[i].key;
-    if(hmgeti(loaded_chunks, position) == -1)
+    LOG_WARN("Failed to load inactive entitites for chunk at (%d, %d, %d). Continuing anyway...", chunk_position.x, chunk_position.y, chunk_position.z);
+    return;
+  }
+
+  for(size_t i=0; i<arrlenu(db_ids); ++i)
+  {
+    const int64_t db_id = db_ids[i];
+
+    struct voxy_entity entity;
+    entity.db_id = db_id;
+
+    if(voxy_entity_database_load(&entity) != 0)
     {
-      hmput(loaded_chunks, position, (struct empty){});
-
-      int64_t *db_ids;
-      if(voxy_entity_database_load_inactive(position, &db_ids) != 0)
-      {
-        LOG_WARN("Failed to load inactive entitites for chunk at (%d, %d, %d). Continuing anyway...", position.x, position.y, position.z);
-        continue;
-      }
-
-      for(size_t i=0; i<arrlenu(db_ids); ++i)
-      {
-        const int64_t db_id = db_ids[i];
-
-        struct voxy_entity entity;
-        entity.db_id = db_id;
-
-        if(voxy_entity_database_load(&entity) != 0)
-        {
-          LOG_WARN("Failed to load entity from database. Continuing anyway...");
-          continue;
-        }
-
-        if(voxy_entity_database_uncommit(entity.db_id) != 0)
-        {
-          LOG_WARN("Failed to uncommit entity from database. Continuing anyway...");
-          continue;
-        }
-
-        voxy_entity_create(entity.db_id, entity.id, entity.position, entity.rotation, entity.opaque);
-        load_count += 1;
-      }
-
-      arrfree(db_ids);
+      LOG_WARN("Failed to load entity from database. Continuing anyway...");
+      continue;
     }
-  }
 
-  if(load_count != 0)
-    LOG_INFO("Entity Manager: Loaded %zu entities", load_count);
-}
-
-static void discard_entities(void)
-{
-  profile_scope;
-
-  size_t discard_count = 0;
-
-  struct loaded_chunk *new_loaded_chunks = NULL;
-  for(ptrdiff_t i=0; i<hmlen(loaded_chunks); ++i)
-  {
-    ivec3_t position = loaded_chunks[i].key;
-    if(hmgeti(active_chunks, position) != -1)
-      hmput(new_loaded_chunks, position, (struct empty){});
-  }
-
-  hmfree(loaded_chunks);
-  loaded_chunks = new_loaded_chunks;
-
-  struct voxy_entity *entities = entity_get_all();
-  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
-  {
-    struct voxy_entity *entity = &entities[handle];
-    if(!entity->alive)
-      continue;
-
-    const ivec3_t chunk_position = get_chunk_position_f(entity->position);
-    if(hmgeti(loaded_chunks, chunk_position) != -1)
-      continue;
-
-    if(voxy_entity_database_commit(entity->db_id, chunk_position) != 0) LOG_WARN("Failed to commit active entity for chunk at (%d, %d, %d). Continuing anyway...", chunk_position.x, chunk_position.y, chunk_position.z);
-    voxy_entity_destroy(handle);
-
-    discard_count += 1;
-  }
-
-  if(discard_count != 0)
-    LOG_INFO("Entity Manager: Discarded %zu entities", discard_count);
-}
-
-static void flush_entities(void)
-{
-  profile_scope;
-
-  struct voxy_entity *entities = entity_get_all();
-  for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
-  {
-    struct voxy_entity *entity = &entities[handle];
-    if(entity->alive)
+    if(voxy_entity_database_uncommit(entity.db_id) != 0)
     {
-      voxy_entity_database_save(entity);
-      voxy_entity_network_update_all(handle, entity);
+      LOG_WARN("Failed to uncommit entity from database. Continuing anyway...");
+      continue;
     }
+
+    voxy_entity_create(entity.db_id, entity.id, entity.position, entity.rotation, entity.opaque);
+    statistic->load_entity_count += 1;
   }
+
+  arrfree(db_ids);
+
+  hmput(loaded_chunks, chunk_position, (struct empty){});
+  statistic->load_count += 1;
 }
+
 
 void voxy_entity_manager_update(void)
 {
   profile_scope;
 
-  if(voxy_entity_database_begin_transaction() != 0) LOG_ERROR("Failed to begin transaction");
+  if(voxy_entity_database_begin_transaction() != 0)
+    LOG_ERROR("Failed to begin transaction");
+
+  // Iterate major chunks and try to load new entities.
   {
-    load_entities();
-    flush_entities();
-    discard_entities();
+    profile_scope;
+
+    struct major_chunk_statistic statistic = {0};
+    iterate_major_chunk(&block_manager_major_chunk_iterate, &statistic);
+
+    if(statistic.load_count != 0)
+      LOG_INFO("Entity Manager: Loaded %zu entities from %zu chunks", statistic.load_entity_count, statistic.load_count);
   }
-  if(voxy_entity_database_end_transaction() != 0) LOG_ERROR("Failed to begin transaction");
+
+  // Iterate existing entities and try to flush them.
+  {
+    profile_scope;
+
+    struct voxy_entity *entities = entity_get_all();
+    for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
+    {
+      struct voxy_entity *entity = &entities[handle];
+      if(entity->alive)
+      {
+        voxy_entity_database_save(entity);
+        voxy_entity_network_update_all(handle, entity);
+      }
+    }
+  }
+
+  // Iterate existing entities and try to unload them.
+  {
+    profile_scope;
+
+    size_t unload_count = 0;
+    size_t unload_entity_count = 0;
+
+    struct loaded_chunk *new_loaded_chunks = NULL;
+    for(ptrdiff_t i=0; i<hmlen(loaded_chunks); ++i)
+    {
+      ivec3_t chunk_position = loaded_chunks[i].key;
+      if(is_minor_chunk(chunk_position))
+      {
+        hmput(new_loaded_chunks, chunk_position, (struct empty){});
+        continue;
+      }
+
+      unload_count += 1;
+    }
+
+    hmfree(loaded_chunks);
+    loaded_chunks = new_loaded_chunks;
+
+    struct voxy_entity *entities = entity_get_all();
+    for(entity_handle_t handle=0; handle<arrlenu(entities); ++handle)
+    {
+      struct voxy_entity *entity = &entities[handle];
+      if(entity->alive)
+      {
+        const ivec3_t chunk_position = get_chunk_position_f(entity->position);
+        if(!hmgetp_null(loaded_chunks, chunk_position))
+        {
+          if(voxy_entity_database_commit(entity->db_id, chunk_position) != 0) LOG_WARN("Failed to commit active entity for chunk at (%d, %d, %d). Continuing anyway...", chunk_position.x, chunk_position.y, chunk_position.z);
+          voxy_entity_destroy(handle);
+          unload_entity_count += 1;
+        }
+      }
+    }
+
+    if(unload_count != 0)
+      LOG_INFO("Entity Manager: Unloaded %zu entities from %zu chunks", unload_entity_count, unload_count);
+  }
+
+  if(voxy_entity_database_end_transaction() != 0)
+    LOG_ERROR("Failed to begin transaction");
 }
 
 void voxy_entity_manager_on_client_connected(libnet_client_proxy_t client_proxy)

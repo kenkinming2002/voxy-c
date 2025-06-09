@@ -45,7 +45,18 @@ struct block_group *get_or_insert_block_group(ivec3_t chunk_position)
 
 void block_manager_remove_block_group(ivec3_t chunk_position)
 {
-  hmdel(block_group_nodes, chunk_position);
+  struct block_group_node *block_group_node = hmgetp_null(block_group_nodes, chunk_position);
+  if(block_group_node)
+  {
+    struct block_group *block_group = block_group_node->value;
+
+    for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
+      if(block_group->neighbours[direction])
+        block_group->neighbours[direction]->neighbours[direction_reverse(direction)] = NULL;
+
+    block_group_destroy(block_group_node->value);
+    hmdel(block_group_nodes, chunk_position);
+  }
 }
 
 void block_manager_on_message_received(const struct libnet_message *_message)

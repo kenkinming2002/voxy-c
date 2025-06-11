@@ -247,6 +247,7 @@ int main()
         "light/light",
         "physics/physics",
         "physics/swept",
+        "chunk/seed",
         "chunk/coordinates",
         "chunk/manager",
         "chunk/block/database",

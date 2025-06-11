@@ -1,3 +1,4 @@
+#include "chunk/seed.h"
 #include "config.h"
 
 #include "chunk/manager.h"
@@ -79,9 +80,9 @@ static void init(int argc, char *argv[])
 
   libnet_server_run(argv[1], argv[2], argv[3]);
 
-  voxy_block_database_init(argv[4]);
-  voxy_block_generator_init(argv[4]);
-  voxy_entity_database_init(argv[4]);
+  world_init(argv[4]);
+  voxy_block_database_init();
+  voxy_entity_database_init();
 
   for(int i=5; i<argc; ++i)
     mod_load(argv[i]);

@@ -1,6 +1,7 @@
 #include "database.h"
 
 #include "chunk/coordinates.h"
+#include "chunk/seed.h"
 #include "sqlite3_utils.h"
 
 #include <voxy/server/registry/entity.h>
@@ -26,16 +27,16 @@ static void cleanup(void)
   sqlite3_close(conn);
 }
 
-void voxy_entity_database_init(const char *world_directory)
+void voxy_entity_database_init(void)
 {
-  const char *directory = tformat("%s/entities", world_directory);
+  const char *directory = tformat("%s/entities", world_get_directory());
   if(mkdir_recursive(directory) != 0)
   {
     LOG_ERROR("Failed to create directory: %s", directory);
     exit(EXIT_FAILURE);
   }
 
-  const char *path = tformat("%s/entities/data.db", world_directory);
+  const char *path = tformat("%s/entities/data.db", world_get_directory());
   if(sqlite3_open(path, &conn) != SQLITE_OK)
   {
     LOG_ERROR("Failed to open entity database %s: %s", path, sqlite3_errmsg(conn));

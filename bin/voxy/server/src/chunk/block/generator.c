@@ -1,5 +1,6 @@
 #include "generator.h"
 
+#include "chunk/seed.h"
 #include "group.h"
 
 #include <libcore/format.h>
@@ -10,10 +11,7 @@
 #include <libcore/utils.h>
 
 #include <stb_ds.h>
-
 #include <string.h>
-#include <ctype.h>
-#include <errno.h>
 
 struct block_generator_wrappers
 {
@@ -21,53 +19,8 @@ struct block_generator_wrappers
   struct block_generator_job *value;
 };
 
-static seed_t seed;
 static voxy_generate_block_t generate_block;
-
 static struct block_generator_wrappers *wrappers;
-
-void voxy_block_generator_init(const char *world_directory)
-{
-  const char *path = tformat("%s/chunks/seed", world_directory);
-
-  char *seed_data;
-  size_t seed_length;
-  if(read_file_all(path, &seed_data, &seed_length) != 0)
-  {
-    seed_length = 32;
-    seed_data = malloc(seed_length);
-
-    srand(time(NULL));
-    for(unsigned i=0; i<seed_length; ++i)
-      while(!isalnum(seed_data[i] = rand()));
-
-    LOG_INFO("Failed to find seed for block_group generator. Generated a new seed %.*s", (int)seed_length, seed_data);
-
-    if(mkdir_recursive(tformat("%s/chunks", world_directory)) != 0)
-    {
-      LOG_INFO("Failed to create directory for block_group generator seed file: %s", strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-
-    if(write_file_all(path, seed_data, seed_length) != 0)
-    {
-      LOG_INFO("Failed to write block_group generator seed file: %s", strerror(errno));
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  seed = 0b0101110101011010101110101101010101011010111010100011010100101010;
-  seed_combine(&seed, seed_data, seed_length);
-  seed_combine(&seed, seed_data, seed_length);
-
-  LOG_INFO("Seed for block_group generator(string): %.*s", (int)seed_length, seed_data);
-  LOG_INFO("Seed for block_group generator(integer): %zu", seed);
-
-  generate_block = NULL;
-  free(seed_data);
-
-  wrappers = NULL;
-}
 
 void voxy_set_generate_block(voxy_generate_block_t _generate_block)
 {
@@ -87,7 +40,7 @@ static void job_invoke(struct thread_pool_job *job)
   struct block_generator_job *real_job = container_of(job, struct block_generator_job, job);
 
   voxy_block_id_t blocks[VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH][VOXY_CHUNK_WIDTH];
-  generate_block(seed, real_job->position, blocks);
+  generate_block(world_get_seed(), real_job->position, blocks);
 
   struct voxy_block_group *block_group = voxy_block_group_create();
 

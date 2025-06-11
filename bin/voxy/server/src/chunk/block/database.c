@@ -1,5 +1,6 @@
 #include "database.h"
 
+#include "chunk/seed.h"
 #include "group.h"
 
 #include <voxy/config.h>
@@ -75,13 +76,13 @@ static struct block_database_save_entry *save_entries;
 
 #define block_group_size (sizeof ((struct voxy_block_group *)0)->ids + sizeof ((struct voxy_block_group *)0)->lights)
 
-void voxy_block_database_init(const char *world_directory)
+void voxy_block_database_init(void)
 {
   io_uring_queue_init(512, &ring, 0);
   io_uring_register_files_sparse(&ring, CHUNK_DATABASE_LOAD_LIMIT);
   memset(&fixed_file_bitmaps, 0, sizeof fixed_file_bitmaps);
 
-  directory = aformat("%s/chunks/blocks", world_directory);
+  directory = aformat("%s/chunks/blocks", world_get_directory());
   if(mkdir_recursive(directory) != 0)
   {
     LOG_ERROR("Failed to create directory: %s", directory);

@@ -44,7 +44,7 @@
 ///
 /// This basically just open the database connection and arrange for it to be
 /// closed atexit(3).
-void voxy_entity_database_init(const char *world_directory);
+void voxy_entity_database_init(void);
 
 /// Begin and end transaction.
 ///

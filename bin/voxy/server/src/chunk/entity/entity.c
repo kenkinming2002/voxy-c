@@ -1,5 +1,70 @@
 #include "entity.h"
 
+#include <stdlib.h>
+
+void voxy_entity_destroy(struct voxy_entity entity)
+{
+  struct voxy_entity_info info = voxy_query_entity(entity.id);
+  info.destroy_opaque(entity.opaque);
+}
+
+int voxy_entity_serialize(const struct voxy_entity *entity, struct sqlite3_utils_blob *blob)
+{
+  char *buf;
+  size_t len;
+
+  libserde_serializer_t serializer = libserde_serializer_create_mem(&buf, &len);
+  if(!serializer)
+    goto err_create;
+
+  libserde_serializer_try_write(serializer, entity->id, err_write);
+  libserde_serializer_try_write(serializer, entity->position, err_write);
+  libserde_serializer_try_write(serializer, entity->rotation, err_write);
+  libserde_serializer_try_write(serializer, entity->velocity, err_write);
+  libserde_serializer_try_write(serializer, entity->grounded, err_write);
+
+  const struct voxy_entity_info info = voxy_query_entity(entity->id);
+  if(info.serialize_opaque(serializer, entity->opaque) != 0)
+    goto err_write;
+
+  libserde_serializer_destroy(serializer);
+
+  blob->data = buf;
+  blob->length = len;
+  return 0;
+
+err_write:
+  libserde_serializer_destroy(serializer);
+  free(buf);
+err_create:
+    return -1;
+}
+
+int voxy_entity_deserialize(struct voxy_entity *entity, const struct sqlite3_utils_blob *blob)
+{
+  libserde_deserializer_t deserializer = libserde_deserializer_create_mem(blob->data, blob->length);
+  if(!deserializer)
+    goto err_create;
+
+  libserde_deserializer_try_read(deserializer, entity->id, err_read);
+  libserde_deserializer_try_read(deserializer, entity->position, err_read);
+  libserde_deserializer_try_read(deserializer, entity->rotation, err_read);
+  libserde_deserializer_try_read(deserializer, entity->velocity, err_read);
+  libserde_deserializer_try_read(deserializer, entity->grounded, err_read);
+
+  const struct voxy_entity_info info = voxy_query_entity(entity->id);
+  if(info.deserialize_opaque(deserializer, &entity->opaque) != 0)
+    goto err_read;
+
+  libserde_deserializer_destroy(deserializer);
+  return 0;
+
+err_read:
+  libserde_deserializer_destroy(deserializer);
+err_create:
+  return -1;
+}
+
 transform_t voxy_entity_get_transform(const struct voxy_entity *entity)
 {
   transform_t transform;

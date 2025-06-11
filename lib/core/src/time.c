@@ -2,6 +2,7 @@
 
 #include <time.h>
 #include <math.h>
+#include <errno.h>
 
 double time_get(void)
 {
@@ -17,3 +18,17 @@ void time_sleep(double secs)
   ts.tv_nsec = floorf((secs - floor(secs))* 1e9);
   nanosleep(&ts, NULL);
 }
+
+static struct timespec ts;
+
+void time_sleep_interruptible_begin(double secs)
+{
+  ts.tv_sec = floorf(secs);
+  ts.tv_nsec = floorf((secs - floor(secs))* 1e9);
+}
+
+bool time_sleep_interruptible(void)
+{
+  return nanosleep(&ts, &ts) == -1 && errno == EINTR;
+}
+

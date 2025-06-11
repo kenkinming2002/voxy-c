@@ -20,6 +20,7 @@
 #include <libcore/time.h>
 #include <libcore/profile.h>
 
+#include <signal.h>
 #include <stb_ds.h>
 
 #include <stdlib.h>
@@ -88,8 +89,20 @@ static void init(int argc, char *argv[])
   voxy_entity_manager_start();
 }
 
+static sig_atomic_t quit;
+static void signal_handler(int signal)
+{
+  (void)signal;
+  quit = 1;
+}
+
 int main(int argc, char *argv[])
 {
+  struct sigaction act = {0};
+  act.sa_handler = signal_handler;
+  sigaction(SIGTERM, &act, NULL);
+  sigaction(SIGINT, &act, NULL);
+
   init(argc, argv);
 
   double compensation = 0.0f;
@@ -134,7 +147,9 @@ int main(int argc, char *argv[])
     else
     {
       compensation = 0.0;
-      time_sleep(FIXED_DT - diff);
+      for(time_sleep_interruptible_begin(FIXED_DT - diff);  time_sleep_interruptible(); )
+        if(quit)
+          return 0;
     }
   }
 }

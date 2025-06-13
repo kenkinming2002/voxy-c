@@ -50,12 +50,12 @@ struct major_chunk_statistic
   size_t load_entity_count;
 };
 
-static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
+static bool block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
 {
   struct major_chunk_statistic *statistic = data;
 
   if(hmgetp_null(loaded_chunks, chunk_position))
-    return;
+    return true;
 
   struct voxy_entity *entities;
   voxy_entity_database_load_inactive(chunk_position, &entities);
@@ -74,6 +74,8 @@ static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data
 
   statistic->load_count += 1;
   hmput(loaded_chunks, chunk_position, (struct empty){});
+
+  return true;
 }
 
 

@@ -103,12 +103,14 @@ struct major_chunk_statistic
   size_t load_count;
 };
 
-static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
+static bool block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
 {
   struct major_chunk_statistic *statistic = data;
+  if(statistic->generate_count + statistic->load_count >= 50)
+    return false;
 
   if(hmgetp_null(block_group_nodes, chunk_position))
-    return;
+    return true;
 
   struct voxy_block_group *block_group = NULL;
 
@@ -116,7 +118,7 @@ static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data
   {
     struct block_group_future future = voxy_block_database_load(chunk_position);
     if(future.pending)
-      return;
+      return true;
 
     block_group = future.value;
     if(block_group)
@@ -127,7 +129,7 @@ static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data
   {
     struct block_group_future future = voxy_block_group_generate(chunk_position);
     if(future.pending)
-      return;
+      return true;
 
     block_group = future.value;
     if(block_group)
@@ -135,7 +137,7 @@ static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data
   }
 
   if(!block_group)
-    return;
+    return true;
 
   hmput(block_group_nodes, chunk_position, block_group);
   for(direction_t direction = 0; direction < DIRECTION_COUNT; ++direction)
@@ -152,6 +154,8 @@ static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data
         else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
           enqueue_light_destruction_update_at(block_group, local_position, (voxy_light_t){ .level = 0, .sol = 0, });
       }
+
+  return true;
 }
 
 void voxy_block_manager_update(void)

@@ -16,7 +16,7 @@ void voxy_add_chunk_region(struct voxy_chunk_region region)
   arrput(chunk_regions, region);
 }
 
-void iterate_major_chunk(void(*iterate)(ivec3_t chunk_position, void *data), void *data)
+void iterate_major_chunk(bool(*iterate)(ivec3_t chunk_position, void *data), void *data)
 {
   for(size_t i=0; i<arrlenu(chunk_regions); ++i)
   {
@@ -48,7 +48,8 @@ void iterate_major_chunk(void(*iterate)(ivec3_t chunk_position, void *data), voi
                     const int y = sy ? -py : py;
                     const int x = sx ? -px : px;
 
-                    iterate(ivec3_add(chunk_region.sphere.center, ivec3(x, y, z)), data);
+                    if(!iterate(ivec3_add(chunk_region.sphere.center, ivec3(x, y, z)), data))
+                      return;
                   }
           }
 

@@ -50,7 +50,7 @@ struct major_chunk_statistic
   size_t load_entity_count;
 };
 
-static bool block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
+static bool entity_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
 {
   struct major_chunk_statistic *statistic = data;
 
@@ -90,7 +90,7 @@ void voxy_entity_manager_update(void)
     profile_scope;
 
     struct major_chunk_statistic statistic = {0};
-    iterate_major_chunk(&block_manager_major_chunk_iterate, &statistic);
+    iterate_major_chunk(&entity_manager_major_chunk_iterate, &statistic);
 
     if(statistic.load_count != 0)
       LOG_INFO("Entity Manager: Loaded %zu entities from %zu chunks", statistic.load_entity_count, statistic.load_count);

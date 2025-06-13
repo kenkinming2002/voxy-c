@@ -103,7 +103,7 @@ struct major_chunk_statistic
   size_t load_count;
 };
 
-static bool block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
+static bool entity_manager_major_chunk_iterate(ivec3_t chunk_position, void *data)
 {
   struct major_chunk_statistic *statistic = data;
   if(statistic->generate_count + statistic->load_count >= 50)
@@ -167,7 +167,7 @@ void voxy_block_manager_update(void)
     profile_scope;
 
     struct major_chunk_statistic statistic = {0};
-    iterate_major_chunk(&block_manager_major_chunk_iterate, &statistic);
+    iterate_major_chunk(&entity_manager_major_chunk_iterate, &statistic);
   }
 
   // Iterate existing block groups and try to flush them

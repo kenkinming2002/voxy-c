@@ -147,11 +147,10 @@ static void block_manager_major_chunk_iterate(ivec3_t chunk_position, void *data
       for(int x = 0; x<VOXY_CHUNK_WIDTH; ++x)
       {
         const ivec3_t local_position = ivec3(x, y, z);
-        const ivec3_t global_position = local_position_to_global_position_i(local_position, chunk_position);
         if(voxy_block_group_get_light(block_group, local_position).level != 0)
-          enqueue_light_creation_update(global_position);
+          enqueue_light_creation_update_at(block_group, local_position);
         else if(z == 0 || z == VOXY_CHUNK_WIDTH - 1 || y == 0 || y == VOXY_CHUNK_WIDTH - 1 || x == 0 || x == VOXY_CHUNK_WIDTH - 1)
-          enqueue_light_destruction_update(global_position, (voxy_light_t){ .level = 0, .sol = 0, });
+          enqueue_light_destruction_update_at(block_group, local_position, (voxy_light_t){ .level = 0, .sol = 0, });
       }
 }
 
